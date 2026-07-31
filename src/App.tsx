@@ -1,13 +1,7 @@
-import { TestCanvas } from './pixi/TestCanvas'
-import './App.css'
+import { RouletteScreen } from './screens/RouletteScreen'
 
 function App() {
-  return (
-    <div className="app">
-      <h1>Neon Roulette</h1>
-      <TestCanvas />
-    </div>
-  )
+  return <RouletteScreen />
 }
 
 export default App
