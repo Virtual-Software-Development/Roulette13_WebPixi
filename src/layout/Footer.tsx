@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { extend } from '@pixi/react'
 import { Container, Sprite, Text } from 'pixi.js'
+import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useTexture } from '../hooks/useTexture'
 import { useScreenSize } from '../hooks/useScreenSize'
@@ -13,6 +14,7 @@ interface FooterProps {
 }
 
 export function Footer({ children }: FooterProps) {
+  const { t } = useTranslation()
   const logoUrl = useGameConfigStore((state) => state.logoUrl)
   const logoTexture = useTexture(logoUrl)
 
@@ -61,7 +63,7 @@ const drawTimeGap = 4 // antes 12, ahora más cerca del cuadro
       <pixiSprite texture={drawTexture} width={drawBoxWidth} height={drawBoxHeight} />
 
       <pixiText
-        text="DRAW"
+        text={t('footer.draw')}
         style={DATE_TIME_LABEL_STYLE}
         x={drawBoxWidth / 2}
         y={drawBoxHeight * 0.35}

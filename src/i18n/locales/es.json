@@ -1,0 +1,14 @@
+{
+  "header": {
+    "date": "FECHA",
+    "time": "HORA"
+  },
+  "footer": {
+    "draw": "SORTEO"
+  },
+  "results": {
+    "time": "HORA",
+    "drawNo": "N° SORTEO",
+    "winner": "GANADOR"
+  }
+}

@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest'
+import '../i18n'
 
 // jsdom doesn't implement canvas rendering contexts, so pixi.js's canvas-renderer
 // fallback (used since jsdom has no WebGL/WebGPU) throws on init. Stub getContext
