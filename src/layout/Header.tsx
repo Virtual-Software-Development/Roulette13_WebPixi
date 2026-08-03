@@ -13,6 +13,8 @@ const BLOCK_GAP = 8
 
 export function Header() {
   const gameName = useGameConfigStore((state) => state.gameName)
+  const showTitle = useGameConfigStore((state) => state.showTitle)
+  const showDateTime = useGameConfigStore((state) => state.showDateTime)
   const { date, time } = useClock()
   const { width } = useScreenSize()
 
@@ -26,42 +28,51 @@ export function Header() {
 
   return (
     <pixiContainer>
-      <pixiText
+      {showTitle &&
+        <pixiText
         text={gameName}
         style={TITLE_STYLE}
         x={LAYOUT.padding}
         y={LAYOUT.padding}
       />
+      }
+      
+     {showDateTime && (
+        <>
+          <pixiText
+            text="DATE"
+            style={DATE_TIME_LABEL_STYLE}
+            x={rightEdgeX}
+            y={dateLabelY}
+            anchor={rightAnchor}
+          />
 
-      <pixiText
-        text="DATE"
-        style={DATE_TIME_LABEL_STYLE}
-        x={rightEdgeX}
-        y={dateLabelY}
-        anchor={rightAnchor}
-      />
-      <pixiText
-        text={date}
-        style={DATE_TIME_VALUE_STYLE}
-        x={rightEdgeX}
-        y={dateValueY}
-        anchor={rightAnchor}
-      />
+          <pixiText
+            text={date}
+            style={DATE_TIME_VALUE_STYLE}
+            x={rightEdgeX}
+            y={dateValueY}
+            anchor={rightAnchor}
+          />
 
-      <pixiText
-        text="TIME"
-        style={DATE_TIME_LABEL_STYLE}
-        x={rightEdgeX}
-        y={timeLabelY}
-        anchor={rightAnchor}
-      />
-      <pixiText
-        text={time}
-        style={DATE_TIME_VALUE_STYLE}
-        x={rightEdgeX}
-        y={timeValueY}
-        anchor={rightAnchor}
-      />
+          <pixiText
+            text="TIME"
+            style={DATE_TIME_LABEL_STYLE}
+            x={rightEdgeX}
+            y={timeLabelY}
+            anchor={rightAnchor}
+          />
+
+          <pixiText
+            text={time}
+            style={DATE_TIME_VALUE_STYLE}
+            x={rightEdgeX}
+            y={timeValueY}
+            anchor={rightAnchor}
+          />
+        </>
+      )}
+      
     </pixiContainer>
   )
 }

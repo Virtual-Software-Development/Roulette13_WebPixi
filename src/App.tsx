@@ -1,7 +1,7 @@
-import { RouletteScreen } from './screens/RouletteScreen'
+import { RouletteVideoView } from './screens/RouletteVideoView'
 
 function App() {
-  return <RouletteScreen />
+  return <RouletteVideoView />
 }
 
 export default App

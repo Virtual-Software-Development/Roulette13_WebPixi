@@ -5,6 +5,8 @@ export const LAYOUT = {
   footerHeight: 240,
   padding: 40,
   logoBoxSize: 250,
+  drawBoxWidth: 220,
+  drawBoxHeight: 120,
 }
 
 export const TITLE_STYLE = new TextStyle({
