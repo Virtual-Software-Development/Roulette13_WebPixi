@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { extend } from '@pixi/react'
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
+import { useTranslation } from 'react-i18next'
 import { useResultsStore } from '../../store/useResultsStore'
 import { useScreenSize } from '../../hooks/useScreenSize'
 import { DATE_TIME_VALUE_STYLE } from '../../layout/layout.constants'
@@ -43,6 +44,7 @@ const WINNER_LABEL_STYLE = new TextStyle({
 })
 
 export function WinnerCard() {
+  const { t } = useTranslation()
   const currentWinner = useResultsStore((state) => state.currentWinner)
   const { width: screenWidth } = useScreenSize()
 
@@ -94,7 +96,7 @@ export function WinnerCard() {
   return (
     <pixiContainer x={tableX} y={WINNER_ROW_CENTER_Y}>
       <pixiText
-        text="TIME"
+        text={t('results.time')}
         style={WINNER_LABEL_STYLE}
         x={timeBoxWidth / 2}
         y={LABEL_OFFSET_Y}
@@ -111,7 +113,7 @@ export function WinnerCard() {
       />
 
       <pixiText
-        text="DRAW NO."
+        text={t('results.drawNo')}
         style={WINNER_LABEL_STYLE}
         x={drawBoxX + drawBoxWidth / 2}
         y={LABEL_OFFSET_Y}
@@ -128,7 +130,7 @@ export function WinnerCard() {
       />
 
       <pixiText
-        text="WINNER"
+        text={t('results.winner')}
         style={WINNER_LABEL_STYLE}
         x={circleX}
         y={LABEL_OFFSET_Y}

@@ -1,5 +1,6 @@
 import { extend } from '@pixi/react'
 import { Container, Text } from 'pixi.js'
+import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useClock } from '../hooks/useClock'
 import { useScreenSize } from '../hooks/useScreenSize'
@@ -12,6 +13,7 @@ const VALUE_HEIGHT = 34
 const BLOCK_GAP = 8
 
 export function Header() {
+  const { t } = useTranslation()
   const gameName = useGameConfigStore((state) => state.gameName)
   const showTitle = useGameConfigStore((state) => state.showTitle)
   const showDateTime = useGameConfigStore((state) => state.showDateTime)
@@ -40,7 +42,7 @@ export function Header() {
      {showDateTime && (
         <>
           <pixiText
-            text="DATE"
+            text={t('header.date')}
             style={DATE_TIME_LABEL_STYLE}
             x={rightEdgeX}
             y={dateLabelY}
@@ -56,7 +58,7 @@ export function Header() {
           />
 
           <pixiText
-            text="TIME"
+            text={t('header.time')}
             style={DATE_TIME_LABEL_STYLE}
             x={rightEdgeX}
             y={timeLabelY}
