@@ -7,7 +7,9 @@ export interface ScreenSize {
   height: number
 }
 
-function readScreenSize(app: Application): ScreenSize {
+function readScreenSize(app: Application, isInitialised: boolean): ScreenSize {
+  if (!isInitialised) return { width: 0, height: 0 }
+
   return {
     width: app.screen?.width ?? 0,
     height: app.screen?.height ?? 0,
@@ -15,17 +17,18 @@ function readScreenSize(app: Application): ScreenSize {
 }
 
 export function useScreenSize(): ScreenSize {
-  const { app } = useApplication()
-  const [size, setSize] = useState(() => readScreenSize(app))
+  const { app, isInitialised } = useApplication()
+  const [size, setSize] = useState(() => readScreenSize(app, isInitialised))
 
   useEffect(() => {
     function handleResize() {
-      requestAnimationFrame(() => setSize(readScreenSize(app)))
+      requestAnimationFrame(() => setSize(readScreenSize(app, isInitialised)))
     }
 
+    handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [app])
+  }, [app, isInitialised])
 
   return size
 }
