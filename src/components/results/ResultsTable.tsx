@@ -8,7 +8,7 @@ extend({ Container })
 
 const ROW_GAP = 10
 const TABLE_TOP_Y = 180
-export const TABLE_WIDTH_RATIO = 0.5
+export const TABLE_WIDTH_RATIO = 0.42
 
 export function ResultsTable() {
   const results = useResultsStore((state) => state.history)

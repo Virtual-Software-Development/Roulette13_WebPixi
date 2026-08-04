@@ -8,13 +8,20 @@ import { useScreenSize } from '../../hooks/useScreenSize'
 import { DATE_TIME_VALUE_STYLE } from '../../layout/layout.constants'
 import { getRouletteColor, ROULETTE_COLOR_HEX } from '../../utils/rouletteColors'
 import {
+  createHorizontalGradient,
+  DRAW_GRAY_TO_BLACK_STOPS,
+  GOLD_BORDER_STOPS,
+  GOLD_BORDER_WIDTH,
+  TIME_RED_TO_BLACK_STOPS,
+} from '../../utils/gradients'
+import { rightTrapezoidPoints, TIME_BOX_SLANT } from '../../utils/shapes'
+import {
   BOX_GAP,
-  CELL_MARGIN,
-  DRAW_BOX_PLACEHOLDER_COLOR,
+  DRAW_BOX_WIDTH_INSET,
   DRAW_COLUMN_RATIO,
   PADDING_X,
-  ROW_HEIGHT,
-  TIME_BOX_PLACEHOLDER_COLOR,
+  WINNER_BOX_GAP,
+  WINNER_BOX_WIDTH,
   WINNER_CELL_WIDTH,
 } from './ResultRow'
 import { TABLE_WIDTH_RATIO } from './ResultsTable'
@@ -25,6 +32,13 @@ const CARD_RADIUS = 48
 const LABEL_GAP = 18
 const WINNER_ROW_CENTER_Y = 110
 const LABEL_OFFSET_Y = -(CARD_RADIUS + LABEL_GAP)
+const TEXT_PADDING = 30
+const TIME_BOX_WIDTH_INSET = 16 // reduce el ancho de la caja TIME
+const BOX_HEIGHT = 44 // misma altura para TIME y DRAW NO., más baja que ROW_HEIGHT
+
+const TIME_FILL_GRADIENT = createHorizontalGradient(TIME_RED_TO_BLACK_STOPS)
+const DRAW_FILL_GRADIENT = createHorizontalGradient(DRAW_GRAY_TO_BLACK_STOPS)
+const GOLD_BORDER_GRADIENT = createHorizontalGradient(GOLD_BORDER_STOPS)
 
 const WINNER_NUMBER_STYLE = new TextStyle({
   fontFamily: 'Arial',
@@ -50,12 +64,14 @@ export function WinnerCard() {
 
   const tableWidth = screenWidth * TABLE_WIDTH_RATIO
   const tableX = (screenWidth - tableWidth) / 2
-  const circleX = tableWidth - WINNER_CELL_WIDTH / 2 - PADDING_X
 
   const drawBoxX = tableWidth * DRAW_COLUMN_RATIO
-  const circleLeftEdge = circleX - CARD_RADIUS
-  const drawBoxWidth = circleLeftEdge - BOX_GAP - drawBoxX
-  const timeBoxWidth = drawBoxX - BOX_GAP
+  const drawBoxWidth =
+    ((tableWidth - WINNER_CELL_WIDTH - PADDING_X - BOX_GAP - drawBoxX - DRAW_BOX_WIDTH_INSET) / 2) * 1.3
+  const timeBoxWidth = drawBoxX - BOX_GAP - TIME_BOX_WIDTH_INSET
+
+  const winnerBoxX = drawBoxX + drawBoxWidth + WINNER_BOX_GAP
+  const circleX = winnerBoxX + WINNER_BOX_WIDTH / 2
 
   const hex = currentWinner
     ? ROULETTE_COLOR_HEX[getRouletteColor(currentWinner.winningNumber)]
@@ -64,9 +80,11 @@ export function WinnerCard() {
   const drawTimeBox = useCallback(
     (g: PixiGraphics) => {
       g.clear()
-      g.setFillStyle({ color: TIME_BOX_PLACEHOLDER_COLOR })
-      g.roundRect(0, -ROW_HEIGHT / 2, timeBoxWidth, ROW_HEIGHT, 6)
+      g.setFillStyle(TIME_FILL_GRADIENT)
+      g.setStrokeStyle({ width: GOLD_BORDER_WIDTH, fill: GOLD_BORDER_GRADIENT })
+      g.poly(rightTrapezoidPoints(0, -BOX_HEIGHT / 2, timeBoxWidth, BOX_HEIGHT, TIME_BOX_SLANT))
       g.fill()
+      g.stroke()
     },
     [timeBoxWidth],
   )
@@ -74,9 +92,11 @@ export function WinnerCard() {
   const drawDrawBox = useCallback(
     (g: PixiGraphics) => {
       g.clear()
-      g.setFillStyle({ color: DRAW_BOX_PLACEHOLDER_COLOR })
-      g.roundRect(drawBoxX, -ROW_HEIGHT / 2, drawBoxWidth, ROW_HEIGHT, 6)
+      g.setFillStyle(DRAW_FILL_GRADIENT)
+      g.setStrokeStyle({ width: GOLD_BORDER_WIDTH, fill: GOLD_BORDER_GRADIENT })
+      g.rect(drawBoxX, -BOX_HEIGHT / 2, drawBoxWidth, BOX_HEIGHT)
       g.fill()
+      g.stroke()
     },
     [drawBoxX, drawBoxWidth],
   )
@@ -107,7 +127,7 @@ export function WinnerCard() {
       <pixiText
         text={currentWinner.time}
         style={DATE_TIME_VALUE_STYLE}
-        x={timeBoxWidth - CELL_MARGIN}
+        x={timeBoxWidth - TEXT_PADDING}
         y={0}
         anchor={{ x: 1, y: 0.5 }}
       />
@@ -124,7 +144,7 @@ export function WinnerCard() {
       <pixiText
         text={currentWinner.drawNumber}
         style={DATE_TIME_VALUE_STYLE}
-        x={drawBoxX + CELL_MARGIN}
+        x={drawBoxX + TEXT_PADDING}
         y={0}
         anchor={{ x: 0, y: 0.5 }}
       />

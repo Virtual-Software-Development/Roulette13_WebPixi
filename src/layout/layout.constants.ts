@@ -6,7 +6,7 @@ export const LAYOUT = {
   padding: 40,
   logoBoxSize: 250,
   drawBoxWidth: 220,
-  drawBoxHeight: 120,
+  drawBoxHeight: 140,
 }
 
 export const TITLE_STYLE = new TextStyle({

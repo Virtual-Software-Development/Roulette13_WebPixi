@@ -5,7 +5,6 @@ import { useTexture } from '../hooks/useTexture'
 import { useScreenSize } from '../hooks/useScreenSize'
 import backgroundUrl from '../assets/background-test.jpg'
 import logoUrl from '../assets/logo-central.png'
-import drawImageUrl from '../assets/drawBox.png'
 import videoUrl from '../assets/roulette-video.mp4'
 import { LAYOUT } from '../layout/layout.constants'
 
@@ -19,7 +18,6 @@ export function RouletteVideoView() {
       logoUrl,
       backgroundUrl,
       videoUrl,
-      drawImageUrl,
       drawNumber: '1234',
       nextDrawTime: '10:30 PM',
       showTitle: true,
