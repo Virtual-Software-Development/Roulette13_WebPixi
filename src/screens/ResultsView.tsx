@@ -7,7 +7,6 @@ import { WinnerCard } from '../components/results/WinnerCard'
 import { ResultsTable } from '../components/results/ResultsTable'
 import backgroundUrl from '../assets/background-test.jpg'
 import logoUrl from '../assets/logo-central.png'
-import drawImageUrl from '../assets/drawBox.png'
 
 const SIMULATOR_INTERVAL_MS = 5000
 const MAX_RESULTS = 10
@@ -25,7 +24,6 @@ export function ResultsView() {
       showDateTime: true,
       showDrawInfo: true,
       showLogo: true,
-      drawImageUrl,
       drawNumber: '38483478',
       nextDrawTime: '03:00 PM'
     })
