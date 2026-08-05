@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Application } from 'pixi.js'
 import { useApplication } from '@pixi/react'
+import { DESIGN_HEIGHT, DESIGN_WIDTH } from '../layout/layout.constants'
 
 export interface ScreenSize {
   width: number
@@ -11,8 +12,8 @@ function readScreenSize(app: Application, isInitialised: boolean): ScreenSize {
   if (!isInitialised) return { width: 0, height: 0 }
 
   return {
-    width: app.screen?.width ?? 0,
-    height: app.screen?.height ?? 0,
+    width: app.screen?.width ?? DESIGN_WIDTH,
+    height: app.screen?.height ?? DESIGN_HEIGHT,
   }
 }
 
@@ -22,7 +23,7 @@ export function useScreenSize(): ScreenSize {
 
   useEffect(() => {
     function handleResize() {
-      requestAnimationFrame(() => setSize(readScreenSize(app, isInitialised)))
+      setSize(readScreenSize(app, isInitialised));
     }
 
     handleResize()

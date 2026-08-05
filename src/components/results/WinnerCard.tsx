@@ -4,15 +4,15 @@ import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
 import { useTranslation } from 'react-i18next'
 import { useResultsStore } from '../../store/useResultsStore'
-import { useScreenSize } from '../../hooks/useScreenSize'
-import { DATE_TIME_VALUE_STYLE } from '../../layout/layout.constants'
+import { DATE_TIME_VALUE_STYLE, DESIGN_WIDTH } from '../../layout/layout.constants'
 import { getRouletteColor, ROULETTE_COLOR_HEX } from '../../utils/rouletteColors'
 import {
   createHorizontalGradient,
-  DRAW_GRAY_TO_BLACK_STOPS,
+  DRAW_COLOR_GRADIENTS,
+  getOppositeTimeColor,
   GOLD_BORDER_STOPS,
   GOLD_BORDER_WIDTH,
-  TIME_RED_TO_BLACK_STOPS,
+  TIME_COLOR_GRADIENTS,
 } from '../../utils/gradients'
 import { rightTrapezoidPoints, TIME_BOX_SLANT } from '../../utils/shapes'
 import {
@@ -36,8 +36,6 @@ const TEXT_PADDING = 30
 const TIME_BOX_WIDTH_INSET = 16 // reduce el ancho de la caja TIME
 const BOX_HEIGHT = 44 // misma altura para TIME y DRAW NO., más baja que ROW_HEIGHT
 
-const TIME_FILL_GRADIENT = createHorizontalGradient(TIME_RED_TO_BLACK_STOPS)
-const DRAW_FILL_GRADIENT = createHorizontalGradient(DRAW_GRAY_TO_BLACK_STOPS)
 const GOLD_BORDER_GRADIENT = createHorizontalGradient(GOLD_BORDER_STOPS)
 
 const WINNER_NUMBER_STYLE = new TextStyle({
@@ -60,10 +58,9 @@ const WINNER_LABEL_STYLE = new TextStyle({
 export function WinnerCard() {
   const { t } = useTranslation()
   const currentWinner = useResultsStore((state) => state.currentWinner)
-  const { width: screenWidth } = useScreenSize()
 
-  const tableWidth = screenWidth * TABLE_WIDTH_RATIO
-  const tableX = (screenWidth - tableWidth) / 2
+  const tableWidth = DESIGN_WIDTH * TABLE_WIDTH_RATIO
+  const tableX = (DESIGN_WIDTH - tableWidth) / 2
 
   const drawBoxX = tableWidth * DRAW_COLUMN_RATIO
   const drawBoxWidth =
@@ -76,29 +73,30 @@ export function WinnerCard() {
   const hex = currentWinner
     ? ROULETTE_COLOR_HEX[getRouletteColor(currentWinner.winningNumber)]
     : 0x1a1a1a
+  const timeColor = currentWinner?.timeColor ?? 'red'
 
   const drawTimeBox = useCallback(
     (g: PixiGraphics) => {
       g.clear()
-      g.setFillStyle(TIME_FILL_GRADIENT)
+      g.setFillStyle(TIME_COLOR_GRADIENTS[timeColor])
       g.setStrokeStyle({ width: GOLD_BORDER_WIDTH, fill: GOLD_BORDER_GRADIENT })
       g.poly(rightTrapezoidPoints(0, -BOX_HEIGHT / 2, timeBoxWidth, BOX_HEIGHT, TIME_BOX_SLANT))
       g.fill()
       g.stroke()
     },
-    [timeBoxWidth],
+    [timeBoxWidth, timeColor],
   )
 
   const drawDrawBox = useCallback(
     (g: PixiGraphics) => {
       g.clear()
-      g.setFillStyle(DRAW_FILL_GRADIENT)
+      g.setFillStyle(DRAW_COLOR_GRADIENTS[getOppositeTimeColor(timeColor)])
       g.setStrokeStyle({ width: GOLD_BORDER_WIDTH, fill: GOLD_BORDER_GRADIENT })
       g.rect(drawBoxX, -BOX_HEIGHT / 2, drawBoxWidth, BOX_HEIGHT)
       g.fill()
       g.stroke()
     },
-    [drawBoxX, drawBoxWidth],
+    [drawBoxX, drawBoxWidth, timeColor],
   )
 
   const drawCircle = useCallback(

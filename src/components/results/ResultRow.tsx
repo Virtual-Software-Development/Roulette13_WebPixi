@@ -6,10 +6,11 @@ import type { RouletteResult } from '../../types/result'
 import { getRouletteColor, ROULETTE_COLOR_HEX } from '../../utils/rouletteColors'
 import {
   createHorizontalGradient,
-  DRAW_GRAY_TO_BLACK_STOPS,
+  DRAW_COLOR_GRADIENTS,
+  getOppositeTimeColor,
   GOLD_BORDER_STOPS,
   GOLD_BORDER_WIDTH,
-  TIME_RED_TO_BLACK_STOPS,
+  TIME_COLOR_GRADIENTS,
 } from '../../utils/gradients'
 import { rightTrapezoidPoints, TIME_BOX_SLANT } from '../../utils/shapes'
 
@@ -29,8 +30,6 @@ const BOX_HEIGHT = 44 // misma altura para TIME y DRAW NO., más baja que ROW_HE
 export const WINNER_BOX_WIDTH = 150 // ancho del rectángulo WINNER — ajusta este valor para jugar con su tamaño
 export const WINNER_BOX_GAP = 30 // separación entre DRAW NO. y WINNER — ajusta este valor para probar otras distancias
 
-const TIME_FILL_GRADIENT = createHorizontalGradient(TIME_RED_TO_BLACK_STOPS)
-const DRAW_FILL_GRADIENT = createHorizontalGradient(DRAW_GRAY_TO_BLACK_STOPS)
 const GOLD_BORDER_GRADIENT = createHorizontalGradient(GOLD_BORDER_STOPS)
 
 const ROW_TEXT_STYLE = new TextStyle({
@@ -60,25 +59,25 @@ export function ResultRow({ result, y, width }: ResultRowProps) {
   const drawTimeBox = useCallback(
     (g: PixiGraphics) => {
       g.clear()
-      g.setFillStyle(TIME_FILL_GRADIENT)
+      g.setFillStyle(TIME_COLOR_GRADIENTS[result.timeColor])
       g.setStrokeStyle({ width: GOLD_BORDER_WIDTH, fill: GOLD_BORDER_GRADIENT })
       g.poly(rightTrapezoidPoints(timeBoxX, boxY, timeBoxWidth, BOX_HEIGHT, TIME_BOX_SLANT))
       g.fill()
       g.stroke()
     },
-    [timeBoxWidth, boxY],
+    [timeBoxWidth, boxY, result.timeColor],
   )
 
   const drawDrawBox = useCallback(
     (g: PixiGraphics) => {
       g.clear()
-      g.setFillStyle(DRAW_FILL_GRADIENT)
+      g.setFillStyle(DRAW_COLOR_GRADIENTS[getOppositeTimeColor(result.timeColor)])
       g.setStrokeStyle({ width: GOLD_BORDER_WIDTH, fill: GOLD_BORDER_GRADIENT })
       g.rect(drawBoxX, boxY, drawBoxWidth, BOX_HEIGHT)
       g.fill()
       g.stroke()
     },
-    [drawBoxX, drawBoxWidth, boxY],
+    [drawBoxX, drawBoxWidth, boxY, result.timeColor],
   )
 
   const color = getRouletteColor(result.winningNumber)

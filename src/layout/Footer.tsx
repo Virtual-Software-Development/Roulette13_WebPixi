@@ -6,8 +6,8 @@ import type { Graphics as PixiGraphics } from 'pixi.js'
 import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useTexture } from '../hooks/useTexture'
-import { useScreenSize } from '../hooks/useScreenSize'
-import { DATE_TIME_VALUE_STYLE,LAYOUT } from './layout.constants'
+import { useViewport } from '../hooks/useViewport'
+import { DATE_TIME_VALUE_STYLE, LAYOUT } from './layout.constants'
 import {
   createVerticalGradient,
   DRAW_GRAY_TO_BLACK_STOPS,
@@ -41,12 +41,11 @@ export function Footer({ children }: FooterProps) {
   const nextDrawTime = useGameConfigStore((state) => state.nextDrawTime)
   const showDrawInfo = useGameConfigStore((state) => state.showDrawInfo)
   const showLogo = useGameConfigStore((state) => state.showLogo)
+  const { visibleLeft, visibleRight, visibleBottom } = useViewport()
 
-  const { width,height } = useScreenSize()
-
- const drawBoxWidth = LAYOUT.drawBoxWidth
+  const drawBoxWidth = LAYOUT.drawBoxWidth
 const drawBoxHeight = LAYOUT.drawBoxHeight
-const drawBoxX = width - LAYOUT.padding - drawBoxWidth
+const drawBoxX = visibleRight - LAYOUT.padding - drawBoxWidth
 const drawBoxY = LAYOUT.padding
 const drawBoxBottomSpace = LAYOUT.footerHeight - drawBoxY - drawBoxHeight
 const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
@@ -66,7 +65,7 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
 
 
   return (
-    <pixiContainer x={0} y={height - LAYOUT.footerHeight}>
+    <pixiContainer x={0} y={visibleBottom - LAYOUT.footerHeight}>
       {showLogo && logoTexture && (() => {
         const scale = Math.min(
           LAYOUT.logoBoxSize / logoTexture.width,
@@ -79,7 +78,7 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
         return (
           <pixiSprite
             texture={logoTexture}
-            x={LAYOUT.padding}
+            x={visibleLeft + LAYOUT.padding}
             y={logoY}
             width={logoWidth}
             height={logoHeight}

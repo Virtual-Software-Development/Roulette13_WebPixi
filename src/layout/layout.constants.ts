@@ -1,5 +1,10 @@
 import { TextStyle } from 'pixi.js'
 
+// Resolución de diseño: todo el layout se expresa en estas unidades fijas y
+// ResponsiveStage lo escala/centra según el tamaño real de pantalla.
+export const DESIGN_WIDTH = 2560
+export const DESIGN_HEIGHT = 1440
+
 export const LAYOUT = {
   headerHeight: 160,
   footerHeight: 240,

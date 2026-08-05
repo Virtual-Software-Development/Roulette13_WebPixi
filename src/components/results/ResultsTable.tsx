@@ -1,7 +1,7 @@
 import { extend } from '@pixi/react'
 import { Container } from 'pixi.js'
 import { useResultsStore } from '../../store/useResultsStore'
-import { useScreenSize } from '../../hooks/useScreenSize'
+import { DESIGN_WIDTH } from '../../layout/layout.constants'
 import { ResultRow, ROW_HEIGHT } from './ResultRow'
 
 extend({ Container })
@@ -12,9 +12,8 @@ export const TABLE_WIDTH_RATIO = 0.42
 
 export function ResultsTable() {
   const results = useResultsStore((state) => state.history)
-  const { width: screenWidth } = useScreenSize()
-  const tableWidth = screenWidth * TABLE_WIDTH_RATIO
-  const tableX = (screenWidth - tableWidth) / 2
+  const tableWidth = DESIGN_WIDTH * TABLE_WIDTH_RATIO
+  const tableX = (DESIGN_WIDTH - tableWidth) / 2
 
   return (
     <pixiContainer x={tableX} y={TABLE_TOP_Y}>
