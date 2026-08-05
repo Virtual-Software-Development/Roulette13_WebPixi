@@ -3,6 +3,7 @@ import { SharedLayout } from '../layout/SharedLayout'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useResultsStore } from '../store/useResultsStore'
 import { useTexture } from '../hooks/useTexture'
+import { useViewport } from '../hooks/useViewport'
 import { useScreenSize } from '../hooks/useScreenSize'
 import i18n from '../i18n'
 import backgroundUrl from '../assets/background-test.jpg'
@@ -47,7 +48,8 @@ function RouletteVideoSprite({ onVideoEnd }: RouletteVideoSpriteProps) {
   const setGameConfig = useGameConfigStore((state) => state.setGameConfig)
   const videoUrlFromStore = useGameConfigStore((state) => state.videoUrl)
   const videoTexture = useTexture(videoUrlFromStore)
-  const { width, height } = useScreenSize()
+  const { scale, offsetX, offsetY } = useViewport()
+  const { width: screenWidth, height: screenHeight } = useScreenSize()
   const [isPlaying, setIsPlaying] = useState(true)
 
   useEffect(() => {
@@ -96,7 +98,18 @@ function RouletteVideoSprite({ onVideoEnd }: RouletteVideoSpriteProps) {
 
   if (!videoTexture || !isPlaying) return null
 
+  // El video debe estirarse exacto a la pantalla real (sin recortes, deformando si hace
+  // falta), a diferencia del resto del layout que usa cover sobre el canvas de diseño.
+  // Estos valores cancelan la transformación del padre (scale/offset de ResponsiveStage +
+  // el desplazamiento fijo de headerHeight de SharedLayout) para pintar exactamente
+  // (0,0)-(screenWidth,screenHeight) en píxeles reales.
   return (
-    <pixiSprite texture={videoTexture} x={0} y={-LAYOUT.headerHeight} width={width} height={height} />
+    <pixiSprite
+      texture={videoTexture}
+      x={-offsetX / scale}
+      y={-offsetY / scale - LAYOUT.headerHeight}
+      width={screenWidth / scale}
+      height={screenHeight / scale}
+    />
   )
 }

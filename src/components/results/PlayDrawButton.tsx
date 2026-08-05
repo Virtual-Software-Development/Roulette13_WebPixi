@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { extend } from '@pixi/react'
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
-import { useScreenSize } from '../../hooks/useScreenSize'
+import { useViewport } from '../../hooks/useViewport'
 import {
   createHorizontalGradient,
   DRAW_GRAY_TO_BLACK_STOPS,
@@ -32,7 +32,7 @@ interface PlayDrawButtonProps {
 }
 
 export function PlayDrawButton({ onTap }: PlayDrawButtonProps) {
-  const { width: screenWidth } = useScreenSize()
+  const { visibleRight, visibleTop } = useViewport()
 
   const drawButton = useCallback((g: PixiGraphics) => {
     g.clear()
@@ -45,8 +45,8 @@ export function PlayDrawButton({ onTap }: PlayDrawButtonProps) {
 
   return (
     <pixiContainer
-      x={screenWidth - BUTTON_WIDTH - BUTTON_MARGIN}
-      y={BUTTON_MARGIN}
+      x={visibleRight - BUTTON_WIDTH - BUTTON_MARGIN}
+      y={visibleTop + BUTTON_MARGIN}
       eventMode="static"
       cursor="pointer"
       onPointerTap={onTap}

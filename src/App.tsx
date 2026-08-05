@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Application } from '@pixi/react'
 import { RouletteVideoView } from './screens/RouletteVideoView'
 import { ResultsView } from './screens/ResultsView'
+import { ResponsiveStage } from './layout/ResponsiveStage'
 
 function App() {
   const [screen, setScreen] = useState<'video' | 'results'>('results')
@@ -16,9 +17,11 @@ function App() {
         resolution={window.devicePixelRatio || 1}
         background={0x000000}
       >
-        {screen === 'video'
-          ? <RouletteVideoView onVideoEnd={() => setScreen('results')} />
-          : <ResultsView onStartDraw={() => setScreen('video')} />}
+        <ResponsiveStage>
+          {screen === 'video'
+            ? <RouletteVideoView onVideoEnd={() => setScreen('results')} />
+            : <ResultsView onStartDraw={() => setScreen('video')} />}
+        </ResponsiveStage>
       </Application>
       <div style={{ position: 'fixed', top: 8, left: 8, zIndex: 10, display: 'flex', gap: 4 }}>
         <button onClick={() => i18n.changeLanguage('en-US')}>EN</button>

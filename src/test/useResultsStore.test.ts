@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { useResultsStore } from '../store/useResultsStore'
 import type { RouletteResult } from '../types/result'
 
-function makeResult(overrides: Partial<RouletteResult> = {}): RouletteResult {
+function makeResult(overrides: Partial<Omit<RouletteResult, 'timeColor'>> = {}): Omit<RouletteResult, 'timeColor'> {
   return {
     id: crypto.randomUUID(),
     time: '11:45 AM',
@@ -16,6 +16,7 @@ describe('useResultsStore', () => {
   beforeEach(() => {
     useResultsStore.getState().clearResults()
     useResultsStore.getState().setMaxResults(10)
+    useResultsStore.setState({ lastTimeColor: null })
   })
 
   it('starts with no current winner and no history', () => {
@@ -30,7 +31,7 @@ describe('useResultsStore', () => {
     useResultsStore.getState().addResult(first)
 
     const state = useResultsStore.getState()
-    expect(state.currentWinner).toEqual(first)
+    expect(state.currentWinner).toEqual(expect.objectContaining(first))
     expect(state.history).toEqual([])
   })
 
@@ -39,11 +40,12 @@ describe('useResultsStore', () => {
     const second = makeResult({ drawNumber: '00002' })
 
     useResultsStore.getState().addResult(first)
+    const firstWinner = useResultsStore.getState().currentWinner
     useResultsStore.getState().addResult(second)
 
     const state = useResultsStore.getState()
-    expect(state.currentWinner).toEqual(second)
-    expect(state.history).toEqual([first])
+    expect(state.currentWinner).toEqual(expect.objectContaining(second))
+    expect(state.history).toEqual([firstWinner])
   })
 
   it('drops the oldest history entry once maxResults is exceeded', () => {
@@ -67,5 +69,37 @@ describe('useResultsStore', () => {
     const state = useResultsStore.getState()
     expect(state.currentWinner?.drawNumber).toBe('00003')
     expect(state.history.map((r) => r.drawNumber)).toEqual(['00002'])
+  })
+
+  it('assigns a random valid timeColor to the first result', () => {
+    useResultsStore.getState().addResult(makeResult())
+
+    const { timeColor } = useResultsStore.getState().currentWinner!
+    expect(['red', 'black']).toContain(timeColor)
+  })
+
+  it('alternates timeColor on every subsequent result', () => {
+    useResultsStore.getState().addResult(makeResult({ drawNumber: '1' }))
+    const firstColor = useResultsStore.getState().currentWinner!.timeColor
+
+    useResultsStore.getState().addResult(makeResult({ drawNumber: '2' }))
+    const secondColor = useResultsStore.getState().currentWinner!.timeColor
+
+    useResultsStore.getState().addResult(makeResult({ drawNumber: '3' }))
+    const thirdColor = useResultsStore.getState().currentWinner!.timeColor
+
+    expect(secondColor).not.toBe(firstColor)
+    expect(thirdColor).toBe(firstColor)
+  })
+
+  it('keeps alternating timeColor across a clearResults reset', () => {
+    useResultsStore.getState().addResult(makeResult({ drawNumber: '1' }))
+    const firstColor = useResultsStore.getState().currentWinner!.timeColor
+
+    useResultsStore.getState().clearResults()
+    useResultsStore.getState().addResult(makeResult({ drawNumber: '2' }))
+    const secondColor = useResultsStore.getState().currentWinner!.timeColor
+
+    expect(secondColor).not.toBe(firstColor)
   })
 })

@@ -3,7 +3,7 @@ import { Container, Text } from 'pixi.js'
 import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useClock } from '../hooks/useClock'
-import { useScreenSize } from '../hooks/useScreenSize'
+import { useViewport } from '../hooks/useViewport'
 import { DATE_TIME_LABEL_STYLE, DATE_TIME_VALUE_STYLE, LAYOUT, TITLE_STYLE } from './layout.constants'
 
 extend({ Container, Text })
@@ -18,12 +18,12 @@ export function Header() {
   const showTitle = useGameConfigStore((state) => state.showTitle)
   const showDateTime = useGameConfigStore((state) => state.showDateTime)
   const { date, time } = useClock()
-  const { width } = useScreenSize()
+  const { visibleLeft, visibleTop, visibleRight } = useViewport()
 
-  const rightEdgeX = width - LAYOUT.padding
+  const rightEdgeX = visibleRight - LAYOUT.padding
   const rightAnchor = { x: 1, y: 0 }
 
-  const dateLabelY = LAYOUT.padding
+  const dateLabelY = visibleTop + LAYOUT.padding
   const dateValueY = dateLabelY + LABEL_TO_VALUE_GAP
   const timeLabelY = dateValueY + VALUE_HEIGHT + BLOCK_GAP
   const timeValueY = timeLabelY + LABEL_TO_VALUE_GAP
@@ -34,8 +34,8 @@ export function Header() {
         <pixiText
         text={gameName}
         style={TITLE_STYLE}
-        x={LAYOUT.padding}
-        y={LAYOUT.padding}
+        x={visibleLeft + LAYOUT.padding}
+        y={visibleTop + LAYOUT.padding}
       />
       }
       
