@@ -28,7 +28,13 @@ dist-ssr
 
 # Environment variables (per-developer secrets/config)
 .env
+.env.local
 .env.*.local
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+!.env.example
 
 # Test coverage output
 coverage/
