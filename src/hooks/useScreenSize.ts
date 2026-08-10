@@ -27,8 +27,17 @@ export function useScreenSize(): ScreenSize {
     }
 
     handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+
+    // Pixi's ResizePlugin also listens to window's 'resize' event, but defers
+    // the actual renderer.resize() to the next requestAnimationFrame instead
+    // of doing it synchronously. Listening to window's 'resize' directly here
+    // would race that and read the stale pre-resize app.screen size. Pixi's
+    // renderer emits its own 'resize' event right after it applies the real
+    // resize (AbstractRenderer.resize()), so we listen to that instead.
+    app?.renderer?.on('resize', handleResize)
+    return () => {
+      app?.renderer?.off('resize', handleResize)
+    }
   }, [app, isInitialised])
 
   return size

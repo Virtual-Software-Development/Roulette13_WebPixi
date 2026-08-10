@@ -28,6 +28,22 @@ const DRAW_BOX_LABEL_STYLE = new TextStyle({
   fill: 0xffffff,
 })
 
+const LOGO_FALLBACK_CORNER_RADIUS = 8
+// El cuadro nominal (logoBoxSize) es más alto que el propio footer — un logo
+// real nunca lo nota porque su sprite se escala por aspect ratio, pero el
+// fallback dibuja un cuadrado fijo, así que se acota al alto disponible para
+// no desbordar el footer (dejando el mismo aire que logoBoxSize/padding).
+const LOGO_FALLBACK_SIZE = Math.min(LAYOUT.logoBoxSize, LAYOUT.footerHeight - LAYOUT.padding)
+
+const LOGO_FALLBACK_LABEL_STYLE = new TextStyle({
+  fontFamily: 'Arial',
+  fontSize: 18,
+  fill: 0xc9c9d1,
+  align: 'center',
+  wordWrap: true,
+  wordWrapWidth: LOGO_FALLBACK_SIZE - LAYOUT.padding,
+})
+
 interface FooterProps {
   children?: ReactNode
 }
@@ -35,7 +51,7 @@ interface FooterProps {
 export function Footer({ children }: FooterProps) {
   const { t } = useTranslation()
   const logoUrl = useGameConfigStore((state) => state.logoUrl)
-  const logoTexture = useTexture(logoUrl)
+  const { texture: logoTexture, failed: logoFailed } = useTexture(logoUrl)
 
   const drawNumber = useGameConfigStore((state) => state.drawNumber)
   const nextDrawTime = useGameConfigStore((state) => state.nextDrawTime)
@@ -62,7 +78,16 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
     [drawBoxWidth, drawBoxHeight],
   )
 
+  const drawLogoFallback = useCallback((g: PixiGraphics) => {
+    g.clear()
+    g.setFillStyle({ color: 0x2b2b33, alpha: 0.4 })
+    g.setStrokeStyle({ width: 2, color: 0x8a8a96 })
+    g.roundRect(0, 0, LOGO_FALLBACK_SIZE, LOGO_FALLBACK_SIZE, LOGO_FALLBACK_CORNER_RADIUS)
+    g.fill()
+    g.stroke()
+  }, [])
 
+  const logoY = (LAYOUT.footerHeight - LOGO_FALLBACK_SIZE) / 2
 
   return (
     <pixiContainer x={0} y={visibleBottom - LAYOUT.footerHeight}>
@@ -73,18 +98,31 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
         )
         const logoWidth = logoTexture.width * scale
         const logoHeight = logoTexture.height * scale
-        const logoY = (LAYOUT.footerHeight - logoHeight) / 2
+        const spriteY = (LAYOUT.footerHeight - logoHeight) / 2
 
         return (
           <pixiSprite
             texture={logoTexture}
             x={visibleLeft + LAYOUT.padding}
-            y={logoY}
+            y={spriteY}
             width={logoWidth}
             height={logoHeight}
           />
         )
       })()}
+
+      {showLogo && !logoTexture && logoFailed && (
+        <pixiContainer x={visibleLeft + LAYOUT.padding} y={logoY}>
+          <pixiGraphics draw={drawLogoFallback} />
+          <pixiText
+            text={t('media.logoNotFound')}
+            style={LOGO_FALLBACK_LABEL_STYLE}
+            x={LOGO_FALLBACK_SIZE / 2}
+            y={LOGO_FALLBACK_SIZE / 2}
+            anchor={{ x: 0.5, y: 0.5 }}
+          />
+        </pixiContainer>
+      )}
 
         { showDrawInfo && (
     <pixiContainer x={drawBoxX} y={drawBoxY}>

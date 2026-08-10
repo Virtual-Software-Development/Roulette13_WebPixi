@@ -10,5 +10,9 @@
     "time": "TIME",
     "drawNo": "DRAW NO.",
     "winner": "WINNER"
+  },
+  "media": {
+    "logoNotFound": "Logo not found",
+    "imageNotAvailable": "Image not available"
   }
 }
