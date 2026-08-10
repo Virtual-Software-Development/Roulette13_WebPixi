@@ -102,4 +102,40 @@ describe('useResultsStore', () => {
 
     expect(secondColor).not.toBe(firstColor)
   })
+
+  describe('hydrateHistory', () => {
+    it('sets the first entry as currentWinner and the rest as history, with alternating colors', () => {
+      useResultsStore.getState().hydrateHistory([
+        makeResult({ drawNumber: '3' }),
+        makeResult({ drawNumber: '2' }),
+        makeResult({ drawNumber: '1' }),
+      ])
+
+      const state = useResultsStore.getState()
+      expect(state.currentWinner?.drawNumber).toBe('3')
+      expect(state.history.map((r) => r.drawNumber)).toEqual(['2', '1'])
+      expect(state.currentWinner!.timeColor).not.toBe(state.history[0].timeColor)
+      expect(state.history[0].timeColor).not.toBe(state.history[1].timeColor)
+    })
+
+    it('keeps alternation consistent with a later addResult', () => {
+      useResultsStore.getState().hydrateHistory([makeResult({ drawNumber: '2' }), makeResult({ drawNumber: '1' })])
+      const winnerColor = useResultsStore.getState().currentWinner!.timeColor
+
+      useResultsStore.getState().addResult(makeResult({ drawNumber: '3' }))
+
+      const state = useResultsStore.getState()
+      expect(state.currentWinner!.timeColor).not.toBe(winnerColor)
+      expect(state.history[0].drawNumber).toBe('2')
+    })
+
+    it('clears currentWinner and history when given an empty array', () => {
+      useResultsStore.getState().addResult(makeResult({ drawNumber: '1' }))
+      useResultsStore.getState().hydrateHistory([])
+
+      const state = useResultsStore.getState()
+      expect(state.currentWinner).toBeNull()
+      expect(state.history).toEqual([])
+    })
+  })
 })

@@ -10,5 +10,9 @@
     "time": "HORA",
     "drawNo": "N° SORTEO",
     "winner": "GANADOR"
+  },
+  "media": {
+    "logoNotFound": "Logo no encontrado",
+    "imageNotAvailable": "Imagen no disponible"
   }
 }

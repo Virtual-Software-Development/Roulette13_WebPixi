@@ -8,6 +8,7 @@ interface ResultsState {
   maxResults: number
   lastTimeColor: TimeColor | null
   addResult: (result: Omit<RouletteResult, 'timeColor'>) => void
+  hydrateHistory: (results: Omit<RouletteResult, 'timeColor'>[]) => void
   setMaxResults: (n: number) => void
   clearResults: () => void
 }
@@ -29,6 +30,21 @@ export const useResultsStore = create<ResultsState>((set) => ({
           ? [state.currentWinner, ...state.history].slice(0, state.maxResults)
           : state.history,
       }
+    }),
+
+  hydrateHistory: (results) =>
+    set((state) => {
+      if (results.length === 0) return { currentWinner: null, history: [] }
+
+      let color = state.lastTimeColor ? getOppositeTimeColor(state.lastTimeColor) : pickRandomTimeColor()
+      const withColors = results.map((r) => {
+        const entry = { ...r, timeColor: color }
+        color = getOppositeTimeColor(color)
+        return entry
+      })
+      const [currentWinner, ...history] = withColors
+
+      return { currentWinner, history, lastTimeColor: currentWinner.timeColor }
     }),
 
   setMaxResults: (n) => set({ maxResults: n }),

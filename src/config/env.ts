@@ -1,4 +1,4 @@
-const required = ['VITE_API_URL', 'VITE_API_KEY'] as const
+const required = ['VITE_API_KEY'] as const
 
 for (const key of required) {
   if (!import.meta.env[key]) {
@@ -7,6 +7,5 @@ for (const key of required) {
 }
 
 export const env = {
-  apiUrl: import.meta.env.VITE_API_URL,
   apiKey: import.meta.env.VITE_API_KEY,
 } as const
