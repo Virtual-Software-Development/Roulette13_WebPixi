@@ -5,9 +5,12 @@ import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
 import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
+import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useTexture } from '../hooks/useTexture'
 import { useViewport } from '../hooks/useViewport'
-import { DATE_TIME_VALUE_STYLE, LAYOUT } from './layout.constants'
+import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
+import { easeInOutCubic } from '../utils/easing'
+import { DATE_TIME_VALUE_STYLE, LAYOUT, SIDE_EXIT_DISTANCE, TRANSITION_DURATION_MS } from './layout.constants'
 import {
   createVerticalGradient,
   DRAW_GRAY_TO_BLACK_STOPS,
@@ -59,12 +62,16 @@ export function Footer({ children }: FooterProps) {
   const showLogo = useGameConfigStore((state) => state.showLogo)
   const { visibleLeft, visibleRight, visibleBottom } = useViewport()
 
+  const active = useDrawCycleStore((state) => state.active)
+  // El logo sale hacia la izquierda y el cuadro de sorteo hacia la derecha
+  // mientras el video está en pantalla; vuelven cuando active vuelve a false.
+  const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS)
+  const exitOffset = easeInOutCubic(progress) * SIDE_EXIT_DISTANCE
+
   const drawBoxWidth = LAYOUT.drawBoxWidth
 const drawBoxHeight = LAYOUT.drawBoxHeight
-const drawBoxX = visibleRight - LAYOUT.padding - drawBoxWidth
+const drawBoxX = visibleRight - LAYOUT.padding - drawBoxWidth + exitOffset
 const drawBoxY = LAYOUT.padding
-const drawBoxBottomSpace = LAYOUT.footerHeight - drawBoxY - drawBoxHeight
-const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
 
   const drawDrawBox = useCallback(
     (g: PixiGraphics) => {
@@ -103,7 +110,7 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
         return (
           <pixiSprite
             texture={logoTexture}
-            x={visibleLeft + LAYOUT.padding}
+            x={visibleLeft + LAYOUT.padding - exitOffset}
             y={spriteY}
             width={logoWidth}
             height={logoHeight}
@@ -112,7 +119,7 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
       })()}
 
       {showLogo && !logoTexture && logoFailed && (
-        <pixiContainer x={visibleLeft + LAYOUT.padding} y={logoY}>
+        <pixiContainer x={visibleLeft + LAYOUT.padding - exitOffset} y={logoY}>
           <pixiGraphics draw={drawLogoFallback} />
           <pixiText
             text={t('media.logoNotFound')}
@@ -132,7 +139,7 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
         text={t('footer.draw')}
         style={DRAW_BOX_LABEL_STYLE}
         x={drawBoxWidth / 2}
-        y={drawBoxHeight * 0.2}
+        y={drawBoxHeight * 0.18}
         anchor={{ x: 0.5, y: 0.5 }}
       />
 
@@ -140,7 +147,7 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
         text={drawNumber}
         style={DATE_TIME_VALUE_STYLE}
         x={drawBoxWidth / 2}
-        y={drawBoxHeight * 0.65}
+        y={drawBoxHeight * 0.5}
         anchor={{ x: 0.5, y: 0.5 }}
       />
 
@@ -148,7 +155,7 @@ const nextDrawTimeY = drawBoxHeight + drawBoxBottomSpace / 2
         text={nextDrawTime}
         style={DATE_TIME_VALUE_STYLE}
         x={drawBoxWidth / 2}
-        y={nextDrawTimeY}
+        y={drawBoxHeight * 0.82}
         anchor={{ x: 0.5, y: 0.5 }}
       />
     </pixiContainer>

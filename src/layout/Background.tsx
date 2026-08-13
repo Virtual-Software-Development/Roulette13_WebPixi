@@ -20,6 +20,15 @@ const ICON_HEIGHT = 200
 const ICON_X = (DESIGN_WIDTH - ICON_WIDTH) / 2
 const ICON_Y = (DESIGN_HEIGHT - ICON_HEIGHT) / 2 - 60
 
+const OVERLAY_ALPHA = 0.6
+
+function drawOverlay(g: PixiGraphics) {
+  g.clear()
+  g.setFillStyle({ color: 0x000000, alpha: OVERLAY_ALPHA })
+  g.rect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT)
+  g.fill()
+}
+
 function drawMediaErrorFallback(g: PixiGraphics) {
   g.clear()
 
@@ -58,7 +67,12 @@ export function Background() {
 
   if (texture) {
     const { width, height, x, y } = getCoverFit(texture.width, texture.height, DESIGN_WIDTH, DESIGN_HEIGHT)
-    return <pixiSprite texture={texture} x={x} y={y} width={width} height={height} />
+    return (
+      <>
+        <pixiSprite texture={texture} x={x} y={y} width={width} height={height} />
+        <pixiGraphics draw={drawOverlay} />
+      </>
+    )
   }
 
   if (!failed) return null
@@ -73,6 +87,7 @@ export function Background() {
         y={ICON_Y + ICON_HEIGHT + 60}
         anchor={{ x: 0.5, y: 0.5 }}
       />
+      <pixiGraphics draw={drawOverlay} />
     </>
   )
 }

@@ -2,9 +2,12 @@ import { extend } from '@pixi/react'
 import { Container, Text } from 'pixi.js'
 import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
+import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useClock } from '../hooks/useClock'
 import { useViewport } from '../hooks/useViewport'
-import { DATE_TIME_LABEL_STYLE, DATE_TIME_VALUE_STYLE, LAYOUT, TITLE_STYLE } from './layout.constants'
+import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
+import { easeInOutCubic } from '../utils/easing'
+import { DATE_TIME_LABEL_STYLE, DATE_TIME_VALUE_STYLE, LAYOUT, SIDE_EXIT_DISTANCE, TITLE_STYLE, TRANSITION_DURATION_MS } from './layout.constants'
 
 extend({ Container, Text })
 
@@ -20,7 +23,13 @@ export function Header() {
   const { date, time } = useClock()
   const { visibleLeft, visibleTop, visibleRight } = useViewport()
 
-  const rightEdgeX = visibleRight - LAYOUT.padding
+  const active = useDrawCycleStore((state) => state.active)
+  // El título sale hacia la izquierda y el bloque de fecha/hora hacia la derecha
+  // mientras el video está en pantalla; vuelven cuando active vuelve a false.
+  const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS)
+  const exitOffset = easeInOutCubic(progress) * SIDE_EXIT_DISTANCE
+
+  const rightEdgeX = visibleRight - LAYOUT.padding + exitOffset
   const rightAnchor = { x: 1, y: 0 }
 
   const dateLabelY = visibleTop + LAYOUT.padding
@@ -34,11 +43,11 @@ export function Header() {
         <pixiText
         text={gameName}
         style={TITLE_STYLE}
-        x={visibleLeft + LAYOUT.padding}
+        x={visibleLeft + LAYOUT.padding - exitOffset}
         y={visibleTop + LAYOUT.padding}
       />
       }
-      
+
      {showDateTime && (
         <>
           <pixiText
@@ -74,7 +83,7 @@ export function Header() {
           />
         </>
       )}
-      
+
     </pixiContainer>
   )
 }

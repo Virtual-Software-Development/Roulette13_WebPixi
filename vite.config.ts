@@ -1,13 +1,14 @@
 /// <reference types="vitest/config" />
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { createMediaHandler } from './server/mediaHandler.js'
+import { createMediaHandler, createMediaListHandler } from './server/mediaHandler.js'
 
 function localMediaPlugin(mediaRoot: string): Plugin {
   return {
     name: 'local-media',
     configureServer(server) {
       server.middlewares.use(createMediaHandler({ mediaRoot }))
+      server.middlewares.use(createMediaListHandler({ mediaRoot }))
     },
   }
 }

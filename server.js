@@ -2,7 +2,7 @@ import fs from 'fs'
 import http from 'http'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { createMediaHandler } from './server/mediaHandler.js'
+import { createMediaHandler, createMediaListHandler } from './server/mediaHandler.js'
 import { createApiProxyHandler } from './server/apiProxy.js'
 
 try {
@@ -17,6 +17,10 @@ const port = process.env.PORT ?? 4000
 const mediaHandler = createMediaHandler({
   mediaRoot: process.env.MEDIA_ROOT ?? './local-media',
   prefix: '/media/',
+})
+const mediaListHandler = createMediaListHandler({
+  mediaRoot: process.env.MEDIA_ROOT ?? './local-media',
+  prefix: '/media-list/',
 })
 const apiProxyHandler = createApiProxyHandler({
   target: process.env.API_URL ?? 'http://localhost:3000',
@@ -57,7 +61,9 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer((req, res) => {
-  mediaHandler(req, res, () => apiProxyHandler(req, res, () => serveStatic(req, res)))
+  mediaHandler(req, res, () =>
+    mediaListHandler(req, res, () => apiProxyHandler(req, res, () => serveStatic(req, res)))
+  )
 })
 
 server.listen(port, () => {

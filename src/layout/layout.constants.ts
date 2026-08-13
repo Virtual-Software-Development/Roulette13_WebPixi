@@ -11,8 +11,16 @@ export const LAYOUT = {
   padding: 40,
   logoBoxSize: 250,
   drawBoxWidth: 220,
-  drawBoxHeight: 140,
+  drawBoxHeight: 160,
 }
+
+// Transición Results <-> Video: cuánto dura cada deslizamiento, cuánto se mueven
+// los elementos que salen de escena, y cuánto queda el video congelado en su
+// último frame antes de volver.
+export const TRANSITION_DURATION_MS = 550
+export const RESULT_HOLD_MS = 3000
+export const SIDE_EXIT_DISTANCE = 600
+export const BODY_EXIT_DISTANCE = DESIGN_HEIGHT
 
 export const TITLE_STYLE = new TextStyle({
   fontFamily: 'Arial',
