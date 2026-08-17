@@ -20,7 +20,7 @@ const ICON_HEIGHT = 200
 const ICON_X = (DESIGN_WIDTH - ICON_WIDTH) / 2
 const ICON_Y = (DESIGN_HEIGHT - ICON_HEIGHT) / 2 - 60
 
-const OVERLAY_ALPHA = 0.6
+const OVERLAY_ALPHA = 0.7
 
 function drawOverlay(g: PixiGraphics) {
   g.clear()

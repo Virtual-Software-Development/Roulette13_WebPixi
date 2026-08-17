@@ -10,26 +10,9 @@ import { useTexture } from '../hooks/useTexture'
 import { useViewport } from '../hooks/useViewport'
 import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
 import { easeInOutCubic } from '../utils/easing'
-import { DATE_TIME_VALUE_STYLE, LAYOUT, SIDE_EXIT_DISTANCE, TRANSITION_DURATION_MS } from './layout.constants'
-import {
-  createVerticalGradient,
-  DRAW_GRAY_TO_BLACK_STOPS,
-  GOLD_BORDER_STOPS,
-  GOLD_BORDER_WIDTH,
-} from '../utils/gradients'
+import { LAYOUT, SIDE_EXIT_DISTANCE, TRANSITION_DURATION_MS } from './layout.constants'
 
 extend({ Container, Graphics, Sprite, Text })
-
-const DRAW_BOX_CORNER_RADIUS = 12
-const DRAW_BOX_FILL_GRADIENT = createVerticalGradient(DRAW_GRAY_TO_BLACK_STOPS)
-const DRAW_BOX_BORDER_GRADIENT = createVerticalGradient(GOLD_BORDER_STOPS)
-
-const DRAW_BOX_LABEL_STYLE = new TextStyle({
-  fontFamily: 'Arial',
-  fontWeight: 'bold',
-  fontSize: 16,
-  fill: 0xffffff,
-})
 
 const LOGO_FALLBACK_CORNER_RADIUS = 8
 // El cuadro nominal (logoBoxSize) es más alto que el propio footer — un logo
@@ -51,39 +34,21 @@ interface FooterProps {
   children?: ReactNode
 }
 
+// El próximo sorteo se fusionó con el panel de estado de Header.tsx (arriba
+// a la derecha); Footer sólo conserva el logo (abajo a la izquierda), lo que
+// deja la esquina inferior derecha libre para la foto de fondo.
 export function Footer({ children }: FooterProps) {
   const { t } = useTranslation()
   const logoUrl = useGameConfigStore((state) => state.logoUrl)
   const { texture: logoTexture, failed: logoFailed } = useTexture(logoUrl)
-
-  const drawNumber = useGameConfigStore((state) => state.drawNumber)
-  const nextDrawTime = useGameConfigStore((state) => state.nextDrawTime)
-  const showDrawInfo = useGameConfigStore((state) => state.showDrawInfo)
   const showLogo = useGameConfigStore((state) => state.showLogo)
-  const { visibleLeft, visibleRight, visibleBottom } = useViewport()
+  const { visibleLeft, visibleBottom } = useViewport()
 
   const active = useDrawCycleStore((state) => state.active)
-  // El logo sale hacia la izquierda y el cuadro de sorteo hacia la derecha
-  // mientras el video está en pantalla; vuelven cuando active vuelve a false.
+  // El logo sale hacia la izquierda mientras el video está en pantalla;
+  // vuelve cuando active vuelve a false.
   const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS)
   const exitOffset = easeInOutCubic(progress) * SIDE_EXIT_DISTANCE
-
-  const drawBoxWidth = LAYOUT.drawBoxWidth
-const drawBoxHeight = LAYOUT.drawBoxHeight
-const drawBoxX = visibleRight - LAYOUT.padding - drawBoxWidth + exitOffset
-const drawBoxY = LAYOUT.padding
-
-  const drawDrawBox = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      g.setFillStyle(DRAW_BOX_FILL_GRADIENT)
-      g.setStrokeStyle({ width: GOLD_BORDER_WIDTH, fill: DRAW_BOX_BORDER_GRADIENT })
-      g.roundRect(0, 0, drawBoxWidth, drawBoxHeight, DRAW_BOX_CORNER_RADIUS)
-      g.fill()
-      g.stroke()
-    },
-    [drawBoxWidth, drawBoxHeight],
-  )
 
   const drawLogoFallback = useCallback((g: PixiGraphics) => {
     g.clear()
@@ -130,36 +95,6 @@ const drawBoxY = LAYOUT.padding
           />
         </pixiContainer>
       )}
-
-        { showDrawInfo && (
-    <pixiContainer x={drawBoxX} y={drawBoxY}>
-      <pixiGraphics draw={drawDrawBox} />
-
-      <pixiText
-        text={t('footer.draw')}
-        style={DRAW_BOX_LABEL_STYLE}
-        x={drawBoxWidth / 2}
-        y={drawBoxHeight * 0.18}
-        anchor={{ x: 0.5, y: 0.5 }}
-      />
-
-      <pixiText
-        text={drawNumber}
-        style={DATE_TIME_VALUE_STYLE}
-        x={drawBoxWidth / 2}
-        y={drawBoxHeight * 0.5}
-        anchor={{ x: 0.5, y: 0.5 }}
-      />
-
-      <pixiText
-        text={nextDrawTime}
-        style={DATE_TIME_VALUE_STYLE}
-        x={drawBoxWidth / 2}
-        y={drawBoxHeight * 0.82}
-        anchor={{ x: 0.5, y: 0.5 }}
-      />
-    </pixiContainer>
-  )}
 
       {children}
     </pixiContainer>
