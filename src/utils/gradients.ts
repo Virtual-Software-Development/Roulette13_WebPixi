@@ -24,6 +24,9 @@ export const DRAW_BLACK_TO_RED_STOPS = [
   { offset: 1, color: 0x860f10 },
 ]
 
+// Color del resplandor (GlowFilter) alrededor del chip del ganador "en vivo".
+export const LIVE_HALO_COLOR = 0xc9a227
+
 export function createHorizontalGradient(colorStops: { offset: number; color: number }[]) {
   return new FillGradient({ start: { x: 0, y: 0.5 }, end: { x: 1, y: 0.5 }, colorStops })
 }

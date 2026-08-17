@@ -3,27 +3,26 @@ import { Assets } from 'pixi.js'
 import { Application } from '@pixi/react'
 import { RouletteVideoView } from './screens/RouletteVideoView'
 import { ResultsView } from './screens/ResultsView'
-import { LoadingView } from './screens/LoadingView'
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { fetchGameInfo } from './api/gameInfo'
 import { applyGameInfo } from './api/applyGameInfo'
 import { fetchDrawResult } from './api/drawResult'
 import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
-import { buildDrawResultVideoUrl } from './utils/media'
+import { pickRandomDrawResultVideoUrl } from './utils/media'
 import { parseApiDateTime } from './utils/time'
 
 const RESULT_LEAD_MS = 500
 
 function App() {
-  const [screen, setScreen] = useState<'video' | 'loading' | 'results'>('results')
+  const [videoMounted, setVideoMounted] = useState(false)
 
   // Agenda el próximo sorteo: pide /gameInfo, y programa dos timers según
   // nextDraw.startTime — uno para pedir /drawResult 500ms antes (y precargar
-  // el video), y otro para, justo a la hora del sorteo, mostrar el loader y
-  // recién pasar a la vista de video cuando el preload (videoReadyPromise)
-  // termine — el margen de 500ms no alcanza para bufferizar el video, así que
-  // el loader cubre esa espera en vez de dejar la pantalla congelada.
+  // el video), y otro para, justo a la hora del sorteo, activar la secuencia de
+  // video (ResultsView se queda visible hasta ese momento, sin loader) — el
+  // margen de 500ms no alcanza para bufferizar el video, así que se espera al
+  // preload (videoReadyPromise) antes de activarla si todavía no terminó.
   const scheduleDraw = useCallback((isCancelled: () => boolean, seedHistory: boolean) => {
     let resultTimer: ReturnType<typeof setTimeout> | undefined
     let startTimer: ReturnType<typeof setTimeout> | undefined
@@ -41,12 +40,14 @@ function App() {
         resultTimer = setTimeout(() => {
           if (isCancelled()) return
           videoReadyPromise = fetchDrawResult(drawNo)
-            .then(({ result, video }) => {
+            .then(({ result }) => {
               if (isCancelled()) return
-              const videoUrl = buildDrawResultVideoUrl(result, video)
-              useDrawCycleStore.getState().setPendingResult({ drawNo, result, video })
-              useGameConfigStore.getState().setGameConfig({ videoUrl })
-              return Assets.load(videoUrl)
+              return pickRandomDrawResultVideoUrl(result).then((videoUrl) => {
+                if (isCancelled()) return
+                useDrawCycleStore.getState().setPendingResult({ drawNo, result })
+                useGameConfigStore.getState().setGameConfig({ videoUrl })
+                return Assets.load(videoUrl)
+              })
             })
             .then(
               () => {},
@@ -56,9 +57,10 @@ function App() {
 
         startTimer = setTimeout(() => {
           if (isCancelled()) return
-          setScreen('loading')
           const showVideo = () => {
-            if (!isCancelled()) setScreen('video')
+            if (isCancelled()) return
+            useDrawCycleStore.getState().setActive(true)
+            setVideoMounted(true)
           }
           if (videoReadyPromise) {
             videoReadyPromise.then(showVideo)
@@ -84,8 +86,11 @@ function App() {
     }
   }, [scheduleDraw])
 
-  const handleVideoEnd = useCallback(() => {
-    setScreen('results')
+  // Se llama recién cuando el video ya terminó de bajar de vuelta a su lugar de
+  // partida (después del hold sobre el resultado) — recién ahí es seguro
+  // desmontarlo y programar el siguiente sorteo.
+  const handleFullyExited = useCallback(() => {
+    setVideoMounted(false)
     scheduleDraw(() => false, false)
   }, [scheduleDraw])
 
@@ -94,13 +99,13 @@ function App() {
       <Application
         autoDensity={true}
         resizeTo={window}
-        resolution={window.devicePixelRatio || 1}
+        resolution={Math.min(window.devicePixelRatio || 1, 1.5)}
+        powerPreference="high-performance"
         background={0x000000}
       >
         <ResponsiveStage>
-          {screen === 'video' && <RouletteVideoView onVideoEnd={handleVideoEnd} />}
-          {screen === 'loading' && <LoadingView />}
-          {screen === 'results' && <ResultsView />}
+          <ResultsView />
+          {videoMounted && <RouletteVideoView onFullyExited={handleFullyExited} />}
         </ResponsiveStage>
       </Application>
     </>

@@ -2,7 +2,7 @@
 
 export type RouletteColor = 'red' | 'black' | 'green'
 
-const RED_NUMBERS = new Set<number>([ 1, 3, 5, 7, 9,12 ])
+const RED_NUMBERS = new Set<number>([ 1, 3, 5, 7, 9,11 ])
 
 export function getRouletteColor(number: number): RouletteColor {
   if (number === 0) {
