@@ -28,7 +28,16 @@ dist-ssr
 
 # Environment variables (per-developer secrets/config)
 .env
+.env.local
 .env.*.local
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+!.env.example
+
+# Local media served at runtime (per-machine video/photo files)
+local-media/
 
 # Test coverage output
 coverage/
