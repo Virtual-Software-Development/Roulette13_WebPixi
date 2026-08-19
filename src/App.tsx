@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Assets } from 'pixi.js'
+import { Assets, Texture } from 'pixi.js'
 import { Application } from '@pixi/react'
 import { RouletteVideoView } from './screens/RouletteVideoView'
 import { ResultsView } from './screens/ResultsView'
@@ -46,7 +46,7 @@ function App() {
                 if (isCancelled()) return
                 useDrawCycleStore.getState().setPendingResult({ drawNo, result })
                 useGameConfigStore.getState().setGameConfig({ videoUrl })
-                return Assets.load(videoUrl)
+                return Assets.load<Texture>({ src: videoUrl, data: { autoPlay: false } })
               })
             })
             .then(
@@ -99,7 +99,7 @@ function App() {
       <Application
         autoDensity={true}
         resizeTo={window}
-        resolution={Math.min(window.devicePixelRatio || 1, 1.5)}
+        resolution={Math.min(window.devicePixelRatio || 1, 1)}
         powerPreference="high-performance"
         background={0x000000}
       >
