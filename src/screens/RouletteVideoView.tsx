@@ -1,4 +1,4 @@
-import { useEffect,useMemo } from 'react'
+import { useEffect } from 'react'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
@@ -6,10 +6,30 @@ import { useTexture } from '../hooks/useTexture'
 import { useViewport } from '../hooks/useViewport'
 import { useScreenSize } from '../hooks/useScreenSize'
 import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
-import { LumaKeyFilter } from '../pixi/filters/LumaKeyFilter'
+import { ChromaKeyFilter } from '../pixi/filters/ChromaKeyFilter'
 import { RESULT_HOLD_MS, TRANSITION_DURATION_MS } from '../layout/layout.constants'
 import { easeInOutCubic } from '../utils/easing'
 import i18n from '../i18n'
+
+// Vuelve transparente el fondo azul sólido (#0000CF) de los videos locales para que se vea
+// el Background de ResultsView (siempre montado detrás) en su lugar. Instancia única a nivel
+// de módulo — RouletteVideoView se desmonta y remonta por completo en cada sorteo, así que
+// crearla acá (en vez de con useMemo dentro del componente) evita recompilar el shader en cada sorteo.
+//
+// Nota: existe también AlphaMatteFilter (src/pixi/filters/AlphaMatteFilter.ts) para videos
+// re-exportados con una máscara de alpha "cocinada" lado a lado en el mismo frame — no se usa
+// acá porque los .webm ya traen alpha real embebida (ver hasNativeAlpha más abajo).
+const ROULETTE_CHROMA_KEY_FILTER = new ChromaKeyFilter()
+
+// Los videos exportados por el pipeline de Unity (RuntimeVideoRecorder → VP9 con alpha real,
+// yuva420p) se entregan en .webm y ya traen su propia transparencia correcta — Chrome/Edge
+// preservan ese canal al subir el frame como textura de WebGL, así que no hay que aplicarles
+// ningún filtro (aplicar ChromaKeyFilter de todas formas podría "agujerear" por error una zona
+// azulada del sujeto que en realidad debía quedar opaca). Los videos viejos (.mp4/.mov) siguen
+// teniendo fondo azul sólido quemado y sí necesitan el chroma-key.
+function hasNativeAlpha(url: string): boolean {
+  return url.toLowerCase().endsWith('.webm')
+}
 
 interface RouletteVideoViewProps {
   // Se llama recién cuando el video termina de bajar de vuelta a su posición
@@ -31,10 +51,6 @@ function RouletteVideoSprite({ onFullyExited }: RouletteVideoSpriteProps) {
   const { scale, offsetX, offsetY } = useViewport()
   const { width: screenWidth, height: screenHeight } = useScreenSize()
   const active = useDrawCycleStore((state) => state.active)
-  // Vuelve transparente el fondo negro quemado en los videos locales para que se vea
-  // el Background de ResultsView (siempre montado detrás) en su lugar.
-  const lumaKeyFilter = useMemo(() => new LumaKeyFilter(), [])
-
   // progress 0 = oculto abajo de la pantalla, 1 = en su posición final mostrándose.
   // Sube cuando active pasa a true, y baja cuando vuelve a false — el mismo cálculo
   // sirve para la entrada y, en reversa, para la salida.
@@ -111,7 +127,7 @@ function RouletteVideoSprite({ onFullyExited }: RouletteVideoSpriteProps) {
       y={y}
       width={screenWidth / scale}
       height={screenHeight / scale}
-      filters={[lumaKeyFilter]}
+      filters={hasNativeAlpha(videoUrlFromStore) ? undefined : [ROULETTE_CHROMA_KEY_FILTER]}
     />
   )
 }

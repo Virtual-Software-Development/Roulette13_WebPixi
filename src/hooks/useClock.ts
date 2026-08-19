@@ -9,7 +9,7 @@ export interface Clock {
 function formatClock(now: Date, locale: string): Clock {
   return {
     date: now.toLocaleDateString(locale),
-    time: now.toLocaleTimeString(locale),
+    time: now.toLocaleTimeString(locale, { hour12: true }),
   }
 }
 

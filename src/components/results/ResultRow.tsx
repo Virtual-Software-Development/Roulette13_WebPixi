@@ -4,6 +4,7 @@ import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
 import { GlowFilter } from 'pixi-filters'
 import type { RouletteResult } from '../../types/result'
+import { useDrawCycleStore } from '../../store/useDrawCycleStore'
 import { getRouletteColor, ROULETTE_COLOR_HEX } from '../../utils/rouletteColors'
 import {
   createHorizontalGradient,
@@ -91,9 +92,14 @@ export function ResultRow({ result, y, width, isLive = false }: ResultRowProps) 
   const boxY = (ROW_HEIGHT - BOX_HEIGHT) / 2
   const winnerBoxY = boxY
 
+  // Mientras el video del sorteo está activo, el chip queda tapado por completo detrás
+  // de él — se deja de animar y de aplicar el filtro para no gastar GPU en un blur que
+  // no se ve, en simultáneo con la decodificación del video y el chroma-key.
+  const videoActive = useDrawCycleStore((state) => state.active)
+
   const glowElapsedRef = useRef(0)
   useTick((ticker) => {
-    if (!isLive) return
+    if (!isLive || videoActive) return
     glowElapsedRef.current += ticker.deltaMS
     const phase = (glowElapsedRef.current / LIVE_GLOW_PERIOD_MS) * Math.PI * 2
     const wave = 0.5 + 0.5 * Math.sin(phase)
@@ -172,7 +178,7 @@ export function ResultRow({ result, y, width, isLive = false }: ResultRowProps) 
         draw={drawWinnerBox}
         x={winnerBoxX}
         y={winnerBoxY}
-        filters={isLive ? [LIVE_GLOW_FILTER] : undefined}
+        filters={isLive && !videoActive ? [LIVE_GLOW_FILTER] : undefined}
       />
       <pixiText
         text={String(result.winningNumber)}
