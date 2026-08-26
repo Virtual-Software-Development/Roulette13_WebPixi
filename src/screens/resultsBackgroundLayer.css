@@ -1,0 +1,30 @@
+/* Detrás del <canvas> de Pixi (position:relative; z-index:0, ver index.css) -- <Application>
+   se monta con backgroundAlpha:0 en App.tsx justamente para dejar ver esta capa donde Pixi no
+   pinte nada opaco encima (Header/Footer, etc). */
+.results-background-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.results-background-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.results-background-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* fill (no cover): se estira exacto a la pantalla real, deformando si hace falta, sin
+     recortar bordes -- mismo criterio que el video de sorteo (ver videoPool.css) y el que
+     tenía el viejo LobbyView por Pixi. */
+  object-fit: fill;
+}

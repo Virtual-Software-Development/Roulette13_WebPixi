@@ -14,9 +14,13 @@ extend({ Container })
 interface SharedLayoutProps {
   children?: ReactNode
   footerContent?: ReactNode
+  // Omite el <Background/> de Pixi (foto+overlay) cuando el fondo ya lo provee una capa de DOM
+  // aparte (ver ResultsBackgroundLayer) -- evita que ese fondo opaco tape lo que haya detrás del
+  // canvas.
+  hideBackground?: boolean
 }
 
-export function SharedLayout({ children, footerContent }: SharedLayoutProps) {
+export function SharedLayout({ children, footerContent, hideBackground }: SharedLayoutProps) {
   const active = useDrawCycleStore((state) => state.active)
   // Mientras el video está en pantalla, el cuerpo de resultados (tarjeta de
   // ganador + tabla) sube y se oculta arriba; vuelve a bajar cuando active
@@ -26,7 +30,7 @@ export function SharedLayout({ children, footerContent }: SharedLayoutProps) {
 
   return (
     <>
-      <Background />
+      {!hideBackground && <Background />}
       <Header />
       <pixiContainer x={0} y={bodyY}>
         {children}

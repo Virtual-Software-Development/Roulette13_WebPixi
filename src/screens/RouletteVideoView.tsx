@@ -1,55 +1,39 @@
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
-import { useTexture } from '../hooks/useTexture'
-import { useViewport } from '../hooks/useViewport'
-import { useScreenSize } from '../hooks/useScreenSize'
 import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
-import { ChromaKeyFilter } from '../pixi/filters/ChromaKeyFilter'
 import { RESULT_HOLD_MS, TRANSITION_DURATION_MS } from '../layout/layout.constants'
 import { easeInOutCubic } from '../utils/easing'
+import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from '../video/videoElements'
+import { onVideoNearEnd } from '../utils/videoSeek'
 import i18n from '../i18n'
-
-// Vuelve transparente el fondo azul sólido (#0000CF) de los videos locales para que se vea
-// el Background de ResultsView (siempre montado detrás) en su lugar. Instancia única a nivel
-// de módulo — RouletteVideoView se desmonta y remonta por completo en cada sorteo, así que
-// crearla acá (en vez de con useMemo dentro del componente) evita recompilar el shader en cada sorteo.
-//
-// Nota: existe también AlphaMatteFilter (src/pixi/filters/AlphaMatteFilter.ts) para videos
-// re-exportados con una máscara de alpha "cocinada" lado a lado en el mismo frame — no se usa
-// acá porque los .webm ya traen alpha real embebida (ver hasNativeAlpha más abajo).
-const ROULETTE_CHROMA_KEY_FILTER = new ChromaKeyFilter()
-
-// Los videos exportados por el pipeline de Unity (RuntimeVideoRecorder → VP9 con alpha real,
-// yuva420p) se entregan en .webm y ya traen su propia transparencia correcta — Chrome/Edge
-// preservan ese canal al subir el frame como textura de WebGL, así que no hay que aplicarles
-// ningún filtro (aplicar ChromaKeyFilter de todas formas podría "agujerear" por error una zona
-// azulada del sujeto que en realidad debía quedar opaca). Los videos viejos (.mp4/.mov) siguen
-// teniendo fondo azul sólido quemado y sí necesitan el chroma-key.
-function hasNativeAlpha(url: string): boolean {
-  return url.toLowerCase().endsWith('.webm')
-}
 
 interface RouletteVideoViewProps {
   // Se llama recién cuando el video termina de bajar de vuelta a su posición
   // de partida (no cuando termina de reproducirse — eso solo arranca el hold).
   onFullyExited?: () => void
+  // Se llama apenas el video termina de reproducirse (evento 'ended'), antes del
+  // freeze-hold/slide-down -- justo cuando este componente se oculta (handedOff), sin
+  // esperar a que termine esa animación.
+  onEnded?: () => void
 }
 
-export function RouletteVideoView({ onFullyExited }: RouletteVideoViewProps) {
-  return <RouletteVideoSprite onFullyExited={onFullyExited} />
-}
-
-interface RouletteVideoSpriteProps {
-  onFullyExited?: () => void
-}
-
-function RouletteVideoSprite({ onFullyExited }: RouletteVideoSpriteProps) {
+// El video real vive en el pool de <video> del DOM (VideoPoolLayer, montado como hermano de
+// <Application> en App.tsx) y se pinta directamente ahí -- ya no pasa por Pixi/WebGL (ni
+// pixiSprite ni textura). Estos .webm traen canal alfa real (alpha_mode:1) y Chromium lo
+// compone solo en un <video> normal (ver project_video_pipeline en memoria) -- así que además
+// de evitar la subida de textura extra por frame, la transparencia real se sigue viendo.
+// Este componente sigue montado dentro del árbol de Pixi únicamente para poder usar
+// useAnimatedProgress (depende del ticker de Pixi) como reloj de la animación de entrada/salida
+// -- no pinta nada en el canvas, devuelve null.
+export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewProps) {
   const videoUrlFromStore = useGameConfigStore((state) => state.videoUrl)
-  const { texture: videoTexture } = useTexture(videoUrlFromStore, { unloadOnChange: true })
-  const { scale, offsetX, offsetY } = useViewport()
-  const { width: screenWidth, height: screenHeight } = useScreenSize()
+  const [ready, setReady] = useState(false)
+  // true desde el evento 'ended' en adelante — este componente deja de pintarse (opacity:0,
+  // revelando el fondo de ResultsBackgroundLayer detrás), aunque el hold/slide-down internos
+  // sigan corriendo (siguen siendo necesarios para disparar onFullyExited).
+  const [handedOff, setHandedOff] = useState(false)
   const active = useDrawCycleStore((state) => state.active)
   // progress 0 = oculto abajo de la pantalla, 1 = en su posición final mostrándose.
   // Sube cuando active pasa a true, y baja cuando vuelve a false — el mismo cálculo
@@ -60,11 +44,27 @@ function RouletteVideoSprite({ onFullyExited }: RouletteVideoSpriteProps) {
   const fullyExited = !active && progress === 0
 
   useEffect(() => {
-    if (!videoTexture) return
+    if (!videoUrlFromStore) return
 
-    const video = videoTexture.source.resource as HTMLVideoElement
-    video.muted = true
+    let cancelled = false
+    setReady(false)
+    const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
     video.loop = false
+
+    loadVideoSrc(video, videoUrlFromStore).then(() => {
+      if (!cancelled) setReady(true)
+    })
+
+    return () => {
+      cancelled = true
+      resetVideoSlot(video)
+    }
+  }, [videoUrlFromStore])
+
+  useEffect(() => {
+    if (!ready) return
+
+    const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
 
     let holdTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -95,39 +95,60 @@ function RouletteVideoSprite({ onFullyExited }: RouletteVideoSpriteProps) {
       video.removeEventListener('ended', handleEnded)
       clearTimeout(holdTimer)
     }
-  }, [videoTexture])
+  }, [ready])
+
+  // Dispara el hand-off visual (ocultar este video, avisar al caller para revelar el lobby) tan
+  // cerca como sea posible del último frame REAL pintado -- separado del 'ended' de arriba
+  // porque la ruleta sigue girando a velocidad casi constante hasta ese frame (nunca frena en
+  // cámara), así que cualquier demora extra esperando el evento 'ended' se ve como un salto de
+  // varios grados. Ver onVideoNearEnd en utils/videoSeek.ts.
+  useEffect(() => {
+    if (!ready) return
+    const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
+    return onVideoNearEnd(video, () => {
+      setHandedOff(true)
+      onEnded?.()
+    })
+  }, [ready, onEnded])
 
   // Recién arranca a reproducirse una vez que termina de subir a su posición final.
   useEffect(() => {
-    if (!videoTexture || !arrived) return
+    if (!ready || !arrived) return
 
-    const video = videoTexture.source.resource as HTMLVideoElement
-    video.play()
-  }, [videoTexture, arrived])
+    const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
+    // El kiosco corre sin interacción de usuario, así que el navegador puede bloquear el
+    // autoplay con sonido — si play() es rechazado por esa política, reintenta mudo para que
+    // el video se siga mostrando (ver flag --autoplay-policy=no-user-gesture-required en el
+    // lanzador del kiosco para que el audio realmente suene en producción).
+    video.play().catch(() => {
+      video.muted = true
+      void video.play()
+    })
+  }, [ready, arrived])
 
   // Avisa recién cuando terminó de bajar de vuelta, para que App desmonte este
   // componente y programe el siguiente sorteo.
   useEffect(() => {
-    if (fullyExited) onFullyExited?.()
+    if (!fullyExited) return
+    resetVideoSlot(getVideoSlot(DRAW_VIDEO_SLOT_ID))
+    onFullyExited?.()
   }, [fullyExited, onFullyExited])
 
-  if (!videoTexture) return null
+  // Posiciona el <video> real del pool a mano: translateY(100%) lo deja empujado fuera de
+  // pantalla por su propio alto (mismo <video> es position:fixed, 100vw/100vh, ver
+  // videoPool.css), y translateY(0) es su posición final en pantalla — mismo cálculo que antes
+  // hacía el pixiSprite con screenHeight/scale, pero en porcentaje, sin depender del canvas de
+  // diseño. La opacidad, a diferencia de la posición, se apaga de un salto (no anima) apenas
+  // handedOff — el caller ya reveló el loop de lobby por encima — igual que antes hacía
+  // `visible={!handedOff}` en el pixiSprite; el hold/slide-down interno sigue corriendo (para
+  // eventualmente disparar onFullyExited) aunque ya no se vea.
+  useLayoutEffect(() => {
+    if (!ready) return
+    const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
+    video.style.display = 'block'
+    video.style.opacity = handedOff ? '0' : '1'
+    video.style.transform = `translateY(${(1 - eased) * 100}%)`
+  }, [ready, eased, handedOff])
 
-  // El video debe estirarse exacto a la pantalla real (sin recortes, deformando si hace
-  // falta), a diferencia del resto del layout que usa cover sobre el canvas de diseño.
-  // Este valor cancela la transformación del padre (scale/offset de ResponsiveStage)
-  // para pintar exactamente (0,0)-(screenWidth,screenHeight) en píxeles reales.
-  const finalY = -offsetY / scale
-  const y = finalY + (1 - eased) * (screenHeight / scale)
-
-  return (
-    <pixiSprite
-      texture={videoTexture}
-      x={-offsetX / scale}
-      y={y}
-      width={screenWidth / scale}
-      height={screenHeight / scale}
-      filters={hasNativeAlpha(videoUrlFromStore) ? undefined : [ROULETTE_CHROMA_KEY_FILTER]}
-    />
-  )
+  return null
 }
