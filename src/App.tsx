@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Assets, Texture } from 'pixi.js'
 import { Application } from '@pixi/react'
 import { RouletteVideoView } from './screens/RouletteVideoView'
 import { ResultsView } from './screens/ResultsView'
+import { ResultsBackgroundLayer } from './screens/ResultsBackgroundLayer'
 import { ResponsiveStage } from './layout/ResponsiveStage'
+import { VideoPoolLayer } from './video/VideoPoolLayer'
+import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc } from './video/videoElements'
 import { fetchGameInfo } from './api/gameInfo'
 import { applyGameInfo } from './api/applyGameInfo'
 import { fetchDrawResult } from './api/drawResult'
@@ -42,11 +44,12 @@ function App() {
           videoReadyPromise = fetchDrawResult(drawNo)
             .then(({ result }) => {
               if (isCancelled()) return
+
               return pickRandomDrawResultVideoUrl(result).then((videoUrl) => {
                 if (isCancelled()) return
                 useDrawCycleStore.getState().setPendingResult({ drawNo, result })
                 useGameConfigStore.getState().setGameConfig({ videoUrl })
-                return Assets.load<Texture>({ src: videoUrl, data: { autoPlay: false } })
+                return loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), videoUrl)
               })
             })
             .then(
@@ -96,12 +99,14 @@ function App() {
 
   return (
     <>
+      <ResultsBackgroundLayer />
+      <VideoPoolLayer />
       <Application
         autoDensity={true}
         resizeTo={window}
         resolution={Math.min(window.devicePixelRatio || 1, 1)}
         powerPreference="high-performance"
-        background={0x000000}
+        backgroundAlpha={0}
       >
         <ResponsiveStage>
           <ResultsView />
