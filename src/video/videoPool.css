@@ -1,6 +1,6 @@
 /* display:contents: el wrapper no debe crear su propio contexto de apilamiento -- cada
    <video> hijo necesita apilarse de forma independiente contra el <canvas> de Pixi (uno
-   por delante, el de sorteo; el otro nunca vive acá, ver ResultsBackgroundLayer). */
+   por delante, el de sorteo; el otro nunca vive acá, ver LobbyBackgroundLayer). */
 .video-pool-layer {
   display: contents;
 }

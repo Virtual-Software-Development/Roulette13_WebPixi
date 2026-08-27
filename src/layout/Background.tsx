@@ -11,14 +11,14 @@ extend({ Sprite, Graphics, Text })
 
 const FALLBACK_LABEL_STYLE = new TextStyle({
   fontFamily: 'Arial',
-  fontSize: 32,
+  fontSize: 24,
   fill: 0xc9c9d1,
 })
 
-const ICON_WIDTH = 280
-const ICON_HEIGHT = 200
+const ICON_WIDTH = 210
+const ICON_HEIGHT = 150
 const ICON_X = (DESIGN_WIDTH - ICON_WIDTH) / 2
-const ICON_Y = (DESIGN_HEIGHT - ICON_HEIGHT) / 2 - 60
+const ICON_Y = (DESIGN_HEIGHT - ICON_HEIGHT) / 2 - 45
 
 const OVERLAY_ALPHA = 0.7
 
@@ -36,25 +36,25 @@ function drawMediaErrorFallback(g: PixiGraphics) {
   g.rect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT)
   g.fill()
 
-  g.setStrokeStyle({ width: 6, color: 0x8a8a96 })
-  g.roundRect(ICON_X, ICON_Y, ICON_WIDTH, ICON_HEIGHT, 10)
+  g.setStrokeStyle({ width: 4.5, color: 0x8a8a96 })
+  g.roundRect(ICON_X, ICON_Y, ICON_WIDTH, ICON_HEIGHT, 7.5)
   g.stroke()
 
   g.setFillStyle({ color: 0x8a8a96 })
-  g.circle(ICON_X + 55, ICON_Y + 55, 16)
+  g.circle(ICON_X + 41.25, ICON_Y + 41.25, 12)
   g.fill()
 
   g.setFillStyle({ color: 0x8a8a96 })
   g.poly([
-    ICON_X + 20, ICON_Y + ICON_HEIGHT - 20,
-    ICON_X + 90, ICON_Y + 40,
-    ICON_X + 130, ICON_Y + 80,
-    ICON_X + 190, ICON_Y + 10,
-    ICON_X + 230, ICON_Y + ICON_HEIGHT - 20,
+    ICON_X + 15, ICON_Y + ICON_HEIGHT - 15,
+    ICON_X + 67.5, ICON_Y + 30,
+    ICON_X + 97.5, ICON_Y + 60,
+    ICON_X + 142.5, ICON_Y + 7.5,
+    ICON_X + 172.5, ICON_Y + ICON_HEIGHT - 15,
   ])
   g.fill()
 
-  g.setStrokeStyle({ width: 8, color: 0xe05a4e })
+  g.setStrokeStyle({ width: 6, color: 0xe05a4e })
   g.moveTo(ICON_X, ICON_Y)
   g.lineTo(ICON_X + ICON_WIDTH, ICON_Y + ICON_HEIGHT)
   g.stroke()
@@ -84,7 +84,7 @@ export function Background() {
         text={t('media.imageNotAvailable')}
         style={FALLBACK_LABEL_STYLE}
         x={DESIGN_WIDTH / 2}
-        y={ICON_Y + ICON_HEIGHT + 60}
+        y={ICON_Y + ICON_HEIGHT + 45}
         anchor={{ x: 0.5, y: 0.5 }}
       />
       <pixiGraphics draw={drawOverlay} />

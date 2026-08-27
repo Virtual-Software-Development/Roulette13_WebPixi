@@ -10,7 +10,7 @@ interface DrawCycleState {
   setPendingResult: (result: PendingDrawResult | null) => void
   // true mientras la secuencia de video está en curso (subiendo, reproduciendo,
   // congelado en el resultado, o bajando) — leído directamente por RouletteVideoSprite
-  // y por los elementos de ResultsView que salen/vuelven de escena en simultáneo.
+  // y por los elementos de RouletteLobby que salen/vuelven de escena en simultáneo.
   active: boolean
   setActive: (active: boolean) => void
 }

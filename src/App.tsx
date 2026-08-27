@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Application } from '@pixi/react'
 import { RouletteVideoView } from './screens/RouletteVideoView'
-import { ResultsView } from './screens/ResultsView'
-import { ResultsBackgroundLayer } from './screens/ResultsBackgroundLayer'
+import { RouletteLobby } from './screens/RouletteLobby'
+import { LobbyBackgroundLayer } from './screens/LobbyBackgroundLayer'
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { VideoPoolLayer } from './video/VideoPoolLayer'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc } from './video/videoElements'
@@ -22,7 +22,7 @@ function App() {
   // Agenda el próximo sorteo: pide /gameInfo, y programa dos timers según
   // nextDraw.startTime — uno para pedir /drawResult 500ms antes (y precargar
   // el video), y otro para, justo a la hora del sorteo, activar la secuencia de
-  // video (ResultsView se queda visible hasta ese momento, sin loader) — el
+  // video (RouletteLobby se queda visible hasta ese momento, sin loader) — el
   // margen de 500ms no alcanza para bufferizar el video, así que se espera al
   // preload (videoReadyPromise) antes de activarla si todavía no terminó.
   const scheduleDraw = useCallback((isCancelled: () => boolean, seedHistory: boolean) => {
@@ -89,17 +89,25 @@ function App() {
     }
   }, [scheduleDraw])
 
-  // Se llama recién cuando el video ya terminó de bajar de vuelta a su lugar de
-  // partida (después del hold sobre el resultado) — recién ahí es seguro
-  // desmontarlo y programar el siguiente sorteo.
-  const handleFullyExited = useCallback(() => {
-    setVideoMounted(false)
+  // Se llama apenas el video termina de reproducirse (bien antes del
+  // freeze-hold/slide-down) — agenda el próximo sorteo ahí, no cuando vuelve
+  // a mostrarse el lobby, para que Header/LastGame ya tengan los datos
+  // actualizados (nextDraw/drawNumber) para cuando termine de regresar la
+  // animación en vez de mostrar el dato viejo un instante y luego saltar.
+  const handleRoundEnded = useCallback(() => {
     scheduleDraw(() => false, false)
   }, [scheduleDraw])
 
+  // Se llama recién cuando el video ya terminó de bajar de vuelta a su lugar
+  // de partida (después del hold sobre el resultado) — recién ahí es seguro
+  // desmontarlo.
+  const handleFullyExited = useCallback(() => {
+    setVideoMounted(false)
+  }, [])
+
   return (
     <>
-      <ResultsBackgroundLayer />
+      <LobbyBackgroundLayer />
       <VideoPoolLayer />
       <Application
         autoDensity={true}
@@ -109,8 +117,8 @@ function App() {
         backgroundAlpha={0}
       >
         <ResponsiveStage>
-          <ResultsView />
-          {videoMounted && <RouletteVideoView onFullyExited={handleFullyExited} />}
+          <RouletteLobby />
+          {videoMounted && <RouletteVideoView onEnded={handleRoundEnded} onFullyExited={handleFullyExited} />}
         </ResponsiveStage>
       </Application>
     </>

@@ -16,8 +16,11 @@ export function getRouletteColor(number: number): RouletteColor {
   return 'black'
 }
 
-export const ROULETTE_COLOR_HEX: Record<RouletteColor, number> = {
-  red: 0x8b1a1a,
-  black: 0x1a1a1a,
+// Color del texto del número ganador sobre el fondo oscuro de la lista —
+// "black" se pinta blanco/claro porque un número casi-negro sería ilegible
+// como texto (a diferencia de un fondo de pill, donde sí funcionaría oscuro).
+export const ROULETTE_TEXT_COLOR_HEX: Record<RouletteColor, number> = {
+  red: 0xff4d4d,
+  black: 0xffffff,
   green: 0x4caf50,
 }

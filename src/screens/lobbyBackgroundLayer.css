@@ -1,7 +1,7 @@
 /* Detrás del <canvas> de Pixi (position:relative; z-index:0, ver index.css) -- <Application>
    se monta con backgroundAlpha:0 en App.tsx justamente para dejar ver esta capa donde Pixi no
    pinte nada opaco encima (Header/Footer, etc). */
-.results-background-layer {
+.lobby-background-layer {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -10,7 +10,7 @@
   pointer-events: none;
 }
 
-.results-background-image {
+.lobby-background-image {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -18,7 +18,7 @@
   object-fit: cover;
 }
 
-.results-background-video {
+.lobby-background-video {
   position: absolute;
   inset: 0;
   width: 100%;

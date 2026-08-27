@@ -1,7 +1,7 @@
 import { FillGradient } from 'pixi.js'
 import type { TimeColor } from '../types/result'
 
-export const GOLD_BORDER_WIDTH = 4
+export const GOLD_BORDER_WIDTH = 3
 
 export const GOLD_BORDER_STOPS = [
   { offset: 0, color: 0xeedda6 },
