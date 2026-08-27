@@ -14,7 +14,7 @@ import { LAYOUT, SIDE_EXIT_DISTANCE, TRANSITION_DURATION_MS } from './layout.con
 
 extend({ Container, Graphics, Sprite, Text })
 
-const LOGO_FALLBACK_CORNER_RADIUS = 8
+const LOGO_FALLBACK_CORNER_RADIUS = 6
 // El cuadro nominal (logoBoxSize) es más alto que el propio footer — un logo
 // real nunca lo nota porque su sprite se escala por aspect ratio, pero el
 // fallback dibuja un cuadrado fijo, así que se acota al alto disponible para
@@ -23,7 +23,7 @@ const LOGO_FALLBACK_SIZE = Math.min(LAYOUT.logoBoxSize, LAYOUT.footerHeight - LA
 
 const LOGO_FALLBACK_LABEL_STYLE = new TextStyle({
   fontFamily: 'Arial',
-  fontSize: 18,
+  fontSize: 13.5,
   fill: 0xc9c9d1,
   align: 'center',
   wordWrap: true,
@@ -53,7 +53,7 @@ export function Footer({ children }: FooterProps) {
   const drawLogoFallback = useCallback((g: PixiGraphics) => {
     g.clear()
     g.setFillStyle({ color: 0x2b2b33, alpha: 0.4 })
-    g.setStrokeStyle({ width: 2, color: 0x8a8a96 })
+    g.setStrokeStyle({ width: 1.5, color: 0x8a8a96 })
     g.roundRect(0, 0, LOGO_FALLBACK_SIZE, LOGO_FALLBACK_SIZE, LOGO_FALLBACK_CORNER_RADIUS)
     g.fill()
     g.stroke()

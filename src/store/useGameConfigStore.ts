@@ -5,10 +5,8 @@ export interface GameConfig {
   logoUrl: string
   backgroundUrl: string
   videoUrl: string
-  showTitle: boolean
-  showDateTime: boolean
   drawNumber: string
-  nextDrawTime: string
+  nextDrawStartTime: string
   showDrawInfo: boolean
   showLogo: boolean
 }
@@ -22,10 +20,8 @@ export const useGameConfigStore = create<GameConfigStore>((set) => ({
   logoUrl: '',
   backgroundUrl: '',
   videoUrl: '',
-  showTitle: true,
-  showDateTime: true,
   drawNumber:'',
-  nextDrawTime:'',
+  nextDrawStartTime:'',
   showDrawInfo: true,
   showLogo: true,
   setGameConfig: (config) => set(config),

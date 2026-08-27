@@ -21,7 +21,7 @@ export function applyGameInfo(data: GameInfoResponse, options: { seedHistory: bo
     logoUrl: buildMediaUrl(data.logo),
     backgroundUrl: buildMediaUrl(data.background),
     drawNumber: data.nextDraw.drawNo,
-    nextDrawTime: formatTime(data.nextDraw.startTime),
+    nextDrawStartTime: data.nextDraw.startTime,
   })
 
   const resultsStore = useResultsStore.getState()

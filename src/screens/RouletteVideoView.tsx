@@ -31,7 +31,7 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
   const videoUrlFromStore = useGameConfigStore((state) => state.videoUrl)
   const [ready, setReady] = useState(false)
   // true desde el evento 'ended' en adelante — este componente deja de pintarse (opacity:0,
-  // revelando el fondo de ResultsBackgroundLayer detrás), aunque el hold/slide-down internos
+  // revelando el fondo de LobbyBackgroundLayer detrás), aunque el hold/slide-down internos
   // sigan corriendo (siguen siendo necesarios para disparar onFullyExited).
   const [handedOff, setHandedOff] = useState(false)
   const active = useDrawCycleStore((state) => state.active)
@@ -83,7 +83,7 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
       }
 
       // Deja el último frame congelado un rato (el resultado visible) antes de
-      // disparar la bajada del video y el regreso de ResultsView.
+      // disparar la bajada del video y el regreso de RouletteLobby.
       holdTimer = setTimeout(() => {
         useDrawCycleStore.getState().setActive(false)
       }, RESULT_HOLD_MS)

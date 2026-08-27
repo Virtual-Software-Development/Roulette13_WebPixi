@@ -13,11 +13,10 @@ interface RoundedPanelOptions {
 }
 
 // Patrón compartido roundRect + fill + borde dorado, usado por el panel de
-// estado (Header) y por las celdas/backdrop de fila (ResultRow/WinnerCard) —
-// antes vivía duplicado en cada componente. Para opacidad baja (backdrop de
-// fila, halo "en vivo") se usa el `alpha` del nodo <pixiGraphics> que lo
-// dibuja, no un parámetro aquí — así se evita depender de alpha por-stop de
-// gradiente, que Pixi no soporta de forma directa.
+// estado (Header) — antes vivía duplicado en cada componente. Para opacidad
+// baja se usa el `alpha` del nodo <pixiGraphics> que lo dibuja, no un
+// parámetro aquí — así se evita depender de alpha por-stop de gradiente, que
+// Pixi no soporta de forma directa.
 export function drawRoundedPanel(g: PixiGraphics, opts: RoundedPanelOptions) {
   const { width, height, radius, fill, borderGradient, borderWidth = 0 } = opts
 

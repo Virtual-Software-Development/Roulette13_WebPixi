@@ -7,8 +7,8 @@ import { useViewport } from '../hooks/useViewport'
 
 extend({ Graphics })
 
-const SPINNER_RADIUS = 60
-const SPINNER_THICKNESS = 12
+const SPINNER_RADIUS = 45
+const SPINNER_THICKNESS = 9
 
 export function LoadingView() {
   return (
