@@ -1,52 +1,55 @@
-import { useEffect, useRef } from 'react'
 import { buildMediaUrl } from '../utils/media'
-import { loadVideoSrc } from '../video/videoElements'
 import { useGameConfigStore } from '../store/useGameConfigStore'
+import { WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC } from '../layout/wheelGeometry.constants'
+import { ACTIVE_WHEEL_TYPE } from '../data/wheelOrder'
+import { LobbyWheelDebugOverlay } from './LobbyWheelDebugOverlay'
 import './lobbyBackgroundLayer.css'
 
-const LOBBY_LOOP_VIDEO_URL = buildMediaUrl('Lobby/lobby_loop.webm')
+const ACTIVE_WHEEL_GEOMETRY = WHEEL_GEOMETRY[ACTIVE_WHEEL_TYPE]
+const WHEEL_BASE_URL = buildMediaUrl(ACTIVE_WHEEL_GEOMETRY.baseAsset)
+const WHEEL_ROTOR_URL = buildMediaUrl(ACTIVE_WHEEL_GEOMETRY.rotorAsset)
 
-function playWithMutedFallback(video: HTMLVideoElement) {
-  video.play().catch(() => {
-    video.muted = true
-    void video.play()
-  })
-}
+// -- Video viejo, comentado (no borrado) por si hace falta volver atrás --
+// import { useEffect, useRef } from 'react'
+// import { loadVideoSrc } from '../video/videoElements'
+// import { useLobbyVideoClock } from '../store/useLobbyVideoClock'
+//
+// const LOBBY_LOOP_VIDEO_URL = buildMediaUrl('Lobby/lobby_loop.webm')
+//
+// function playWithMutedFallback(video: HTMLVideoElement) {
+//   video.play().catch(() => {
+//     video.muted = true
+//     void video.play()
+//   })
+// }
 
-// Fondo de RouletteLobby: un <video> real del DOM, sin pasar por Pixi/WebGL, montado como hermano
-// de <Application> en App.tsx -- vive SIEMPRE detrás del canvas (z-index negativo, ver CSS).
-// Reemplaza tanto al loop que antes pintaba LobbyView vía pixiSprite/textura como al <Background/>
-// que pinta SharedLayout (ver prop hideBackground) -- todo el fondo de la pantalla de resultados
-// pasa a ser nativo del navegador, en vez de Pixi. Sin overlay oscuro: el video va a brillo
-// completo (a diferencia de la foto de Background, que sí lo lleva para contraste de texto).
+// Fondo de RouletteLobby: dos <img> reales del DOM (base estática + rotor animado por CSS),
+// sin pasar por Pixi/WebGL, montadas como hermanas de <Application> en App.tsx -- viven SIEMPRE
+// detrás del canvas (z-index negativo, ver CSS). Reemplaza tanto al loop que antes pintaba
+// LobbyView vía pixiSprite/textura como al <Background/> que pinta SharedLayout (ver prop
+// hideBackground) -- todo el fondo de la pantalla de resultados es nativo del navegador, en vez
+// de Pixi. Antes esto era un <video> en loop (lobby_loop.webm); se reemplazó por 2 PNG + rotación
+// CSS porque decodificar video es más costoso de GPU que rotar una textura ya cargada (transform
+// corre en el compositor) y da control total sobre velocidad/dirección del giro.
 export function LobbyBackgroundLayer() {
-  const videoRef = useRef<HTMLVideoElement>(null)
   const backgroundUrl = useGameConfigStore((state) => state.backgroundUrl)
-
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    let cancelled = false
-    video.muted = true
-    video.loop = true
-
-    loadVideoSrc(video, LOBBY_LOOP_VIDEO_URL).then(() => {
-      if (!cancelled) playWithMutedFallback(video)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   return (
     <div className="lobby-background-layer">
-      {/* Detrás del video en el DOM (sin z-index propio, alcanza con el orden) -- el video de
-          hoy es opaco (lobby_loop.webm no trae canal alfa), así que esta imagen todavía no se
-          termina de ver hasta que se resuelva la transparencia del video. */}
+      {/* A diferencia del video viejo (opaco, tapaba todo), los PNG de la rueda (base/rotor,
+          según ACTIVE_WHEEL_TYPE -- ver data/wheelOrder.ts) tienen transparencia real alrededor
+          del círculo (verificado por canal alfa) -- esta imagen de fondo se ve genuinamente
+          detrás/alrededor de la rueda, no solo como fallback mientras algo carga. */}
       {backgroundUrl && <img src={backgroundUrl} className="lobby-background-image" alt="" />}
-      <video ref={videoRef} className="lobby-background-video" playsInline preload="auto" />
+      <img src={WHEEL_BASE_URL} className="lobby-wheel-base" alt="" />
+      <img
+        src={WHEEL_ROTOR_URL}
+        className="lobby-wheel-rotor"
+        alt=""
+        style={{ animationDuration: `${WHEEL_SPIN_DURATION_SEC}s` }}
+      />
+      {/* <video ref={videoRef} className="lobby-background-video" playsInline preload="auto" /> */}
+      <LobbyWheelDebugOverlay />
     </div>
   )
 }
