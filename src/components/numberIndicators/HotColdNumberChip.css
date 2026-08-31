@@ -1,0 +1,15 @@
+@keyframes hot-cold-number-chip-blink {
+  0%,
+  100% {
+    opacity: 0.55;
+    filter: brightness(0.85);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.4);
+  }
+}
+
+.hot-cold-number-chip-rect {
+  animation: hot-cold-number-chip-blink 1.4s ease-in-out infinite;
+}

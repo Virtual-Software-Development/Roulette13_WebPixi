@@ -1,15 +1,17 @@
 // src/utils/rouletteColors.ts
 
+import type { WheelPocket } from '../types/wheel'
+
 export type RouletteColor = 'red' | 'black' | 'green'
 
-const RED_NUMBERS = new Set<number>([ 1, 3, 5, 7, 9,11 ])
+const RED_NUMBERS = new Set<number>([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36])
 
-export function getRouletteColor(number: number): RouletteColor {
-  if (number === 0) {
+export function getRouletteColor(pocket: WheelPocket): RouletteColor {
+  if (pocket === '00' || pocket === 0) {
     return 'green'
   }
 
-  if (RED_NUMBERS.has(number)) {
+  if (RED_NUMBERS.has(pocket)) {
     return 'red'
   }
 

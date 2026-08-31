@@ -1,0 +1,36 @@
+.number-cell-highlight-path {
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+/* Rect de máscara ("barra de carga") -- crece/decrece animando y/height por CSS (propiedades de
+   geometría SVG animables), NO con transform: scaleY -- el rotate() que alinea este rect con su
+   casilla vive como attribute SVG en el propio elemento (ver NumberCellHighlight.tsx), y un
+   transform CSS lo reemplazaría por completo. Los valores de los extremos (dónde está el borde
+   inferior fijo, dónde termina el borde superior) dependen de constantes del componente, así que
+   llegan como CSS custom properties inline en vez de estar hardcodeados acá. */
+@keyframes number-cell-highlight-reveal {
+  from {
+    y: var(--number-cell-highlight-mask-collapsed-y);
+    height: 0;
+  }
+  to {
+    y: var(--number-cell-highlight-mask-full-y);
+    height: var(--number-cell-highlight-mask-full-height);
+  }
+}
+
+.number-cell-highlight-mask-rect--entering {
+  animation-name: number-cell-highlight-reveal;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+/* Misma animación, reproducida al revés (animation-direction: reverse) -- así "desactivar" es
+   literalmente lo mismo que "activar" pero invertido, sin duplicar keyframes. */
+.number-cell-highlight-mask-rect--leaving {
+  animation-name: number-cell-highlight-reveal;
+  animation-direction: reverse;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
