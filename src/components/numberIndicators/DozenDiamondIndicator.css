@@ -1,0 +1,15 @@
+@keyframes dozen-diamond-indicator-blink {
+  0%,
+  100% {
+    opacity: 0;
+    filter: brightness(0.9);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+}
+
+.dozen-diamond-indicator-blink-line {
+  animation: dozen-diamond-indicator-blink 1.4s ease-in-out infinite;
+}

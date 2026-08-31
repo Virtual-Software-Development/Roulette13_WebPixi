@@ -1,0 +1,19 @@
+.number-cell-highlight-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.number-cell-highlight-rotor-group {
+  /* Mismo eje que .lobby-wheel-rotor -- transform-box: view-box hace que transform-origin se
+     mida en coordenadas del viewBox en vez del bounding box del propio grupo. */
+  transform-box: view-box;
+  /* Reutiliza @keyframes lobby-wheel-spin (definido en lobbyBackgroundLayer.css, que siempre
+     está cargado junto a este layer). animation-duration se fija inline desde
+     WHEEL_SPIN_DURATION_SEC para no desincronizarse de .lobby-wheel-rotor. */
+  animation-name: lobby-wheel-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
