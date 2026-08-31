@@ -1,0 +1,60 @@
+@keyframes column-diamond-indicator-blink {
+  0%,
+  100% {
+    opacity: 0.35;
+    filter: brightness(0.9);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+}
+
+.column-diamond-indicator-blink-line {
+  animation: column-diamond-indicator-blink 1.4s ease-in-out infinite;
+}
+
+/* Cadena de encendido/apagado del 2do y 3er diamante del stack (el primero queda siempre
+   encendido, ver STACK_POSITION_CLASS_NAMES en ColumnDiamondIndicator.tsx). Un ciclo completo
+   se divide en 4 cuartos iguales:
+     Q1 (0-25%):  segundo ON,  último OFF -- se enciende el segundo
+     Q2 (25-50%): segundo ON,  último ON  -- se enciende el último
+     Q3 (50-75%): segundo ON,  último OFF -- se apaga el último (el segundo sigue encendido)
+     Q4 (75-100%): segundo OFF, último OFF -- se apaga el segundo
+   y vuelve a Q1 (el segundo se enciende de nuevo). La duración real la fija
+   COLUMN_DIAMOND_CHASE_DURATION_MS inline (ver ColumnDiamondIndicator.tsx); el valor acá abajo
+   es solo el default si por algún motivo no llega el inline style. Los pares de porcentajes muy
+   cercanos (ej. 49.9%/50%) simulan un corte instantáneo en vez de un fade. */
+@keyframes column-diamond-indicator-chase-second {
+  0%,
+  74.9% {
+    opacity: 1;
+  }
+  75%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes column-diamond-indicator-chase-last {
+  0%,
+  24.9% {
+    opacity: 0;
+  }
+  25%,
+  49.9% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.column-diamond-indicator-stack-second {
+  animation: column-diamond-indicator-chase-second 2.4s linear infinite;
+}
+
+.column-diamond-indicator-stack-last {
+  animation: column-diamond-indicator-chase-last 2.4s linear infinite;
+}

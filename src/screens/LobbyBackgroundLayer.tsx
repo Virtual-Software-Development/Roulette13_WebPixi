@@ -3,11 +3,32 @@ import { useGameConfigStore } from '../store/useGameConfigStore'
 import { WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC } from '../layout/wheelGeometry.constants'
 import { ACTIVE_WHEEL_TYPE } from '../data/wheelOrder'
 import { LobbyWheelDebugOverlay } from './LobbyWheelDebugOverlay'
+// import { HotColdNumberChipLayer } from '../components/numberIndicators/HotColdNumberChipLayer'
+// NumberCellHighlightLayer pausado temporalmente mientras se construye DozenDiamondIndicator.
+// import { NumberCellHighlightLayer } from '../components/numberIndicators/NumberCellHighlightLayer'
+// import { useNumberCellHighlightCycle } from '../hooks/useNumberCellHighlightCycle'
+import { DozenDiamondIndicatorLayer } from '../components/numberIndicators/DozenDiamondIndicatorLayer'
+// ColumnDiamondIndicatorLayer pausado temporalmente mientras se prueban las docenas.
+// import { ColumnDiamondIndicatorLayer } from '../components/numberIndicators/ColumnDiamondIndicatorLayer'
+import type { NumberIndicatorType } from '../types/numberIndicator'
+import type { WheelPocket } from '../types/wheel'
 import './lobbyBackgroundLayer.css'
 
 const ACTIVE_WHEEL_GEOMETRY = WHEEL_GEOMETRY[ACTIVE_WHEEL_TYPE]
 const WHEEL_BASE_URL = buildMediaUrl(ACTIVE_WHEEL_GEOMETRY.baseAsset)
 const WHEEL_ROTOR_URL = buildMediaUrl(ACTIVE_WHEEL_GEOMETRY.rotorAsset)
+
+// Ejemplo de uso temporal -- a reemplazar cuando exista cálculo real de frecuencia sobre
+// useResultsStore().history. HotColdNumberChip queda pausado por ahora (ver montaje comentado
+// más abajo) mientras se construye NumberCellHighlight.
+const DEMO_NUMBERS_BY_TYPE: Partial<Record<NumberIndicatorType, WheelPocket[]>> = {
+  hot: [7, 23, 10, 5],
+  cold: [8, 2, 16],
+}
+
+// Datos de prueba para NumberCellHighlight -- mismos números de la foto de referencia (11
+// negro, 30 rojo, 8 negro).
+const DEMO_HIGHLIGHT_NUMBERS: WheelPocket[] = [11, 30, 8]
 
 // -- Video viejo, comentado (no borrado) por si hace falta volver atrás --
 // import { useEffect, useRef } from 'react'
@@ -33,6 +54,7 @@ const WHEEL_ROTOR_URL = buildMediaUrl(ACTIVE_WHEEL_GEOMETRY.rotorAsset)
 // corre en el compositor) y da control total sobre velocidad/dirección del giro.
 export function LobbyBackgroundLayer() {
   const backgroundUrl = useGameConfigStore((state) => state.backgroundUrl)
+  // const highlightEntries = useNumberCellHighlightCycle(DEMO_HIGHLIGHT_NUMBERS)
 
   return (
     <div className="lobby-background-layer">
@@ -49,6 +71,12 @@ export function LobbyBackgroundLayer() {
         style={{ animationDuration: `${WHEEL_SPIN_DURATION_SEC}s` }}
       />
       {/* <video ref={videoRef} className="lobby-background-video" playsInline preload="auto" /> */}
+      {/* <HotColdNumberChipLayer numbersByType={DEMO_NUMBERS_BY_TYPE} /> */}
+      {/* <NumberCellHighlightLayer entries={highlightEntries} /> */}
+      {/* Solo 1-12 activo por ahora -- agregar 'secondDozen'/'thirdDozen' al array para
+          probar las otras docenas. */}
+      <DozenDiamondIndicatorLayer activeGroups={['thirdDozen']} />
+      {/* <ColumnDiamondIndicatorLayer activeGroups={['thirdColumn']} /> */}
       <LobbyWheelDebugOverlay />
     </div>
   )
