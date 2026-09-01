@@ -2,18 +2,35 @@ import { getWheelOrder } from '../data/wheelOrder'
 import { WHEEL_GEOMETRY } from '../layout/wheelGeometry.constants'
 import type { WheelPocket, WheelType } from '../types/wheel'
 
+// Forma mínima que necesita este archivo para ubicar casillas -- WHEEL_GEOMETRY (imagen) y
+// WHEEL_VIDEO_GEOMETRY (video, ver layout/wheelVideoGeometry.constants.ts) cumplen ambas esta
+// forma, así que las funciones *ForGeometry de abajo sirven para cualquiera de las dos sin
+// import cruzado entre esos dos archivos de constantes.
+export interface PocketGeometry {
+  center: { x: number; y: number }
+  radius: number
+  pocketAngleDeg: number[]
+}
+
 // Ángulo (grados, 0 = arriba, sentido horario) de una casilla tal como aparece impresa en el
 // rotor de este tipo de rueda (ver WHEEL_GEOMETRY.pocketAngleDeg) -- es la posición de
 // referencia en reposo; el giro en pantalla lo aplica el transform CSS (.lobby-wheel-rotor /
 // LobbyWheelDebugOverlay), no este cálculo.
 export function getPocketAngleDeg(pocket: WheelPocket, wheelType: WheelType): number {
+  return getPocketAngleDegForGeometry(pocket, wheelType, WHEEL_GEOMETRY[wheelType])
+}
+
+// Misma lógica que getPocketAngleDeg, pero contra una geometría explícita en vez de
+// WHEEL_GEOMETRY[wheelType] -- usada por el modo video (ver layout/wheelVideoGeometry.constants.ts),
+// que tiene su propia tabla de ángulos sin relación con la del PNG.
+export function getPocketAngleDegForGeometry(pocket: WheelPocket, wheelType: WheelType, geometry: PocketGeometry): number {
   const order = getWheelOrder(wheelType)
   const index = order.indexOf(pocket)
   if (index === -1) {
     throw new Error(`Pocket ${pocket} does not exist on the ${wheelType} wheel`)
   }
 
-  return WHEEL_GEOMETRY[wheelType].pocketAngleDeg[index]
+  return geometry.pocketAngleDeg[index]
 }
 
 // Posición de una casilla en unidades del canvas del rotor de este tipo de rueda (ver
@@ -29,8 +46,19 @@ export function getPocketPosition(
   wheelType: WheelType,
   radiusOffset = 0,
 ): { x: number; y: number } {
-  const { center, radius } = WHEEL_GEOMETRY[wheelType]
-  const angleDeg = getPocketAngleDeg(pocket, wheelType)
+  return getPocketPositionForGeometry(pocket, wheelType, WHEEL_GEOMETRY[wheelType], radiusOffset)
+}
+
+// Misma lógica que getPocketPosition, pero contra una geometría explícita -- ver
+// getPocketAngleDegForGeometry.
+export function getPocketPositionForGeometry(
+  pocket: WheelPocket,
+  wheelType: WheelType,
+  geometry: PocketGeometry,
+  radiusOffset = 0,
+): { x: number; y: number } {
+  const { center, radius } = geometry
+  const angleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const angleRad = (angleDeg * Math.PI) / 180
   const effectiveRadius = radius + radiusOffset
 

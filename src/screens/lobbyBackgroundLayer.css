@@ -29,7 +29,8 @@
 */
 
 .lobby-wheel-base,
-.lobby-wheel-rotor {
+.lobby-wheel-rotor,
+.lobby-wheel-video {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -37,9 +38,16 @@
   /* contain (no fill): a diferencia del video viejo, acá el contenido es un círculo preciso --
      estirarlo de forma no uniforme (fill) lo deforma en una elipse apenas el viewport no es
      exactamente 16:9. contain preserva el aspect ratio del PNG (2560x1440 en ambas capas), así
-     que el círculo se mantiene redondo y las dos capas siguen alineadas entre sí. */
+     que el círculo se mantiene redondo y las dos capas siguen alineadas entre sí. Mismo criterio
+     para .lobby-wheel-video (modo video, ver data/wheelRenderMode.ts): así el mismo truco de
+     viewBox+preserveAspectRatio="xMidYMid meet" que usan los overlays de LobbyBackgroundLayer
+     sigue valiendo, ahora contra WHEEL_VIDEO_GEOMETRY.canvasWidth/canvasHeight en vez de
+     WHEEL_CANVAS_WIDTH/HEIGHT. */
   object-fit: contain;
 }
+
+/* .lobby-wheel-video no tiene animation-name: la rotación ya está grabada en el video, a
+   diferencia de .lobby-wheel-rotor que gira via CSS sobre un PNG estático. */
 
 .lobby-wheel-rotor {
   /* Base_European.png y Rotor_European.png están centradas en el mismo punto del canvas

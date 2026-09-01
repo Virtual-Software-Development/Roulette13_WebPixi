@@ -1,4 +1,9 @@
-import { getPocketAngleDeg, getPocketPosition } from '../../utils/wheelPositions'
+import { memo } from 'react'
+import { getPocketAngleDegForGeometry, getPocketPositionForGeometry } from '../../utils/wheelPositions'
+import type { PocketGeometry } from '../../utils/wheelPositions'
+import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
+import { getDiamondGlowSprite } from '../../utils/diamondGlowSprite'
+import { pocketAngleChangedBeyondThreshold } from './pocketGeometryMemo'
 import { COLUMN_DIAMOND_INDICATOR_STYLES } from './columnDiamondIndicatorStyles'
 import type { ColumnGroup } from '../../types/numberIndicator'
 import type { WheelPocket, WheelType } from '../../types/wheel'
@@ -33,6 +38,10 @@ interface ColumnDiamondIndicatorProps {
   active: boolean
   width?: number
   height?: number
+  // Geometría a usar para ubicar la casilla -- por defecto WHEEL_GEOMETRY[wheelType] (modo
+  // imagen, mismo comportamiento de siempre). Pasar WHEEL_VIDEO_GEOMETRY[wheelType] (ver
+  // layout/wheelVideoGeometry.constants.ts) para dibujar sobre el modo video en vez de la imagen.
+  geometry?: PocketGeometry
 }
 
 function buildDiamondPoints(width: number, height: number): string {
@@ -66,59 +75,92 @@ const STACK_POSITION_CLASS_NAMES = ['column-diamond-indicator-stack-last', 'colu
 // .lobby-wheel-rotor), un diamante es simétrico bajo giros de 90° y visualmente "no se nota"
 // que está girando -- al rotarlo igual que HotColdNumberChip, el ojo detecta el giro igual
 // que con las fichas de hot/cold.
-export function ColumnDiamondIndicator({
+function ColumnDiamondIndicatorComponent({
   pocket,
   wheelType,
   group,
   active,
   width = COLUMN_DIAMOND_DEFAULT_WIDTH,
   height = COLUMN_DIAMOND_DEFAULT_HEIGHT,
+  geometry = WHEEL_GEOMETRY[wheelType],
 }: ColumnDiamondIndicatorProps) {
   if (!active) return null
 
-  const { x, y } = getPocketPosition(pocket, wheelType, COLUMN_DIAMOND_RADIUS_OFFSET)
-  const angleDeg = getPocketAngleDeg(pocket, wheelType)
+  const { x, y } = getPocketPositionForGeometry(pocket, wheelType, geometry, COLUMN_DIAMOND_RADIUS_OFFSET)
+  const angleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const style = COLUMN_DIAMOND_INDICATOR_STYLES[group]
   const points = buildDiamondPoints(width, height)
   const stackOffsets = buildStackOffsets(height)
+  // Un solo sprite prerenderizado por (tamaño, color) -- compartido por las 3 casillas apiladas
+  // de TODAS las casillas de este grupo, no solo las de este componente (cache global, ver
+  // diamondGlowSprite.ts). El feDropShadow ya no se recalcula por instancia: se rasterizó una vez
+  // al pedir el primer diamante de este color y de ahí en más es solo una textura reusada.
+  const sprite = getDiamondGlowSprite({
+    width,
+    height,
+    strokeColor: style.stroke,
+    glowColor: style.glow,
+    strokeWidth: COLUMN_DIAMOND_STROKE_WIDTH,
+    glowBlur: COLUMN_DIAMOND_GLOW_BLUR,
+  })
 
   return (
     <g transform={`translate(${x}, ${y}) rotate(${angleDeg})`} data-number={pocket} data-column-group={group}>
-      {stackOffsets.map((offsetY, i) => {
-        const glowId = `column-diamond-glow-${group}-${pocket}-${i}`
-        return (
-          <g
-            key={i}
-            className={STACK_POSITION_CLASS_NAMES[i]}
-            transform={`translate(0, ${offsetY})`}
-            style={{ animationDuration: `${COLUMN_DIAMOND_CHASE_DURATION_MS}ms` }}
-          >
-            <defs>
-              <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation={COLUMN_DIAMOND_GLOW_BLUR} floodColor={style.glow} floodOpacity="1" />
-              </filter>
-            </defs>
-            {/* Diamante base: líneas con glow simétrico (feDropShadow) alrededor del trazo, que
-                se lee como halo tanto hacia adentro como hacia afuera del diamante. */}
-            <polygon
-              className="column-diamond-indicator-base"
-              points={points}
-              fill="none"
-              stroke={style.stroke}
-              strokeWidth={COLUMN_DIAMOND_STROKE_WIDTH}
-              filter={`url(#${glowId})`}
-            />
-            {/* Segunda línea, misma forma, superpuesta -- hace blink por CSS (ver .css). */}
-            <polygon
-              className="column-diamond-indicator-blink-line"
-              points={points}
-              fill="none"
-              stroke={style.glow}
-              strokeWidth={COLUMN_DIAMOND_BLINK_STROKE_WIDTH}
-            />
-          </g>
-        )
-      })}
+      {stackOffsets.map((offsetY, i) => (
+        <g
+          key={i}
+          className={STACK_POSITION_CLASS_NAMES[i]}
+          transform={`translate(0, ${offsetY})`}
+          style={{ animationDuration: `${COLUMN_DIAMOND_CHASE_DURATION_MS}ms` }}
+        >
+          {/* Diamante base: sprite prerenderizado (trazo + glow ya horneados) en vez de
+              polygon+filter por instancia -- ver comentario de `sprite` arriba. */}
+          <image
+            className="column-diamond-indicator-base"
+            href={sprite.url}
+            x={sprite.offsetX}
+            y={sprite.offsetY}
+            width={sprite.spriteWidth}
+            height={sprite.spriteHeight}
+          />
+          {/* Segunda línea, misma forma, superpuesta -- hace blink por CSS (ver .css). Sigue
+              siendo un polygon liviano: no lleva filter propio, así que no se beneficia del
+              sprite (no hay nada caro que compartir acá). */}
+          <polygon
+            className="column-diamond-indicator-blink-line"
+            points={points}
+            fill="none"
+            stroke={style.glow}
+            strokeWidth={COLUMN_DIAMOND_BLINK_STROKE_WIDTH}
+          />
+        </g>
+      ))}
     </g>
   )
 }
+
+// En modo video, ColumnDiamondIndicatorLayer le pasa una `geometry` distinta en cada frame real
+// (ver useWheelVideoPocketGeometry.ts) -- sin este memo, eso fuerza a React a reconciliar TODOS
+// los diamantes activos en cada frame, aunque el ángulo de una casilla puntual apenas se haya
+// movido (típico en la desaceleración/parada del video, donde el ángulo medido cambia menos de
+// un grado entre frames consecutivos). El comparador solo mira el ángulo de ESTA casilla -- no
+// la geometría completa -- así que un diamante no se vuelve a pintar hasta que su propia posición
+// cruce el umbral (ver pocketGeometryMemo.ts), aunque otras casillas sí se hayan movido más.
+function columnDiamondPropsAreEqual(prev: ColumnDiamondIndicatorProps, next: ColumnDiamondIndicatorProps): boolean {
+  if (
+    prev.pocket !== next.pocket ||
+    prev.wheelType !== next.wheelType ||
+    prev.group !== next.group ||
+    prev.active !== next.active ||
+    prev.width !== next.width ||
+    prev.height !== next.height
+  ) {
+    return false
+  }
+
+  const prevGeometry = prev.geometry ?? WHEEL_GEOMETRY[prev.wheelType]
+  const nextGeometry = next.geometry ?? WHEEL_GEOMETRY[next.wheelType]
+  return !pocketAngleChangedBeyondThreshold(next.pocket, next.wheelType, prevGeometry, nextGeometry)
+}
+
+export const ColumnDiamondIndicator = memo(ColumnDiamondIndicatorComponent, columnDiamondPropsAreEqual)

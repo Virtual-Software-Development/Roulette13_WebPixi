@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "serve": "node server.js",
     "test": "vitest run",
+    "encode-alpha-video": "node scripts/encode-alpha-video.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

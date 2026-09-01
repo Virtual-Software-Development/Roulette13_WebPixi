@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
-import { describeCellFlarePath, getPocketAngleDeg, getPolarPoint } from '../../utils/wheelPositions'
+import { describeCellFlarePath, getPocketAngleDegForGeometry, getPolarPoint } from '../../utils/wheelPositions'
+import type { PocketGeometry } from '../../utils/wheelPositions'
 import { getRouletteColor } from '../../utils/rouletteColors'
 import { NUMBER_CELL_HIGHLIGHT_STYLES } from './numberCellHighlightStyles'
 import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
@@ -53,6 +54,10 @@ interface NumberCellHighlightProps {
   wheelType: WheelType
   phase: NumberCellHighlightPhase
   delayMs?: number
+  // Geometría a usar para ubicar la casilla -- por defecto WHEEL_GEOMETRY[wheelType] (modo
+  // imagen, mismo comportamiento de siempre). Pasar WHEEL_VIDEO_GEOMETRY[wheelType] (ver
+  // layout/wheelVideoGeometry.constants.ts) para dibujar sobre el modo video en vez de la imagen.
+  geometry?: PocketGeometry
 }
 
 // Resalta la casilla de un número con forma de rectángulo que se abre hacia arriba (borde
@@ -62,9 +67,9 @@ interface NumberCellHighlightProps {
 // cuánto tiempo -- eso lo controla el padre (ver useNumberCellHighlightCycle.ts) a través de
 // `phase`. Cuando el padre no debe mostrar este número, simplemente no lo incluye en su lista
 // (ni nodo, ni espacio), en vez de pasarle una phase "hidden".
-export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0 }: NumberCellHighlightProps) {
-  const { center } = WHEEL_GEOMETRY[wheelType]
-  const centerAngleDeg = getPocketAngleDeg(pocket, wheelType)
+export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, geometry = WHEEL_GEOMETRY[wheelType] }: NumberCellHighlightProps) {
+  const { center } = geometry
+  const centerAngleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const bottomStartDeg = centerAngleDeg + CELL_HIGHLIGHT_BOTTOM_START_DEG
   const bottomEndDeg = centerAngleDeg + CELL_HIGHLIGHT_BOTTOM_END_DEG
   const topStartDeg = centerAngleDeg + CELL_HIGHLIGHT_TOP_START_DEG
