@@ -1,4 +1,6 @@
-import { getPocketAngleDeg, getPocketPosition } from '../../utils/wheelPositions'
+import { getPocketAngleDegForGeometry, getPocketPositionForGeometry } from '../../utils/wheelPositions'
+import type { PocketGeometry } from '../../utils/wheelPositions'
+import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
 import { COLUMN_DIAMOND_INDICATOR_STYLES } from './columnDiamondIndicatorStyles'
 import type { ColumnGroup } from '../../types/numberIndicator'
 import type { WheelPocket, WheelType } from '../../types/wheel'
@@ -33,6 +35,10 @@ interface ColumnDiamondIndicatorProps {
   active: boolean
   width?: number
   height?: number
+  // Geometría a usar para ubicar la casilla -- por defecto WHEEL_GEOMETRY[wheelType] (modo
+  // imagen, mismo comportamiento de siempre). Pasar WHEEL_VIDEO_GEOMETRY[wheelType] (ver
+  // layout/wheelVideoGeometry.constants.ts) para dibujar sobre el modo video en vez de la imagen.
+  geometry?: PocketGeometry
 }
 
 function buildDiamondPoints(width: number, height: number): string {
@@ -73,11 +79,12 @@ export function ColumnDiamondIndicator({
   active,
   width = COLUMN_DIAMOND_DEFAULT_WIDTH,
   height = COLUMN_DIAMOND_DEFAULT_HEIGHT,
+  geometry = WHEEL_GEOMETRY[wheelType],
 }: ColumnDiamondIndicatorProps) {
   if (!active) return null
 
-  const { x, y } = getPocketPosition(pocket, wheelType, COLUMN_DIAMOND_RADIUS_OFFSET)
-  const angleDeg = getPocketAngleDeg(pocket, wheelType)
+  const { x, y } = getPocketPositionForGeometry(pocket, wheelType, geometry, COLUMN_DIAMOND_RADIUS_OFFSET)
+  const angleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const style = COLUMN_DIAMOND_INDICATOR_STYLES[group]
   const points = buildDiamondPoints(width, height)
   const stackOffsets = buildStackOffsets(height)

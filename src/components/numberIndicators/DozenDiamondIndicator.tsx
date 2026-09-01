@@ -1,4 +1,6 @@
-import { getPocketAngleDeg, getPocketPosition } from '../../utils/wheelPositions'
+import { getPocketAngleDegForGeometry, getPocketPositionForGeometry } from '../../utils/wheelPositions'
+import type { PocketGeometry } from '../../utils/wheelPositions'
+import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
 import { DOZEN_DIAMOND_INDICATOR_STYLES } from './dozenDiamondIndicatorStyles'
 import type { DozenGroup } from '../../types/numberIndicator'
 import type { WheelPocket, WheelType } from '../../types/wheel'
@@ -28,6 +30,10 @@ interface DozenDiamondIndicatorProps {
   active: boolean
   width?: number
   height?: number
+  // Geometría a usar para ubicar la casilla -- por defecto WHEEL_GEOMETRY[wheelType] (modo
+  // imagen, mismo comportamiento de siempre). Pasar WHEEL_VIDEO_GEOMETRY[wheelType] (ver
+  // layout/wheelVideoGeometry.constants.ts) para dibujar sobre el modo video en vez de la imagen.
+  geometry?: PocketGeometry
 }
 
 function buildDiamondPoints(width: number, height: number): string {
@@ -50,11 +56,12 @@ export function DozenDiamondIndicator({
   active,
   width = DOZEN_DIAMOND_DEFAULT_WIDTH,
   height = DOZEN_DIAMOND_DEFAULT_HEIGHT,
+  geometry = WHEEL_GEOMETRY[wheelType],
 }: DozenDiamondIndicatorProps) {
   if (!active) return null
 
-  const { x, y } = getPocketPosition(pocket, wheelType, DOZEN_DIAMOND_RADIUS_OFFSET)
-  const angleDeg = getPocketAngleDeg(pocket, wheelType)
+  const { x, y } = getPocketPositionForGeometry(pocket, wheelType, geometry, DOZEN_DIAMOND_RADIUS_OFFSET)
+  const angleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const style = DOZEN_DIAMOND_INDICATOR_STYLES[group]
   const points = buildDiamondPoints(width, height)
   const blinkPoints = buildDiamondPoints(width * DOZEN_DIAMOND_BLINK_SCALE, height * DOZEN_DIAMOND_BLINK_SCALE)

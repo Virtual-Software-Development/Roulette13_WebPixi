@@ -1,4 +1,6 @@
-import { getPocketAngleDeg, getPocketPosition } from '../../utils/wheelPositions'
+import { getPocketAngleDegForGeometry, getPocketPositionForGeometry } from '../../utils/wheelPositions'
+import type { PocketGeometry } from '../../utils/wheelPositions'
+import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
 import { NUMBER_INDICATOR_STYLES } from './numberIndicatorStyles'
 import type { NumberIndicatorType } from '../../types/numberIndicator'
 import type { WheelPocket, WheelType } from '../../types/wheel'
@@ -24,18 +26,22 @@ interface HotColdNumberChipProps {
   wheelType: WheelType
   type: NumberIndicatorType
   active: boolean
+  // Geometría a usar para ubicar la casilla -- por defecto WHEEL_GEOMETRY[wheelType] (modo
+  // imagen, mismo comportamiento de siempre). Pasar WHEEL_VIDEO_GEOMETRY[wheelType] (ver
+  // layout/wheelVideoGeometry.constants.ts) para dibujar sobre el modo video en vez de la imagen.
+  geometry?: PocketGeometry
 }
 
 // Ficha pulsante anclada a la posición de una casilla del rotor, para marcar números
 // calientes/fríos (hot/cold). Cuando active=false no renderiza nada -- ni color, ni borde, ni
 // espacio: el número simplemente no tiene ficha.
-export function HotColdNumberChip({ pocket, wheelType, type, active }: HotColdNumberChipProps) {
+export function HotColdNumberChip({ pocket, wheelType, type, active, geometry = WHEEL_GEOMETRY[wheelType] }: HotColdNumberChipProps) {
   if (!active) {
     return null
   }
 
-  const { x, y } = getPocketPosition(pocket, wheelType, CHIP_RADIUS_OFFSET)
-  const angleDeg = getPocketAngleDeg(pocket, wheelType)
+  const { x, y } = getPocketPositionForGeometry(pocket, wheelType, geometry, CHIP_RADIUS_OFFSET)
+  const angleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const style = NUMBER_INDICATOR_STYLES[type]
 
   return (
