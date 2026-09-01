@@ -1,0 +1,43 @@
+.wheel-frame-stepper {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  font-family: monospace;
+  color: #fff;
+  pointer-events: auto;
+}
+
+.wheel-frame-stepper-button {
+  font-family: inherit;
+  font-size: 14px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.wheel-frame-stepper-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.wheel-frame-stepper-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.wheel-frame-stepper-label {
+  font-size: 14px;
+  min-width: 8em;
+  text-align: center;
+}

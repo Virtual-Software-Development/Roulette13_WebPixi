@@ -1,7 +1,15 @@
 import { useLayoutEffect, useState } from 'react'
-import { flushSync } from 'react-dom'
 import type { WheelVideoGeometry } from '../layout/wheelVideoGeometry.constants'
 import type { PocketGeometry } from '../utils/wheelPositions'
+
+// Cuántos requestVideoFrameCallback reales se dejan pasar entre cada recálculo/commit de
+// geometría -- 1 = recalcula en todos los frames (comportamiento anterior), 2 = uno sí uno no,
+// etc. En low-end devices, forzar un commit de React (36+ transforms de diamantes + sus filtros
+// SVG) en TODOS los frames reales del video es lo que compite por el mismo hilo principal que
+// necesita el propio <video> para no trabarse. Saltear frames alternados reduce ese trabajo a la
+// mitad sin que el desfasaje visual entre el video y los diamantes sea perceptible (a ~45°/s de
+// giro, un frame de diferencia en un video de 30-60fps es sub-grado).
+const VIDEO_GEOMETRY_FRAME_SKIP = 2
 
 // Reemplaza a la versión anterior de este hook (que aplicaba una rotación uniforme sobre una
 // única tabla de ángulos) -- el video tiene perspectiva real y la separación entre casillas
@@ -22,13 +30,14 @@ function resolveGeometry(video: WheelVideoGeometry, mediaTimeSec: number): Pocke
 // frame que el usuario está viendo en ese instante (rAF podría leer video.currentTime antes de
 // que el frame nuevo se pinte y repetir el mismo índice, o saltarse uno).
 //
-// setGeometry va envuelto en flushSync a propósito: sin esto, React agenda el re-render para
-// más adelante (el siguiente tick de su scheduler), y a ~45°/s ese retraso -- aunque sea de un
-// frame o dos -- se ve como que los puntos van sistemáticamente "atrasados" respecto al video
-// real (mismo síntoma que el desfasaje de calibración, pero acá la causa es latencia de render,
-// no la tabla de datos). flushSync fuerza a que el commit de React (recalcular los 38
-// transform="translate(...) rotate(...)") pase en el mismo tick que el frame real del video, sin
-// esperar al scheduler.
+// setGeometry ya NO va envuelto en flushSync (a diferencia de una versión anterior de este
+// hook): forzar un commit síncrono de React en todos y cada uno de los frames reales del video
+// es exactamente el tipo de trabajo que traba el hilo principal en low-end devices (compite con
+// el propio <video> por el mismo hilo). Dejar que React agende el re-render normalmente cuesta
+// como mucho un frame de latencia adicional -- imperceptible a las velocidades de giro de esta
+// rueda -- a cambio de no bloquear el frame real del video. Combinado con
+// VIDEO_GEOMETRY_FRAME_SKIP (saltear frames alternados), el trabajo de re-render se reduce a una
+// fracción del que había antes.
 //
 // Busca el <video class="lobby-wheel-video"> por selector, mismo patrón que useWheelRotationSync
 // usa para '.lobby-wheel-rotor'.
@@ -39,12 +48,18 @@ export function useWheelVideoPocketGeometry(video: WheelVideoGeometry): PocketGe
     const videoEl = document.querySelector<HTMLVideoElement>('.lobby-wheel-video')
     if (!videoEl) return
 
+    let frameCounter = 0
+    function shouldSkipFrame(): boolean {
+      frameCounter = (frameCounter + 1) % VIDEO_GEOMETRY_FRAME_SKIP
+      return frameCounter !== 0
+    }
+
     if (typeof videoEl.requestVideoFrameCallback !== 'function') {
       // Fallback defensivo -- no se espera este caso en el navegador de este kiosco (Chrome/Edge),
       // ver mismo criterio en onVideoNearEnd (utils/videoSeek.ts).
       let handle: number
       function tick() {
-        flushSync(() => setGeometry(resolveGeometry(video, videoEl!.currentTime)))
+        if (!shouldSkipFrame()) setGeometry(resolveGeometry(video, videoEl!.currentTime))
         handle = requestAnimationFrame(tick)
       }
       handle = requestAnimationFrame(tick)
@@ -55,7 +70,7 @@ export function useWheelVideoPocketGeometry(video: WheelVideoGeometry): PocketGe
     let vfcHandle: number
     function tick(_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) {
       if (cancelled) return
-      flushSync(() => setGeometry(resolveGeometry(video, metadata.mediaTime)))
+      if (!shouldSkipFrame()) setGeometry(resolveGeometry(video, metadata.mediaTime))
       vfcHandle = videoEl!.requestVideoFrameCallback(tick)
     }
     vfcHandle = videoEl.requestVideoFrameCallback(tick)

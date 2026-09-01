@@ -6,6 +6,8 @@ import { WHEEL_VIDEO_GEOMETRY } from '../layout/wheelVideoGeometry.constants'
 import { ACTIVE_WHEEL_TYPE } from '../data/wheelOrder'
 import { getEffectiveWheelRenderMode } from '../data/wheelRenderMode'
 import { loadVideoSrc } from '../video/videoElements'
+import { WHEEL_VIDEO_FROZEN } from '../config/wheelCalibration'
+import { WheelFrameStepper } from './WheelFrameStepper'
 import { LobbyWheelDebugOverlay } from './LobbyWheelDebugOverlay'
 // import { HotColdNumberChipLayer } from '../components/numberIndicators/HotColdNumberChipLayer'
 // NumberCellHighlightLayer pausado temporalmente mientras se construye DozenDiamondIndicator.
@@ -80,6 +82,11 @@ export function LobbyBackgroundLayer() {
     video.loop = true
     loadVideoSrc(video, WHEEL_VIDEO_URL).then(() => {
       if (cancelled) return
+      if (WHEEL_VIDEO_FROZEN) {
+        video.pause()
+        video.currentTime = 0
+        return
+      }
       video.play().catch(() => {
         video.muted = true
         void video.play()
@@ -119,6 +126,7 @@ export function LobbyBackgroundLayer() {
       <DozenDiamondIndicatorLayer activeGroups={['thirdDozen']} />
       {/* <ColumnDiamondIndicatorLayer activeGroups={['thirdColumn']} /> */}
       <LobbyWheelDebugOverlay />
+      <WheelFrameStepper />
     </div>
   )
 }

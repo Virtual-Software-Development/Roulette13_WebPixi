@@ -1,6 +1,9 @@
+import { memo } from 'react'
 import { getPocketAngleDegForGeometry, getPocketPositionForGeometry } from '../../utils/wheelPositions'
 import type { PocketGeometry } from '../../utils/wheelPositions'
 import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
+import { getDiamondGlowSprite } from '../../utils/diamondGlowSprite'
+import { pocketAngleChangedBeyondThreshold } from './pocketGeometryMemo'
 import { DOZEN_DIAMOND_INDICATOR_STYLES } from './dozenDiamondIndicatorStyles'
 import type { DozenGroup } from '../../types/numberIndicator'
 import type { WheelPocket, WheelType } from '../../types/wheel'
@@ -49,7 +52,7 @@ function buildDiamondPoints(width: number, height: number): string {
 // .lobby-wheel-rotor), un diamante es simétrico bajo giros de 90° y visualmente "no se nota"
 // que está girando -- al rotarlo igual que HotColdNumberChip, el ojo detecta el giro igual
 // que con las fichas de hot/cold.
-export function DozenDiamondIndicator({
+function DozenDiamondIndicatorComponent({
   pocket,
   wheelType,
   group,
@@ -63,29 +66,33 @@ export function DozenDiamondIndicator({
   const { x, y } = getPocketPositionForGeometry(pocket, wheelType, geometry, DOZEN_DIAMOND_RADIUS_OFFSET)
   const angleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const style = DOZEN_DIAMOND_INDICATOR_STYLES[group]
-  const points = buildDiamondPoints(width, height)
   const blinkPoints = buildDiamondPoints(width * DOZEN_DIAMOND_BLINK_SCALE, height * DOZEN_DIAMOND_BLINK_SCALE)
-  const glowId = `dozen-diamond-glow-${group}-${pocket}`
+  // Sprite prerenderizado compartido por (tamaño, color) -- mismo criterio que
+  // ColumnDiamondIndicator.tsx (ver comentario largo ahí y en diamondGlowSprite.ts).
+  const sprite = getDiamondGlowSprite({
+    width,
+    height,
+    strokeColor: style.stroke,
+    glowColor: style.glow,
+    strokeWidth: DOZEN_DIAMOND_STROKE_WIDTH,
+    glowBlur: DOZEN_DIAMOND_GLOW_BLUR,
+  })
 
   return (
     <g transform={`translate(${x}, ${y}) rotate(${angleDeg})`} data-number={pocket} data-dozen-group={group}>
-      <defs>
-        <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="0" stdDeviation={DOZEN_DIAMOND_GLOW_BLUR} floodColor={style.glow} floodOpacity="1" />
-        </filter>
-      </defs>
-      {/* Diamante base: líneas con glow simétrico (feDropShadow) alrededor del trazo, que se
-          lee como halo tanto hacia adentro como hacia afuera del diamante. */}
-      <polygon
+      {/* Diamante base: sprite prerenderizado (trazo + glow ya horneados) en vez de
+          polygon+filter por instancia. */}
+      <image
         className="dozen-diamond-indicator-base"
-        points={points}
-        fill="none"
-        stroke={style.stroke}
-        strokeWidth={DOZEN_DIAMOND_STROKE_WIDTH}
-        filter={`url(#${glowId})`}
+        href={sprite.url}
+        x={sprite.offsetX}
+        y={sprite.offsetY}
+        width={sprite.spriteWidth}
+        height={sprite.spriteHeight}
       />
       {/* Segundo diamante, más grande (tipo halo), superpuesto -- hace blink por CSS (ver
-          .css), apareciendo y desapareciendo por fuera del diamante principal. */}
+          .css), apareciendo y desapareciendo por fuera del diamante principal. Sigue siendo un
+          polygon liviano: no lleva filter propio. */}
       <polygon
         className="dozen-diamond-indicator-blink-line"
         points={blinkPoints}
@@ -96,3 +103,26 @@ export function DozenDiamondIndicator({
     </g>
   )
 }
+
+// Mismo criterio que ColumnDiamondIndicator.tsx (ver comentario largo ahí): sin este memo,
+// ColumnDiamondIndicatorLayer/DozenDiamondIndicatorLayer le pasan una `geometry` nueva a cada
+// diamante en cada frame real de video, forzando reconciliación aunque el ángulo de esta casilla
+// puntual apenas se haya movido.
+function dozenDiamondPropsAreEqual(prev: DozenDiamondIndicatorProps, next: DozenDiamondIndicatorProps): boolean {
+  if (
+    prev.pocket !== next.pocket ||
+    prev.wheelType !== next.wheelType ||
+    prev.group !== next.group ||
+    prev.active !== next.active ||
+    prev.width !== next.width ||
+    prev.height !== next.height
+  ) {
+    return false
+  }
+
+  const prevGeometry = prev.geometry ?? WHEEL_GEOMETRY[prev.wheelType]
+  const nextGeometry = next.geometry ?? WHEEL_GEOMETRY[next.wheelType]
+  return !pocketAngleChangedBeyondThreshold(next.pocket, next.wheelType, prevGeometry, nextGeometry)
+}
+
+export const DozenDiamondIndicator = memo(DozenDiamondIndicatorComponent, dozenDiamondPropsAreEqual)

@@ -61,6 +61,13 @@ export const WHEEL_GEOMETRY: Record<WheelType, WheelGeometry> = {
     // Orden: AMERICAN_WHEEL_ORDER (0, 28, 9, 26, ..., 1, '00', 27, ...). Acá el desvío respecto
     // al espaciado uniforme sí es grande (hasta ~5°, cerca de '00', el lado opuesto al '0') --
     // por eso hacía falta esta tabla en vez de un solo offset.
+    //
+    // Reemplazado por AMERICAN_POCKET_ANGLE_DEG_BY_FRAME[0] (frame 0 del video, ver
+    // wheelVideoGeometry.american.frames.ts) en vez de la medición original tomada del PNG
+    // (Rotor_American.png): comparando ambas mediciones pocket a pocket, coinciden dentro de
+    // ~0.5-2° con la MISMA forma de desvío creciente hacia el lado opuesto al '0' -- confirma que
+    // es la misma rueda/orientación medida dos veces, y la del video es la fuente más directa
+    // (la que efectivamente usa el modo video) así que se usa como valor por defecto acá también.
     pocketAngleDeg: [
       86.1, 95.9, 105.65, 115.4, 125.1, 134.7, 144.3, 154.05, 163.65, 173.2, 182.75, 192.5,
       202.1, 211.9, 221.75, 231.6, 241.35, 251.05, 260.9, 270.7, 280.0, 289.1, 298.35, 307.55,

@@ -10,7 +10,7 @@ import { useEffect } from 'react'
 // Prende/apaga los puntos de calibración sin sacar el componente del árbol -- cambiar acá y
 // guardar alcanza para ocultarlos/mostrarlos de nuevo (hot reload), más rápido que comentar el
 // JSX. Solo tiene efecto en dev (ver chequeo de import.meta.env.DEV más abajo).
-const SHOW_DEBUG_POCKETS = true
+const SHOW_DEBUG_POCKETS = false
 
 // Referencia visual para calibrar WHEEL_GEOMETRY (modo imagen, wheelGeometry.constants.ts) o
 // WHEEL_VIDEO_GEOMETRY (modo video, wheelVideoGeometry.constants.ts -- ver

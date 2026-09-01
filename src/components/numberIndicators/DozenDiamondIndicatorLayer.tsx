@@ -32,7 +32,7 @@ export function DozenDiamondIndicatorLayer({ activeGroups, wheelType = ACTIVE_WH
       viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       preserveAspectRatio="xMidYMid meet"
     >
-      <WheelRotorGroup wheelType={wheelType} className="dozen-diamond-indicator-rotor-group">
+      <WheelRotorGroup wheelType={wheelType} className="dozen-diamond-indicator-rotor-group" videoMode="rigid">
         {(geometry) =>
           entries.map(({ pocket, group }) => (
             <DozenDiamondIndicator

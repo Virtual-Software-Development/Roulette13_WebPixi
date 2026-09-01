@@ -13,6 +13,7 @@ import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
 import { pickRandomDrawResultVideoUrl } from './utils/media'
 import { parseApiDateTime } from './utils/time'
+import { WHEEL_VIDEO_FROZEN } from './config/wheelCalibration'
 
 const RESULT_LEAD_MS = 500
 
@@ -61,7 +62,11 @@ function App() {
         startTimer = setTimeout(() => {
           if (isCancelled()) return
           const showVideo = () => {
-            if (isCancelled()) return
+            // WHEEL_VIDEO_FROZEN (ver LobbyBackgroundLayer.tsx): con la rueda calibrándose a mano
+            // sobre un frame quieto (o moviéndose cuadro a cuadro con WheelFrameStepper.tsx), no
+            // queremos que el reloj del próximo sorteo dispare la escena de juego a mitad de
+            // sesión -- se pierde el frame que se estaba comparando.
+            if (isCancelled() || WHEEL_VIDEO_FROZEN) return
             useDrawCycleStore.getState().setActive(true)
             setVideoMounted(true)
           }
