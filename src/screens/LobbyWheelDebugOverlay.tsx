@@ -12,6 +12,22 @@ import { useEffect } from 'react'
 // JSX. Solo tiene efecto en dev (ver chequeo de import.meta.env.DEV más abajo).
 const SHOW_DEBUG_POCKETS = false
 
+// Radio del círculo -- independiente por modo (el canvas de video es más chico que el de imagen,
+// 1920x1080 vs 2560x1440, así que el mismo radio se ve proporcionalmente más grande ahí). El
+// tamaño de la fuente del número tiene su propio ajuste por modo en lobbyWheelDebugOverlay.css
+// (clase lobby-wheel-debug-pocket--video). Ajustar a mano.
+const DEBUG_POCKET_RADIUS = 16
+const DEBUG_POCKET_VIDEO_RADIUS = 10
+
+// Corrección de posición SOLO en modo video -- mismo motivo que CHIP_VIDEO_X_OFFSET en
+// HotColdNumberChip.tsx: geometry.center/radius se midieron por ajuste de círculo + barrido de
+// color sobre el video, así que la posición calculada puede no calzar 100% exacto con el número
+// impreso. RADIUS_OFFSET mueve el punto a lo largo del eje radial (positivo = más lejos del
+// centro), X_OFFSET se suma directo al x del translate() del <g>. Ajustar a mano viendo el video
+// en vivo (server de dev con HMR). En modo imagen no se aplica ninguno de los dos.
+const DEBUG_POCKET_VIDEO_RADIUS_OFFSET = 8
+const DEBUG_POCKET_VIDEO_X_OFFSET = 0
+
 // Referencia visual para calibrar WHEEL_GEOMETRY (modo imagen, wheelGeometry.constants.ts) o
 // WHEEL_VIDEO_GEOMETRY (modo video, wheelVideoGeometry.constants.ts -- ver
 // data/wheelRenderMode.ts) contra los números reales impresos en el rotor/video de
@@ -24,9 +40,11 @@ export function LobbyWheelDebugOverlay() {
   if (!import.meta.env.DEV || !SHOW_DEBUG_POCKETS) return null
 
   const mode = getEffectiveWheelRenderMode(ACTIVE_WHEEL_TYPE)
+  const isVideoMode = mode === 'video'
   const videoGeometry = WHEEL_VIDEO_GEOMETRY[ACTIVE_WHEEL_TYPE]
-  const canvasWidth = mode === 'video' && videoGeometry ? videoGeometry.canvasWidth : WHEEL_CANVAS_WIDTH
-  const canvasHeight = mode === 'video' && videoGeometry ? videoGeometry.canvasHeight : WHEEL_CANVAS_HEIGHT
+  const canvasWidth = isVideoMode && videoGeometry ? videoGeometry.canvasWidth : WHEEL_CANVAS_WIDTH
+  const canvasHeight = isVideoMode && videoGeometry ? videoGeometry.canvasHeight : WHEEL_CANVAS_HEIGHT
+  const pocketRadius = isVideoMode ? DEBUG_POCKET_VIDEO_RADIUS : DEBUG_POCKET_RADIUS
 
   useEffect(() => {
     
@@ -41,15 +59,17 @@ export function LobbyWheelDebugOverlay() {
       <WheelRotorGroup wheelType={ACTIVE_WHEEL_TYPE} className="lobby-wheel-debug-rotor-group">
         {(geometry, order) =>
           order.map((pocket) => {
-            const { x, y } = getPocketPositionForGeometry(pocket, ACTIVE_WHEEL_TYPE, geometry)
+            const radiusOffset = isVideoMode ? DEBUG_POCKET_VIDEO_RADIUS_OFFSET : 0
+            const { x, y } = getPocketPositionForGeometry(pocket, ACTIVE_WHEEL_TYPE, geometry, radiusOffset)
+            const translateX = isVideoMode ? x + DEBUG_POCKET_VIDEO_X_OFFSET : x
             const angleDeg = getPocketAngleDegForGeometry(pocket, ACTIVE_WHEEL_TYPE, geometry)
             return (
               <g
                 key={pocket}
-                className="lobby-wheel-debug-pocket"
-                transform={`translate(${x}, ${y}) rotate(${angleDeg})`}
+                className={`lobby-wheel-debug-pocket${isVideoMode ? ' lobby-wheel-debug-pocket--video' : ''}`}
+                transform={`translate(${translateX}, ${y}) rotate(${angleDeg})`}
               >
-                <circle r={16} />
+                <circle r={pocketRadius} />
                 <text dy="0.35em">{pocket}</text>
               </g>
             )

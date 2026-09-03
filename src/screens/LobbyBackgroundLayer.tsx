@@ -1,21 +1,19 @@
-import { useEffect, useRef } from 'react'
 import { buildMediaUrl } from '../utils/media'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC } from '../layout/wheelGeometry.constants'
 import { WHEEL_VIDEO_GEOMETRY } from '../layout/wheelVideoGeometry.constants'
 import { ACTIVE_WHEEL_TYPE } from '../data/wheelOrder'
 import { getEffectiveWheelRenderMode } from '../data/wheelRenderMode'
-import { loadVideoSrc } from '../video/videoElements'
 import { WHEEL_VIDEO_FROZEN } from '../config/wheelCalibration'
+import { useSeamlessVideoLoop } from '../hooks/useSeamlessVideoLoop'
 import { WheelFrameStepper } from './WheelFrameStepper'
 import { LobbyWheelDebugOverlay } from './LobbyWheelDebugOverlay'
-// import { HotColdNumberChipLayer } from '../components/numberIndicators/HotColdNumberChipLayer'
-// NumberCellHighlightLayer pausado temporalmente mientras se construye DozenDiamondIndicator.
-// import { NumberCellHighlightLayer } from '../components/numberIndicators/NumberCellHighlightLayer'
-// import { useNumberCellHighlightCycle } from '../hooks/useNumberCellHighlightCycle'
+ import { HotColdNumberChipLayer } from '../components/numberIndicators/HotColdNumberChipLayer'
+ import { NumberCellHighlightLayer } from '../components/numberIndicators/NumberCellHighlightLayer'
+ import { useNumberCellHighlightCycle } from '../hooks/useNumberCellHighlightCycle'
 import { DozenDiamondIndicatorLayer } from '../components/numberIndicators/DozenDiamondIndicatorLayer'
 // ColumnDiamondIndicatorLayer pausado temporalmente mientras se prueban las docenas.
-// import { ColumnDiamondIndicatorLayer } from '../components/numberIndicators/ColumnDiamondIndicatorLayer'
+ import { ColumnDiamondIndicatorLayer } from '../components/numberIndicators/ColumnDiamondIndicatorLayer'
 import type { NumberIndicatorType } from '../types/numberIndicator'
 import type { WheelPocket } from '../types/wheel'
 import './lobbyBackgroundLayer.css'
@@ -40,7 +38,7 @@ const DEMO_NUMBERS_BY_TYPE: Partial<Record<NumberIndicatorType, WheelPocket[]>> 
 
 // Datos de prueba para NumberCellHighlight -- mismos números de la foto de referencia (11
 // negro, 30 rojo, 8 negro).
-const DEMO_HIGHLIGHT_NUMBERS: WheelPocket[] = [11, 30, 8]
+const DEMO_HIGHLIGHT_NUMBERS: WheelPocket[] = [11, 8, 14]
 
 // -- Video viejo, comentado (no borrado) por si hace falta volver atrás --
 // import { useEffect, useRef } from 'react'
@@ -66,37 +64,17 @@ const DEMO_HIGHLIGHT_NUMBERS: WheelPocket[] = [11, 30, 8]
 // corre en el compositor) y da control total sobre velocidad/dirección del giro.
 export function LobbyBackgroundLayer() {
   const backgroundUrl = useGameConfigStore((state) => state.backgroundUrl)
-  const wheelVideoRef = useRef<HTMLVideoElement>(null)
-  // const highlightEntries = useNumberCellHighlightCycle(DEMO_HIGHLIGHT_NUMBERS)
+  const highlightEntries = useNumberCellHighlightCycle(DEMO_HIGHLIGHT_NUMBERS)
 
-  // Carga y arranca el loop del video de la rueda -- solo corre en modo video (WHEEL_RENDER_MODE
-  // no cambia en runtime, así que este efecto es un no-op completo en modo imagen). Mismo
-  // fallback de autoplay mudo que RouletteVideoView.tsx (el kiosco corre sin interacción de
-  // usuario, el navegador puede bloquear autoplay con sonido).
-  useEffect(() => {
-    if (WHEEL_RENDER_MODE !== 'video' || !WHEEL_VIDEO_URL) return
-    const video = wheelVideoRef.current
-    if (!video) return
-
-    let cancelled = false
-    video.loop = true
-    loadVideoSrc(video, WHEEL_VIDEO_URL).then(() => {
-      if (cancelled) return
-      if (WHEEL_VIDEO_FROZEN) {
-        video.pause()
-        video.currentTime = 0
-        return
-      }
-      video.play().catch(() => {
-        video.muted = true
-        void video.play()
-      })
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  // Doble-video con crossfade en vez de loop nativo -- esconde el hitch de Chromium al reiniciar
+  // un <video loop> (bug genérico del navegador, confirmado incluso fuera de esta app -- ver
+  // useSeamlessVideoLoop.ts). WHEEL_RENDER_MODE no cambia en runtime, así que "enabled" es estable
+  // por montaje.
+  const { videoRefA, videoRefB } = useSeamlessVideoLoop({
+    enabled: WHEEL_RENDER_MODE === 'video' && !!WHEEL_VIDEO_URL,
+    url: WHEEL_VIDEO_URL,
+    frozen: WHEEL_VIDEO_FROZEN,
+  })
 
   return (
     <div className="lobby-background-layer">
@@ -106,25 +84,42 @@ export function LobbyBackgroundLayer() {
           detrás/alrededor de la rueda, no solo como fallback mientras algo carga. */}
       {backgroundUrl && <img src={backgroundUrl} className="lobby-background-image" alt="" />}
       {WHEEL_RENDER_MODE === 'video' && WHEEL_VIDEO_URL ? (
-        <video ref={wheelVideoRef} className="lobby-wheel-video" muted playsInline />
+        <>
+          <video
+            ref={videoRefA}
+            className="lobby-wheel-video"
+            muted
+            playsInline
+            preload="auto"
+            data-wheel-video-active="true"
+            style={{ opacity: 0 }}
+          />
+          <video
+            ref={videoRefB}
+            className="lobby-wheel-video"
+            muted
+            playsInline
+            preload="auto"
+            data-wheel-video-active="false"
+            style={{ opacity: 0 }}
+          />
+        </>
       ) : (
         <>
-          <img src={WHEEL_BASE_URL} className="lobby-wheel-base" alt="" />
-          <img
+        <img
             src={WHEEL_ROTOR_URL}
             className="lobby-wheel-rotor"
             alt=""
             style={{ animationDuration: `${WHEEL_SPIN_DURATION_SEC}s` }}
           />
+          <img src={WHEEL_BASE_URL} className="lobby-wheel-base" alt="" />    
         </>
       )}
       {/* <video ref={videoRef} className="lobby-background-video" playsInline preload="auto" /> */}
-      {/* <HotColdNumberChipLayer numbersByType={DEMO_NUMBERS_BY_TYPE} /> */}
-      {/* <NumberCellHighlightLayer entries={highlightEntries} /> */}
-      {/* Solo 1-12 activo por ahora -- agregar 'secondDozen'/'thirdDozen' al array para
-          probar las otras docenas. */}
-      <DozenDiamondIndicatorLayer activeGroups={['thirdDozen']} />
-      {/* <ColumnDiamondIndicatorLayer activeGroups={['thirdColumn']} /> */}
+      {/*<HotColdNumberChipLayer numbersByType={DEMO_NUMBERS_BY_TYPE} />*/}
+      {/*<NumberCellHighlightLayer entries={highlightEntries} /> */}
+      {/*<DozenDiamondIndicatorLayer activeGroups={['firstDozen']} /> */}
+       <ColumnDiamondIndicatorLayer activeGroups={['firstColumn']} />
       <LobbyWheelDebugOverlay />
       <WheelFrameStepper />
     </div>

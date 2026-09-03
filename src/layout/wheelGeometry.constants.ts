@@ -56,22 +56,29 @@ export const WHEEL_GEOMETRY: Record<WheelType, WheelGeometry> = {
   american: {
     baseAsset: 'Lobby/Base_American.png',
     rotorAsset: 'Lobby/Rotor_American.png',
-    center: { x: 1276, y: 718 },
-    radius: 380,
-    // Orden: AMERICAN_WHEEL_ORDER (0, 28, 9, 26, ..., 1, '00', 27, ...). Acá el desvío respecto
-    // al espaciado uniforme sí es grande (hasta ~5°, cerca de '00', el lado opuesto al '0') --
-    // por eso hacía falta esta tabla en vez de un solo offset.
-    //
-    // Reemplazado por AMERICAN_POCKET_ANGLE_DEG_BY_FRAME[0] (frame 0 del video, ver
-    // wheelVideoGeometry.american.frames.ts) en vez de la medición original tomada del PNG
-    // (Rotor_American.png): comparando ambas mediciones pocket a pocket, coinciden dentro de
-    // ~0.5-2° con la MISMA forma de desvío creciente hacia el lado opuesto al '0' -- confirma que
-    // es la misma rueda/orientación medida dos veces, y la del video es la fuente más directa
-    // (la que efectivamente usa el modo video) así que se usa como valor por defecto acá también.
+    // Medido directo sobre Rotor_American.png (scripts/measure-wheel-image-angles.py, ajuste de
+    // círculo por mínimos cuadrados sobre el canal alfa del PNG). Reemplaza la medición vieja
+    // (1276, 718) -- esta imagen es un asset independiente del video (no comparten orientación de
+    // render), así que no tiene por qué coincidir con WHEEL_VIDEO_GEOMETRY.american ni con
+    // AMERICAN_POCKET_ANGLE_DEG_BY_FRAME.
+    center: { x: 1279.53, y: 719.47 },
+    radius: 320.35,
+    // Orden: AMERICAN_WHEEL_ORDER (0, 28, 9, 26, ..., 1, '00', 27, ...). Medido con
+    // measure-wheel-image-angles.py: barrido angular de color (rojo/negro/verde) directo sobre
+    // Rotor_American.png, sin OCR, con phase-lock contra la secuencia de colores conocida del paño
+    // americano -- mismo método que measure-wheel-video-angles.py pero aplicado a la imagen
+    // estática en vez de frames de video, y por lo tanto medido una sola vez (no hay rotación que
+    // resolver). Validado con 17 radios de muestreo distintos (todos con phase-lock 38/38); el
+    // desvío entre esas 17 mediciones independientes fue de hasta ~0.05° por casilla (promedio de
+    // los 17 usado acá). Reemplaza la tabla vieja, que en realidad ya no describía este PNG
+    // (Rotor_American.png fue reemplazado por un render nuevo -- por eso el desvío respecto al
+    // espaciado uniforme (360/38) también cambió de forma, aunque sigue sin ser uniforme: hasta
+    // ~2.4° cerca del extremo opuesto al '0').
     pocketAngleDeg: [
-      86.1, 95.9, 105.65, 115.4, 125.1, 134.7, 144.3, 154.05, 163.65, 173.2, 182.75, 192.5,
-      202.1, 211.9, 221.75, 231.6, 241.35, 251.05, 260.9, 270.7, 280.0, 289.1, 298.35, 307.55,
-      316.8, 326.15, 335.5, 344.7, 353.9, 3.3, 12.7, 21.7, 30.9, 40.05, 49.2, 58.3, 67.5, 76.8,
+      180.0, 189.47, 198.95, 208.42, 217.89, 227.36, 236.86, 246.33, 255.78, 265.25, 274.76,
+      284.22, 293.63, 303.15, 312.62, 322.1, 331.57, 341.05, 350.53, 0.0, 9.45, 18.94, 28.43,
+      37.88, 47.38, 56.85, 66.35, 75.81, 85.3, 94.71, 104.22, 113.68, 123.17, 132.64, 142.16,
+      151.58, 161.06, 170.51,
     ],
   },
 }
