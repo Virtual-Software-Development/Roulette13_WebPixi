@@ -5,7 +5,7 @@ export type WheelRenderMode = 'image' | 'video'
 // Modo de render activo para la rueda del lobby -- fijo por código (no runtime, no prop).
 // Cambiar acá para probar el modo video mientras se calibra WHEEL_VIDEO_GEOMETRY
 // (ver layout/wheelVideoGeometry.constants.ts).
-export const ACTIVE_WHEEL_RENDER_MODE: WheelRenderMode = 'video'
+export const ACTIVE_WHEEL_RENDER_MODE: WheelRenderMode = 'image'
 
 // Qué tipos de rueda tienen video disponible -- hoy solo la americana
 // (local-media/Lobby/lobby_loop_american.webm). Agregar 'european: true' acá el día que

@@ -18,7 +18,7 @@ export const DOZEN_DIAMOND_DEFAULT_HEIGHT = 35
 // Separa el diamante del anillo de números impresos -- ajustar a mano (ver CHIP_RADIUS_OFFSET
 // en HotColdNumberChip.tsx, mismo criterio). Valores más grandes lo alejan del centro de la
 // rueda, más chicos (o negativos) lo acercan.
-const DOZEN_DIAMOND_RADIUS_OFFSET = 95
+const DOZEN_DIAMOND_RADIUS_OFFSET = 175
 const DOZEN_DIAMOND_STROKE_WIDTH = 2
 const DOZEN_DIAMOND_GLOW_BLUR = 8
 const DOZEN_DIAMOND_BLINK_STROKE_WIDTH = 1.5

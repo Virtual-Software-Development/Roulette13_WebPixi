@@ -54,3 +54,56 @@ export function onVideoNearEnd(video: HTMLVideoElement, onNearEnd: () => void, l
     if (handle !== undefined) video.cancelVideoFrameCallback(handle)
   }
 }
+
+// Espera a que un <video> recién arrancado (currentTime = 0; play()) pinte framesToConfirm frames
+// reales CONSECUTIVOS antes de avisar que está "estable" -- un solo frame pintado solo prueba que
+// algo se está pintando, no que ya pasó el hitch de reinicio que esto existe para esconder (ver
+// useSeamlessVideoLoop.ts): si el reinicio tarda más de un frame en asentarse (reordenamiento de
+// buffers, flush del decoder), ese primer requestVideoFrameCallback puede llegar tarde pero
+// seguido de otro también retrasado. timeoutMs es una red de seguridad dura -- si por lo que sea
+// nunca se confirman los frames pedidos, dispara igual: quedarse esperando para siempre y mostrar
+// el video viejo indefinidamente sería peor que un swap sin confirmar del todo.
+export function onVideoPlaybackStable(
+  video: HTMLVideoElement,
+  onStable: () => void,
+  { framesToConfirm = 2, timeoutMs = 500 }: { framesToConfirm?: number; timeoutMs?: number } = {},
+): () => void {
+  let fired = false
+  const timeoutHandle = window.setTimeout(fire, timeoutMs)
+
+  function fire() {
+    if (fired) return
+    fired = true
+    window.clearTimeout(timeoutHandle)
+    onStable()
+  }
+
+  if (typeof video.requestVideoFrameCallback !== 'function') {
+    return () => {
+      fired = true
+      window.clearTimeout(timeoutHandle)
+    }
+  }
+
+  let framesSeen = 0
+  let cancelled = false
+  let handle: number | undefined
+
+  function tick() {
+    if (cancelled || fired) return
+    framesSeen++
+    if (framesSeen >= framesToConfirm) {
+      fire()
+      return
+    }
+    handle = video.requestVideoFrameCallback(tick)
+  }
+  handle = video.requestVideoFrameCallback(tick)
+
+  return () => {
+    cancelled = true
+    fired = true
+    window.clearTimeout(timeoutHandle)
+    if (handle !== undefined) video.cancelVideoFrameCallback(handle)
+  }
+}

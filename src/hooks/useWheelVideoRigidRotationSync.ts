@@ -1,6 +1,7 @@
 import { useLayoutEffect } from 'react'
 import type { RefObject } from 'react'
 import type { WheelVideoGeometry } from '../layout/wheelVideoGeometry.constants'
+import { getActiveWheelVideoElement, onWheelVideoSwap } from '../video/wheelVideoActive'
 
 // Aproximación DELIBERADA: en vez de recalcular la posición medida de cada casilla en cada
 // frame (ver useWheelVideoPocketGeometry.ts), este hook resume el giro del frame actual en UN
@@ -118,9 +119,8 @@ function getAverageRotationTable(video: WheelVideoGeometry): number[] {
 
 export function useWheelVideoRigidRotationSync(groupRef: RefObject<SVGGElement | null>, video: WheelVideoGeometry) {
   useLayoutEffect(() => {
-    const videoEl = document.querySelector<HTMLVideoElement>('.lobby-wheel-video')
     const group = groupRef.current
-    if (!videoEl || !group) return
+    if (!group) return
 
     const rotationByFrame = getAverageRotationTable(video)
     const frameCount = rotationByFrame.length
@@ -133,28 +133,50 @@ export function useWheelVideoRigidRotationSync(groupRef: RefObject<SVGGElement |
       group!.style.transform = `rotate(${rotationByFrame[frameIndex]}deg)`
     }
 
-    if (typeof videoEl.requestVideoFrameCallback !== 'function') {
-      let handle: number
-      function tick() {
-        applyRotation(videoEl!.currentTime)
+    let cancelled = false
+    let unsubscribeCurrent: (() => void) | null = null
+
+    // El doble-video de useSeamlessVideoLoop.ts cambia cuál <video> es el visible cada ~7s --
+    // guardarse el elemento una sola vez al montar (y no volver a consultarlo) hace que este hook
+    // se quede escuchando requestVideoFrameCallback del que quedó pausado, que ya no dispara nada,
+    // y la rotación se congela justo en el primer swap. onWheelVideoSwap fuerza una
+    // re-suscripción al elemento correcto cada vez que eso pasa.
+    function subscribeToActiveVideo() {
+      unsubscribeCurrent?.()
+      unsubscribeCurrent = null
+
+      const videoEl = getActiveWheelVideoElement()
+      if (!videoEl) return
+
+      if (typeof videoEl.requestVideoFrameCallback !== 'function') {
+        let handle: number
+        function tick() {
+          if (cancelled) return
+          applyRotation(videoEl!.currentTime)
+          handle = requestAnimationFrame(tick)
+        }
         handle = requestAnimationFrame(tick)
+        unsubscribeCurrent = () => cancelAnimationFrame(handle)
+        return
       }
-      handle = requestAnimationFrame(tick)
-      return () => cancelAnimationFrame(handle)
+
+      let vfcHandle: number
+      function tick(_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) {
+        if (cancelled) return
+        applyRotation(metadata.mediaTime)
+        vfcHandle = videoEl!.requestVideoFrameCallback(tick)
+      }
+      vfcHandle = videoEl.requestVideoFrameCallback(tick)
+      unsubscribeCurrent = () => videoEl.cancelVideoFrameCallback(vfcHandle)
     }
 
-    let cancelled = false
-    let vfcHandle: number
-    function tick(_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) {
-      if (cancelled) return
-      applyRotation(metadata.mediaTime)
-      vfcHandle = videoEl!.requestVideoFrameCallback(tick)
-    }
-    vfcHandle = videoEl.requestVideoFrameCallback(tick)
+    subscribeToActiveVideo()
+    const unsubscribeSwap = onWheelVideoSwap(subscribeToActiveVideo)
 
     return () => {
       cancelled = true
-      videoEl.cancelVideoFrameCallback(vfcHandle)
+      unsubscribeCurrent?.()
+      unsubscribeSwap()
     }
   }, [video, groupRef])
 }

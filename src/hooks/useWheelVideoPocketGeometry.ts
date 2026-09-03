@@ -1,6 +1,7 @@
 import { useLayoutEffect, useState } from 'react'
 import type { WheelVideoGeometry } from '../layout/wheelVideoGeometry.constants'
 import type { PocketGeometry } from '../utils/wheelPositions'
+import { getActiveWheelVideoElement, onWheelVideoSwap } from '../video/wheelVideoActive'
 
 // Cuántos requestVideoFrameCallback reales se dejan pasar entre cada recálculo/commit de
 // geometría -- 1 = recalcula en todos los frames (comportamiento anterior), 2 = uno sí uno no,
@@ -39,45 +40,64 @@ function resolveGeometry(video: WheelVideoGeometry, mediaTimeSec: number): Pocke
 // VIDEO_GEOMETRY_FRAME_SKIP (saltear frames alternados), el trabajo de re-render se reduce a una
 // fracción del que había antes.
 //
-// Busca el <video class="lobby-wheel-video"> por selector, mismo patrón que useWheelRotationSync
-// usa para '.lobby-wheel-rotor'.
+// Busca el <video> activo vía getActiveWheelVideoElement (mismo patrón que useWheelRotationSync
+// usa para '.lobby-wheel-rotor', pero re-consultado en cada swap): el doble-video de
+// useSeamlessVideoLoop.ts cambia cuál elemento es el visible cada ~7s -- guardarse el elemento
+// una sola vez al montar y no volver a consultarlo hace que este hook se quede escuchando
+// requestVideoFrameCallback del que quedó pausado (que ya no dispara nada) y la geometría se
+// congele justo en el primer swap. onWheelVideoSwap fuerza una re-suscripción al elemento
+// correcto cada vez que eso pasa.
 export function useWheelVideoPocketGeometry(video: WheelVideoGeometry): PocketGeometry {
   const [geometry, setGeometry] = useState<PocketGeometry>(() => resolveGeometry(video, 0))
 
   useLayoutEffect(() => {
-    const videoEl = document.querySelector<HTMLVideoElement>('.lobby-wheel-video')
-    if (!videoEl) return
-
-    let frameCounter = 0
-    function shouldSkipFrame(): boolean {
-      frameCounter = (frameCounter + 1) % VIDEO_GEOMETRY_FRAME_SKIP
-      return frameCounter !== 0
-    }
-
-    if (typeof videoEl.requestVideoFrameCallback !== 'function') {
-      // Fallback defensivo -- no se espera este caso en el navegador de este kiosco (Chrome/Edge),
-      // ver mismo criterio en onVideoNearEnd (utils/videoSeek.ts).
-      let handle: number
-      function tick() {
-        if (!shouldSkipFrame()) setGeometry(resolveGeometry(video, videoEl!.currentTime))
-        handle = requestAnimationFrame(tick)
-      }
-      handle = requestAnimationFrame(tick)
-      return () => cancelAnimationFrame(handle)
-    }
-
     let cancelled = false
-    let vfcHandle: number
-    function tick(_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) {
-      if (cancelled) return
-      if (!shouldSkipFrame()) setGeometry(resolveGeometry(video, metadata.mediaTime))
-      vfcHandle = videoEl!.requestVideoFrameCallback(tick)
+    let unsubscribeCurrent: (() => void) | null = null
+
+    function subscribeToActiveVideo() {
+      unsubscribeCurrent?.()
+      unsubscribeCurrent = null
+
+      const videoEl = getActiveWheelVideoElement()
+      if (!videoEl) return
+
+      let frameCounter = 0
+      function shouldSkipFrame(): boolean {
+        frameCounter = (frameCounter + 1) % VIDEO_GEOMETRY_FRAME_SKIP
+        return frameCounter !== 0
+      }
+
+      if (typeof videoEl.requestVideoFrameCallback !== 'function') {
+        // Fallback defensivo -- no se espera este caso en el navegador de este kiosco (Chrome/Edge),
+        // ver mismo criterio en onVideoNearEnd (utils/videoSeek.ts).
+        let handle: number
+        function tick() {
+          if (cancelled) return
+          if (!shouldSkipFrame()) setGeometry(resolveGeometry(video, videoEl!.currentTime))
+          handle = requestAnimationFrame(tick)
+        }
+        handle = requestAnimationFrame(tick)
+        unsubscribeCurrent = () => cancelAnimationFrame(handle)
+        return
+      }
+
+      let vfcHandle: number
+      function tick(_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) {
+        if (cancelled) return
+        if (!shouldSkipFrame()) setGeometry(resolveGeometry(video, metadata.mediaTime))
+        vfcHandle = videoEl!.requestVideoFrameCallback(tick)
+      }
+      vfcHandle = videoEl.requestVideoFrameCallback(tick)
+      unsubscribeCurrent = () => videoEl.cancelVideoFrameCallback(vfcHandle)
     }
-    vfcHandle = videoEl.requestVideoFrameCallback(tick)
+
+    subscribeToActiveVideo()
+    const unsubscribeSwap = onWheelVideoSwap(subscribeToActiveVideo)
 
     return () => {
       cancelled = true
-      videoEl.cancelVideoFrameCallback(vfcHandle)
+      unsubscribeCurrent?.()
+      unsubscribeSwap()
     }
   }, [video])
 

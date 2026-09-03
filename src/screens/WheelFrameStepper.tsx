@@ -22,7 +22,10 @@ export function WheelFrameStepper() {
   const videoGeometry = WHEEL_VIDEO_GEOMETRY[ACTIVE_WHEEL_TYPE]
   const [frameIndex, setFrameIndex] = useState(0)
 
-  const getVideo = useCallback(() => document.querySelector<HTMLVideoElement>('.lobby-wheel-video'), [])
+  const getVideo = useCallback(
+    () => document.querySelector<HTMLVideoElement>('.lobby-wheel-video[data-wheel-video-active="true"]'),
+    [],
+  )
 
   // No mantiene su propio estado de "cuál es el frame actual" más allá de lo necesario para
   // mostrarlo en pantalla -- lo lee de video.currentTime (fuente real) cada vez que el video

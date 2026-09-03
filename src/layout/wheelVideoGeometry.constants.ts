@@ -52,8 +52,11 @@ export const WHEEL_VIDEO_GEOMETRY: Partial<Record<WheelType, WheelVideoGeometry>
     videoAsset: 'Lobby/lobby_loop_american.webm',
     canvasWidth: 1920,
     canvasHeight: 1080,
-    center: { x: 954.5, y: 543.5 },
-    radius: 265,
+    // Re-medido para el render actual del video (ver wheelVideoGeometry.american.frames.ts) --
+    // centro por ajuste de círculo (mínimos cuadrados) sobre el contorno del borde exterior de la
+    // rueda, radio = el usado para el barrido de color que generó la tabla de ángulos.
+    center: { x: 958.549, y: 540.019 },
+    radius: 260.43,
     fps: 60,
     pocketAngleDegByFrame: AMERICAN_POCKET_ANGLE_DEG_BY_FRAME,
   },

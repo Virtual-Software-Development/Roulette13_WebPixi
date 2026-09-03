@@ -30,3 +30,10 @@
   font-size: 20px;
   text-anchor: middle;
 }
+
+/* Canvas de video (1920x1080) más chico que el de imagen (2560x1440) -- mismo font-size se ve
+   proporcionalmente más grande ahí. Ajustar a mano junto con DEBUG_POCKET_VIDEO_RADIUS en
+   LobbyWheelDebugOverlay.tsx. */
+.lobby-wheel-debug-pocket--video text {
+  font-size: 13px;
+}

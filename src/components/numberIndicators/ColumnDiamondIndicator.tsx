@@ -19,7 +19,7 @@ export const COLUMN_DIAMOND_DEFAULT_HEIGHT = 30
 // Separa el conjunto del anillo de números impresos -- ajustar a mano (ver CHIP_RADIUS_OFFSET
 // en HotColdNumberChip.tsx, mismo criterio). Valores más grandes lo alejan del centro de la
 // rueda, más chicos (o negativos) lo acercan.
-const COLUMN_DIAMOND_RADIUS_OFFSET = 115
+const COLUMN_DIAMOND_RADIUS_OFFSET = 175
 const COLUMN_DIAMOND_STROKE_WIDTH = 2
 const COLUMN_DIAMOND_GLOW_BLUR = 8
 const COLUMN_DIAMOND_BLINK_STROKE_WIDTH = 1.5

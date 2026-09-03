@@ -4,15 +4,31 @@ import type { PocketGeometry } from '../../utils/wheelPositions'
 import { getRouletteColor } from '../../utils/rouletteColors'
 import { NUMBER_CELL_HIGHLIGHT_STYLES } from './numberCellHighlightStyles'
 import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
+import { getEffectiveWheelRenderMode } from '../../data/wheelRenderMode'
 import type { WheelPocket, WheelType } from '../../types/wheel'
 import './NumberCellHighlight.css'
 
 // Radio del borde de abajo (más cerca del centro de la rueda) y de arriba (más afuera) -- no
 // hay dato medido contra el PNG real (a diferencia de WHEEL_GEOMETRY.radius), así que quedan
-// acá como constantes a ajustar a mano. Mover cualquiera de las dos cambia el LARGO del
-// rectángulo (la distancia entre el borde de abajo y el de arriba).
+// acá como constantes de referencia a ajustar a mano, calibradas contra el radio de la
+// geometría de IMAGEN (WHEEL_GEOMETRY[wheelType].radius). Mover cualquiera de las dos cambia el
+// LARGO del rectángulo (la distancia entre el borde de abajo y el de arriba). Para otras
+// geometrías (p.ej. modo video, con su propio radio) se reescalan proporcionalmente dentro del
+// componente -- ver radiusScale más abajo -- para no quedar hardcodeadas a las unidades del
+// canvas de imagen.
 const CELL_HIGHLIGHT_BOTTOM_RADIUS = 260
 const CELL_HIGHLIGHT_TOP_RADIUS = 480
+
+// Corrección residual SOLO para modo video -- WHEEL_VIDEO_GEOMETRY.center/radius se midieron
+// contra un video con perspectiva de cámara real (Hough circle sobre el borde exterior de la
+// rueda + barrido de color sobre el anillo de números, ver el comentario largo en
+// layout/wheelVideoGeometry.constants.ts), así que no calzan 100% exacto con el reescalado
+// proporcional de más abajo -- a diferencia del PNG (render cenital, sin perspectiva, donde el
+// reescalado ya da el resultado exacto). Ajustar a mano viendo el video en vivo: subir el radio
+// agranda el rectángulo hacia ambos lados por igual, subir el offset de centro lo corre a la
+// derecha. En modo imagen ninguno de los dos se aplica (ver isVideoMode más abajo).
+const CELL_HIGHLIGHT_VIDEO_RADIUS_BONUS = 15
+const CELL_HIGHLIGHT_VIDEO_CENTER_X_OFFSET = 8
 
 // Cada una de las 4 esquinas del rectángulo se mueve de forma independiente con su propio
 // valor: son grados de offset respecto al ángulo central de la casilla (getPocketAngleDeg),
@@ -42,11 +58,6 @@ const CELL_HIGHLIGHT_GLOW_INSET_DEG = 1
 export const NUMBER_CELL_HIGHLIGHT_ENTER_DURATION_MS = 200
 export const NUMBER_CELL_HIGHLIGHT_LEAVE_DURATION_MS = 200
 
-// Ancho (mitad, hacia cada lado de centerAngleDeg) del rect de máscara -- no necesita ser
-// exacto, solo lo bastante grande para no cortar el costado del path real (que es angosto);
-// usar el propio radio externo alcanza de sobra.
-const CELL_HIGHLIGHT_MASK_HALF_WIDTH = CELL_HIGHLIGHT_TOP_RADIUS
-
 export type NumberCellHighlightPhase = 'entering' | 'visible' | 'leaving'
 
 interface NumberCellHighlightProps {
@@ -68,31 +79,34 @@ interface NumberCellHighlightProps {
 // `phase`. Cuando el padre no debe mostrar este número, simplemente no lo incluye en su lista
 // (ni nodo, ni espacio), en vez de pasarle una phase "hidden".
 export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, geometry = WHEEL_GEOMETRY[wheelType] }: NumberCellHighlightProps) {
-  const { center } = geometry
+  const isVideoMode = getEffectiveWheelRenderMode(wheelType) === 'video'
+  // Corrimiento de centro solo en modo video (ver CELL_HIGHLIGHT_VIDEO_CENTER_X_OFFSET) -- no
+  // muta geometry.center (compartido con otros consumidores de la misma geometría).
+  const center = isVideoMode ? { x: geometry.center.x + CELL_HIGHLIGHT_VIDEO_CENTER_X_OFFSET, y: geometry.center.y } : geometry.center
+  // Reescala las constantes de referencia (calibradas contra WHEEL_GEOMETRY, modo imagen) al
+  // radio real de la geometría recibida -- da 1 (sin cambios) en modo imagen, y en modo video
+  // (radio distinto) mantiene la misma proporción relativa al tamaño del anillo. El bonus fijo
+  // solo se suma en modo video (ver CELL_HIGHLIGHT_VIDEO_RADIUS_BONUS).
+  const radiusScale = geometry.radius / WHEEL_GEOMETRY[wheelType].radius
+  const videoRadiusBonus = isVideoMode ? CELL_HIGHLIGHT_VIDEO_RADIUS_BONUS : 0
+  const bottomRadius = CELL_HIGHLIGHT_BOTTOM_RADIUS * radiusScale + videoRadiusBonus
+  const topRadius = CELL_HIGHLIGHT_TOP_RADIUS * radiusScale + videoRadiusBonus
   const centerAngleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const bottomStartDeg = centerAngleDeg + CELL_HIGHLIGHT_BOTTOM_START_DEG
   const bottomEndDeg = centerAngleDeg + CELL_HIGHLIGHT_BOTTOM_END_DEG
   const topStartDeg = centerAngleDeg + CELL_HIGHLIGHT_TOP_START_DEG
   const topEndDeg = centerAngleDeg + CELL_HIGHLIGHT_TOP_END_DEG
 
-  const path = describeCellFlarePath(
-    center,
-    CELL_HIGHLIGHT_BOTTOM_RADIUS,
-    CELL_HIGHLIGHT_TOP_RADIUS,
-    bottomStartDeg,
-    bottomEndDeg,
-    topStartDeg,
-    topEndDeg,
-  )
+  const path = describeCellFlarePath(center, bottomRadius, topRadius, bottomStartDeg, bottomEndDeg, topStartDeg, topEndDeg)
   const style = NUMBER_CELL_HIGHLIGHT_STYLES[getRouletteColor(pocket)]
 
   // Puntos de las líneas de glow -- corridos hacia adentro (ver CELL_HIGHLIGHT_GLOW_INSET_DEG)
   // respecto de las esquinas reales del rectángulo, para que el halo tenga margen visible antes
   // del clipPath. El path de relleno sigue usando las esquinas reales sin este corrimiento.
-  const glowInnerStart = getPolarPoint(center, CELL_HIGHLIGHT_BOTTOM_RADIUS, bottomStartDeg + CELL_HIGHLIGHT_GLOW_INSET_DEG)
-  const glowInnerEnd = getPolarPoint(center, CELL_HIGHLIGHT_BOTTOM_RADIUS, bottomEndDeg - CELL_HIGHLIGHT_GLOW_INSET_DEG)
-  const glowOuterStart = getPolarPoint(center, CELL_HIGHLIGHT_TOP_RADIUS, topStartDeg + CELL_HIGHLIGHT_GLOW_INSET_DEG)
-  const glowOuterEnd = getPolarPoint(center, CELL_HIGHLIGHT_TOP_RADIUS, topEndDeg - CELL_HIGHLIGHT_GLOW_INSET_DEG)
+  const glowInnerStart = getPolarPoint(center, bottomRadius, bottomStartDeg + CELL_HIGHLIGHT_GLOW_INSET_DEG)
+  const glowInnerEnd = getPolarPoint(center, bottomRadius, bottomEndDeg - CELL_HIGHLIGHT_GLOW_INSET_DEG)
+  const glowOuterStart = getPolarPoint(center, topRadius, topStartDeg + CELL_HIGHLIGHT_GLOW_INSET_DEG)
+  const glowOuterEnd = getPolarPoint(center, topRadius, topEndDeg - CELL_HIGHLIGHT_GLOW_INSET_DEG)
 
   const idSuffix = `pocket-${pocket}`
   const clipId = `number-cell-highlight-clip-${idSuffix}`
@@ -100,7 +114,7 @@ export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, geo
   const maskClipId = `number-cell-highlight-mask-clip-${idSuffix}`
 
   // El rect de máscara vive en coordenadas SIN rotar (ancho de sobra, centrado en center.x,
-  // desde CELL_HIGHLIGHT_BOTTOM_RADIUS hasta CELL_HIGHLIGHT_TOP_RADIUS) y se alinea a esta
+  // desde bottomRadius hasta topRadius) y se alinea a esta
   // casilla con un rotate() de attribute SVG puesto directamente en el propio <rect> --
   // <clipPath> solo respeta formas hijas directas (un <g> envolviendo el rect NO cuenta, queda
   // clipeado a nada). y/height se animan por CSS (no transform: scaleY, porque un transform CSS
@@ -115,12 +129,16 @@ export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, geo
       : ({
           animationDuration: `${maskAnimationDurationMs}ms`,
           animationDelay: `${delayMs}ms`,
-          '--number-cell-highlight-mask-collapsed-y': `${center.y - CELL_HIGHLIGHT_BOTTOM_RADIUS}px`,
-          '--number-cell-highlight-mask-full-y': `${center.y - CELL_HIGHLIGHT_TOP_RADIUS}px`,
-          '--number-cell-highlight-mask-full-height': `${CELL_HIGHLIGHT_TOP_RADIUS - CELL_HIGHLIGHT_BOTTOM_RADIUS}px`,
+          '--number-cell-highlight-mask-collapsed-y': `${center.y - bottomRadius}px`,
+          '--number-cell-highlight-mask-full-y': `${center.y - topRadius}px`,
+          '--number-cell-highlight-mask-full-height': `${topRadius - bottomRadius}px`,
         } as CSSProperties)
-  const maskRectY = phase === 'visible' ? center.y - CELL_HIGHLIGHT_TOP_RADIUS : center.y - CELL_HIGHLIGHT_BOTTOM_RADIUS
-  const maskRectHeight = phase === 'visible' ? CELL_HIGHLIGHT_TOP_RADIUS - CELL_HIGHLIGHT_BOTTOM_RADIUS : 0
+  const maskRectY = phase === 'visible' ? center.y - topRadius : center.y - bottomRadius
+  const maskRectHeight = phase === 'visible' ? topRadius - bottomRadius : 0
+  // Ancho (mitad, hacia cada lado de centerAngleDeg) del rect de máscara -- no necesita ser
+  // exacto, solo lo bastante grande para no cortar el costado del path real (que es angosto);
+  // usar el propio radio externo (ya reescalado) alcanza de sobra.
+  const maskHalfWidth = topRadius
 
   return (
     <>
@@ -132,9 +150,9 @@ export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, geo
           <rect
             className={`number-cell-highlight-mask-rect number-cell-highlight-mask-rect--${phase}`}
             transform={`rotate(${centerAngleDeg}, ${center.x}, ${center.y})`}
-            x={center.x - CELL_HIGHLIGHT_MASK_HALF_WIDTH}
+            x={center.x - maskHalfWidth}
             y={maskRectY}
-            width={CELL_HIGHLIGHT_MASK_HALF_WIDTH * 2}
+            width={maskHalfWidth * 2}
             height={maskRectHeight}
             style={maskRectStyle}
           />
