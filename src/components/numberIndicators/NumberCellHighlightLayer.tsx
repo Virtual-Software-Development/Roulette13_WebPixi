@@ -12,6 +12,11 @@ export interface NumberCellHighlightEntry {
   pocket: WheelPocket
   phase: NumberCellHighlightPhase
   delayMs?: number
+  // Color de fill+glow -- si no se pasa, NumberCellHighlight cae al color real de ruleta de la
+  // casilla (ver su propio default). useCategoryHighlightEntries SIEMPRE lo pasa (todas las
+  // casillas de una misma categoría -- red/black/even/odd/high/low -- comparten UN solo color, en
+  // vez del propio de cada casilla real).
+  color?: string
 }
 
 interface NumberCellHighlightLayerProps {
@@ -37,13 +42,14 @@ export function NumberCellHighlightLayer({ entries, wheelType = ACTIVE_WHEEL_TYP
     >
       <WheelRotorGroup wheelType={wheelType} className="number-cell-highlight-rotor-group">
         {(geometry) =>
-          entries.map(({ pocket, phase, delayMs }) => (
+          entries.map(({ pocket, phase, delayMs, color }) => (
             <NumberCellHighlight
               key={pocket}
               pocket={pocket}
               wheelType={wheelType}
               phase={phase}
               delayMs={delayMs}
+              color={color}
               geometry={geometry}
             />
           ))

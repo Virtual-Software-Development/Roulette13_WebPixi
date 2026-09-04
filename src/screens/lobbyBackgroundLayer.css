@@ -16,6 +16,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: brightness(0.6);
 }
 
 /* Video viejo, comentado (no borrado) junto con su JSX en LobbyBackgroundLayer.tsx.

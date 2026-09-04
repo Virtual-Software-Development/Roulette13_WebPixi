@@ -4,6 +4,8 @@ import { Header } from '../layout/Header'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { LastGame } from '../components/results/LastGame'
 import { GameList } from '../components/results/GameList'
+import { NumberPanelHotCold } from '../components/numberPanel/NumberPanelHotCold'
+import { SpinStatsPanel } from '../components/spinStats/SpinStatsPanel'
 
 export function RouletteLobby() {
   const setGameConfig = useGameConfigStore((state) => state.setGameConfig)
@@ -18,6 +20,8 @@ export function RouletteLobby() {
   return (
     <>
       <Header />
+      <NumberPanelHotCold />
+      <SpinStatsPanel />
       <SharedLayout hideBackground>
         <LastGame />
         <GameList />

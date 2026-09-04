@@ -58,3 +58,37 @@
 .column-diamond-indicator-stack-last {
   animation: column-diamond-indicator-chase-last 2.4s linear infinite;
 }
+
+/* Pop de entrada/salida (fase 2 de SpinStatsPanel, ver useDozenColumnHighlightEntries) -- fade +
+   scale sobre el stack de 3 diamantes ENTERO (mismo criterio que DozenDiamondIndicator.css), sin
+   tocar la cadena de encendido de cada diamante individual (column-diamond-indicator-chase-*), que
+   sigue corriendo independiente adentro. transform-box: fill-box ancla el scale al centro real del
+   stack. animation-duration/-delay llegan inline (ver ColumnDiamondIndicator.tsx). */
+@keyframes column-diamond-indicator-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.column-diamond-indicator-body {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.column-diamond-indicator-body--entering {
+  animation-name: column-diamond-indicator-pop;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.column-diamond-indicator-body--leaving {
+  animation-name: column-diamond-indicator-pop;
+  animation-direction: reverse;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+}

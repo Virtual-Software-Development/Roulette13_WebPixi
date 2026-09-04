@@ -1,6 +1,9 @@
+/* opacity < 1 (no 0 -- eso lo dejaba totalmente invisible, quedaban solo las dos líneas de
+   glow) para que el relleno se vea como un haz translúcido en vez de un trapecio sólido plano;
+   mix-blend-mode: screen aclara donde se superpone al fondo oscuro. Ajustar a mano. */
 .number-cell-highlight-path {
   mix-blend-mode: screen;
-  opacity: 0;
+  opacity: 0.15;
 }
 
 /* Rect de máscara ("barra de carga") -- crece/decrece animando y/height por CSS (propiedades de

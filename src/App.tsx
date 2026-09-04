@@ -9,8 +9,10 @@ import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc } from './video/videoEle
 import { fetchGameInfo } from './api/gameInfo'
 import { applyGameInfo } from './api/applyGameInfo'
 import { fetchDrawResult } from './api/drawResult'
+import { fetchLastResults } from './api/lastResults'
 import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
+import { useResultsStore } from './store/useResultsStore'
 import { pickRandomDrawResultVideoUrl } from './utils/media'
 import { parseApiDateTime } from './utils/time'
 import { WHEEL_VIDEO_FROZEN } from './config/wheelCalibration'
@@ -93,6 +95,23 @@ function App() {
       cleanup()
     }
   }, [scheduleDraw])
+
+  // Historial largo (hasta ~100 resultados) para cálculos de frecuencia (hot/cold, ver
+  // DEMO_NUMBERS_BY_TYPE en LobbyBackgroundLayer.tsx) -- separado de `history` (que alimenta
+  // GameList/LastGame y queda acotado a maxResults). Se pide una sola vez al montar; no forma
+  // parte del ciclo de sorteo (scheduleDraw), así que no hace falta reprogramarlo.
+  useEffect(() => {
+    let cancelled = false
+    fetchLastResults()
+      .then((data) => {
+        if (cancelled) return
+        useResultsStore.getState().setRawResults(data.results)
+      })
+      .catch((err) => console.error('No se pudo obtener /api/results', err))
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Se llama apenas el video termina de reproducirse (bien antes del
   // freeze-hold/slide-down) — agenda el próximo sorteo ahí, no cuando vuelve

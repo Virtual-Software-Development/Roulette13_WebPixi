@@ -1,13 +1,17 @@
 import { memo } from 'react'
+import type { CSSProperties } from 'react'
 import { getPocketAngleDegForGeometry, getPocketPositionForGeometry } from '../../utils/wheelPositions'
 import type { PocketGeometry } from '../../utils/wheelPositions'
 import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
 import { getDiamondGlowSprite } from '../../utils/diamondGlowSprite'
 import { pocketAngleChangedBeyondThreshold } from './pocketGeometryMemo'
 import { COLUMN_DIAMOND_INDICATOR_STYLES } from './columnDiamondIndicatorStyles'
+import { DIAMOND_INDICATOR_ENTER_DURATION_MS, DIAMOND_INDICATOR_LEAVE_DURATION_MS } from './diamondIndicatorTiming'
 import type { ColumnGroup } from '../../types/numberIndicator'
 import type { WheelPocket, WheelType } from '../../types/wheel'
 import './ColumnDiamondIndicator.css'
+
+export type ColumnDiamondIndicatorPhase = 'entering' | 'visible' | 'leaving'
 
 // Ancho del diamante -- ajustar a mano (ver CHIP_WIDTH/CHIP_HEIGHT en HotColdNumberChip.tsx,
 // mismo criterio: son constantes de archivo, no hay que tocar la lógica para cambiarlas).
@@ -35,7 +39,15 @@ interface ColumnDiamondIndicatorProps {
   pocket: WheelPocket
   wheelType: WheelType
   group: ColumnGroup
-  active: boolean
+  // 'entering'/'leaving' juegan un pop de fade+scale sobre el stack entero (ver
+  // ColumnDiamondIndicator.css); 'visible' no anima nada. A diferencia del `active: boolean` que
+  // tenía antes, este componente ya NO decide cuándo desmontarse solo -- eso lo controla
+  // ColumnDiamondIndicatorLayer vía `entries` (ver useDozenColumnHighlightEntries), que lo sigue
+  // incluyendo mientras dura su salida.
+  phase: ColumnDiamondIndicatorPhase
+  // Cuánto tarda en arrancar el pop de este diamante respecto de los demás del mismo grupo --
+  // efecto acordeón (ver useDozenColumnHighlightEntries). Ignorado si phase es 'visible'.
+  delayMs?: number
   width?: number
   height?: number
   // Geometría a usar para ubicar la casilla -- por defecto WHEEL_GEOMETRY[wheelType] (modo
@@ -79,13 +91,12 @@ function ColumnDiamondIndicatorComponent({
   pocket,
   wheelType,
   group,
-  active,
+  phase,
+  delayMs = 0,
   width = COLUMN_DIAMOND_DEFAULT_WIDTH,
   height = COLUMN_DIAMOND_DEFAULT_HEIGHT,
   geometry = WHEEL_GEOMETRY[wheelType],
 }: ColumnDiamondIndicatorProps) {
-  if (!active) return null
-
   const { x, y } = getPocketPositionForGeometry(pocket, wheelType, geometry, COLUMN_DIAMOND_RADIUS_OFFSET)
   const angleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const style = COLUMN_DIAMOND_INDICATOR_STYLES[group]
@@ -104,37 +115,52 @@ function ColumnDiamondIndicatorComponent({
     glowBlur: COLUMN_DIAMOND_GLOW_BLUR,
   })
 
+  // Wrapper interno para el pop de entrada/salida -- un transform CSS acá (scale) no choca con el
+  // transform de posición/rotación del <g> de afuera (attribute SVG), mismo criterio que separa
+  // maskRect de su casilla en NumberCellHighlight.tsx. Envuelve el stack ENTERO (las 3 casillas),
+  // no cada una por separado -- la cadena de encendido individual sigue corriendo adentro, sin
+  // relación con este pop.
+  const bodyStyle: CSSProperties | undefined =
+    phase === 'visible'
+      ? undefined
+      : {
+          animationDuration: `${phase === 'entering' ? DIAMOND_INDICATOR_ENTER_DURATION_MS : DIAMOND_INDICATOR_LEAVE_DURATION_MS}ms`,
+          animationDelay: `${delayMs}ms`,
+        }
+
   return (
     <g transform={`translate(${x}, ${y}) rotate(${angleDeg})`} data-number={pocket} data-column-group={group}>
-      {stackOffsets.map((offsetY, i) => (
-        <g
-          key={i}
-          className={STACK_POSITION_CLASS_NAMES[i]}
-          transform={`translate(0, ${offsetY})`}
-          style={{ animationDuration: `${COLUMN_DIAMOND_CHASE_DURATION_MS}ms` }}
-        >
-          {/* Diamante base: sprite prerenderizado (trazo + glow ya horneados) en vez de
-              polygon+filter por instancia -- ver comentario de `sprite` arriba. */}
-          <image
-            className="column-diamond-indicator-base"
-            href={sprite.url}
-            x={sprite.offsetX}
-            y={sprite.offsetY}
-            width={sprite.spriteWidth}
-            height={sprite.spriteHeight}
-          />
-          {/* Segunda línea, misma forma, superpuesta -- hace blink por CSS (ver .css). Sigue
-              siendo un polygon liviano: no lleva filter propio, así que no se beneficia del
-              sprite (no hay nada caro que compartir acá). */}
-          <polygon
-            className="column-diamond-indicator-blink-line"
-            points={points}
-            fill="none"
-            stroke={style.glow}
-            strokeWidth={COLUMN_DIAMOND_BLINK_STROKE_WIDTH}
-          />
-        </g>
-      ))}
+      <g className={`column-diamond-indicator-body column-diamond-indicator-body--${phase}`} style={bodyStyle}>
+        {stackOffsets.map((offsetY, i) => (
+          <g
+            key={i}
+            className={STACK_POSITION_CLASS_NAMES[i]}
+            transform={`translate(0, ${offsetY})`}
+            style={{ animationDuration: `${COLUMN_DIAMOND_CHASE_DURATION_MS}ms` }}
+          >
+            {/* Diamante base: sprite prerenderizado (trazo + glow ya horneados) en vez de
+                polygon+filter por instancia -- ver comentario de `sprite` arriba. */}
+            <image
+              className="column-diamond-indicator-base"
+              href={sprite.url}
+              x={sprite.offsetX}
+              y={sprite.offsetY}
+              width={sprite.spriteWidth}
+              height={sprite.spriteHeight}
+            />
+            {/* Segunda línea, misma forma, superpuesta -- hace blink por CSS (ver .css). Sigue
+                siendo un polygon liviano: no lleva filter propio, así que no se beneficia del
+                sprite (no hay nada caro que compartir acá). */}
+            <polygon
+              className="column-diamond-indicator-blink-line"
+              points={points}
+              fill="none"
+              stroke={style.glow}
+              strokeWidth={COLUMN_DIAMOND_BLINK_STROKE_WIDTH}
+            />
+          </g>
+        ))}
+      </g>
     </g>
   )
 }
@@ -151,7 +177,8 @@ function columnDiamondPropsAreEqual(prev: ColumnDiamondIndicatorProps, next: Col
     prev.pocket !== next.pocket ||
     prev.wheelType !== next.wheelType ||
     prev.group !== next.group ||
-    prev.active !== next.active ||
+    prev.phase !== next.phase ||
+    prev.delayMs !== next.delayMs ||
     prev.width !== next.width ||
     prev.height !== next.height
   ) {

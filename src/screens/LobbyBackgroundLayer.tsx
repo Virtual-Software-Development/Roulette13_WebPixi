@@ -8,14 +8,14 @@ import { WHEEL_VIDEO_FROZEN } from '../config/wheelCalibration'
 import { useSeamlessVideoLoop } from '../hooks/useSeamlessVideoLoop'
 import { WheelFrameStepper } from './WheelFrameStepper'
 import { LobbyWheelDebugOverlay } from './LobbyWheelDebugOverlay'
- import { HotColdNumberChipLayer } from '../components/numberIndicators/HotColdNumberChipLayer'
- import { NumberCellHighlightLayer } from '../components/numberIndicators/NumberCellHighlightLayer'
- import { useNumberCellHighlightCycle } from '../hooks/useNumberCellHighlightCycle'
+import { HotColdNumberChipLayer } from '../components/numberIndicators/HotColdNumberChipLayer'
+import { NumberCellHighlightLayer } from '../components/numberIndicators/NumberCellHighlightLayer'
 import { DozenDiamondIndicatorLayer } from '../components/numberIndicators/DozenDiamondIndicatorLayer'
-// ColumnDiamondIndicatorLayer pausado temporalmente mientras se prueban las docenas.
- import { ColumnDiamondIndicatorLayer } from '../components/numberIndicators/ColumnDiamondIndicatorLayer'
-import type { NumberIndicatorType } from '../types/numberIndicator'
-import type { WheelPocket } from '../types/wheel'
+import { ColumnDiamondIndicatorLayer } from '../components/numberIndicators/ColumnDiamondIndicatorLayer'
+import { useHotColdWindow } from '../hooks/useHotColdWindow'
+import { useSpinStatsCycle } from '../hooks/useSpinStatsCycle'
+import { useCategoryHighlightEntries } from '../hooks/useCategoryHighlightEntries'
+import { useDozenColumnHighlightEntries } from '../hooks/useDozenColumnHighlightEntries'
 import './lobbyBackgroundLayer.css'
 
 const ACTIVE_WHEEL_GEOMETRY = WHEEL_GEOMETRY[ACTIVE_WHEEL_TYPE]
@@ -27,18 +27,6 @@ const WHEEL_ROTOR_URL = buildMediaUrl(ACTIVE_WHEEL_GEOMETRY.rotorAsset)
 const WHEEL_RENDER_MODE = getEffectiveWheelRenderMode(ACTIVE_WHEEL_TYPE)
 const ACTIVE_WHEEL_VIDEO_GEOMETRY = WHEEL_VIDEO_GEOMETRY[ACTIVE_WHEEL_TYPE]
 const WHEEL_VIDEO_URL = ACTIVE_WHEEL_VIDEO_GEOMETRY ? buildMediaUrl(ACTIVE_WHEEL_VIDEO_GEOMETRY.videoAsset) : undefined
-
-// Ejemplo de uso temporal -- a reemplazar cuando exista cálculo real de frecuencia sobre
-// useResultsStore().history. HotColdNumberChip queda pausado por ahora (ver montaje comentado
-// más abajo) mientras se construye NumberCellHighlight.
-const DEMO_NUMBERS_BY_TYPE: Partial<Record<NumberIndicatorType, WheelPocket[]>> = {
-  hot: [7, 23, 10, 5],
-  cold: [8, 2, 16],
-}
-
-// Datos de prueba para NumberCellHighlight -- mismos números de la foto de referencia (11
-// negro, 30 rojo, 8 negro).
-const DEMO_HIGHLIGHT_NUMBERS: WheelPocket[] = [11, 8, 14]
 
 // -- Video viejo, comentado (no borrado) por si hace falta volver atrás --
 // import { useEffect, useRef } from 'react'
@@ -64,7 +52,19 @@ const DEMO_HIGHLIGHT_NUMBERS: WheelPocket[] = [11, 8, 14]
 // corre en el compositor) y da control total sobre velocidad/dirección del giro.
 export function LobbyBackgroundLayer() {
   const backgroundUrl = useGameConfigStore((state) => state.backgroundUrl)
-  const highlightEntries = useNumberCellHighlightCycle(DEMO_HIGHLIGHT_NUMBERS)
+  // Mismos números y misma ventana de tiempo que NumberPanelHotCold (ver RouletteLobby.tsx) --
+  // useHotColdWindow es la fuente única para ambos.
+  const { shouldShow: showHotCold, hot, cold } = useHotColdWindow()
+  // Categoría resaltada (red/black/even/odd/high/low) -- misma fuente que SpinStatsPanel (ver
+  // useSpinStatsCycle), así la dona que brilla ahí y los números que se resaltan acá en la rueda
+  // siempre corresponden a la misma categoría. useCategoryHighlightEntries se encarga de la
+  // transición (entering/leaving) entre una categoría y la siguiente, ver su comentario.
+  const { activeCategory } = useSpinStatsCycle()
+  const highlightEntries = useCategoryHighlightEntries(activeCategory, ACTIVE_WHEEL_TYPE)
+  // Fase 2 (docenas/columnas) -- misma activeCategory, useDozenColumnHighlightEntries ignora todo
+  // lo que no sea una docena/columna (ver su comentario) y reparte entre los dos layers de acá
+  // abajo según cuál esté resaltada en este instante.
+  const { dozenEntries, columnEntries } = useDozenColumnHighlightEntries(activeCategory, ACTIVE_WHEEL_TYPE)
 
   // Doble-video con crossfade en vez de loop nativo -- esconde el hitch de Chromium al reiniciar
   // un <video loop> (bug genérico del navegador, confirmado incluso fuera de esta app -- ver
@@ -116,10 +116,10 @@ export function LobbyBackgroundLayer() {
         </>
       )}
       {/* <video ref={videoRef} className="lobby-background-video" playsInline preload="auto" /> */}
-      {/*<HotColdNumberChipLayer numbersByType={DEMO_NUMBERS_BY_TYPE} />*/}
-      {/*<NumberCellHighlightLayer entries={highlightEntries} /> */}
-      {/*<DozenDiamondIndicatorLayer activeGroups={['firstDozen']} /> */}
-       <ColumnDiamondIndicatorLayer activeGroups={['firstColumn']} />
+      {showHotCold && <HotColdNumberChipLayer numbersByType={{ hot, cold }} />}
+      <NumberCellHighlightLayer entries={highlightEntries} />
+      <DozenDiamondIndicatorLayer entries={dozenEntries} />
+      <ColumnDiamondIndicatorLayer entries={columnEntries} />
       <LobbyWheelDebugOverlay />
       <WheelFrameStepper />
     </div>
