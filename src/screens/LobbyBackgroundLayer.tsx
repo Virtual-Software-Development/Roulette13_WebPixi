@@ -1,5 +1,7 @@
+import { useLayoutEffect, useRef } from 'react'
 import { buildMediaUrl } from '../utils/media'
 import { useGameConfigStore } from '../store/useGameConfigStore'
+import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC } from '../layout/wheelGeometry.constants'
 import { WHEEL_VIDEO_GEOMETRY } from '../layout/wheelVideoGeometry.constants'
 import { ACTIVE_WHEEL_TYPE } from '../data/wheelOrder'
@@ -52,6 +54,13 @@ const WHEEL_VIDEO_URL = ACTIVE_WHEEL_VIDEO_GEOMETRY ? buildMediaUrl(ACTIVE_WHEEL
 // corre en el compositor) y da control total sobre velocidad/dirección del giro.
 export function LobbyBackgroundLayer() {
   const backgroundUrl = useGameConfigStore((state) => state.backgroundUrl)
+  // Con el video del sorteo activo, el rotor de modo imagen se pausa y se resetea al ángulo 0
+  // (misma posición de referencia que usa la calibración/wheelDebug) -- ver el efecto más abajo.
+  // No hace falta en modo video (WHEEL_VIDEO_FROZEN ya cubre ESE caso, y acá `active` nunca es
+  // true mientras WHEEL_VIDEO_FROZEN está activo -- ver App.tsx: showVideo() ni siquiera dispara
+  // setActive(true) en ese caso).
+  const isDrawVideoActive = useDrawCycleStore((state) => state.active)
+  const wheelRotorRef = useRef<HTMLImageElement>(null)
   // Mismos números y misma ventana de tiempo que NumberPanelHotCold (ver RouletteLobby.tsx) --
   // useHotColdWindow es la fuente única para ambos.
   const { shouldShow: showHotCold, hot, cold } = useHotColdWindow()
@@ -75,6 +84,22 @@ export function LobbyBackgroundLayer() {
     url: WHEEL_VIDEO_URL,
     frozen: WHEEL_VIDEO_FROZEN,
   })
+
+  // Al entrar el video del sorteo (isDrawVideoActive true): resetea el rotor al ángulo 0 -- la
+  // clase lobby-wheel-rotor--frozen (ver CSS) ya lo pausa vía animation-play-state, pero pausar
+  // sola cosa NO reposiciona, solo congela donde haya quedado -- por eso hace falta este seek
+  // explícito. Usa Animation.currentTime (Web Animations API), NO animation-delay como string:
+  // reasignar animation-delay sobre una animación que ya lleva un rato corriendo NO la reposiciona
+  // (el navegador la reinterpreta contra el momento en que arrancó originalmente, no contra
+  // "ahora") -- confirmado con el mismo bug en useWheelRotationSync.ts, ver su comentario. Al
+  // volver isDrawVideoActive a false, la clase se saca y listo: como quedó en 0, retoma girando
+  // desde ahí, sin necesidad de tocar nada en esta rama.
+  useLayoutEffect(() => {
+    const rotor = wheelRotorRef.current
+    if (!rotor || !isDrawVideoActive) return
+    const rotorAnimation = rotor.getAnimations()[0]
+    if (rotorAnimation) rotorAnimation.currentTime = 0
+  }, [isDrawVideoActive])
 
   return (
     <div className="lobby-background-layer">
@@ -107,8 +132,9 @@ export function LobbyBackgroundLayer() {
       ) : (
         <>
         <img
+            ref={wheelRotorRef}
             src={WHEEL_ROTOR_URL}
-            className="lobby-wheel-rotor"
+            className={`lobby-wheel-rotor${isDrawVideoActive ? ' lobby-wheel-rotor--frozen' : ''}`}
             alt=""
             style={{ animationDuration: `${WHEEL_SPIN_DURATION_SEC}s` }}
           />

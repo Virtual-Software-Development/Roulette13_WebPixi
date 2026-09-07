@@ -64,6 +64,12 @@
   will-change: transform;
 }
 
+/* Con el video del sorteo activo (ver LobbyBackgroundLayer.tsx) -- pausa el giro; el reseteo al
+   ángulo 0 lo hace ese mismo componente vía Animation.currentTime, pausar solo no reposiciona. */
+.lobby-wheel-rotor--frozen {
+  animation-play-state: paused;
+}
+
 @keyframes lobby-wheel-spin {
   from {
     transform: rotate(0deg);

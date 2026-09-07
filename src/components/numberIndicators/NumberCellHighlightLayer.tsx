@@ -1,9 +1,10 @@
+import { useMemo } from 'react'
 import { ACTIVE_WHEEL_TYPE } from '../../data/wheelOrder'
 import { getEffectiveWheelRenderMode } from '../../data/wheelRenderMode'
 import { WHEEL_CANVAS_HEIGHT, WHEEL_CANVAS_WIDTH } from '../../layout/wheelGeometry.constants'
 import { WHEEL_VIDEO_GEOMETRY } from '../../layout/wheelVideoGeometry.constants'
 import { WheelRotorGroup } from '../wheel/WheelRotorGroup'
-import { NumberCellHighlight } from './NumberCellHighlight'
+import { NumberCellHighlight, NumberCellHighlightGlowDef, resolveNumberCellHighlightColor } from './NumberCellHighlight'
 import type { NumberCellHighlightPhase } from './NumberCellHighlight'
 import type { WheelPocket, WheelType } from '../../types/wheel'
 import './NumberCellHighlightLayer.css'
@@ -34,12 +35,30 @@ export function NumberCellHighlightLayer({ entries, wheelType = ACTIVE_WHEEL_TYP
   const canvasWidth = mode === 'video' && videoGeometry ? videoGeometry.canvasWidth : WHEEL_CANVAS_WIDTH
   const canvasHeight = mode === 'video' && videoGeometry ? videoGeometry.canvasHeight : WHEEL_CANVAS_HEIGHT
 
+  // Colores DISTINTOS realmente en uso ahora mismo -- normalmente 1 (una categoría entera
+  // comparte un solo color, ver useCategoryHighlightEntries), pero puede haber 2 durante la
+  // transición de acordeón (el grupo saliente todavía terminando de irse con su color viejo
+  // mientras el entrante ya empieza con el nuevo). Un <filter> por color acá, no uno por casilla
+  // -- ver NumberCellHighlightGlowDef.
+  const glowColors = useMemo(() => {
+    const colors = new Set<string>()
+    for (const entry of entries) {
+      colors.add(resolveNumberCellHighlightColor(entry.pocket, entry.color))
+    }
+    return Array.from(colors)
+  }, [entries])
+
   return (
     <svg
       className="number-cell-highlight-layer"
       viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       preserveAspectRatio="xMidYMid meet"
     >
+      <defs>
+        {glowColors.map((color) => (
+          <NumberCellHighlightGlowDef key={color} color={color} />
+        ))}
+      </defs>
       <WheelRotorGroup wheelType={wheelType} className="number-cell-highlight-rotor-group">
         {(geometry) =>
           entries.map(({ pocket, phase, delayMs, color }) => (

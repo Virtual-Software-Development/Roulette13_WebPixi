@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { CSSProperties } from 'react'
 import { describeCellFlarePath, getPocketAngleDegForGeometry, getPolarPoint } from '../../utils/wheelPositions'
 import type { PocketGeometry } from '../../utils/wheelPositions'
@@ -5,6 +6,7 @@ import { getRouletteColor } from '../../utils/rouletteColors'
 import { NUMBER_CELL_HIGHLIGHT_STYLES } from './numberCellHighlightStyles'
 import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
 import { getEffectiveWheelRenderMode } from '../../data/wheelRenderMode'
+import { pocketAngleChangedBeyondThreshold } from './pocketGeometryMemo'
 import type { WheelPocket, WheelType } from '../../types/wheel'
 import './NumberCellHighlight.css'
 
@@ -56,6 +58,42 @@ const CELL_HIGHLIGHT_GLOW_STROKE_WIDTH = 3
 // adentro les queda margen real para que el blur se desvanezca en vez de cortarse en seco.
 const CELL_HIGHLIGHT_GLOW_INSET_DEG = 1
 
+// Color final (fill+glow) de una casilla -- explícito (categoría de useCategoryHighlightEntries)
+// o, a falta de uno, el color real de ruleta de la propia casilla. Exportado para que
+// NumberCellHighlightLayer pueda calcular el conjunto de colores DISTINTOS realmente en uso (ver
+// numberCellHighlightGlowFilterId más abajo) sin duplicar esta regla de fallback.
+export function resolveNumberCellHighlightColor(pocket: WheelPocket, color?: string): string {
+  return color ?? NUMBER_CELL_HIGHLIGHT_STYLES[getRouletteColor(pocket)].fill
+}
+
+// Id del <filter> de glow compartido para un color dado (ver NumberCellHighlightLayer: arma UN
+// <filter> por color distinto en vez de que cada NumberCellHighlight declare el suyo propio --
+// hasta 18 casillas pueden compartir la misma categoría/color a la vez, así que antes esto eran
+// hasta 18 subárboles de filtro idénticos, doble feGaussianBlur cada uno, reconciliando en cada
+// re-render del padre). Sanitiza el color (p.ej. "#3aa8ff" -> "3aa8ff") para que sea un id de SVG
+// válido.
+export function numberCellHighlightGlowFilterId(color: string): string {
+  return `number-cell-highlight-glow-${color.replace(/[^a-zA-Z0-9]/g, '')}`
+}
+
+// El <filter> de glow en sí (dos feGaussianBlur + feMerge, ver comentario de
+// CELL_HIGHLIGHT_GLOW_BLUR) -- NumberCellHighlightLayer renderiza uno de estos por cada color
+// DISTINTO presente en sus entries (ver numberCellHighlightGlowFilterId), en vez de que cada
+// NumberCellHighlight de acá abajo declare el suyo propio.
+export function NumberCellHighlightGlowDef({ color }: { color: string }) {
+  return (
+    <filter id={numberCellHighlightGlowFilterId(color)} x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation={CELL_HIGHLIGHT_GLOW_BLUR} result="wideHalo" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation={CELL_HIGHLIGHT_GLOW_CORE_BLUR} result="coreHalo" />
+      <feMerge>
+        <feMergeNode in="wideHalo" />
+        <feMergeNode in="coreHalo" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  )
+}
+
 // Duración de la animación de "barra de carga" que revela/oculta la casilla -- una sola fuente
 // de verdad, reutilizada tanto acá (animationDuration del rect de máscara) como en
 // useNumberCellHighlightCycle.ts (para saber cuándo agendar la siguiente fase del ciclo).
@@ -88,7 +126,7 @@ interface NumberCellHighlightProps {
 // ni por cuánto tiempo -- eso lo controla el padre (ver useNumberCellHighlightCycle.ts) a través
 // de `phase`. Cuando el padre no debe mostrar este número, simplemente no lo incluye en su lista
 // (ni nodo, ni espacio), en vez de pasarle una phase "hidden".
-export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, color, geometry = WHEEL_GEOMETRY[wheelType] }: NumberCellHighlightProps) {
+function NumberCellHighlightComponent({ pocket, wheelType, phase, delayMs = 0, color, geometry = WHEEL_GEOMETRY[wheelType] }: NumberCellHighlightProps) {
   const isVideoMode = getEffectiveWheelRenderMode(wheelType) === 'video'
   // Corrimiento de centro solo en modo video (ver CELL_HIGHLIGHT_VIDEO_CENTER_X_OFFSET) -- no
   // muta geometry.center (compartido con otros consumidores de la misma geometría).
@@ -108,7 +146,8 @@ export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, col
   const topEndDeg = centerAngleDeg + CELL_HIGHLIGHT_TOP_END_DEG
 
   const path = describeCellFlarePath(center, bottomRadius, topRadius, bottomStartDeg, bottomEndDeg, topStartDeg, topEndDeg)
-  const resolvedColor = color ?? NUMBER_CELL_HIGHLIGHT_STYLES[getRouletteColor(pocket)].fill
+  const resolvedColor = resolveNumberCellHighlightColor(pocket, color)
+  const glowId = numberCellHighlightGlowFilterId(resolvedColor)
 
   // Puntos de las líneas de glow -- corridos levemente hacia adentro (ver
   // CELL_HIGHLIGHT_GLOW_INSET_DEG) respecto de las esquinas reales del rectángulo, para que no
@@ -122,9 +161,7 @@ export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, col
   const glowOuterStart = getPolarPoint(center, topRadius, topStartDeg + CELL_HIGHLIGHT_GLOW_INSET_DEG)
   const glowOuterEnd = getPolarPoint(center, topRadius, topEndDeg - CELL_HIGHLIGHT_GLOW_INSET_DEG)
 
-  const idSuffix = `pocket-${pocket}`
-  const glowId = `number-cell-highlight-glow-${idSuffix}`
-  const maskClipId = `number-cell-highlight-mask-clip-${idSuffix}`
+  const maskClipId = `number-cell-highlight-mask-clip-pocket-${pocket}`
 
   // El rect de máscara vive en coordenadas SIN rotar (ancho de sobra, centrado en center.x,
   // desde bottomRadius hasta topRadius) y se alinea a esta
@@ -167,15 +204,10 @@ export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, col
             style={maskRectStyle}
           />
         </clipPath>
-        <filter id={glowId} x="-150%" y="-150%" width="400%" height="400%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation={CELL_HIGHLIGHT_GLOW_BLUR} result="wideHalo" />
-          <feGaussianBlur in="SourceGraphic" stdDeviation={CELL_HIGHLIGHT_GLOW_CORE_BLUR} result="coreHalo" />
-          <feMerge>
-            <feMergeNode in="wideHalo" />
-            <feMergeNode in="coreHalo" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
+        {/* El <filter> de glow YA NO se declara acá -- lo renderiza NumberCellHighlightLayer una
+            sola vez por cada color distinto en uso (ver numberCellHighlightGlowFilterId), no una
+            vez por casilla. Con hasta 18 casillas activas compartiendo la misma categoría/color,
+            evita hasta 18 subárboles de filtro idénticos (doble feGaussianBlur cada uno). */}
       </defs>
       <g clipPath={`url(#${maskClipId})`}>
         <path className="number-cell-highlight-path" d={path} fill={resolvedColor} data-number={pocket} />
@@ -203,3 +235,29 @@ export function NumberCellHighlight({ pocket, wheelType, phase, delayMs = 0, col
     </>
   )
 }
+
+// Mismo criterio que columnDiamondPropsAreEqual (ver ColumnDiamondIndicator.tsx): con hasta 18
+// casillas activas a la vez (una categoría entera, ver useCategoryHighlightEntries), sin memo el
+// árbol entero de cada una (path + 2 líneas + su filtro, antes propio -- ver
+// NumberCellHighlightGlowDef) se reconciliaba en cada re-render del padre (antes, 5 veces por
+// segundo por el countdown -- ver useCountdown/useClockStore) aunque nada de esta casilla en
+// particular hubiera cambiado. Solo mira el ángulo de ESTA casilla puntual, no la geometría
+// completa (dos objetos PocketGeometry distintos pueden dar el mismo ángulo para esta casilla en
+// particular aunque otras sí se hayan movido).
+function numberCellHighlightPropsAreEqual(prev: NumberCellHighlightProps, next: NumberCellHighlightProps): boolean {
+  if (
+    prev.pocket !== next.pocket ||
+    prev.wheelType !== next.wheelType ||
+    prev.phase !== next.phase ||
+    prev.delayMs !== next.delayMs ||
+    prev.color !== next.color
+  ) {
+    return false
+  }
+
+  const prevGeometry = prev.geometry ?? WHEEL_GEOMETRY[prev.wheelType]
+  const nextGeometry = next.geometry ?? WHEEL_GEOMETRY[next.wheelType]
+  return !pocketAngleChangedBeyondThreshold(next.pocket, next.wheelType, prevGeometry, nextGeometry)
+}
+
+export const NumberCellHighlight = memo(NumberCellHighlightComponent, numberCellHighlightPropsAreEqual)

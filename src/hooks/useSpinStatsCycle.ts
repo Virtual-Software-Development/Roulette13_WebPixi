@@ -20,9 +20,9 @@ const HIDE_AT_REMAINING_SECONDS = 5
 // en la fase que corresponda, no siempre desde cero).
 const INITIAL_OFF_SECONDS = 3 // le da tiempo al panel a terminar de bajar antes de encender algo
 const SUB_PHASE_DURATION_SECONDS = 6 // cuánto dura cada categoría activa (red/black/.../dozen/column)
-// Cuánto tarda cada mitad (ocultar / revelar) de la transición de máscara entre fase 1 y fase 2 --
-// mismo orden de magnitud que TRANSITION_DURATION_MS (paneles), 0.55s.
-const MASK_TRANSITION_SECONDS = 0.55
+// Cuánto tarda cada mitad (ocultar / revelar) de la transición entre fase 1 y fase 2 -- mismo
+// orden de magnitud que TRANSITION_DURATION_MS (paneles), 0.55s.
+const TRANSITION_SECONDS = 0.55
 
 const PHASE1_SLOT_NAMES = ['red', 'black', 'evenOdd', 'highLow'] as const
 const PHASE2_SLOT_NAMES = ['dozen', 'column'] as const
@@ -32,13 +32,13 @@ const PHASE2_DURATION_SECONDS = PHASE2_SLOT_NAMES.length * SUB_PHASE_DURATION_SE
 // Límites del ciclo completo (fase 1 -> mask -> fase 2 -> mask -> vuelve a fase 1), en segundos
 // desde el arranque del ciclo (t=0). Ver useCategoryHighlightEntries/useDozenColumnHighlightEntries
 // para el lado "qué se resalta en la rueda" de cada tramo.
-const HIDE_PHASE1_START = PHASE1_DURATION_SECONDS // 24 -- termina highLow, empieza a taparse fase 1
-const HIDE_PHASE1_END = HIDE_PHASE1_START + MASK_TRANSITION_SECONDS // 24.55
-const REVEAL_PHASE2_END = HIDE_PHASE1_END + MASK_TRANSITION_SECONDS // 25.1 -- fase 2 ya visible del todo
+const HIDE_PHASE1_START = PHASE1_DURATION_SECONDS // 24 -- termina highLow, empieza a ocultarse fase 1
+const HIDE_PHASE1_END = HIDE_PHASE1_START + TRANSITION_SECONDS // 24.55
+const REVEAL_PHASE2_END = HIDE_PHASE1_END + TRANSITION_SECONDS // 25.1 -- fase 2 ya visible del todo
 const PHASE2_START = REVEAL_PHASE2_END
 const PHASE2_END = PHASE2_START + PHASE2_DURATION_SECONDS // 37.1 -- termina column
-const HIDE_PHASE2_END = PHASE2_END + MASK_TRANSITION_SECONDS // 37.65
-const REVEAL_PHASE1_END = HIDE_PHASE2_END + MASK_TRANSITION_SECONDS // 38.2 -- fase 1 ya visible de nuevo
+const HIDE_PHASE2_END = PHASE2_END + TRANSITION_SECONDS // 37.65
+const REVEAL_PHASE1_END = HIDE_PHASE2_END + TRANSITION_SECONDS // 38.2 -- fase 1 ya visible de nuevo
 const CYCLE_DURATION_SECONDS = REVEAL_PHASE1_END
 
 export type SpinStatsCategory = 'red' | 'black' | 'even' | 'odd' | 'high' | 'low' | DozenGroup | ColumnGroup
@@ -56,15 +56,13 @@ export interface SpinStatsCycle {
   // mostrarse.
   activeCategory: SpinStatsCategory | null
   // Qué conjunto de donas corresponde tener montado -- 'phase1' (color/even-odd/high-low) o
-  // 'phase2' (docenas/columnas). Durante una transición de máscara, sigue indicando el set que
-  // hay que seguir dibujando (el saliente mientras se oculta, el entrante mientras se revela) --
-  // ver maskCoverage.
+  // 'phase2' (docenas/columnas). Un cambio de valor acá es la SEÑAL de que hay que animar la
+  // transición -- no expone un progreso 0..1 propio: remainingSeconds (y por lo tanto todo lo que
+  // sale de este hook) solo cambia una vez por segundo real, insuficiente para animar algo de
+  // ~1s de duración sin que se vea a los saltos. SpinStatsPanel anima la transición en sí con su
+  // propio useAnimatedProgress (un tick real de Pixi por frame), disparado por el CAMBIO de este
+  // valor, no por su valor crudo.
   donutSet: SpinStatsDonutSet
-  // 0 = donutSet totalmente visible, sin máscara. Sube de 0 a 1 mientras donutSet se OCULTA (una
-  // máscara le "pasa por encima" de abajo hacia arriba, ver SpinStatsPanel); en cuanto llega a 1,
-  // donutSet cambia y maskCoverage arranca en 1 y baja a 0 mientras el nuevo set se REVELA de
-  // arriba hacia abajo. 0 el resto del tiempo (dentro de una fase, sin transición en curso).
-  maskCoverage: number
 }
 
 // Hash determinístico simple (no cripto) -- mismo seed siempre da el mismo resultado, así el
@@ -80,8 +78,8 @@ function seededPick<T extends readonly unknown[]>(seed: string, options: T): T[n
 }
 
 // Fuente única de verdad para "cuándo se muestra SpinStatsPanel", "qué categoría está resaltada
-// en este instante" y "qué set de donas (fase 1 o fase 2) toca mostrar, con qué progreso de
-// máscara" -- consumida por SpinStatsPanel (donas + máscara), useCategoryHighlightEntries
+// en este instante" y "qué set de donas (fase 1 o fase 2) toca mostrar" -- consumida por
+// SpinStatsPanel (donas), useCategoryHighlightEntries
 // (NumberCellHighlightLayer, fase 1) y useDozenColumnHighlightEntries (Dozen/ColumnDiamond
 // IndicatorLayer, fase 2). Todo se deriva de remainingSeconds (countdown real) en vez de un timer
 // local, para que cargar la página a mitad de una animación la retome en la fase correcta en vez
@@ -95,12 +93,12 @@ export function useSpinStatsCycle(): SpinStatsCycle {
 
   return useMemo<SpinStatsCycle>(() => {
     if (!shouldShow) {
-      return { shouldShow: false, activeCategory: null, donutSet: 'phase1', maskCoverage: 0 }
+      return { shouldShow: false, activeCategory: null, donutSet: 'phase1' }
     }
 
     const elapsed = VISIBLE_MAX_REMAINING_SECONDS - remainingSeconds
     if (elapsed < INITIAL_OFF_SECONDS) {
-      return { shouldShow: true, activeCategory: null, donutSet: 'phase1', maskCoverage: 0 }
+      return { shouldShow: true, activeCategory: null, donutSet: 'phase1' }
     }
 
     const cyclePosition = elapsed - INITIAL_OFF_SECONDS
@@ -108,7 +106,6 @@ export function useSpinStatsCycle(): SpinStatsCycle {
     const t = cyclePosition % CYCLE_DURATION_SECONDS
 
     let donutSet: SpinStatsDonutSet
-    let maskCoverage = 0
     let activeSlot: (typeof PHASE1_SLOT_NAMES)[number] | (typeof PHASE2_SLOT_NAMES)[number] | null = null
 
     if (t < PHASE1_DURATION_SECONDS) {
@@ -116,19 +113,15 @@ export function useSpinStatsCycle(): SpinStatsCycle {
       activeSlot = PHASE1_SLOT_NAMES[Math.floor(t / SUB_PHASE_DURATION_SECONDS)]
     } else if (t < HIDE_PHASE1_END) {
       donutSet = 'phase1'
-      maskCoverage = (t - HIDE_PHASE1_START) / MASK_TRANSITION_SECONDS
     } else if (t < REVEAL_PHASE2_END) {
       donutSet = 'phase2'
-      maskCoverage = 1 - (t - HIDE_PHASE1_END) / MASK_TRANSITION_SECONDS
     } else if (t < PHASE2_END) {
       donutSet = 'phase2'
       activeSlot = PHASE2_SLOT_NAMES[Math.floor((t - PHASE2_START) / SUB_PHASE_DURATION_SECONDS)]
     } else if (t < HIDE_PHASE2_END) {
       donutSet = 'phase2'
-      maskCoverage = (t - PHASE2_END) / MASK_TRANSITION_SECONDS
     } else {
       donutSet = 'phase1'
-      maskCoverage = 1 - (t - HIDE_PHASE2_END) / MASK_TRANSITION_SECONDS
     }
 
     let activeCategory: SpinStatsCategory | null = null
@@ -144,6 +137,6 @@ export function useSpinStatsCycle(): SpinStatsCycle {
       activeCategory = seededPick(`${nextDrawStartTime}:column:${cycleIndex}`, ['firstColumn', 'secondColumn', 'thirdColumn'] as const)
     }
 
-    return { shouldShow: true, activeCategory, donutSet, maskCoverage }
+    return { shouldShow: true, activeCategory, donutSet }
   }, [shouldShow, remainingSeconds, nextDrawStartTime])
 }

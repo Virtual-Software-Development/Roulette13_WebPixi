@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { extend } from '@pixi/react'
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
@@ -6,6 +6,7 @@ import { GlowFilter } from 'pixi-filters'
 import { useTranslation } from 'react-i18next'
 import { useResultsStore } from '../../store/useResultsStore'
 import { useSpinStatsCycle } from '../../hooks/useSpinStatsCycle'
+import type { SpinStatsDonutSet } from '../../hooks/useSpinStatsCycle'
 import { useViewport } from '../../hooks/useViewport'
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress'
 import { easeInOutCubic } from '../../utils/easing'
@@ -49,16 +50,10 @@ const BLOCK_GAP = 26
 // en pantalla incluso con la animación de salida completa.
 const PANEL_EXIT_DISTANCE = 850
 
-// Margen extra al final de la máscara -- el glow del segmento activo (ver ACTIVE_GLOW_DISTANCE
-// más abajo) se difumina más allá del radio nominal del anillo (DONUT_OUTER_RADIUS), así que sin
-// este margen la ÚLTIMA dona apilada (high/low en fase 1) quedaba con su glow cortado en seco por
-// el borde de abajo de la máscara justo cuando se encendía. Ver PHASE_MASK_CONTENT_HEIGHT.
-const MASK_BOTTOM_MARGIN = 60
-
-// Alto del contenido que tapa/revela la máscara entre fase 1 y fase 2 (ver drawMask más abajo) --
-// el de fase 1 (3 donas: color/even-odd/high-low), más alto que fase 2 (2 donas: docenas/
-// columnas), así alcanza de sobra para cualquiera de los dos sets sin recortar de más.
-const PHASE_MASK_CONTENT_HEIGHT = 3 * (DONUT_OUTER_RADIUS * 2) + 2 * BLOCK_GAP + MASK_BOTTOM_MARGIN
+// Cuánto tarda la transición de ocultar/revelar entre fase 1 y fase 2 -- se anima acá, con
+// useAnimatedProgress (tick real de Pixi), no con el valor crudo de useSpinStatsCycle (que solo
+// cambia una vez por segundo real, insuficiente para animar esto sin que se vea a los saltos).
+const DONUT_TRANSITION_DURATION_MS = 320
 
 // Track (fondo) de cada dona -- se ve donde ningún segmento cubre, p.ej. la porción de spins en
 // 0/00 en los gráficos que no los cuentan en ninguna categoría (par/impar, alto/bajo, docena,
@@ -82,6 +77,13 @@ const DONUT_TEXT_RADIUS = 36
 // Empuje extra hacia abajo (px) para el bloque de texto que cae justo abajo del centro -- ver
 // dónde se usa, en el map de Donut.
 const BOTTOM_TEXT_Y_OFFSET = 10
+
+// Animación de ocultar/revelar entre fase 1 y fase 2 (ver Donut.transitionProgress, viene de
+// useSpinStatsCycle) -- sin máscara: cada elemento anima su propia salida. El porcentaje baja,
+// la etiqueta sube, ambos se difuminan a la vez -- se separan en vez de moverse juntos para que
+// el ojo note el movimiento, no solo el fundido.
+const PERCENT_EXIT_Y_OFFSET = 14
+const LABEL_EXIT_Y_OFFSET = 14
 
 // Glow del segmento activo (ver Donut.activeLabel) -- se redibuja SOLO ese arco encima del anillo
 // normal con un GlowFilter (mismo tipo que LIVE_GLOW_FILTER en GameRow.tsx), sin cambiar el
@@ -163,6 +165,33 @@ function blockHeight(): number {
   return DONUT_OUTER_RADIUS * 2
 }
 
+// Encoge un segmento de línea (de `from` a `to`) hacia su propio punto medio a medida que
+// `progress` sube de 0 a 1 -- a progress=1 ambos extremos coinciden en el punto medio (largo 0,
+// invisible). Usado tanto para la línea única de lineCount 1 (su punto medio es el centro de la
+// dona, así que se encoge simétrico hacia el centro) como para cada rayo de lineCount 3 (su punto
+// medio cae a mitad de camino hacia afuera, así que se encoge hacia ESE punto, no hacia el centro).
+function shrinkLineTowardMidpoint(fromX: number, fromY: number, toX: number, toY: number, progress: number) {
+  const midX = (fromX + toX) / 2
+  const midY = (fromY + toY) / 2
+  const keep = 1 - progress
+  return {
+    fromX: midX + (fromX - midX) * keep,
+    fromY: midY + (fromY - midY) * keep,
+    toX: midX + (toX - midX) * keep,
+    toY: midY + (toY - midY) * keep,
+  }
+}
+
+// Achica un arco (segmento del anillo) desde AMBOS extremos hacia su ángulo medio a medida que
+// `progress` sube de 0 a 1 -- el ángulo medio queda fijo (se calcula sobre el sweep ORIGINAL, no
+// el que se va reduciendo), así el arco se va comiendo simétricamente desde las dos puntas hasta
+// desaparecer del todo en progress=1, en vez de deslizarse hacia un lado.
+function shrinkArcTowardMidAngle(startAngle: number, sweep: number, progress: number) {
+  const midAngle = startAngle + sweep / 2
+  const newSweep = sweep * (1 - progress)
+  return { startAngle: midAngle - newSweep / 2, sweep: newSweep }
+}
+
 // Anillo con segmentos proporcionales a `value/total` (arcos gruesos, como antes) más N líneas
 // doradas en partes IGUALES (una por segmento, sin importar su proporción real) que dividen el
 // centro en zonas de texto -- en cada zona va el porcentaje (grande, blanco) y la etiqueta
@@ -181,12 +210,17 @@ function Donut({
   segments,
   lineCount,
   activeLabel,
+  transitionProgress,
 }: {
   x: number
   y: number
   segments: DonutSegment[]
   lineCount: 1 | 3
   activeLabel?: string
+  // 0 = dona en reposo, totalmente visible. Sube a 1 mientras se oculta (ver useSpinStatsCycle) y
+  // baja de 1 a 0 mientras el set entrante se revela -- maneja las tres animaciones de acá abajo
+  // (arcos, líneas, texto), no un mask.
+  transitionProgress: number
 }) {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0)
 
@@ -230,30 +264,37 @@ function Donut({
 
       for (const entry of segmentAngles) {
         if (entry.sweep <= 0) continue
-        // El anillo base SIEMPRE va a INACTIVE_SEGMENT_ALPHA, haya o no un segmento activo -- el
-        // que está activo resalta solo por el overlay con glow (drawGlow, alpha 1 + GlowFilter),
-        // no porque acá se le suba el alpha. Sin ningún activo, toda la dona queda pareja y tenue.
-        drawArcSegment(g, entry.startAngle, entry.sweep, entry.segment.color, INACTIVE_SEGMENT_ALPHA)
+        // Se achica desde ambos extremos hacia su ángulo medio a medida que transitionProgress
+        // sube -- ver shrinkArcTowardMidAngle. El anillo base SIEMPRE va a INACTIVE_SEGMENT_ALPHA,
+        // haya o no un segmento activo -- el que está activo resalta solo por el overlay con glow
+        // (drawGlow, alpha 1 + GlowFilter), no porque acá se le suba el alpha. Sin ningún activo,
+        // toda la dona queda pareja y tenue.
+        const arc = shrinkArcTowardMidAngle(entry.startAngle, entry.sweep, transitionProgress)
+        if (arc.sweep <= 0) continue
+        drawArcSegment(g, arc.startAngle, arc.sweep, entry.segment.color, INACTIVE_SEGMENT_ALPHA)
       }
 
       // lineCount 1 = una sola línea recta de punta a punta (arriba-abajo, dos mitades) -- se
       // dibuja como UNA línea (no dos radios), para que no quede un vértice partido a la mitad.
-      // lineCount 3 = tres rayos a 120° desde el centro.
+      // lineCount 3 = tres rayos a 120° desde el centro. Cada línea se encoge hacia su propio
+      // punto medio a medida que transitionProgress sube -- ver shrinkLineTowardMidpoint.
       g.setStrokeStyle({ width: DONUT_SPOKE_WIDTH, color: DONUT_SPOKE_COLOR })
       if (lineCount === 1) {
-        g.moveTo(0, -DONUT_SPOKE_LENGTH)
-        g.lineTo(0, DONUT_SPOKE_LENGTH)
+        const line = shrinkLineTowardMidpoint(0, -DONUT_SPOKE_LENGTH, 0, DONUT_SPOKE_LENGTH, transitionProgress)
+        g.moveTo(line.fromX, line.fromY)
+        g.lineTo(line.toX, line.toY)
       } else {
         const spokeAngleStep = (Math.PI * 2) / lineCount
         for (let i = 0; i < lineCount; i++) {
           const lineAngle = -Math.PI / 2 + i * spokeAngleStep
-          g.moveTo(0, 0)
-          g.lineTo(Math.cos(lineAngle) * DONUT_SPOKE_LENGTH, Math.sin(lineAngle) * DONUT_SPOKE_LENGTH)
+          const line = shrinkLineTowardMidpoint(0, 0, Math.cos(lineAngle) * DONUT_SPOKE_LENGTH, Math.sin(lineAngle) * DONUT_SPOKE_LENGTH, transitionProgress)
+          g.moveTo(line.fromX, line.fromY)
+          g.lineTo(line.toX, line.toY)
         }
       }
       g.stroke()
     },
-    [segmentAngles, lineCount, drawArcSegment],
+    [segmentAngles, lineCount, drawArcSegment, transitionProgress],
   )
 
   // Redibuja SOLO el segmento activo, encima del anillo -- mismo arco, mismo grosor, la única
@@ -264,9 +305,11 @@ function Donut({
     (g: PixiGraphics) => {
       g.clear()
       if (!activeEntry || activeEntry.sweep <= 0) return
-      drawArcSegment(g, activeEntry.startAngle, activeEntry.sweep, activeEntry.segment.color)
+      const arc = shrinkArcTowardMidAngle(activeEntry.startAngle, activeEntry.sweep, transitionProgress)
+      if (arc.sweep <= 0) return
+      drawArcSegment(g, arc.startAngle, arc.sweep, activeEntry.segment.color)
     },
-    [activeEntry, drawArcSegment],
+    [activeEntry, drawArcSegment, transitionProgress],
   )
 
   // Estático (sin pulso) -- distance grande y outerStrength bajo para que se vea difuminado y
@@ -303,11 +346,29 @@ function Donut({
         // 3 rayos dorados, BOTTOM_TEXT_Y_OFFSET le da un poco más de aire hacia abajo.
         const textY = Math.sin(bisector) * DONUT_TEXT_RADIUS + (Math.sin(bisector) > 0.99 ? BOTTOM_TEXT_Y_OFFSET : 0)
         const percent = total > 0 ? Math.round((segment.value / total) * 100) : 0
+        // Al ocultarse (transitionProgress 0->1): el porcentaje baja, la etiqueta sube, ambos se
+        // difuminan a la vez -- ver PERCENT_EXIT_Y_OFFSET/LABEL_EXIT_Y_OFFSET. Al revelarse
+        // (1->0) es la misma animación en reversa, sin lógica aparte.
+        const textAlpha = 1 - transitionProgress
 
         return (
           <pixiContainer key={segment.label}>
-            <pixiText text={`${percent}%`} style={PERCENT_STYLE} x={textX} y={textY - 11} anchor={centerAnchor} />
-            <pixiText text={segment.label} style={LABEL_STYLE} x={textX} y={textY + 14} anchor={centerAnchor} />
+            <pixiText
+              text={`${percent}%`}
+              style={PERCENT_STYLE}
+              x={textX}
+              y={textY - 11 + transitionProgress * PERCENT_EXIT_Y_OFFSET}
+              anchor={centerAnchor}
+              alpha={textAlpha}
+            />
+            <pixiText
+              text={segment.label}
+              style={LABEL_STYLE}
+              x={textX}
+              y={textY + 14 - transitionProgress * LABEL_EXIT_Y_OFFSET}
+              anchor={centerAnchor}
+              alpha={textAlpha}
+            />
           </pixiContainer>
         )
       })}
@@ -324,14 +385,18 @@ function StatDonutBlock({
   segments,
   lineCount,
   activeLabel,
+  transitionProgress,
 }: {
   x: number
   y: number
   segments: DonutSegment[]
   lineCount: 1 | 3
   activeLabel?: string
+  transitionProgress: number
 }) {
-  return <Donut x={x} y={y + DONUT_OUTER_RADIUS} segments={segments} lineCount={lineCount} activeLabel={activeLabel} />
+  return (
+    <Donut x={x} y={y + DONUT_OUTER_RADIUS} segments={segments} lineCount={lineCount} activeLabel={activeLabel} transitionProgress={transitionProgress} />
+  )
 }
 
 export function SpinStatsPanel() {
@@ -339,13 +404,41 @@ export function SpinStatsPanel() {
   const { visibleLeft, visibleTop } = useViewport()
   const rawResults = useResultsStore((state) => state.rawResults)
 
-  // shouldShow/activeCategory/donutSet/maskCoverage vienen de useSpinStatsCycle -- fuente única
-  // ligada al countdown real (baja 2s después de que Hot/Cold se oculta, se oculta a los 5s de
-  // faltar para el próximo sorteo) y compartida con LobbyBackgroundLayer (NumberCellHighlightLayer
-  // en fase 1, Dozen/ColumnDiamondIndicatorLayer en fase 2), para que la dona resaltada y lo que
-  // se resalta en la rueda siempre coincidan.
-  const { shouldShow, activeCategory, donutSet, maskCoverage } = useSpinStatsCycle()
+  // shouldShow/activeCategory/donutSet vienen de useSpinStatsCycle -- fuente única ligada al
+  // countdown real (baja 2s después de que Hot/Cold se oculta, se oculta a los 5s de faltar para
+  // el próximo sorteo) y compartida con LobbyBackgroundLayer (NumberCellHighlightLayer en fase 1,
+  // Dozen/ColumnDiamondIndicatorLayer en fase 2), para que la dona resaltada y lo que se resalta
+  // en la rueda siempre coincidan.
+  const { shouldShow, activeCategory, donutSet } = useSpinStatsCycle()
   const progress = useAnimatedProgress(shouldShow ? 0 : 1, TRANSITION_DURATION_MS, { startAtTarget: true })
+
+  // Qué set se está dibujando AHORA -- distinto de `donutSet` (la fuente de verdad de
+  // useSpinStatsCycle) mientras dura la animación de transición: `donutSet` es la señal de "hay
+  // que cambiar", `renderedDonutSet` es lo que de verdad se monta, y solo se actualiza cuando la
+  // salida del set viejo terminó de animarse (ver los dos efectos de abajo).
+  const [renderedDonutSet, setRenderedDonutSet] = useState<SpinStatsDonutSet>(donutSet)
+  // 0 = renderedDonutSet visible en reposo. 1 = ocultándose/oculto. hideProgress corre con un tick
+  // real de Pixi por frame (useAnimatedProgress), NO con donutSet -- ese valor solo cambia una vez
+  // por segundo real (ver useSpinStatsCycle), insuficiente para animar algo de ~0.5s sin que se
+  // vea a los saltos.
+  const [hideTarget, setHideTarget] = useState<0 | 1>(0)
+  const hideProgress = useAnimatedProgress(hideTarget, DONUT_TRANSITION_DURATION_MS, { startAtTarget: true })
+
+  // donutSet cambió respecto de lo que se está dibujando -- arranca a ocultarse el set viejo.
+  useEffect(() => {
+    if (donutSet !== renderedDonutSet) {
+      setHideTarget(1)
+    }
+  }, [donutSet, renderedDonutSet])
+
+  // El set viejo ya terminó de ocultarse del todo -- recién ahí se cambia al nuevo y arranca a
+  // revelarse (misma animación, en reversa). Nunca se solapan.
+  useEffect(() => {
+    if (hideTarget === 1 && hideProgress >= 1) {
+      setRenderedDonutSet(donutSet)
+      setHideTarget(0)
+    }
+  }, [hideTarget, hideProgress, donutSet])
   // PANEL_EXIT_DISTANCE propio (no el SIDE_EXIT_DISTANCE compartido de 550) -- el contenido de
   // este panel (título + 3 donas apiladas, ~750px de alto) es más alto que el resto de los
   // paneles que usan ese valor, así que 550 no alcanzaba para sacarlo completo de pantalla.
@@ -433,36 +526,13 @@ export function SpinStatsPanel() {
     [stats, t, activeCategory],
   )
 
-  const blocks = donutSet === 'phase1' ? phase1Blocks : phase2Blocks
-
-  // Máscara que tapa/revela las donas entre fase 1 y fase 2 -- un simple rectángulo ancho de sobra
-  // (CONTENT_WIDTH) cuyo alto baja de PHASE_MASK_CONTENT_HEIGHT a 0 a medida que maskCoverage sube
-  // de 0 a 1 (y viceversa). y=0 siempre fijo (arriba): con maskCoverage subiendo, el borde de ABAJO
-  // del rectángulo visible sube -- se ve como si la máscara tapara de abajo hacia arriba. Con
-  // maskCoverage bajando de 1 a 0 (fase entrante), ese mismo borde baja -- se ve como si revelara
-  // de arriba hacia abajo. Un solo rectángulo, la dirección la da si maskCoverage sube o baja (ver
-  // useSpinStatsCycle). Sin renderable={false} a propósito -- Pixi ya deja de dibujar como hijo
-  // normal a cualquier objeto que esté asignado como `mask` de otro (se ve solo como máscara, no
-  // como rectángulo blanco encima); renderable={false} ACÁ rompe la máscara entera (queda con
-  // geometría vacía, tapando TODO sin importar maskCoverage) -- probado, no es solo teoría.
-  const [maskGraphics, setMaskGraphics] = useState<PixiGraphics | null>(null)
-  const drawMask = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      const visibleHeight = Math.max(0, PHASE_MASK_CONTENT_HEIGHT * (1 - maskCoverage))
-      if (visibleHeight <= 0) return
-      g.rect(0, 0, CONTENT_WIDTH, visibleHeight)
-      g.fill(0xffffff)
-    },
-    [maskCoverage],
-  )
+  const blocks = renderedDonutSet === 'phase1' ? phase1Blocks : phase2Blocks
 
   return (
     <pixiContainer x={panelX} y={panelY}>
       <pixiText text={t('spinStats.title', { count: LAST_SPINS_LIMIT })} style={TITLE_STYLE} x={CONTENT_WIDTH / 2} y={TITLE_HEIGHT / 2} anchor={titleAnchor} />
 
-      <pixiGraphics ref={setMaskGraphics} draw={drawMask} />
-      <pixiContainer x={0} y={TITLE_HEIGHT + TITLE_GAP} mask={maskGraphics ?? undefined}>
+      <pixiContainer x={0} y={TITLE_HEIGHT + TITLE_GAP}>
         {(() => {
           let cursorY = 0
           return blocks.map((block, index) => {
@@ -470,12 +540,13 @@ export function SpinStatsPanel() {
             cursorY += blockHeight() + BLOCK_GAP
             return (
               <StatDonutBlock
-                key={`${donutSet}-${index}`}
+                key={`${renderedDonutSet}-${index}`}
                 x={CONTENT_WIDTH / 2}
                 y={y}
                 segments={block.segments}
                 lineCount={block.lineCount}
                 activeLabel={block.activeLabel}
+                transitionProgress={hideProgress}
               />
             )
           })
