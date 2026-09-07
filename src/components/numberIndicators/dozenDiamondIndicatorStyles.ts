@@ -1,14 +1,19 @@
 import type { DozenGroup } from '../../types/numberIndicator'
+import { FIRST_GROUP_COLOR, SECOND_GROUP_COLOR, THIRD_GROUP_COLOR, numberToCssHex } from '../../utils/spinStatsColors'
 
 export interface DozenDiamondIndicatorStyle {
   stroke: string
   glow: string
 }
 
-// Paleta placeholder -- un color bien diferenciable por docena, a reemplazar por los
-// colores finales cuando estén definidos.
+// Mismo trío que SPIN_STATS_CATEGORY_COLOR (ver spinStatsColors.ts) -- así el anillo de la dona de
+// docenas en SpinStatsPanel y estos diamantes sobre la rueda siempre coinciden en color.
+const FIRST_HEX = numberToCssHex(FIRST_GROUP_COLOR)
+const SECOND_HEX = numberToCssHex(SECOND_GROUP_COLOR)
+const THIRD_HEX = numberToCssHex(THIRD_GROUP_COLOR)
+
 export const DOZEN_DIAMOND_INDICATOR_STYLES: Record<DozenGroup, DozenDiamondIndicatorStyle> = {
-  firstDozen: { stroke: '#f5b942', glow: '#f5b942' },
-  secondDozen: { stroke: '#5ab4f0', glow: '#5ab4f0' },
-  thirdDozen: { stroke: '#b083f5', glow: '#b083f5' },
+  firstDozen: { stroke: FIRST_HEX, glow: FIRST_HEX },
+  secondDozen: { stroke: SECOND_HEX, glow: SECOND_HEX },
+  thirdDozen: { stroke: THIRD_HEX, glow: THIRD_HEX },
 }

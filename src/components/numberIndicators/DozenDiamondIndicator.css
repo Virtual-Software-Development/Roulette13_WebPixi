@@ -13,3 +13,38 @@
 .dozen-diamond-indicator-blink-line {
   animation: dozen-diamond-indicator-blink 1.4s ease-in-out infinite;
 }
+
+/* Pop de entrada/salida (fase 2 de SpinStatsPanel, ver useDozenColumnHighlightEntries) -- fade +
+   scale, en vez de la barra de carga direccional de NumberCellHighlight (acá no hay una forma
+   angosta que "revelar", es un marcador puntual). transform-box: fill-box ancla el scale al
+   propio centro del diamante en vez del origen del <svg>. animation-duration/-delay llegan
+   inline (ver DozenDiamondIndicator.tsx) porque dependen de constantes de ese archivo y del
+   índice de este diamante dentro de su grupo (acordeón). */
+@keyframes dozen-diamond-indicator-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.dozen-diamond-indicator-body {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.dozen-diamond-indicator-body--entering {
+  animation-name: dozen-diamond-indicator-pop;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.dozen-diamond-indicator-body--leaving {
+  animation-name: dozen-diamond-indicator-pop;
+  animation-direction: reverse;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+}

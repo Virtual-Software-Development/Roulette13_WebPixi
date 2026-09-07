@@ -6,5 +6,28 @@
   "media": {
     "logoNotFound": "Logo no encontrado",
     "imageNotAvailable": "Imagen no disponible"
+  },
+  "numbers": {
+    "title": "Números",
+    "hot": "HOT",
+    "cold": "COLD"
+  },
+  "spinStats": {
+    "title": "ÚLTIMOS {{count}} SPIN",
+    "color": "COLOR",
+    "evenOdd": "PAR / IMPAR",
+    "highLow": "ALTO / BAJO",
+    "dozens": "DOCENAS",
+    "columns": "COLUMNAS",
+    "red": "ROJO",
+    "black": "NEGRO",
+    "green": "VERDE",
+    "even": "PAR",
+    "odd": "IMPAR",
+    "low": "BAJO",
+    "high": "ALTO",
+    "firstColumn": "1RA",
+    "secondColumn": "2DA",
+    "thirdColumn": "3RA"
   }
 }

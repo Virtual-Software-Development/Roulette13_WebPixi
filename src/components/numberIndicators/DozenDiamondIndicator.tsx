@@ -1,13 +1,17 @@
 import { memo } from 'react'
+import type { CSSProperties } from 'react'
 import { getPocketAngleDegForGeometry, getPocketPositionForGeometry } from '../../utils/wheelPositions'
 import type { PocketGeometry } from '../../utils/wheelPositions'
 import { WHEEL_GEOMETRY } from '../../layout/wheelGeometry.constants'
 import { getDiamondGlowSprite } from '../../utils/diamondGlowSprite'
 import { pocketAngleChangedBeyondThreshold } from './pocketGeometryMemo'
 import { DOZEN_DIAMOND_INDICATOR_STYLES } from './dozenDiamondIndicatorStyles'
+import { DIAMOND_INDICATOR_ENTER_DURATION_MS, DIAMOND_INDICATOR_LEAVE_DURATION_MS } from './diamondIndicatorTiming'
 import type { DozenGroup } from '../../types/numberIndicator'
 import type { WheelPocket, WheelType } from '../../types/wheel'
 import './DozenDiamondIndicator.css'
+
+export type DozenDiamondIndicatorPhase = 'entering' | 'visible' | 'leaving'
 
 // Ancho del diamante -- ajustar a mano (ver CHIP_WIDTH/CHIP_HEIGHT en HotColdNumberChip.tsx,
 // mismo criterio: son constantes de archivo, no hay que tocar la lógica para cambiarlas).
@@ -30,7 +34,14 @@ interface DozenDiamondIndicatorProps {
   pocket: WheelPocket
   wheelType: WheelType
   group: DozenGroup
-  active: boolean
+  // 'entering'/'leaving' juegan un pop de fade+scale (ver DozenDiamondIndicator.css); 'visible' no
+  // anima nada. A diferencia del `active: boolean` que tenía antes, este componente ya NO decide
+  // cuándo desmontarse solo -- eso lo controla DozenDiamondIndicatorLayer vía `entries` (ver
+  // useDozenColumnHighlightEntries), que lo sigue incluyendo mientras dura su salida.
+  phase: DozenDiamondIndicatorPhase
+  // Cuánto tarda en arrancar el pop de este diamante respecto de los demás del mismo grupo --
+  // efecto acordeón (ver useDozenColumnHighlightEntries). Ignorado si phase es 'visible'.
+  delayMs?: number
   width?: number
   height?: number
   // Geometría a usar para ubicar la casilla -- por defecto WHEEL_GEOMETRY[wheelType] (modo
@@ -56,13 +67,12 @@ function DozenDiamondIndicatorComponent({
   pocket,
   wheelType,
   group,
-  active,
+  phase,
+  delayMs = 0,
   width = DOZEN_DIAMOND_DEFAULT_WIDTH,
   height = DOZEN_DIAMOND_DEFAULT_HEIGHT,
   geometry = WHEEL_GEOMETRY[wheelType],
 }: DozenDiamondIndicatorProps) {
-  if (!active) return null
-
   const { x, y } = getPocketPositionForGeometry(pocket, wheelType, geometry, DOZEN_DIAMOND_RADIUS_OFFSET)
   const angleDeg = getPocketAngleDegForGeometry(pocket, wheelType, geometry)
   const style = DOZEN_DIAMOND_INDICATOR_STYLES[group]
@@ -78,28 +88,41 @@ function DozenDiamondIndicatorComponent({
     glowBlur: DOZEN_DIAMOND_GLOW_BLUR,
   })
 
+  // Wrapper interno para el pop de entrada/salida -- un transform CSS acá (scale) no choca con el
+  // transform de posición/rotación del <g> de afuera (attribute SVG), mismo criterio que separa
+  // maskRect de su casilla en NumberCellHighlight.tsx.
+  const bodyStyle: CSSProperties | undefined =
+    phase === 'visible'
+      ? undefined
+      : {
+          animationDuration: `${phase === 'entering' ? DIAMOND_INDICATOR_ENTER_DURATION_MS : DIAMOND_INDICATOR_LEAVE_DURATION_MS}ms`,
+          animationDelay: `${delayMs}ms`,
+        }
+
   return (
     <g transform={`translate(${x}, ${y}) rotate(${angleDeg})`} data-number={pocket} data-dozen-group={group}>
-      {/* Diamante base: sprite prerenderizado (trazo + glow ya horneados) en vez de
-          polygon+filter por instancia. */}
-      <image
-        className="dozen-diamond-indicator-base"
-        href={sprite.url}
-        x={sprite.offsetX}
-        y={sprite.offsetY}
-        width={sprite.spriteWidth}
-        height={sprite.spriteHeight}
-      />
-      {/* Segundo diamante, más grande (tipo halo), superpuesto -- hace blink por CSS (ver
-          .css), apareciendo y desapareciendo por fuera del diamante principal. Sigue siendo un
-          polygon liviano: no lleva filter propio. */}
-      <polygon
-        className="dozen-diamond-indicator-blink-line"
-        points={blinkPoints}
-        fill="none"
-        stroke={style.glow}
-        strokeWidth={DOZEN_DIAMOND_BLINK_STROKE_WIDTH}
-      />
+      <g className={`dozen-diamond-indicator-body dozen-diamond-indicator-body--${phase}`} style={bodyStyle}>
+        {/* Diamante base: sprite prerenderizado (trazo + glow ya horneados) en vez de
+            polygon+filter por instancia. */}
+        <image
+          className="dozen-diamond-indicator-base"
+          href={sprite.url}
+          x={sprite.offsetX}
+          y={sprite.offsetY}
+          width={sprite.spriteWidth}
+          height={sprite.spriteHeight}
+        />
+        {/* Segundo diamante, más grande (tipo halo), superpuesto -- hace blink por CSS (ver
+            .css), apareciendo y desapareciendo por fuera del diamante principal. Sigue siendo un
+            polygon liviano: no lleva filter propio. */}
+        <polygon
+          className="dozen-diamond-indicator-blink-line"
+          points={blinkPoints}
+          fill="none"
+          stroke={style.glow}
+          strokeWidth={DOZEN_DIAMOND_BLINK_STROKE_WIDTH}
+        />
+      </g>
     </g>
   )
 }
@@ -113,7 +136,8 @@ function dozenDiamondPropsAreEqual(prev: DozenDiamondIndicatorProps, next: Dozen
     prev.pocket !== next.pocket ||
     prev.wheelType !== next.wheelType ||
     prev.group !== next.group ||
-    prev.active !== next.active ||
+    prev.phase !== next.phase ||
+    prev.delayMs !== next.delayMs ||
     prev.width !== next.width ||
     prev.height !== next.height
   ) {
