@@ -11,6 +11,7 @@ import { useSeamlessVideoLoop } from '../hooks/useSeamlessVideoLoop'
 import { WheelFrameStepper } from './WheelFrameStepper'
 import { LobbyWheelDebugOverlay } from './LobbyWheelDebugOverlay'
 import { HotColdNumberChipLayer } from '../components/numberIndicators/HotColdNumberChipLayer'
+import { LastWinnerBallLayer } from '../components/numberIndicators/LastWinnerBallLayer'
 import { NumberCellHighlightLayer } from '../components/numberIndicators/NumberCellHighlightLayer'
 import { DozenDiamondIndicatorLayer } from '../components/numberIndicators/DozenDiamondIndicatorLayer'
 import { ColumnDiamondIndicatorLayer } from '../components/numberIndicators/ColumnDiamondIndicatorLayer'
@@ -169,6 +170,7 @@ export function LobbyBackgroundLayer() {
       <NumberCellHighlightLayer entries={highlightEntries} />
       <DozenDiamondIndicatorLayer entries={dozenEntries} />
       <ColumnDiamondIndicatorLayer entries={columnEntries} />
+      <LastWinnerBallLayer />
       <LobbyWheelDebugOverlay />
       <WheelFrameStepper />
     </div>
