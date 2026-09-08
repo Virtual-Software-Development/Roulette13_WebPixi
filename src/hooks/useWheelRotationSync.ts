@@ -1,5 +1,6 @@
 import { useLayoutEffect } from 'react'
 import type { RefObject } from 'react'
+import { useDrawCycleStore } from '../store/useDrawCycleStore'
 
 // Cada cuánto se vuelve a leer la fase real de .lobby-wheel-rotor y realinear -- no alcanza con
 // sincronizar una sola vez al montar (ver comentario de abajo): en una build que corre días sin
@@ -51,7 +52,34 @@ export function useWheelRotationSync(rotorGroupRef: RefObject<SVGGElement | null
     }
 
     sync()
+    // Red de seguridad para un grupo RECIÉN montado (p. ej. HotColdNumberChipLayer, que monta de
+    // cero cada vez que reaparece, bastante después de que .lobby-wheel-rotor ya lleva rato
+    // girando): el primer sync() de arriba puede caer justo antes de que el navegador termine de
+    // crear el objeto Animation de ESTE grupo (confirmado en vivo -- se ve desfasado hasta el
+    // primer resync periódico, varios segundos después), en cuyo caso toma la rama de
+    // animation-delay como string en vez del seek confiable. Un segundo intento en el próximo
+    // frame (para entonces el Animation ya existe seguro) corrige eso casi al instante en vez de
+    // esperar hasta RESYNC_INTERVAL_MS.
+    const rafId = requestAnimationFrame(sync)
     const intervalId = setInterval(sync, RESYNC_INTERVAL_MS)
-    return () => clearInterval(intervalId)
+
+    // Resync inmediato apenas la rueda de imagen retoma girando -- mismo criterio de "congelada"
+    // que usa LobbyBackgroundLayer para pausar/resetear .lobby-wheel-rotor (videoSlideProgress
+    // llega a 1). Relevante para un grupo que se queda montado durante TODO el freeze (a
+    // diferencia de HotColdNumberChipLayer, que se desmonta/remonta -- ver el rAF de arriba para
+    // ese caso): sin esto podía quedar hasta RESYNC_INTERVAL_MS desalineado del rotor real justo
+    // cuando vuelve a ser relevante (highlights que recién ahí empiezan a mostrarse de nuevo).
+    let wasFrozen = useDrawCycleStore.getState().videoSlideProgress >= 1
+    const unsubscribe = useDrawCycleStore.subscribe((state) => {
+      const isFrozen = state.videoSlideProgress >= 1
+      if (wasFrozen && !isFrozen) sync()
+      wasFrozen = isFrozen
+    })
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      clearInterval(intervalId)
+      unsubscribe()
+    }
   }, [durationSec, rotorGroupRef])
 }

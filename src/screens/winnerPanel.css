@@ -1,0 +1,73 @@
+/* Por encima de .video-pool-slot (z-index:5, ver videoPool.css) -- debe tapar el video mientras
+   este panel está en pantalla. vw/vh/clamp (no px fijos): este panel vive fuera de
+   ResponsiveStage (que solo escala el canvas de Pixi), así que se dimensiona contra el viewport
+   real, igual que LobbyBackgroundLayer/VideoPoolLayer. */
+.winner-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Color sólido de respaldo mientras el <canvas> todavía no dibujó su primer frame. */
+  background: #050810;
+  overflow: hidden;
+}
+
+/* Un solo frame del video, capturado una vez (ver WinnerPanel.tsx) y blureado con filter (no
+   backdrop-filter) -- a diferencia de backdrop-filter, que reblurea el contenido de detrás en
+   cada frame, esto es una imagen ya fija: no cambia aunque el video siga o el hand-off revele el
+   fondo del lobby detrás. */
+.winner-panel-backdrop-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(24px);
+}
+
+.winner-panel-tint {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 8, 20, 0.45);
+}
+
+.winner-panel-card {
+  /* position:relative (no solo z-index) para quedar por encima del canvas/tint (ambos
+     position:absolute): sin esto, un elemento no-posicionado pinta ANTES que los posicionados,
+     sin importar el orden en el DOM -- ver CSS2.1 stacking order. */
+  position: relative;
+  background: rgba(13, 27, 51, 0.85);
+  border: 2.25px solid #35a7ff;
+  border-radius: 24px;
+  padding: 4vh 6vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2vh;
+  transform: scale(1);
+  transition: transform 400ms ease;
+}
+
+/* Se dispara poniendo winnerPanelExiting=true -- ver WinnerPanel.tsx, que desmonta el panel
+   WINNER_PANEL_EXIT_DURATION_MS después (misma duración que esta transición). */
+.winner-panel-backdrop--exiting .winner-panel-card {
+  transform: scale(0);
+}
+
+.winner-panel-title {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: clamp(32px, 4vw, 64px);
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.winner-panel-number {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: clamp(120px, 16vw, 260px);
+  line-height: 1;
+}

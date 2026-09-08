@@ -20,11 +20,11 @@ interface SharedLayoutProps {
 }
 
 export function SharedLayout({ children, footerContent, hideBackground }: SharedLayoutProps) {
-  const active = useDrawCycleStore((state) => state.active)
-  // Mientras el video está en pantalla, el cuerpo de resultados (tarjeta de
-  // ganador + tabla) sube y se oculta arriba; vuelve a bajar cuando active
-  // vuelve a false.
-  const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS)
+  const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
+  // Mientras el video está en pantalla, el cuerpo de resultados (tarjeta de ganador + tabla) sube
+  // y se oculta arriba; vuelve a bajar recién cuando el panel Winner terminó de escalarse a 0
+  // (ver useDrawCycleStore.lobbyInfoVisible).
+  const progress = useAnimatedProgress(lobbyInfoVisible ? 0 : 1, TRANSITION_DURATION_MS)
   const exitOffset = easeInOutCubic(progress) * SIDE_EXIT_DISTANCE
   const bodyX = BODY_OFFSET_X + exitOffset
   const bodyY = HEADER_HEIGHT + BODY_OFFSET_Y

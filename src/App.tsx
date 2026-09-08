@@ -3,6 +3,7 @@ import { Application } from '@pixi/react'
 import { RouletteVideoView } from './screens/RouletteVideoView'
 import { RouletteLobby } from './screens/RouletteLobby'
 import { LobbyBackgroundLayer } from './screens/LobbyBackgroundLayer'
+import { WinnerPanel } from './screens/WinnerPanel'
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { VideoPoolLayer } from './video/VideoPoolLayer'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc } from './video/videoElements'
@@ -70,6 +71,9 @@ function App() {
             // sesión -- se pierde el frame que se estaba comparando.
             if (isCancelled() || WHEEL_VIDEO_FROZEN) return
             useDrawCycleStore.getState().setActive(true)
+            useDrawCycleStore.getState().setLobbyInfoVisible(false)
+            useDrawCycleStore.getState().setWinnerPanelNumber(null)
+            useDrawCycleStore.getState().setWinnerPanelExiting(false)
             setVideoMounted(true)
           }
           if (videoReadyPromise) {
@@ -98,9 +102,17 @@ function App() {
 
   // Historial largo (hasta ~100 resultados) para cálculos de frecuencia (hot/cold, ver
   // DEMO_NUMBERS_BY_TYPE en LobbyBackgroundLayer.tsx) -- separado de `history` (que alimenta
-  // GameList/LastGame y queda acotado a maxResults). Se pide una sola vez al montar; no forma
-  // parte del ciclo de sorteo (scheduleDraw), así que no hace falta reprogramarlo.
+  // GameList/LastGame y queda acotado a maxResults). Se pide al montar Y cada vez que `active`
+  // vuelve a false -- ni bien termina el hold, que es también el instante en que la rueda de
+  // imagen retoma girando (LobbyBackgroundLayer: se destraba apenas videoSlideProgress deja de
+  // estar en 1, lo que pasa ni bien active pasa a false). Se dispara ahí (no en lobbyInfoVisible,
+  // que recién llega ~1.3s después: bajada de la rueda + salida del panel Winner) para darle todo
+  // ese margen extra al fetch y a la recomputación de hot/cold, y que el panel de números
+  // (que igual espera otros 5s más, ver SHOW_DELAY_AFTER_LOBBY_INFO_MS en useHotColdWindow) nunca
+  // alcance a mostrarse todavía con el resultado de la ronda anterior.
+  const active = useDrawCycleStore((state) => state.active)
   useEffect(() => {
+    if (active) return
     let cancelled = false
     fetchLastResults()
       .then((data) => {
@@ -111,7 +123,7 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [active])
 
   // Se llama apenas el video termina de reproducirse (bien antes del
   // freeze-hold/slide-down) — agenda el próximo sorteo ahí, no cuando vuelve
@@ -127,12 +139,14 @@ function App() {
   // desmontarlo.
   const handleFullyExited = useCallback(() => {
     setVideoMounted(false)
+    useDrawCycleStore.getState().setWinnerPanelExiting(true)
   }, [])
 
   return (
     <>
       <LobbyBackgroundLayer />
       <VideoPoolLayer />
+      <WinnerPanel />
       <Application
         autoDensity={true}
         resizeTo={window}
