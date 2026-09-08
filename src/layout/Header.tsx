@@ -57,10 +57,10 @@ export function Header() {
   const countdown = useCountdown(nextDrawStartTime)
   const { visibleTop, visibleRight } = useViewport()
 
-  const active = useDrawCycleStore((state) => state.active)
-  // El panel sale hacia la derecha mientras el video está en pantalla; vuelve
-  // cuando active vuelve a false.
-  const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS)
+  const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
+  // El panel sale hacia la derecha mientras el video está en pantalla; vuelve recién cuando el
+  // panel Winner terminó de escalarse a 0 (ver useDrawCycleStore.lobbyInfoVisible).
+  const progress = useAnimatedProgress(lobbyInfoVisible ? 0 : 1, TRANSITION_DURATION_MS)
   const exitOffset = easeInOutCubic(progress) * SIDE_EXIT_DISTANCE
 
   const panelX = visibleRight - LAYOUT.padding - STATUS_PANEL_WIDTH + exitOffset

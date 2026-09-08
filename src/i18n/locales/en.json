@@ -29,5 +29,8 @@
     "firstColumn": "1ST",
     "secondColumn": "2ND",
     "thirdColumn": "3RD"
+  },
+  "winnerPanel": {
+    "title": "WINNER"
   }
 }

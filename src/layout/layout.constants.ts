@@ -50,6 +50,17 @@ export const TRANSITION_DURATION_MS = 550
 export const RESULT_HOLD_MS = 3000
 export const SIDE_EXIT_DISTANCE = 550
 
+// Deslizamiento del video de sorteo (RouletteVideoView) y, en sync, de la rueda de fondo que
+// sube/baja con él (LobbyBackgroundLayer, ver useDrawCycleStore.videoSlideProgress) --
+// deliberadamente más lenta que TRANSITION_DURATION_MS (paneles de Header/Footer/etc., que no
+// deben volverse más lentos) para que el movimiento se alcance a percibir bien.
+export const VIDEO_WHEEL_TRANSITION_DURATION_MS = 900
+
+// Panel Winner (RouletteVideoView + WinnerPanel): cuánto antes del final del video aparece, y
+// cuánto dura su propia animación de escala a 0 al salir (ver WinnerPanel.tsx).
+export const WINNER_PANEL_LEAD_SECONDS = 2
+export const WINNER_PANEL_EXIT_DURATION_MS = 400
+
 // Label "GAME:" + valor del número de sorteo en el panel de estado del Header.
 export const HEADER_LABEL_STYLE = new TextStyle({
   fontFamily: 'Arial',

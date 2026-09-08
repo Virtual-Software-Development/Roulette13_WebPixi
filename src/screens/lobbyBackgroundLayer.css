@@ -29,6 +29,16 @@
 }
 */
 
+/* Envuelve base+rotor (modo imagen) para trasladarlos juntos en sync con la subida/bajada
+   del video de sorteo -- ver el useLayoutEffect que suscribe a useDrawCycleStore.videoSlideProgress
+   en LobbyBackgroundLayer.tsx. Los hijos mantienen su inset:0 propio, ahora relativo a este
+   wrapper en vez de a .lobby-background-layer directamente -- sin cambio visual en reposo. */
+.lobby-wheel-image-group {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
 .lobby-wheel-base,
 .lobby-wheel-rotor,
 .lobby-wheel-video {

@@ -3,7 +3,7 @@ import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
-import { RESULT_HOLD_MS, TRANSITION_DURATION_MS } from '../layout/layout.constants'
+import { RESULT_HOLD_MS, VIDEO_WHEEL_TRANSITION_DURATION_MS, WINNER_PANEL_LEAD_SECONDS } from '../layout/layout.constants'
 import { easeInOutCubic } from '../utils/easing'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from '../video/videoElements'
 import { onVideoNearEnd } from '../utils/videoSeek'
@@ -38,10 +38,18 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
   // progress 0 = oculto abajo de la pantalla, 1 = en su posición final mostrándose.
   // Sube cuando active pasa a true, y baja cuando vuelve a false — el mismo cálculo
   // sirve para la entrada y, en reversa, para la salida.
-  const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS)
+  const progress = useAnimatedProgress(active ? 1 : 0, VIDEO_WHEEL_TRANSITION_DURATION_MS)
   const eased = easeInOutCubic(progress)
   const arrived = active && progress === 1
   const fullyExited = !active && progress === 0
+
+  // Publica el mismo progreso ya-easeado que posiciona este video para que LobbyBackgroundLayer
+  // (fuera del árbol de Pixi, no puede usar useAnimatedProgress) mueva la rueda del lobby en
+  // sync -- ver useDrawCycleStore.videoSlideProgress. Sin gating por `ready`: existe desde el
+  // instante en que `active` cambia, igual que `progress`.
+  useLayoutEffect(() => {
+    useDrawCycleStore.getState().setVideoSlideProgress(eased)
+  }, [eased])
 
   useEffect(() => {
     if (!videoUrlFromStore) return
@@ -110,6 +118,20 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
       onEnded?.()
     })
   }, [ready, onEnded])
+
+  // Captura el número ganador para el panel Winner (WinnerPanel.tsx) apenas quedan
+  // WINNER_PANEL_LEAD_SECONDS del video -- no puede leer pendingResult en el momento en que el
+  // panel debe desaparecer porque el 'ended' de handleEnded ya lo limpió para entonces (bastante
+  // antes: el panel sigue en pantalla durante el hold + la bajada de la rueda). Registro
+  // independiente del hand-off de arriba (mismo video, otro leadSeconds -- ver onVideoNearEnd).
+  useEffect(() => {
+    if (!ready) return
+    const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
+    return onVideoNearEnd(video, () => {
+      const pendingResult = useDrawCycleStore.getState().pendingResult
+      if (pendingResult) useDrawCycleStore.getState().setWinnerPanelNumber(pendingResult.result)
+    }, WINNER_PANEL_LEAD_SECONDS)
+  }, [ready])
 
   // Recién arranca a reproducirse una vez que termina de subir a su posición final.
   useEffect(() => {

@@ -54,13 +54,11 @@ const WHEEL_VIDEO_URL = ACTIVE_WHEEL_VIDEO_GEOMETRY ? buildMediaUrl(ACTIVE_WHEEL
 // corre en el compositor) y da control total sobre velocidad/dirección del giro.
 export function LobbyBackgroundLayer() {
   const backgroundUrl = useGameConfigStore((state) => state.backgroundUrl)
-  // Con el video del sorteo activo, el rotor de modo imagen se pausa y se resetea al ángulo 0
-  // (misma posición de referencia que usa la calibración/wheelDebug) -- ver el efecto más abajo.
-  // No hace falta en modo video (WHEEL_VIDEO_FROZEN ya cubre ESE caso, y acá `active` nunca es
-  // true mientras WHEEL_VIDEO_FROZEN está activo -- ver App.tsx: showVideo() ni siquiera dispara
-  // setActive(true) en ese caso).
-  const isDrawVideoActive = useDrawCycleStore((state) => state.active)
   const wheelRotorRef = useRef<HTMLImageElement>(null)
+  const wheelImageGroupRef = useRef<HTMLDivElement>(null)
+  // Espeja el último estado de congelamiento aplicado, para no tocar el DOM (classList/seek) en
+  // cada tick del progreso -- solo al cruzar el umbral (ver el efecto más abajo).
+  const wheelFrozenRef = useRef(false)
   // Mismos números y misma ventana de tiempo que NumberPanelHotCold (ver RouletteLobby.tsx) --
   // useHotColdWindow es la fuente única para ambos.
   const { shouldShow: showHotCold, hot, cold } = useHotColdWindow()
@@ -85,21 +83,46 @@ export function LobbyBackgroundLayer() {
     frozen: WHEEL_VIDEO_FROZEN,
   })
 
-  // Al entrar el video del sorteo (isDrawVideoActive true): resetea el rotor al ángulo 0 -- la
-  // clase lobby-wheel-rotor--frozen (ver CSS) ya lo pausa vía animation-play-state, pero pausar
-  // sola cosa NO reposiciona, solo congela donde haya quedado -- por eso hace falta este seek
-  // explícito. Usa Animation.currentTime (Web Animations API), NO animation-delay como string:
-  // reasignar animation-delay sobre una animación que ya lleva un rato corriendo NO la reposiciona
-  // (el navegador la reinterpreta contra el momento en que arrancó originalmente, no contra
-  // "ahora") -- confirmado con el mismo bug en useWheelRotationSync.ts, ver su comentario. Al
-  // volver isDrawVideoActive a false, la clase se saca y listo: como quedó en 0, retoma girando
-  // desde ahí, sin necesidad de tocar nada en esta rama.
+  // Traslada el grupo base+rotor en sync con la subida/bajada del video de sorteo (mismo
+  // progreso ya-easeado, misma duración), y congela el giro del rotor (modo imagen) recién
+  // cuando ya terminó de ocultarse del todo (progress===1) -- no al arrancar la subida, para que
+  // se lo vea girar mientras sale de escena en vez de quedar "muerto" detrás del video que sube.
+  // Al bajar de vuelta, se destraba apenas el progreso deja de estar en 1 (retoma girando desde
+  // el ángulo de referencia al que quedó fijado). No hace falta en modo video (WHEEL_VIDEO_FROZEN
+  // ya cubre ESE caso, y acá `active`/`videoSlideProgress` nunca se mueven mientras
+  // WHEEL_VIDEO_FROZEN está activo -- ver App.tsx: showVideo() ni siquiera dispara
+  // setActive(true) en ese caso).
+  //
+  // Un solo useLayoutEffect/subscribe para ambas cosas (posición + freeze), en vez de un selector
+  // reactivo (que re-renderizaría todo este componente, con varios hooks pesados encima, en cada
+  // tick) -- se suscribe fuera de React y escribe el DOM a mano, mismo patrón que ya usa
+  // RouletteVideoView con su <video> y useWheelRotationSync con Animation.currentTime.
   useLayoutEffect(() => {
-    const rotor = wheelRotorRef.current
-    if (!rotor || !isDrawVideoActive) return
-    const rotorAnimation = rotor.getAnimations()[0]
-    if (rotorAnimation) rotorAnimation.currentTime = 0
-  }, [isDrawVideoActive])
+    const applyProgress = (progress: number) => {
+      const group = wheelImageGroupRef.current
+      if (group) group.style.transform = `translateY(${-progress * 100}%)`
+
+      const rotor = wheelRotorRef.current
+      const shouldFreeze = progress >= 1
+      if (rotor && shouldFreeze !== wheelFrozenRef.current) {
+        wheelFrozenRef.current = shouldFreeze
+        rotor.classList.toggle('lobby-wheel-rotor--frozen', shouldFreeze)
+        if (shouldFreeze) {
+          // Pausar (animation-play-state, vía la clase de arriba) no reposiciona, solo congela
+          // donde haya quedado -- por eso hace falta este seek explícito al ángulo de referencia,
+          // misma posición que usa la calibración/wheelDebug. Animation.currentTime (Web
+          // Animations API), NO animation-delay como string: reasignar animation-delay sobre una
+          // animación que ya lleva un rato corriendo NO la reposiciona (el navegador la
+          // reinterpreta contra el momento en que arrancó originalmente, no contra "ahora") --
+          // confirmado con el mismo bug en useWheelRotationSync.ts, ver su comentario.
+          const rotorAnimation = rotor.getAnimations()[0]
+          if (rotorAnimation) rotorAnimation.currentTime = 0
+        }
+      }
+    }
+    applyProgress(useDrawCycleStore.getState().videoSlideProgress)
+    return useDrawCycleStore.subscribe((state) => applyProgress(state.videoSlideProgress))
+  }, [])
 
   return (
     <div className="lobby-background-layer">
@@ -130,16 +153,16 @@ export function LobbyBackgroundLayer() {
           />
         </>
       ) : (
-        <>
-        <img
+        <div className="lobby-wheel-image-group" ref={wheelImageGroupRef}>
+          <img
             ref={wheelRotorRef}
             src={WHEEL_ROTOR_URL}
-            className={`lobby-wheel-rotor${isDrawVideoActive ? ' lobby-wheel-rotor--frozen' : ''}`}
+            className="lobby-wheel-rotor"
             alt=""
             style={{ animationDuration: `${WHEEL_SPIN_DURATION_SEC}s` }}
           />
-          <img src={WHEEL_BASE_URL} className="lobby-wheel-base" alt="" />    
-        </>
+          <img src={WHEEL_BASE_URL} className="lobby-wheel-base" alt="" />
+        </div>
       )}
       {/* <video ref={videoRef} className="lobby-background-video" playsInline preload="auto" /> */}
       {showHotCold && <HotColdNumberChipLayer numbersByType={{ hot, cold }} />}

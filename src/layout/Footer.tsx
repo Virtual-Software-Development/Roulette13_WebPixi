@@ -44,10 +44,10 @@ export function Footer({ children }: FooterProps) {
   const showLogo = useGameConfigStore((state) => state.showLogo)
   const { visibleLeft, visibleBottom } = useViewport()
 
-  const active = useDrawCycleStore((state) => state.active)
-  // El logo sale hacia la izquierda mientras el video está en pantalla;
-  // vuelve cuando active vuelve a false.
-  const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS)
+  const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
+  // El logo sale hacia la izquierda mientras el video está en pantalla; vuelve recién cuando el
+  // panel Winner terminó de escalarse a 0 (ver useDrawCycleStore.lobbyInfoVisible).
+  const progress = useAnimatedProgress(lobbyInfoVisible ? 0 : 1, TRANSITION_DURATION_MS)
   const exitOffset = easeInOutCubic(progress) * SIDE_EXIT_DISTANCE
 
   const drawLogoFallback = useCallback((g: PixiGraphics) => {

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useGameConfigStore } from '../store/useGameConfigStore'
@@ -14,7 +14,12 @@ export const HOT_COLD_ENTRY_LIMIT = 5
 // más de este umbral para el próximo sorteo (la ronda completa dura ~1:30, ver useCountdown) --
 // ligado al countdown real en vez de un timer local para que, si se entra a mitad de una ronda ya
 // avanzada, no aparezcan igual.
-export const VISIBLE_MIN_REMAINING_SECONDS = 80 // 1:20
+export const VISIBLE_MIN_REMAINING_SECONDS = 70 // 1:20
+
+// Cuánto esperar, después de que vuelve a aparecer la info del lobby (Header/Footer/
+// SharedLayout, ver useDrawCycleStore.lobbyInfoVisible), antes de mostrar este panel -- para que
+// no se sientan pisados/simultáneos.
+const SHOW_DELAY_AFTER_LOBBY_INFO_MS = 5000
 
 export interface HotColdWindow extends HotColdNumbers {
   shouldShow: boolean
@@ -26,11 +31,26 @@ export interface HotColdWindow extends HotColdNumbers {
 // pantalla.
 export function useHotColdWindow(): HotColdWindow {
   const rawResults = useResultsStore((state) => state.rawResults)
-  const active = useDrawCycleStore((state) => state.active)
+  // A diferencia de `active` (que ya pasa a false apenas termina el hold, antes de que la rueda
+  // termine de bajar de vuelta y de que el panel Winner se escale a 0), esto sigue en false hasta
+  // que la info del lobby ya volvió a aparecer -- ver useDrawCycleStore.
+  const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
   const { remainingSeconds } = useCountdown(nextDrawStartTime)
 
-  const shouldShow = !active && remainingSeconds > VISIBLE_MIN_REMAINING_SECONDS
+  // Un solo setTimeout por ronda (no un polling continuo) -- se rearma cada vez que
+  // lobbyInfoVisible vuelve a false al arrancar la siguiente ronda.
+  const [delayElapsed, setDelayElapsed] = useState(false)
+  useEffect(() => {
+    if (!lobbyInfoVisible) {
+      setDelayElapsed(false)
+      return
+    }
+    const timer = setTimeout(() => setDelayElapsed(true), SHOW_DELAY_AFTER_LOBBY_INFO_MS)
+    return () => clearTimeout(timer)
+  }, [lobbyInfoVisible])
+
+  const shouldShow = lobbyInfoVisible && delayElapsed && remainingSeconds > VISIBLE_MIN_REMAINING_SECONDS
   const { hot, cold } = useMemo(() => computeHotColdNumbers(rawResults, HOT_COLD_ENTRY_LIMIT), [rawResults])
 
   return { shouldShow, hot, cold }
