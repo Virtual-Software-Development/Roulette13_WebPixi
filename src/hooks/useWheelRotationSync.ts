@@ -6,11 +6,16 @@ import { useDrawCycleStore } from '../store/useDrawCycleStore'
 // sincronizar una sola vez al montar (ver comentario de abajo): en una build que corre días sin
 // recargar (pantalla/kiosco), cualquier hipo puntual del navegador (throttling de la pestaña,
 // recuperación de contexto GPU, lo que sea) puede dejar a ESTE overlay desfasado del resto para
-// siempre, porque nada más lo vuelve a corregir. Reintentar cada 5s autocorrige cualquier
-// desfasaje que se cuele, sin depender de detectarlo ni de un reload manual -- la operación en sí
-// (leer/asignar Animation.currentTime, transform-only, sin layout) es barata incluso en hardware
-// débil, así que bajar el intervalo no tiene costo real hasta valores mucho menores (~1-2s).
-const RESYNC_INTERVAL_MS = 5_000
+// siempre, porque nada más lo vuelve a corregir. Reintentar autocorrige cualquier desfasaje que se
+// cuele, sin depender de detectarlo ni de un reload manual -- la operación en sí (leer/asignar
+// Animation.currentTime, transform-only, sin layout) es barata incluso en hardware débil: no hay
+// costo real hasta valores mucho menores que este (unas pocas decenas de instancias -- una por
+// WheelRotorGroup montado -- leyendo/seekeando un Animation cada 1s es insignificante para
+// cualquier hardware que corra Chromium). Este intervalo es ahora solo la red de seguridad para
+// ese desfasaje de sesión larga -- los momentos donde SE SABE que puede haber un salto real
+// (destrabarse el freeze, revelarse detrás del panel Winner, montaje en frío) ya se resincronizan
+// al instante más abajo, sin esperarlo.
+const RESYNC_INTERVAL_MS = 1_000
 
 // Sincroniza la fase de un grupo rotante con la de .lobby-wheel-rotor -- necesario porque el
 // grupo puede montar en cualquier momento (Fast Refresh, datos que llegan tarde, etc.), bastante
@@ -69,11 +74,22 @@ export function useWheelRotationSync(rotorGroupRef: RefObject<SVGGElement | null
     // diferencia de HotColdNumberChipLayer, que se desmonta/remonta -- ver el rAF de arriba para
     // ese caso): sin esto podía quedar hasta RESYNC_INTERVAL_MS desalineado del rotor real justo
     // cuando vuelve a ser relevante (highlights que recién ahí empiezan a mostrarse de nuevo).
+    //
+    // Segundo resync inmediato apenas el panel Winner arranca su animación de escala a 0
+    // (winnerPanelExiting pasa a true, WINNER_PANEL_EXIT_DURATION_MS antes de que termine de
+    // revelar la rueda detrás -- ver WinnerPanel.tsx) -- red de seguridad final para overlays como
+    // LastWinnerBallLayer, que montan de cero apenas `active` pasa a false (bastante antes de que
+    // el panel Winner empiece a taparlos): les da una última corrección justo antes de quedar
+    // realmente visibles, sin depender de que el mount-time rAF de arriba haya alcanzado.
     let wasFrozen = useDrawCycleStore.getState().videoSlideProgress >= 1
+    let wasExitingWinnerPanel = useDrawCycleStore.getState().winnerPanelExiting
     const unsubscribe = useDrawCycleStore.subscribe((state) => {
       const isFrozen = state.videoSlideProgress >= 1
       if (wasFrozen && !isFrozen) sync()
       wasFrozen = isFrozen
+
+      if (!wasExitingWinnerPanel && state.winnerPanelExiting) sync()
+      wasExitingWinnerPanel = state.winnerPanelExiting
     })
 
     return () => {
