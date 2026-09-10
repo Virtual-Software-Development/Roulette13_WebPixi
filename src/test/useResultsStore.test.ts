@@ -5,7 +5,7 @@ import type { RouletteResult } from '../types/result'
 function makeResult(overrides: Partial<Omit<RouletteResult, 'timeColor'>> = {}): Omit<RouletteResult, 'timeColor'> {
   return {
     id: crypto.randomUUID(),
-    time: '11:45 AM',
+    timestamp: Date.now(),
     drawNumber: '00001',
     winningNumber: 8,
     ...overrides,

@@ -51,7 +51,10 @@ export function useHotColdWindow(): HotColdWindow {
   }, [lobbyInfoVisible])
 
   const shouldShow = lobbyInfoVisible && delayElapsed && remainingSeconds > VISIBLE_MIN_REMAINING_SECONDS
-  const { hot, cold } = useMemo(() => computeHotColdNumbers(rawResults, HOT_COLD_ENTRY_LIMIT), [rawResults])
+  const { hot, cold, hotEntries, coldEntries, totalSpins } = useMemo(
+    () => computeHotColdNumbers(rawResults, HOT_COLD_ENTRY_LIMIT),
+    [rawResults],
+  )
 
-  return { shouldShow, hot, cold }
+  return { shouldShow, hot, cold, hotEntries, coldEntries, totalSpins }
 }

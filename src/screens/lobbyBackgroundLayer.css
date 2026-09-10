@@ -29,6 +29,21 @@
 }
 */
 
+/* Envuelve la rueda (imagen o video) y todos sus overlays (highlights, diamantes, fichas
+   hot/cold, bolita, debug) -- el `transform: scale()` (inline, ver WHEEL_DISPLAY_SCALE en
+   wheelGeometry.constants.ts) los achica a TODOS juntos, sin desalinearlos entre sí, porque ya se
+   posicionan relativos unos a otros dentro de este mismo contenedor (viewBox 2560x1440 +
+   preserveAspectRatio="xMidYMid meet" == object-fit:contain, ver comentario en
+   wheelGeometry.constants.ts). transform-origin: 50% 100% ancla el achique al punto
+   central-inferior de la pantalla (la esquina inferior de este contenedor, que ocupa el 100% de
+   .lobby-background-layer) en vez de al centro -- la rueda se encoge "hacia abajo", no hacia el
+   medio. La foto de fondo (lobby-background-image) queda afuera de este contenedor a propósito. */
+.lobby-wheel-scale {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+}
+
 /* Envuelve base+rotor (modo imagen) para trasladarlos juntos en sync con la subida/bajada
    del video de sorteo -- ver el useLayoutEffect que suscribe a useDrawCycleStore.videoSlideProgress
    en LobbyBackgroundLayer.tsx. Los hijos mantienen su inset:0 propio, ahora relativo a este

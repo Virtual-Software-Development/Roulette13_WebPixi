@@ -4,6 +4,7 @@ import { RouletteVideoView } from './screens/RouletteVideoView'
 import { RouletteLobby } from './screens/RouletteLobby'
 import { LobbyBackgroundLayer } from './screens/LobbyBackgroundLayer'
 import { WinnerPanel } from './screens/WinnerPanel'
+import { Header } from './layout/Header'
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { VideoPoolLayer } from './video/VideoPoolLayer'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc } from './video/videoElements'
@@ -147,6 +148,7 @@ function App() {
       <LobbyBackgroundLayer />
       <VideoPoolLayer />
       <WinnerPanel />
+      <Header />
       <Application
         autoDensity={true}
         resizeTo={window}
