@@ -1,19 +1,26 @@
 {
   "header": {
-    "game": "JUEGO",
-    "nextRound": "PRÓXIMA RONDA"
+    "roulette": "ROULETTE",
+    "lottery": "LOTTERY",
+    "balanceLabel": "TU SALDO"
   },
   "media": {
     "logoNotFound": "Logo no encontrado",
     "imageNotAvailable": "Imagen no disponible"
   },
   "numbers": {
-    "title": "Números",
-    "hot": "HOT",
-    "cold": "COLD"
+    "title": "NÚMEROS CALIENTES Y FRÍOS",
+    "subtitle": "Últimas {{count}} tiradas",
+    "hot": "NÚMEROS CALIENTES",
+    "cold": "NÚMEROS FRÍOS",
+    "hitsColumn": "ACIERTOS",
+    "percentColumn": "%",
+    "hotDescription": "Frecuencia por encima del promedio",
+    "coldDescription": "Frecuencia por debajo del promedio",
+    "disclaimer": "Los resultados históricos no predicen resultados futuros."
   },
   "spinStats": {
-    "title": "ÚLTIMOS {{count}} SPIN",
+    "title": "ÚLTIMOS {{count}} SPINS",
     "color": "COLOR",
     "evenOdd": "PAR / IMPAR",
     "highLow": "ALTO / BAJO",
@@ -31,6 +38,22 @@
     "thirdColumn": "3RA"
   },
   "winnerPanel": {
-    "title": "GANADOR"
+    "title": "GANADOR",
+    "color": "COLOR",
+    "parity": "PARIDAD",
+    "range": "RANGO",
+    "recentResults": "RESULTADOS RECIENTES",
+    "notApplicable": "—"
+  },
+  "lastGame": {
+    "currentGame": "JUEGO ACTUAL",
+    "nextRoundIn": "PRÓXIMA RONDA EN"
+  },
+  "gameList": {
+    "title": "JUEGOS RECIENTES",
+    "now": "AHORA",
+    "minutesAgo": "hace {{count}}m",
+    "hoursAgo": "hace {{count}}h",
+    "viewFullHistory": "VER HISTORIAL COMPLETO"
   }
 }

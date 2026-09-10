@@ -4,6 +4,14 @@ import type { WheelPocket } from '../types/wheel'
 
 export type RouletteColor = 'red' | 'black' | 'green'
 
+// La API usa 37 para representar la casilla '00' (mismo backend/misma rueda americana en todo el
+// proyecto -- confirmado con varias llamadas a /api/results, ver useResultsStore.ts). Cualquier
+// número crudo de la API que se muestre como casilla de ruleta (color, badge, texto) debe pasar
+// por acá primero -- sin esto, 37 cae por defecto en "black" en vez de la casilla verde real.
+export function toWheelPocket(raw: number): WheelPocket {
+  return raw === 37 ? '00' : raw
+}
+
 const RED_NUMBERS = new Set<number>([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36])
 
 export function getRouletteColor(pocket: WheelPocket): RouletteColor {

@@ -33,19 +33,23 @@
   background: rgba(4, 8, 20, 0.45);
 }
 
+/* position:relative (no solo z-index) para quedar por encima del canvas/tint (ambos
+   position:absolute): sin esto, un elemento no-posicionado pinta ANTES que los posicionados,
+   sin importar el orden en el DOM -- ver CSS2.1 stacking order. Fondo en dos capas (no un color
+   plano): un degradado vertical navy-black de base, más una capa horizontal muy tenue para que no
+   se sienta chato -- ninguna de las dos usa negro puro. */
 .winner-panel-card {
-  /* position:relative (no solo z-index) para quedar por encima del canvas/tint (ambos
-     position:absolute): sin esto, un elemento no-posicionado pinta ANTES que los posicionados,
-     sin importar el orden en el DOM -- ver CSS2.1 stacking order. */
   position: relative;
-  background: rgba(13, 27, 51, 0.85);
-  border: 2.25px solid #35a7ff;
-  border-radius: 24px;
-  padding: 4vh 6vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2vh;
+  width: min(88vw, 940px);
+  background:
+    linear-gradient(180deg, rgba(17, 35, 47, 0.94), rgba(8, 18, 27, 0.97)),
+    linear-gradient(90deg, rgba(25, 49, 63, 0.12), transparent 45%, rgba(0, 0, 0, 0.1));
+  border: 1px solid rgba(115, 139, 153, 0.45);
+  border-radius: clamp(12px, 1.2vw, 16px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 45px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
   transform: scale(1);
   transition: transform 400ms ease;
 }
@@ -56,18 +60,394 @@
   transform: scale(0);
 }
 
-.winner-panel-title {
+/* ---------------------------------------------------------------------------------------------
+   Paleta por resultado -- una sola fuente de verdad (getRouletteColor, ver WinnerPanel.tsx) fija
+   este atributo en header, tarjeta, number-box, dot y cada chip de Recent Results. Cada selector
+   solo define variables; los elementos que las consumen están definidos una única vez más abajo,
+   así que el CSS de cada color no se repite.
+
+   4 tonos por color (oscuro -> medio -> vivo -> highlight), no un color plano -- igual que el
+   resto del panel, cada elemento combina 2-4 de estos tonos en vez de pintarse con uno solo:
+   --winner-accent-dark   tono más oscuro/profundo
+   --winner-accent-mid    tono medio
+   --winner-accent        tono vivo/principal
+   --winner-accent-light  highlight más brillante (glows, punta del corte diagonal, dot)
+   --winner-accent-sheen  tinte para el reflejo radial de la esquina sup-izq del number-box
+   --winner-accent-border borde translúcido (nunca hex opaco -- se ve demasiado fuerte)
+   --winner-accent-glow   glow ambiente (box-shadows suaves)
+   --winner-header-glow   glow más intenso, solo para el halo de .winner-panel-header::after
+   --winner-frame-tint    tinte muy sutil del marco interno (.winner-panel-body) */
+[data-color='red'] {
+  --winner-accent-dark: #7d0a14;
+  --winner-accent-mid: #a91220;
+  --winner-accent: #d92333;
+  --winner-accent-light: #f9484d;
+  --winner-accent-sheen: rgba(255, 70, 80, 0.32);
+  --winner-accent-border: rgba(255, 48, 66, 0.75);
+  --winner-accent-glow: rgba(255, 20, 40, 0.3);
+  --winner-header-glow: rgba(255, 20, 40, 0.55);
+  --winner-frame-tint: rgba(217, 35, 51, 0.14);
+}
+
+[data-color='green'] {
+  --winner-accent-dark: #013d21;
+  --winner-accent-mid: #01552d;
+  --winner-accent: #08713e;
+  --winner-accent-light: #17a863;
+  --winner-accent-sheen: rgba(70, 255, 150, 0.28);
+  --winner-accent-border: rgba(10, 142, 75, 0.6);
+  --winner-accent-glow: rgba(15, 165, 86, 0.28);
+  --winner-header-glow: rgba(20, 200, 100, 0.5);
+  --winner-frame-tint: rgba(23, 168, 99, 0.14);
+}
+
+[data-color='black'] {
+  --winner-accent-dark: #07131b;
+  --winner-accent-mid: #091821;
+  --winner-accent: #10232e;
+  --winner-accent-light: #2e3f4b;
+  --winner-accent-sheen: rgba(180, 195, 210, 0.18);
+  --winner-accent-border: rgba(104, 130, 145, 0.45);
+  --winner-accent-glow: rgba(148, 163, 184, 0.22);
+  --winner-header-glow: rgba(180, 195, 210, 0.4);
+  --winner-frame-tint: rgba(58, 75, 88, 0.14);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Header
+   --------------------------------------------------------------------------------------------- */
+/* margin arriba/izquierda (no derecha ni abajo) -- el lado derecho llega hasta el borde de la
+   tarjeta a propósito, como antes, así que ese lado se queda cuadrado (sin redondear) en vez de
+   inset como el izquierdo. border-radius asimétrico: solo las esquinas izquierdas (donde el
+   header sí queda separado del borde de la tarjeta) se redondean, y bastante menos que antes.
+   Fondo propio (no negro puro): degradado horizontal navy-cyan muy desaturado, para la zona del
+   header que no cubre la franja de color de ::before. */
+.winner-panel-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.8vw, 14px);
+  margin: clamp(28px, 3.6vh, 42px) 0 0 clamp(16px, 2.2vw, 28px);
+  padding: clamp(10px, 1.4vh, 18px) clamp(16px, 2.2vw, 28px);
+  background: linear-gradient(90deg, #101e29 0%, #0d1a24 55%, #0a1720 100%);
+  border-radius: clamp(4px, 0.5vw, 6px) 0 0 clamp(4px, 0.5vw, 6px);
+  overflow: hidden;
+  /* Los dos números que definen el look del corte: ancho de la franja de color (% del header) y
+     cuántos px se inclina el borde diagonal derecho. Tocar solo estos dos para ajustar todo. */
+  --winner-header-accent-width: 25%;
+  --winner-header-cut-skew: 20px;
+}
+
+/* Franja de color diagonal detrás del ícono/título -- separada del fondo del header (que queda
+   fijo, oscuro) para poder recortarla con clip-path sin afectar el resto de la caja. El polígono
+   recorta la esquina superior derecha `--winner-header-cut-skew` px antes del final, y deja la
+   esquina inferior derecha a todo el ancho -- el corte va de arriba-izquierda a abajo-derecha.
+   Los 3 glows localizados que dependen de esta forma (esquina sup-izq, línea inferior, borde
+   diagonal) van acá adentro como capas extra de background-image en vez de en un elemento aparte:
+   al estar recortados por el mismo clip-path, siguen la geometría del corte solos, sin tener que
+   recalcular el ángulo en otro lado. El orden importa -- la primera capa listada es la de más
+   arriba (pinta encima de las demás). La base de color ya no es un degradado de 2 tonos: combina
+   un barrido horizontal de 4 paradas (mid -> vivo -> highlight -> mid) con una capa vertical de
+   volumen (más luz arriba, más sombra abajo), para que no se sienta un bloque plano. */
+.winner-panel-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: var(--winner-header-accent-width);
+  background-image:
+    /* highlight sobre el borde diagonal derecho -- el clip-path ya recorta todo lo que no es
+       visible, así que este brillo "hacia la derecha" termina concentrado justo en el borde que
+       queda, sin necesidad de calcular el ángulo real del corte. Con tinte del color (no blanco
+       neutro): es un specular highlight rojizo/verdoso/plateado según el resultado. */
+    linear-gradient(to right, transparent 78%, var(--winner-accent-border) 95%, var(--winner-accent-light) 100%),
+    /* concentración leve en la esquina superior izquierda */
+    radial-gradient(90px 46px at 0 0, var(--winner-accent-glow), transparent 70%),
+    /* línea inferior más brillante bajo la parte izquierda del bloque, apagándose hacia la derecha */
+    linear-gradient(to right, var(--winner-accent-border) 0%, transparent 55%),
+    /* volumen: más luz cerca del borde superior, sombra propia del color hacia abajo */
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 32%, rgba(0, 0, 0, 0.22) 100%),
+    /* base de color según el resultado -- barrido horizontal de 4 tonos, no 2 */
+    linear-gradient(
+      100deg,
+      var(--winner-accent-mid) 0%,
+      var(--winner-accent) 58%,
+      var(--winner-accent-light) 82%,
+      var(--winner-accent-mid) 100%
+    );
+  background-repeat: no-repeat;
+  background-position: top left, top left, bottom left, top left, top left;
+  background-size: 100% 100%, 100% 100%, 100% 3px, 100% 100%, 100% 100%;
+  clip-path: polygon(0 0, calc(100% - var(--winner-header-cut-skew)) 0, 100% 100%, 0 100%);
+  box-shadow: 0 0 24px -8px var(--winner-accent-glow) inset;
+}
+
+/* Acentos que sí cruzan todo el header, sin recortar (a diferencia de ::before): una línea fina
+   en el borde superior, otra en el inferior, y la barra vertical con halo en el extremo derecho
+   (el punto de bloom más brillante del header -- centro vivo, glow medio, halo ancho y tenue).
+   Por encima del ícono/título (z-index 2 > 1) porque son puntuales en los bordes/esquinas -- no
+   chocan con el texto, que queda centrado a la izquierda. */
+.winner-panel-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image:
+    /* halo ancho y suave alrededor de la barra vertical */
+    radial-gradient(26px 90% at 100% 50%, var(--winner-header-glow), transparent 75%),
+    /* bloom más ceñido, justo pegado a la barra -- el "centro brillante" del efecto */
+    radial-gradient(8px 70% at 100% 50%, var(--winner-accent-light), transparent 70%),
+    /* la barra vertical en sí, fina y brillante */
+    linear-gradient(to left, var(--winner-accent-light) 0, var(--winner-accent-light) 2px, transparent 2px),
+    /* mismo bloom (centro brillante -> glow -> transparente) que la barra vertical, ahora en la
+       esquina superior izquierda -- el origen de luz de la línea de arriba */
+    radial-gradient(70% 20px at 0% 0%, var(--winner-accent-light) 0%, var(--winner-header-glow) 30%, transparent 75%),
+    /* mismo bloom, esquina inferior izquierda -- origen de luz de la línea de abajo */
+    radial-gradient(55% 20px at 0% 100%, var(--winner-accent-light) 0%, var(--winner-header-glow) 30%, transparent 75%),
+    /* highlight fino en el borde superior -- se apaga antes de llegar a la barra vertical, para no
+       competir con ella (esa sí debe quedar como el punto más brillante) */
+    linear-gradient(to right, rgba(255, 255, 255, 0.28) 0%, transparent 75%),
+    /* línea fina en el borde inferior -- mismo criterio, se apaga antes del extremo derecho */
+    linear-gradient(to right, var(--winner-header-glow) 0%, transparent 75%);
+  background-repeat: no-repeat;
+  background-position: top left, top left, top left, top left, top left, top left, bottom left;
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 2px,
+    100% 3px;
+}
+
+/* position:relative + z-index para quedar por encima de ::before (position:absolute pinta
+   siempre después del contenido estático, sin importar el orden en el DOM -- por eso, sin esto,
+   la franja de color taparía el ícono y el texto). */
+.winner-panel-trophy {
+  position: relative;
+  z-index: 1;
+  width: clamp(16px, 1.6vw, 22px);
+  height: clamp(16px, 1.6vw, 22px);
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.winner-panel-header-title {
+  position: relative;
+  z-index: 1;
   font-family: Arial, sans-serif;
   font-weight: bold;
-  font-size: clamp(32px, 4vw, 64px);
-  letter-spacing: 0.15em;
+  font-size: clamp(15px, 1.6vw, 22px);
+  letter-spacing: 0.14em;
   color: #ffffff;
   text-transform: uppercase;
 }
 
+/* ---------------------------------------------------------------------------------------------
+   Cuerpo: número grande + detalles
+   --------------------------------------------------------------------------------------------- */
+/* Marco interno donde viven el número y los detalles -- separado del borde exterior de la
+   tarjeta (margin) Y del header (margin-top). Fondo navy oscuro (más oscuro que la tarjeta) con
+   un tinte del color ganador (--winner-frame-tint) apenas perceptible de izquierda a derecha --
+   nunca domina, es solo un indicio de color sobre el navy de base. */
+.winner-panel-body {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(14px, 2vw, 28px);
+  margin: clamp(22px, 2.8vh, 34px) clamp(16px, 2.2vw, 28px) clamp(16px, 2.2vh, 28px);
+  padding: clamp(14px, 2vh, 26px) clamp(14px, 1.8vw, 24px);
+  border: 1px solid rgba(70, 105, 125, 0.16);
+  border-radius: clamp(10px, 1vw, 14px);
+  background:
+    linear-gradient(180deg, rgba(11, 29, 40, 0.84), rgba(7, 20, 29, 0.88)),
+    linear-gradient(90deg, var(--winner-frame-tint) 0%, transparent 60%);
+}
+
+/* Vertical de 4 tonos (highlight -> vivo -> medio -> oscuro), no 2 -- da sensación de volumen.
+   El reflejo radial en la esquina superior izquierda (--winner-accent-sheen) es el mismo truco
+   que un catch-light en fotografía de producto. position:relative + overflow:hidden para que
+   ::after (edge glow) quede recortado a las mismas esquinas redondeadas. */
+.winner-panel-number-box {
+  position: relative;
+  flex: 0 0 clamp(100px, 18vw, 180px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  border-radius: clamp(10px, 1vw, 14px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 10%, var(--winner-accent-sheen), transparent 38%),
+    linear-gradient(
+      180deg,
+      var(--winner-accent-light) 0%,
+      var(--winner-accent) 35%,
+      var(--winner-accent-mid) 70%,
+      var(--winner-accent-dark) 100%
+    );
+  border: 1.5px solid var(--winner-accent-border);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.45),
+    0 0 16px -4px var(--winner-accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Edge glow -- mismo lenguaje visual que .winner-panel-header::after: highlight fino y glossy en
+   el borde superior, glow del color del resultado en el borde inferior. El número (z-index 1,
+   position:relative más abajo) queda por encima para no taparse. */
+.winner-panel-number-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent),
+    linear-gradient(to top, var(--winner-accent-light), transparent);
+  background-repeat: no-repeat;
+  background-position: top left, bottom left;
+  background-size:
+    100% 3px,
+    100% 8px;
+}
+
+/* position:relative + z-index para quedar por encima de ::after (edge glow) -- mismo motivo que
+   .winner-panel-trophy/.winner-panel-header-title en el header. */
 .winner-panel-number {
+  position: relative;
+  z-index: 1;
   font-family: Arial, sans-serif;
   font-weight: bold;
-  font-size: clamp(120px, 16vw, 260px);
+  font-size: clamp(60px, 9vw, 128px);
   line-height: 1;
+  color: #f8f8f8;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+}
+
+.winner-panel-details {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(12px, 2vh, 20px);
+}
+
+.winner-panel-detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(10px, 1.4vw, 20px);
+}
+
+.winner-panel-detail {
+  flex: 1 1 110px;
+  min-width: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.winner-panel-detail-label {
+  font-family: Arial, sans-serif;
+  font-size: clamp(10px, 0.85vw, 13px);
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  color: #8ca7ba;
+  text-transform: uppercase;
+}
+
+.winner-panel-detail-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: clamp(8px, 1.1vh, 12px) clamp(10px, 1.2vw, 14px);
+  background: linear-gradient(180deg, rgba(10, 25, 35, 0.92), rgba(7, 18, 27, 0.96));
+  border: 1px solid rgba(91, 129, 150, 0.3);
+  border-radius: 6px;
+  font-family: Arial, sans-serif;
+  font-weight: 600;
+  font-size: clamp(13px, 1.1vw, 18px);
+  color: #f1f2f3;
+  white-space: nowrap;
+}
+
+/* Vertical de 3 tonos + glow leve -- igual que el resto de los acentos de color, nunca un
+   círculo plano de un solo tono. El borde blanco translúcido se mantiene en los 3 colores para
+   que el dot negro no se pierda contra el fondo oscuro del panel. */
+.winner-panel-color-dot {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--winner-accent-light) 0%, var(--winner-accent) 55%, var(--winner-accent-mid) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 8px var(--winner-accent-glow);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Recent results
+   --------------------------------------------------------------------------------------------- */
+.winner-panel-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.winner-panel-recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(6px, 0.8vw, 10px);
+}
+
+/* Vertical de 2 tonos (medio -> oscuro) -- más apagado que la tarjeta grande del número a
+   propósito, para que ésta siga siendo el elemento más vistoso del panel. */
+.winner-panel-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(32px, 3.2vw, 46px);
+  padding: clamp(6px, 0.8vh, 9px) 6px;
+  border-radius: 6px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: clamp(13px, 1.05vw, 17px);
+  color: #ffffff;
+  background: linear-gradient(180deg, var(--winner-accent-mid) 0%, var(--winner-accent-dark) 100%);
+  border: 1px solid var(--winner-accent-border);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Responsive: sin precedente DOM de breakpoints en el proyecto (el resto de los overlays usa
+   solo vw/vh/clamp), pero necesario acá para reorganizar el layout horizontal -> apilado.
+   --------------------------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .winner-panel-body {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .winner-panel-number-box {
+    flex: 0 0 auto;
+    width: clamp(100px, 36vw, 160px);
+  }
+
+  .winner-panel-details {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .winner-panel-header-title {
+    letter-spacing: 0.08em;
+  }
+
+  .winner-panel-detail {
+    flex: 1 1 100%;
+  }
+
+  .winner-panel-detail-value {
+    white-space: normal;
+  }
 }

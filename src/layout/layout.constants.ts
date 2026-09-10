@@ -1,47 +1,34 @@
-import { TextStyle } from 'pixi.js'
-
 // Resolución de diseño: todo el layout se expresa en estas unidades fijas y
 // ResponsiveStage lo escala/centra según el tamaño real de pantalla.
 export const DESIGN_WIDTH = 1920
 export const DESIGN_HEIGHT = 1080
 
+// Alto real (px de pantalla, NO unidades de diseño) del header DOM
+// (src/layout/Header.tsx + header.css), que vive fuera de ResponsiveStage.
+// useViewport lo resta del alto disponible para el canvas de Pixi y desplaza
+// todo el contenido hacia abajo esa misma cantidad, para que nada quede
+// tapado debajo del header. Debe coincidir con la altura fija que usa
+// header.css.
+export const HEADER_BAR_HEIGHT_PX = 65
+
 export const LAYOUT = {
   footerHeight: 180,
-  padding: 30,
+  padding: 15,
   logoBoxSize: 187.5,
 }
-
-// Panel de estado único (arriba a la derecha): número de sorteo + countdown
-// de la próxima ronda.
-export const STATUS_PANEL_WIDTH = 225
-export const STATUS_PANEL_PADDING = 18
-export const HEADER_ROW_HEIGHT = 30
-export const HEADER_ROW_GAP = 12
-
-// Alto real del contenido del panel de Header (2 filas + gap + padding
-// simétrico), medido desde el techo de la pantalla -- usado para ubicar lo
-// que va justo debajo (ver bodyY en SharedLayout) en vez de un valor fijo
-// desacoplado de la geometría real del panel.
-export const HEADER_HEIGHT = LAYOUT.padding + STATUS_PANEL_PADDING * 2 + HEADER_ROW_HEIGHT * 2 + HEADER_ROW_GAP
-
-// Separación horizontal entre el grupo de labels y el grupo de values del
-// Header. Solo mueve el grupo de labels (hacia la izquierda); values se
-// mantiene en valueX.
-export const LABEL_VALUE_SPACING = 140
 
 // Radio compartido por todas las celdas de fila (TIME/DRAW NO./WINNER) —
 // antes la celda TIME era un trapecio diagonal.
 export const CELL_CORNER_RADIUS = 6
 
-export const TABLE_WIDTH_RATIO = 0.18
+export const TABLE_WIDTH_RATIO = 0.2
 
-// Desplazamiento manual del cuerpo (LastGame + GameList) sobre el offset base
-// que ya aplica SharedLayout -- valor de partida para X: alinea el borde
-// izquierdo de la tabla (que internamente se centra en DESIGN_WIDTH) con el
-// borde izquierdo del panel de Header (DESIGN_WIDTH - LAYOUT.padding -
-// STATUS_PANEL_WIDTH). Ajustar a mano según se necesite.
+// Desplazamiento manual horizontal del cuerpo (LastGame + GameList) sobre el offset base que ya
+// aplica SharedLayout -- afinado a mano contra el layout original del viejo panel de estado. El
+// offset vertical ya no se afina acá: SharedLayout usa useViewport (visibleTop + LAYOUT.padding),
+// el mismo anchor que NumberPanelHotCold/SpinStatsPanel, para que los tres paneles compartan techo
+// y piso exactos en vez de un valor fijo aparte que se desalineaba (ver SharedLayout.tsx).
 export const BODY_OFFSET_X = 757.5
-export const BODY_OFFSET_Y = 82.5
 
 // Transición Results <-> Video: cuánto dura cada deslizamiento, cuánto se mueven
 // los elementos que salen de escena, y cuánto queda el video congelado en su
@@ -60,63 +47,4 @@ export const VIDEO_WHEEL_TRANSITION_DURATION_MS = 900
 // cuánto dura su propia animación de escala a 0 al salir (ver WinnerPanel.tsx).
 export const WINNER_PANEL_LEAD_SECONDS = 2
 export const WINNER_PANEL_EXIT_DURATION_MS = 400
-
-// Label "GAME:" + valor del número de sorteo en el panel de estado del Header.
-export const HEADER_LABEL_STYLE = new TextStyle({
-  fontFamily: 'Arial',
-  fontSize: 27,
-  fill: 0xc9c9d1,
-  letterSpacing: 1.125,
-})
-
-export const HEADER_GAME_VALUE_STYLE = new TextStyle({
-  fontFamily: 'Arial',
-  fontWeight: 'bold',
-  fontSize: 27,
-  fill: 0xffffff,
-})
-
-// Countdown "NEXT ROUND MM:SS" — blanco en estado normal, ámbar cuando
-// quedan ≤10s (ver useCountdown / URGENT_THRESHOLD_SECONDS). El glow neón se
-// aplica aparte vía GlowFilter en Header.tsx (mismo color que el fill).
-export const COUNTDOWN_VALUE_STYLE_NORMAL = new TextStyle({
-  fontFamily: 'Arial',
-  fontWeight: 'bold',
-  fontSize: 27,
-  fill: 0xffffff,
-  letterSpacing: 0.75,
-  padding: 15,
-  dropShadow: {
-    alpha: 1,
-    blur: 18,         // How far the glow radiates outward
-    color: 0xffffff,  // Your glow color (Cyan)
-    distance: 0,      // Keep it at 0 so it glows evenly on all sides
-  },
-  stroke: {
-    color: 0xffffff, // Match glow color
-    width: 1.5,         // Thickness of the hard edge
-    join: 'round',     // 'round' looks organic, 'miter' looks sharp/blocky
-    alpha: 0.6
-  },
-})
-
-export const COUNTDOWN_VALUE_STYLE_URGENT = new TextStyle({
-  fontFamily: 'Arial',
-  fontWeight: 'bold',
-  fontSize: 27,
-  fill: 0xffc400,
-  letterSpacing: 0.75,
-  dropShadow: {
-    alpha: 0.8,
-    blur: 12,         // How far the glow radiates outward
-    color: 0xffc400,  // Your glow color (Cyan)
-    distance: 0,      // Keep it at 0 so it glows evenly on all sides
-  },
-  stroke: {
-    color: 0xffc400, // Match glow color
-    width: 1.5,         // Thickness of the hard edge
-    join: 'round',     // 'round' looks organic, 'miter' looks sharp/blocky
-    alpha: 0.6
-  },
-})
 

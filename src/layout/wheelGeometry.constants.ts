@@ -10,6 +10,21 @@ import type { WheelType } from '../types/wheel'
 export const WHEEL_CANVAS_WIDTH = 2560
 export const WHEEL_CANVAS_HEIGHT = 1440
 
+// Escala visual de la rueda completa (base+rotor, modo imagen o video) y de TODOS los overlays que
+// se dibujan sobre ella (highlights, diamantes, fichas hot/cold, bolita, debug) -- se aplica como
+// un único `transform: scale()` CSS sobre el contenedor que los envuelve a todos
+// (.lobby-wheel-scale, ver LobbyBackgroundLayer.tsx/lobbyBackgroundLayer.css), NO achicando cada
+// asset/geometría por separado. Como todos esos overlays ya se posicionan en las mismas
+// coordenadas relativas entre sí (viewBox 0 0 WHEEL_CANVAS_WIDTH WHEEL_CANVAS_HEIGHT +
+// preserveAspectRatio="xMidYMid meet", igual que el object-fit:contain de las <img>/<video>), un
+// solo scale del contenedor los achica a todos juntos sin desalinearlos -- no hace falta tocar
+// WHEEL_GEOMETRY/wheelPositions.ts para nada de esto.
+// transform-origin: 50% 100% (ver CSS) ancla el achique al punto central-inferior del contenedor
+// (que ocupa toda la pantalla), no al centro de la rueda -- pedido explícito: la rueda debe
+// encogerse "hacia" ese punto de abajo, no hacia el medio de la pantalla. 1 = tamaño actual (sin
+// cambios); <1 la achica. Único lugar para ajustar el tamaño de la rueda.
+export const WHEEL_DISPLAY_SCALE = 0.93
+
 // Duración de una vuelta completa del rotor -- fuente única compartida por la animación CSS de
 // .lobby-wheel-rotor y la del grupo de puntos de LobbyWheelDebugOverlay, para que no se
 // desincronicen si se cambia el valor. Vale para cualquier tipo de rueda.

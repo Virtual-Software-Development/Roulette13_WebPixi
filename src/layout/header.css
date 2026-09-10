@@ -1,0 +1,243 @@
+/* Header real (DOM, no Pixi) -- vive fuera de ResponsiveStage, montado como hermano de
+   <Application> en App.tsx (mismo patrón que WinnerPanel/LobbyBackgroundLayer). Reemplaza al
+   viejo panel de estado (ROUND/NEXT ROUND) que vivía dentro del canvas -- useViewport reserva
+   HEADER_BAR_HEIGHT_PX arriba de todo para que el contenido de Pixi nunca quede debajo (ver
+   hooks/useViewport.ts). z-index:2 -- por encima del <canvas> (0) pero por debajo del video de
+   sorteo (5, ver videoPool.css) y del panel Winner (20), igual que el header/footer viejos. */
+.app-header {
+  position: fixed;
+  top: 2px;
+  left: 4px;
+  right: 4px;
+  height: 65px;
+  z-index: 2;
+  /* Sale hacia arriba mientras el video de sorteo está en pantalla y vuelve a bajar cuando
+     termina (ver Header.tsx: data-hidden, atado a useDrawCycleStore.lobbyInfoVisible) -- misma
+     duración que el resto de las transiciones de la lobby (TRANSITION_DURATION_MS = 550ms en
+     layout.constants.ts) y el mismo cubic-bezier equivalente a easeInOutCubic (utils/easing.ts),
+     para que se sienta como parte del mismo movimiento que Footer/SharedLayout. */
+  transition: transform 550ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.app-header[data-hidden='true'] {
+  /* -100% (su propio alto) menos el margen superior, para que quede completamente fuera de
+     pantalla en vez de asomar un borde. */
+  transform: translateY(calc(-100% - 24px));
+}
+
+.app-header-shell {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  border-radius: 10px;
+  border: 1px solid rgba(115, 125, 135, 0.25);
+  /* Negro con variación sutil (no #000 plano) -- mismo criterio que el resto de overlays DOM del
+     proyecto (ver winnerPanel.css): nunca un color sólido puro. */
+  background: linear-gradient(180deg, #07090d 0%, #020305 55%, #010203 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+  /* Sin overflow:hidden: el glow de los tabs (filter:drop-shadow) necesita poder pintar por
+     encima del borde superior del shell -- clipparlo ahí sería tapar justo el highlight que más
+     importa (ver .app-header-tab--roulette). Los extremos (logo/balance) son rectángulos que
+     nunca exceden el área redondeada, así que no hace falta clip para que se vean prolijos. */
+}
+
+/* Línea superior apenas más clara que el resto del borde -- no un borde CSS uniforme. */
+.app-header-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(90deg, transparent, rgba(170, 180, 190, 0.32) 25%, rgba(170, 180, 190, 0.14) 80%, transparent);
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Logo -- ocupa su propio bloque a la izquierda, sin fondo propio ni aspecto de botón. Reusa
+   logoUrl/showLogo (mismo origen que Footer.tsx, dato dinámico vía /gameInfo). */
+.app-header-logo {
+  flex: 0 0 auto;
+  width: clamp(150px, 10vw, 190px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(10px, 1vw, 18px);
+}
+
+.app-header-logo-img {
+  max-height: 80px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.app-header-logo-fallback {
+  font-size: 10px;
+  line-height: 1.3;
+  text-align: center;
+  color: #8a8a96;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Tabs -- geometría trapezoidal/paralelogramo vía clip-path, NO border-radius. Ambos tabs
+   comparten el mismo --skew para que la diagonal derecha de Roulette y la izquierda de Lottery
+   caigan exactamente sobre la misma línea (ver margin-left negativo en Lottery más abajo) y la
+   transición entre ambos se sienta continua, sin gap. */
+.app-header-nav {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.app-header-tab {
+  --skew: 23px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.9vw, 14px);
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 clamp(16px, 1.8vw, 28px) 0 calc(clamp(16px, 1.8vw, 28px) + var(--skew));
+  clip-path: polygon(0 0, calc(100% - var(--skew)) 0, 100% 100%, var(--skew) 100%);
+  white-space: nowrap;
+  text-transform: uppercase;
+  font-family: Arial, sans-serif;
+}
+
+.app-header-tab-label {
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.app-header-tab-icon {
+  width: clamp(16px, 1.2vw, 21px);
+  height: auto;
+  flex-shrink: 0;
+}
+
+/* Roulette -- tab activo (única sección real del proyecto hoy, ver Header.tsx: ACTIVE_TAB). */
+.app-header-tab--roulette {
+  z-index: 2;
+  min-width: clamp(190px, 15.5vw, 250px);
+  color: #f5f5f5;
+  font-size: clamp(13px, 0.95vw, 16px);
+  background: linear-gradient(110deg, #7c060a 0%, #ab0a0e 32%, #c8121a 62%, #8f1013 100%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  /* Glow rojo LOCALIZADO a los bordes del paralelogramo (drop-shadow sigue la silueta ya
+     recortada por clip-path, a diferencia de box-shadow que seguiría el rectángulo completo) --
+     dos capas: una ceñida y brillante, otra más ancha y suave (halo hacia el área negra de
+     abajo). Nada de un halo grande/uniforme. */
+  filter:
+    drop-shadow(0 0 3px rgba(255, 40, 45, 0.55))
+    drop-shadow(0 4px 14px rgba(200, 10, 15, 0.35));
+}
+
+/* Línea superior más brillante, ceñida al borde -- pseudo-elemento propio (mismo clip-path,
+   --skew se hereda) en vez de un border-top uniforme. */
+.app-header-tab--roulette::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, calc(100% - var(--skew)) 0, 100% 100%, var(--skew) 100%);
+  background: linear-gradient(180deg, rgba(255, 60, 64, 0.95) 0%, rgba(255, 60, 64, 0) 9%);
+  pointer-events: none;
+}
+
+.app-header-tab--roulette .app-header-tab-icon {
+  color: #f5f5f5;
+}
+
+/* Lottery -- continúa la misma barra (mismo --skew), superpuesta hacia la izquierda para que su
+   diagonal izquierda coincida exactamente con la diagonal derecha de Roulette. z-index menor:
+   ante cualquier hairline de antialiasing en el borde compartido, que gane el rojo. */
+.app-header-tab--lottery {
+  --skew: 23px;
+  margin-left: calc(var(--skew) * -1);
+  z-index: 1;
+  min-width: clamp(150px, 11vw, 210px);
+  color: #99999e;
+  font-size: clamp(12px, 0.85vw, 15px);
+  background: linear-gradient(110deg, #07090d 0%, #030509 55%, #06080c 100%);
+}
+
+.app-header-tab--lottery .app-header-tab-label {
+  font-weight: 500;
+}
+
+.app-header-tab--lottery .app-header-tab-icon {
+  color: #b7b7b9;
+}
+
+/* Diagonal derecha de Lottery -- tinte rojo/gris muy sutil (no gris plano), última huella del
+   rojo de Roulette perdiéndose hacia el negro. */
+.app-header-tab--lottery::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, calc(100% - var(--skew)) 0, 100% 100%, var(--skew) 100%);
+  background: linear-gradient(100deg, transparent 72%, rgba(170, 60, 60, 0.16) 90%, rgba(170, 60, 60, 0.26) 100%);
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Espacio flexible: ocupa el lugar que antes tenían ROUND/NEXT ROUND/SETTINGS/FULLSCREEN, sin
+   ningún elemento nuevo -- solo empuja YOUR BALANCE hacia el extremo derecho. */
+.app-header-spacer {
+  flex: 1 1 auto;
+}
+
+.app-header-divider {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1px;
+  height: 58%;
+  background: rgba(140, 145, 150, 0.18);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Balance -- único bloque que se conserva del lado derecho del header viejo. balance viene de
+   useGameConfigStore (ver Header.tsx); NO hardcodeado. */
+.app-header-balance {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.8vw, 12px);
+  padding: 0 clamp(14px, 1.4vw, 22px);
+}
+
+.app-header-balance-icon {
+  /* Antes clamp(18px, 1.4vw, 24px) -- se veía chico contra el texto de dos líneas al lado; en la
+     referencia el ícono ocupa aprox. el mismo alto que el bloque label+value completo. */
+  width: clamp(26px, 2vw, 34px);
+  height: auto;
+  color: #e7e7ea;
+  flex-shrink: 0;
+}
+
+.app-header-balance-text {
+  display: flex;
+  flex-direction: column;
+  /* Sin gap: line-height:1 en label/value ya deja el aire mínimo entre ambos -- un gap positivo
+     acá se sumaba a ese aire y los separaba de más. */
+  gap: 0;
+}
+
+/* Poppins (ver index.html) -- geométrica/redondeada, más parecida al tipo de letra del mockup de
+   referencia que Arial (que se ve más angosta, sobre todo en los números del value). */
+.app-header-balance-label {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(8px, 0.6vw, 10px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #a4a4a8;
+}
+
+.app-header-balance-value {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(16px, 1.3vw, 21px);
+  font-weight: 600;
+  line-height: 1;
+  color: #f5f5f5;
+}

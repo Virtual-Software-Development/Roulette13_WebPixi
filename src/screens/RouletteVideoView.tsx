@@ -7,7 +7,6 @@ import { RESULT_HOLD_MS, VIDEO_WHEEL_TRANSITION_DURATION_MS, WINNER_PANEL_LEAD_S
 import { easeInOutCubic } from '../utils/easing'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from '../video/videoElements'
 import { onVideoNearEnd } from '../utils/videoSeek'
-import i18n from '../i18n'
 
 interface RouletteVideoViewProps {
   // Se llama recién cuando el video termina de bajar de vuelta a su posición
@@ -81,7 +80,7 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
       if (pendingResult) {
         useResultsStore.getState().addResult({
           id: pendingResult.drawNo,
-          time: new Date().toLocaleTimeString(i18n.language, { hour: 'numeric', minute: '2-digit', hour12: true }),
+          timestamp: Date.now(),
           drawNumber: pendingResult.drawNo,
           winningNumber: pendingResult.result,
         })

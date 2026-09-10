@@ -1,15 +1,19 @@
 import { useMemo } from 'react'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useGameConfigStore } from '../store/useGameConfigStore'
-import { useCountdown } from './useCountdown'
+import { ensureClockTicking, useClockStore } from '../store/useClockStore'
+import { parseApiDateTime } from '../utils/time'
 import { VISIBLE_MIN_REMAINING_SECONDS } from './useHotColdWindow'
 import type { DozenGroup, ColumnGroup } from '../types/numberIndicator'
 
-// Cuánto esperar (en segundos reales de countdown) después de que Hot/Cold se oculta antes de
-// mostrar este panel -- para que no se sientan pisados/simultáneos. Como Hot/Cold se oculta apenas
-// remainingSeconds cae a VISIBLE_MIN_REMAINING_SECONDS o menos, "2s después" en tiempo real
-// equivale a 2s MENOS de remaining.
-const SHOW_DELAY_AFTER_HOT_COLD_SECONDS = 2
+// Cuánto esperar (en segundos reales) después de que Hot/Cold se oculta antes de mostrar este
+// panel -- para que no se sientan pisados/simultáneos. Como Hot/Cold se oculta apenas
+// remainingSeconds cae a VISIBLE_MIN_REMAINING_SECONDS o menos, "0.5s después" en tiempo real
+// equivale a 0.5s MENOS de remaining. Pedido explícito: 0.5s exactos, no los ~2s de antes -- por
+// eso acá abajo NO se reusa useCountdown().remainingSeconds (redondeado a entero, ver su
+// comentario) sino que se recalcula el remaining en segundos con decimales directo desde
+// useClockStore, con la misma precisión (~200ms) que el resto del reloj compartido.
+const SHOW_DELAY_AFTER_HOT_COLD_SECONDS = 0.25
 const VISIBLE_MAX_REMAINING_SECONDS = VISIBLE_MIN_REMAINING_SECONDS - SHOW_DELAY_AFTER_HOT_COLD_SECONDS
 // Se oculta cuando faltan estos segundos o menos para el próximo sorteo -- deja aire antes de que
 // arranque el video del sorteo.
@@ -87,7 +91,13 @@ function seededPick<T extends readonly unknown[]>(seed: string, options: T): T[n
 export function useSpinStatsCycle(): SpinStatsCycle {
   const active = useDrawCycleStore((state) => state.active)
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
-  const { remainingSeconds } = useCountdown(nextDrawStartTime)
+  ensureClockTicking()
+  // Segundos reales CON decimales (a diferencia de useCountdown.remainingSeconds, que redondea
+  // hacia arriba al entero más próximo para el texto MM:SS) -- ver SHOW_DELAY_AFTER_HOT_COLD_SECONDS.
+  const remainingSeconds = useClockStore((state) => {
+    if (!nextDrawStartTime) return 0
+    return Math.max(0, parseApiDateTime(nextDrawStartTime).getTime() - state.now) / 1000
+  })
 
   const shouldShow = !active && remainingSeconds <= VISIBLE_MAX_REMAINING_SECONDS && remainingSeconds > HIDE_AT_REMAINING_SECONDS
 

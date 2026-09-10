@@ -1,4 +1,4 @@
-import { DESIGN_HEIGHT, DESIGN_WIDTH } from '../layout/layout.constants'
+import { DESIGN_HEIGHT, DESIGN_WIDTH, HEADER_BAR_HEIGHT_PX } from '../layout/layout.constants'
 import { useScreenSize } from './useScreenSize'
 
 export interface Viewport {
@@ -32,17 +32,24 @@ export function useViewport(): Viewport {
 
   // cover: el canvas de diseño siempre llena la pantalla real por completo,
   // recortando el sobrante en el eje "suelto" en vez de dejar franjas negras.
-  const scale = Math.max(width / DESIGN_WIDTH, height / DESIGN_HEIGHT)
+  // El header vive fuera de Pixi (DOM, ver src/layout/Header.tsx) como una
+  // franja fija de HEADER_BAR_HEIGHT_PX arriba de todo -- el cover-fit se
+  // calcula contra el alto disponible DEBAJO de esa franja (usableHeight), y
+  // el resultado se corre hacia abajo esa misma cantidad de px reales, para
+  // que ningún contenido de Pixi quede tapado por el header.
+  const usableHeight = Math.max(0, height - HEADER_BAR_HEIGHT_PX)
+  const scale = Math.max(width / DESIGN_WIDTH, usableHeight / DESIGN_HEIGHT)
   const offsetX = (width - DESIGN_WIDTH * scale) / 2
-  const offsetY = (height - DESIGN_HEIGHT * scale) / 2
+  const offsetYWithinUsable = (usableHeight - DESIGN_HEIGHT * scale) / 2
+  const offsetY = HEADER_BAR_HEIGHT_PX + offsetYWithinUsable
 
   return {
     scale,
     offsetX,
     offsetY,
     visibleLeft: -offsetX / scale || 0,
-    visibleTop: -offsetY / scale || 0,
+    visibleTop: -offsetYWithinUsable / scale || 0,
     visibleRight: (width - offsetX) / scale,
-    visibleBottom: (height - offsetY) / scale,
+    visibleBottom: (usableHeight - offsetYWithinUsable) / scale,
   }
 }

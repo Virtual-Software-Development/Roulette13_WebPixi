@@ -7,8 +7,8 @@ export interface GameConfig {
   videoUrl: string
   drawNumber: string
   nextDrawStartTime: string
-  showDrawInfo: boolean
   showLogo: boolean
+  balance: number
 }
 
 interface GameConfigStore extends GameConfig {
@@ -22,7 +22,7 @@ export const useGameConfigStore = create<GameConfigStore>((set) => ({
   videoUrl: '',
   drawNumber:'',
   nextDrawStartTime:'',
-  showDrawInfo: true,
   showLogo: true,
+  balance: 0,
   setGameConfig: (config) => set(config),
 }))

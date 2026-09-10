@@ -7,14 +7,6 @@ import type { GameInfoResponse } from '../types/gameInfo'
 
 const LANGUAGE_MAP: Record<string, string> = { es: 'es', en: 'en-US' }
 
-function formatTime(datetime: string): string {
-  return parseApiDateTime(datetime).toLocaleTimeString(i18n.language, {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-}
-
 export function applyGameInfo(data: GameInfoResponse, options: { seedHistory: boolean }) {
   useGameConfigStore.getState().setGameConfig({
     gameName: data.gameName,
@@ -36,7 +28,7 @@ export function applyGameInfo(data: GameInfoResponse, options: { seedHistory: bo
     resultsStore.hydrateHistory(
       data.history.map((draw) => ({
         id: draw.drawNo,
-        time: formatTime(draw.time),
+        timestamp: parseApiDateTime(draw.time).getTime(),
         drawNumber: draw.drawNo,
         winningNumber: draw.result,
       }))

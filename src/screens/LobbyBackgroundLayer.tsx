@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { buildMediaUrl } from '../utils/media'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
-import { WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC } from '../layout/wheelGeometry.constants'
+import { WHEEL_DISPLAY_SCALE, WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC } from '../layout/wheelGeometry.constants'
 import { WHEEL_VIDEO_GEOMETRY } from '../layout/wheelVideoGeometry.constants'
 import { ACTIVE_WHEEL_TYPE } from '../data/wheelOrder'
 import { getEffectiveWheelRenderMode } from '../data/wheelRenderMode'
@@ -132,46 +132,52 @@ export function LobbyBackgroundLayer() {
           del círculo (verificado por canal alfa) -- esta imagen de fondo se ve genuinamente
           detrás/alrededor de la rueda, no solo como fallback mientras algo carga. */}
       {backgroundUrl && <img src={backgroundUrl} className="lobby-background-image" alt="" />}
-      {WHEEL_RENDER_MODE === 'video' && WHEEL_VIDEO_URL ? (
-        <>
-          <video
-            ref={videoRefA}
-            className="lobby-wheel-video"
-            muted
-            playsInline
-            preload="auto"
-            data-wheel-video-active="true"
-            style={{ opacity: 0 }}
-          />
-          <video
-            ref={videoRefB}
-            className="lobby-wheel-video"
-            muted
-            playsInline
-            preload="auto"
-            data-wheel-video-active="false"
-            style={{ opacity: 0 }}
-          />
-        </>
-      ) : (
-        <div className="lobby-wheel-image-group" ref={wheelImageGroupRef}>
-          <img
-            ref={wheelRotorRef}
-            src={WHEEL_ROTOR_URL}
-            className="lobby-wheel-rotor"
-            alt=""
-            style={{ animationDuration: `${WHEEL_SPIN_DURATION_SEC}s` }}
-          />
-          <img src={WHEEL_BASE_URL} className="lobby-wheel-base" alt="" />
-        </div>
-      )}
-      {/* <video ref={videoRef} className="lobby-background-video" playsInline preload="auto" /> */}
-      {showHotCold && <HotColdNumberChipLayer numbersByType={{ hot, cold }} />}
-      <NumberCellHighlightLayer entries={highlightEntries} />
-      <DozenDiamondIndicatorLayer entries={dozenEntries} />
-      <ColumnDiamondIndicatorLayer entries={columnEntries} />
-      <LastWinnerBallLayer />
-      <LobbyWheelDebugOverlay />
+      {/* Envuelve la rueda (imagen o video) y TODOS sus overlays -- un solo scale acá los achica
+          juntos, anclado al punto central-inferior de la pantalla (ver WHEEL_DISPLAY_SCALE). La
+          foto de fondo (lobby-background-image, arriba) queda afuera a propósito: solo la rueda
+          debe achicarse, no el fondo. */}
+      <div className="lobby-wheel-scale" style={{ transform: `scale(${WHEEL_DISPLAY_SCALE})` }}>
+        {WHEEL_RENDER_MODE === 'video' && WHEEL_VIDEO_URL ? (
+          <>
+            <video
+              ref={videoRefA}
+              className="lobby-wheel-video"
+              muted
+              playsInline
+              preload="auto"
+              data-wheel-video-active="true"
+              style={{ opacity: 0 }}
+            />
+            <video
+              ref={videoRefB}
+              className="lobby-wheel-video"
+              muted
+              playsInline
+              preload="auto"
+              data-wheel-video-active="false"
+              style={{ opacity: 0 }}
+            />
+          </>
+        ) : (
+          <div className="lobby-wheel-image-group" ref={wheelImageGroupRef}>
+            <img
+              ref={wheelRotorRef}
+              src={WHEEL_ROTOR_URL}
+              className="lobby-wheel-rotor"
+              alt=""
+              style={{ animationDuration: `${WHEEL_SPIN_DURATION_SEC}s` }}
+            />
+            <img src={WHEEL_BASE_URL} className="lobby-wheel-base" alt="" />
+          </div>
+        )}
+        {/* <video ref={videoRef} className="lobby-background-video" playsInline preload="auto" /> */}
+        {showHotCold && <HotColdNumberChipLayer numbersByType={{ hot, cold }} />}
+        <NumberCellHighlightLayer entries={highlightEntries} />
+        <DozenDiamondIndicatorLayer entries={dozenEntries} />
+        <ColumnDiamondIndicatorLayer entries={columnEntries} />
+        <LastWinnerBallLayer />
+        <LobbyWheelDebugOverlay />
+      </div>
       <WheelFrameStepper />
     </div>
   )
