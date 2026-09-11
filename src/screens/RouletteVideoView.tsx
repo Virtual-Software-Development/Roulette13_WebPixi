@@ -8,6 +8,12 @@ import { easeInOutCubic } from '../utils/easing'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from '../video/videoElements'
 import { onVideoNearEnd } from '../utils/videoSeek'
 
+// Escala del <video>, anclada arriba-al-centro (ver `transform-origin: top center` en
+// videoPool.css) -- 1 = sin escalar. Tiene que combinarse en el MISMO string de `transform` que
+// translateY más abajo: asignar video.style.transform por separado para el scale lo pisaría por
+// completo (son la misma propiedad inline), no se puede setear una vez desde CSS y otra desde acá.
+export const VIDEO_SCALE = 0.90
+
 interface RouletteVideoViewProps {
   // Se llama recién cuando el video termina de bajar de vuelta a su posición
   // de partida (no cuando termina de reproducirse — eso solo arranca el hold).
@@ -168,7 +174,7 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
     const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
     video.style.display = 'block'
     video.style.opacity = handedOff ? '0' : '1'
-    video.style.transform = `translateY(${(1 - eased) * 100}%)`
+    video.style.transform = `translateY(${(1 - eased) * 100}%) scale(${VIDEO_SCALE})`
   }, [ready, eased, handedOff])
 
   return null

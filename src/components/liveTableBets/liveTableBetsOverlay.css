@@ -1,0 +1,14 @@
+/* El <canvas> principal de Pixi vive en z-index:0 (ver index.css) y el video de resultado en
+   z-index:5 por encima suyo a propósito (videoPool.css: mientras juega, tapa todo el canvas
+   principal, igual que Header/Footer). LiveTableBetsPanel necesita mostrarse ENCIMA del video --
+   como está montado en un <Application> propio (ver LiveTableBetsOverlay.tsx), separado del
+   canvas principal, alcanza con subir el z-index de ESTE canvas nomás, sin tocar el stacking del
+   resto de la app. Mismo criterio que ya usa WinnerPanel (z-index:20, DOM) para lo mismo, pero acá
+   en Pixi. pointer-events:none porque este panel es puramente informativo (nunca debe interceptar
+   clicks). */
+.live-table-bets-overlay-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}

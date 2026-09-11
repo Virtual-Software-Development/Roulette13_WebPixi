@@ -8,3 +8,10 @@ export function easeInOutCubic(t: number): number {
 export function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3)
 }
+
+// Inverso de easeOutCubic: arranca lento y acelera hasta el final -- para animaciones de SALIDA
+// que deben sentirse como "aspiradas" hacia su destino final en vez de frenar de golpe (ver
+// ResultStatsPanel, cuyo HUD se retrae hacia abajo al terminar el video de resultado).
+export function easeInCubic(t: number): number {
+  return t * t * t
+}

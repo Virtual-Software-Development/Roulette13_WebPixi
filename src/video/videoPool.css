@@ -15,8 +15,22 @@
 .video-pool-slot {
   position: fixed;
   inset: 0;
+  /* Corrido un poco a la izquierda a pedido -- RouletteVideoView pisa `transform` por su cuenta
+     (translateY de la animación de entrada/salida), así que el corrimiento horizontal va acá por
+     `left` en vez de por transform, para no pisarse con eso. */
+  left: -30px;
+  /* Posición final (a dónde llega al terminar de subir / desde dónde arranca a bajar) -- mismo
+     motivo que `left`: el `transform` con translateY(0%) en eased=1 apunta siempre a este `top`,
+     así que moverlo a mano ES mover el punto de llegada de la animación. height:100vh fijo hace
+     que `bottom` (heredado de inset:0) se ignore, así que sí sube el video de verdad en vez de
+     estirarlo. Negativo = sube, positivo = baja.
+  */
+  top: -20px;
   width: 100vw;
   height: 100vh;
+  /* El scale (ver RouletteVideoView.tsx, VIDEO_SCALE) usa este punto como referencia -- centro
+     arriba, no el centro del video (default), a pedido. */
+  transform-origin: top center;
   /* contain (no fill): preserva el aspect ratio real del video (1920x1080) -- fill lo estiraba
      exacto a la pantalla real, deformándolo en cualquier ventana que no fuera 16:9 exacto. Mismo
      criterio que .lobby-wheel-video (ver lobbyBackgroundLayer.css); las barras de letterbox que

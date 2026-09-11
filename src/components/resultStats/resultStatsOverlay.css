@@ -1,0 +1,10 @@
+/* Mismo criterio que liveTableBetsOverlay.css: el video de resultado (z-index:5) vive por encima
+   del canvas principal (z-index:0) a propósito, así que ResultStatsPanel necesita su propio
+   <Application> (ver ResultStatsOverlay.tsx) posicionado por CSS por encima del video para
+   mostrarse "arriba" suyo siendo 100% Pixi. pointer-events:none porque es puramente informativo. */
+.result-stats-overlay-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}

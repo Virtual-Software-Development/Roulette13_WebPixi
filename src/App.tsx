@@ -12,14 +12,26 @@ import { fetchGameInfo } from './api/gameInfo'
 import { applyGameInfo } from './api/applyGameInfo'
 import { fetchDrawResult } from './api/drawResult'
 import { fetchLastResults } from './api/lastResults'
+import { fetchBetsSummary } from './api/betsSummary'
 import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
 import { useResultsStore } from './store/useResultsStore'
+import { useBetsSummaryStore } from './store/useBetsSummaryStore'
 import { pickRandomDrawResultVideoUrl } from './utils/media'
 import { parseApiDateTime } from './utils/time'
+import { toLiveTableBetsData, toResultStatsData } from './utils/betsSummaryMapping'
 import { WHEEL_VIDEO_FROZEN } from './config/wheelCalibration'
+import { LiveTableBetsOverlay } from './components/liveTableBets/LiveTableBetsOverlay'
+import { LIVE_TABLE_BETS_MOCK_DATA } from './data/liveTableBetsMockData'
+import { ResultStatsOverlay } from './components/resultStats/ResultStatsOverlay'
+import { RESULT_STATS_MOCK_DATA } from './data/resultStatsMockData'
+import { LeftStatsSidebarOverlay } from './components/leftStatsSidebar/LeftStatsSidebarOverlay'
 
 const RESULT_LEAD_MS = 500
+// Momento en que se pide /api/bets -- pedido explícito: "10 segundos para cargar el video". Mismo
+// timer que ya agenda resultTimer/startTimer (scheduleDraw, basado en nextDraw.startTime), no uno
+// nuevo independiente.
+const BETS_LEAD_MS = 10_000
 
 function App() {
   const [videoMounted, setVideoMounted] = useState(false)
@@ -33,6 +45,7 @@ function App() {
   const scheduleDraw = useCallback((isCancelled: () => boolean, seedHistory: boolean) => {
     let resultTimer: ReturnType<typeof setTimeout> | undefined
     let startTimer: ReturnType<typeof setTimeout> | undefined
+    let betsTimer: ReturnType<typeof setTimeout> | undefined
     let videoReadyPromise: Promise<void> | null = null
 
     fetchGameInfo()
@@ -43,6 +56,23 @@ function App() {
         const { drawNo, startTime } = data.nextDraw
         const msUntilStart = Math.max(0, parseApiDateTime(startTime).getTime() - Date.now())
         const msUntilResult = Math.max(0, msUntilStart - RESULT_LEAD_MS)
+        const msUntilBets = Math.max(0, msUntilStart - BETS_LEAD_MS)
+
+        // /api/bets alimenta LiveTableBetsPanel/LeftStatsSidebar/ResultStatsPanel -- independiente
+        // de resultTimer/startTimer (no necesita el número ganador, solo el resumen de apuestas
+        // vigente), así que es un timer propio en vez de encadenarse a los otros dos.
+        betsTimer = setTimeout(() => {
+          if (isCancelled()) return
+          fetchBetsSummary()
+            .then((data) => {
+              if (isCancelled()) return
+              useBetsSummaryStore.getState().setBetsSummary({
+                liveTableBetsData: toLiveTableBetsData(data),
+                resultStatsData: toResultStatsData(data),
+              })
+            })
+            .catch((err) => console.error('No se pudo obtener /api/bets', err))
+        }, msUntilBets)
 
         resultTimer = setTimeout(() => {
           if (isCancelled()) return
@@ -89,6 +119,7 @@ function App() {
     return () => {
       clearTimeout(resultTimer)
       clearTimeout(startTimer)
+      clearTimeout(betsTimer)
     }
   }, [])
 
@@ -112,6 +143,11 @@ function App() {
   // (que igual espera otros 5s más, ver SHOW_DELAY_AFTER_LOBBY_INFO_MS en useHotColdWindow) nunca
   // alcance a mostrarse todavía con el resultado de la ronda anterior.
   const active = useDrawCycleStore((state) => state.active)
+  // Caen a los mocks solo hasta que llegue el primer /api/bets exitoso (ver BETS_LEAD_MS más
+  // arriba) -- una vez que el store tiene datos reales, se quedan para siempre (nunca vuelve a
+  // null).
+  const liveTableBetsData = useBetsSummaryStore((state) => state.liveTableBetsData) ?? LIVE_TABLE_BETS_MOCK_DATA
+  const resultStatsData = useBetsSummaryStore((state) => state.resultStatsData) ?? RESULT_STATS_MOCK_DATA
   useEffect(() => {
     if (active) return
     let cancelled = false
@@ -124,6 +160,15 @@ function App() {
     return () => {
       cancelled = true
     }
+  }, [active])
+
+  // Apaga highlighted/showChipStack de LiveTableBetsPanel (pedido explícito: "cuando se oculte
+  // apagas el highlight y apagas la moneda también") -- se dispara junto con `active=false`, el
+  // mismo instante en que los tres paneles (LiveTableBetsPanel/ResultStatsPanel/LeftStatsSidebar)
+  // empiezan a desvanecerse. No borra los totales, ver useBetsSummaryStore.clearHighlights.
+  useEffect(() => {
+    if (active) return
+    useBetsSummaryStore.getState().clearHighlights()
   }, [active])
 
   // Se llama apenas el video termina de reproducirse (bien antes del
@@ -161,6 +206,9 @@ function App() {
           {videoMounted && <RouletteVideoView onEnded={handleRoundEnded} onFullyExited={handleFullyExited} />}
         </ResponsiveStage>
       </Application>
+      <LiveTableBetsOverlay data={liveTableBetsData} />
+      <ResultStatsOverlay data={resultStatsData} />
+      <LeftStatsSidebarOverlay data={liveTableBetsData} />
     </>
   )
 }

@@ -55,5 +55,28 @@
     "minutesAgo": "hace {{count}}m",
     "hoursAgo": "hace {{count}}h",
     "viewFullHistory": "VER HISTORIAL COMPLETO"
+  },
+  "liveTableBets": {
+    "title": "APUESTAS EN VIVO",
+    "subtitle": "TOTAL APOSTADO POR NÚMERO (TODOS LOS JUGADORES)",
+    "firstDozen": "1ra 12",
+    "secondDozen": "2da 12",
+    "thirdDozen": "3ra 12",
+    "column": "2 A 1",
+    "low": "1 al 18",
+    "even": "PAR",
+    "odd": "IMPAR",
+    "high": "19 al 36",
+    "red": "ROJO",
+    "black": "NEGRO"
+  },
+  "resultStats": {
+    "activeBets": "APUESTAS ACTIVAS",
+    "playersInRound": "JUGADORES EN RONDA",
+    "totalPot": "POZO TOTAL"
+  },
+  "leftStatsSidebar": {
+    "top10Title": "TOP 10 NÚMEROS MÁS APOSTADOS",
+    "disclaimer": "Los montos mostrados en cada número son el total apostado por todos los jugadores en la ronda actual."
   }
 }
