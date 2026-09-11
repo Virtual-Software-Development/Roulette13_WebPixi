@@ -1,0 +1,11 @@
+/* Mismo criterio que liveTableBetsOverlay.css/resultStatsOverlay.css: el video de resultado
+   (z-index:5) tapa el canvas principal (z-index:0) a propósito mientras juega, así que este
+   sidebar necesita su propio <Application> (ver LeftStatsSidebarOverlay.tsx) posicionado por CSS
+   por encima del video para mostrarse "arriba" suyo siendo 100% Pixi. pointer-events:none porque
+   es puramente informativo. */
+.left-stats-sidebar-overlay-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}

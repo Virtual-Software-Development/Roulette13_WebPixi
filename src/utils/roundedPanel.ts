@@ -1,4 +1,4 @@
-import type { Graphics as PixiGraphics } from 'pixi.js'
+import type { FillGradient, Graphics as PixiGraphics } from 'pixi.js'
 
 interface CornerRadii {
   topLeft?: number
@@ -17,7 +17,7 @@ interface RoundedPanelOptions {
   // tarjeta continua).
   radius?: number
   corners?: CornerRadii
-  fill?: number | { color: number; alpha?: number }
+  fill?: number | FillGradient | { color: number; alpha?: number }
   strokeColor?: number
   strokeWidth?: number
   strokeAlpha?: number

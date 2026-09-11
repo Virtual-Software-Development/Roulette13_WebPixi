@@ -21,6 +21,12 @@ import { useCategoryHighlightEntries } from '../hooks/useCategoryHighlightEntrie
 import { useDozenColumnHighlightEntries } from '../hooks/useDozenColumnHighlightEntries'
 import './lobbyBackgroundLayer.css'
 
+// Cuánto sube el grupo base+rotor (imagen) al ocultarse para el video de resultado -- porcentaje
+// de la altura DEL PROPIO GRUPO (translateY con %), no píxeles fijos. 100 = sube justo lo
+// necesario para salir de vista (su propio alto); subir este número lo hace ir más arriba, más
+// allá de fuera de pantalla.
+const WHEEL_SLIDE_UP_PERCENT = 250
+
 const ACTIVE_WHEEL_GEOMETRY = WHEEL_GEOMETRY[ACTIVE_WHEEL_TYPE]
 const WHEEL_BASE_URL = buildMediaUrl(ACTIVE_WHEEL_GEOMETRY.baseAsset)
 const WHEEL_ROTOR_URL = buildMediaUrl(ACTIVE_WHEEL_GEOMETRY.rotorAsset)
@@ -101,7 +107,7 @@ export function LobbyBackgroundLayer() {
   useLayoutEffect(() => {
     const applyProgress = (progress: number) => {
       const group = wheelImageGroupRef.current
-      if (group) group.style.transform = `translateY(${-progress * 100}%)`
+      if (group) group.style.transform = `translateY(${-progress * WHEEL_SLIDE_UP_PERCENT}%)`
 
       const rotor = wheelRotorRef.current
       const shouldFreeze = progress >= 1

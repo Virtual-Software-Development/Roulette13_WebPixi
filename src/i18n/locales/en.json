@@ -55,5 +55,28 @@
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",
     "viewFullHistory": "VIEW FULL HISTORY"
+  },
+  "liveTableBets": {
+    "title": "LIVE TABLE BETS",
+    "subtitle": "TOTAL BETS ON EACH NUMBER (ALL PLAYERS)",
+    "firstDozen": "1st 12",
+    "secondDozen": "2nd 12",
+    "thirdDozen": "3rd 12",
+    "column": "2 TO 1",
+    "low": "1 to 18",
+    "even": "EVEN",
+    "odd": "ODD",
+    "high": "19 to 36",
+    "red": "RED",
+    "black": "BLACK"
+  },
+  "resultStats": {
+    "activeBets": "ACTIVE BETS",
+    "playersInRound": "PLAYERS IN ROUND",
+    "totalPot": "TOTAL POT"
+  },
+  "leftStatsSidebar": {
+    "top10Title": "TOP 10 MOST BET NUMBERS",
+    "disclaimer": "Amounts shown on each number are total bets by all players in the current round."
   }
 }
