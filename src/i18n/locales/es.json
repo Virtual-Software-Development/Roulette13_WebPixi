@@ -78,5 +78,21 @@
   "leftStatsSidebar": {
     "top10Title": "TOP 10 NÚMEROS MÁS APOSTADOS",
     "disclaimer": "Los montos mostrados en cada número son el total apostado por todos los jugadores en la ronda actual."
+  },
+  "login": {
+    "title": "ACCESO ADMIN",
+    "subtitle": "Inicia sesión para gestionar la ruleta y la lotería",
+    "usernameLabel": "Usuario",
+    "usernamePlaceholder": "Usuario",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "rememberMe": "Recordarme",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "signIn": "Iniciar sesión",
+    "signingIn": "Iniciando sesión…",
+    "secureAccessOnly": "Acceso seguro únicamente",
+    "error": "Usuario o contraseña inválidos."
   }
 }
