@@ -1,0 +1,556 @@
+/* Pantalla de login -- DOM puro (sin Pixi/canvas), pensada para vivir sola en su propia ruta,
+   sin el header/nav del resto de la app. Ocupa todo el viewport por sí misma en vez de depender
+   de ResponsiveStage/useViewport (esos existen para el canvas de Pixi, ver
+   [[project_responsive_layout_system]]). */
+.login-page {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden auto;
+  box-sizing: border-box;
+  padding: clamp(20px, 3vh, 32px);
+
+  /* --login-bg-image la fija LoginPage.tsx (url dinámica vía buildMediaUrl). El fondo ya tiene
+     buena iluminación propia (roulette roja a la izquierda, lottery machine azul a la derecha) --
+     el overlay es apenas un ajuste de exposición, no una capa opaca. */
+  background-image: linear-gradient(rgba(2, 4, 8, 0.1), rgba(2, 4, 8, 0.18)), var(--login-bg-image);
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  font-family:
+    'Montserrat',
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+.login-card {
+  position: relative;
+  width: min(650px, calc(100vw - 48px));
+  box-sizing: border-box;
+  padding:
+    clamp(32px, 4.5vh, 48px)
+    clamp(28px, 4vw, 64px)
+    clamp(32px, 4.5vh, 46px);
+  border-radius: 22px;
+  /* El trazo real vive en ::before (gradient-border vía mask) -- este border transparent solo
+     reserva el mismo grosor para que el contenido no se corra si algún navegador no soporta el
+     mask-composite de abajo. */
+  border: 1px solid transparent;
+  /* Tres temperaturas: negro carbón de base + una mancha azul-slate arriba/derecha + una mancha
+     roja muy tenue abajo/izquierda -- nunca un plano #080d14 (ver conversación: "eso lo hará
+     plano"). */
+  background:
+    radial-gradient(circle at 92% 16%, rgba(21, 54, 82, 0.16) 0%, rgba(9, 25, 39, 0.08) 30%, transparent 55%),
+    radial-gradient(circle at 8% 92%, rgba(120, 10, 24, 0.13) 0%, rgba(67, 8, 18, 0.06) 34%, transparent 58%),
+    linear-gradient(145deg, rgba(10, 15, 22, 0.94) 0%, rgba(6, 13, 20, 0.94) 48%, rgba(4, 11, 18, 0.96) 100%);
+  background-clip: padding-box;
+  backdrop-filter: blur(9px) saturate(105%);
+  -webkit-backdrop-filter: blur(9px) saturate(105%);
+  box-shadow:
+    0 0 0 1px rgba(110, 132, 156, 0.14),
+    0 25px 65px rgba(0, 0, 0, 0.48),
+    -8px 16px 30px rgba(150, 0, 20, 0.035),
+    12px -10px 32px rgba(30, 100, 165, 0.035);
+}
+
+/* Borde en degradado (no un gris uniforme): slate/azul arriba-derecha, apagándose hacia un rojo
+   oscuro discreto en la esquina inferior izquierda ("to bottom left" ancla el 100% del gradiente
+   ahí, en vez de 135deg que lo mandaba a la esquina opuesta). padding:1px + mask-composite deja
+   visible solo el anillo de 1px, no el relleno. */
+.login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom left,
+    rgba(135, 151, 171, 0.6) 0%,
+    rgba(91, 119, 148, 0.53) 38%,
+    rgba(73, 99, 125, 0.52) 70%,
+    rgba(159, 37, 50, 0.7) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Glow rojo del panel entero (no solo el bloque del logo) anclado a la esquina inferior
+   izquierda del card -- direccional hacia la esquina opuesta pero con corte bien temprano (18%)
+   para que en la práctica solo se note pegado a esa esquina. z-index:-1 lo deja por encima del
+   background del card (que backdrop-filter convierte en su propio stacking context) pero por
+   debajo de todo el contenido real (logo, título, form, etc). */
+.login-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(to top right, rgba(230, 24, 42, 0.22) 0%, transparent 18%);
+}
+
+.login-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  margin-bottom: 20px;
+}
+
+.login-logo-img {
+  display: block;
+  width: clamp(95px, 11vw, 140px);
+  height: auto;
+  max-height: 90px;
+  object-fit: contain;
+  margin-inline: auto;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.18));
+}
+
+.login-logo-fallback {
+  font-size: 12px;
+  color: #8a8a96;
+}
+
+.login-title {
+  position: relative;
+  margin: 0;
+  text-align: center;
+  text-transform: uppercase;
+  color: rgba(246, 247, 249, 0.96);
+  font-weight: 400;
+  font-size: clamp(20px, 1.65vw, 29px);
+  line-height: 1.2;
+  letter-spacing: 0.28em;
+  /* Compensa ópticamente el espacio que el letter-spacing agrega DESPUÉS de la última letra --
+     sin esto el bloque de texto se ve corrido hacia la izquierda del centro real. */
+  text-indent: 0.28em;
+}
+
+.login-subtitle {
+  position: relative;
+  margin: 11px 0 0;
+  text-align: center;
+  color: rgba(171, 181, 195, 0.88);
+  font-weight: 400;
+  font-size: clamp(14px, 1.15vw, 18px);
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+}
+
+.login-form {
+  position: relative;
+  margin-top: clamp(26px, 4vh, 34px);
+  display: flex;
+  flex-direction: column;
+}
+
+.login-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: clamp(56px, 7vh, 66px);
+  border-radius: 10px;
+  border: 1px solid rgba(105, 128, 153, 0.72);
+  background: linear-gradient(110deg, rgba(18, 30, 43, 0.97) 0%, rgba(14, 24, 35, 0.97) 55%, rgba(11, 20, 30, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(190, 205, 220, 0.045),
+    0 1px 2px rgba(0, 0, 0, 0.22);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.login-input-wrapper + .login-input-wrapper {
+  margin-top: 19px;
+}
+
+.login-input-wrapper:focus-within {
+  border-color: rgba(134, 162, 192, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(210, 220, 235, 0.05),
+    0 0 0 2px rgba(90, 125, 165, 0.1),
+    0 0 15px rgba(45, 95, 145, 0.07);
+}
+
+.login-input-icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd2db;
+}
+
+/* Separador MUY sutil y corto (28px, centrado) -- no un border-right de techo a piso. */
+.login-input-icon::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 28px;
+  background: rgba(160, 175, 192, 0.11);
+}
+
+.login-input-icon-svg {
+  width: 23px;
+  height: 23px;
+}
+
+.login-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0 18px;
+  border: none;
+  background: transparent;
+  color: #e4e8ee;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: clamp(15px, 1.2vw, 18px);
+  font-weight: 400;
+}
+
+/* La password necesita aire a la derecha para el botón eye (position:absolute, ver
+   .login-eye-button) -- :has() acota el padding extra solo a ese input en vez de agregarlo
+   también al de username. */
+.login-input-wrapper:has(.login-eye-button) .login-input {
+  padding-right: 52px;
+}
+
+.login-input::placeholder {
+  color: rgba(167, 177, 191, 0.78);
+}
+
+.login-input:focus {
+  outline: none;
+}
+
+.login-eye-button {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  color: rgba(197, 207, 218, 0.82);
+  cursor: pointer;
+}
+
+.login-eye-button:focus-visible {
+  outline: 2px solid rgba(160, 185, 215, 0.9);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+.login-eye-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.login-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.login-error {
+  margin: 10px 0 0;
+  color: #ff5a5a;
+  font-size: 13.5px;
+}
+
+.login-options {
+  margin-top: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.login-remember {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: rgba(210, 216, 225, 0.9);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+/* position:absolute lo saca del flujo del flex (si no, empujaría el check visual) -- por eso
+   .login-remember necesita position:relative, para que quede anclado sobre el span decorativo
+   en vez de saltar a la esquina de un ancestro lejano y taparse detrás de él. */
+.login-checkbox-input {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.login-checkbox-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  border: 1.5px solid rgba(150, 165, 185, 0.5);
+  background: rgba(12, 23, 35, 0.7);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.login-checkbox-box::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 7px;
+  height: 13px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -55%) rotate(45deg);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.login-checkbox-input:checked + .login-checkbox-box {
+  background: linear-gradient(145deg, #f21c32 0%, #e41128 100%);
+  border-color: rgba(255, 55, 70, 0.95);
+  box-shadow: 0 4px 10px rgba(180, 0, 25, 0.14);
+}
+
+.login-checkbox-input:checked + .login-checkbox-box::after {
+  opacity: 1;
+}
+
+.login-checkbox-input:focus-visible + .login-checkbox-box {
+  box-shadow: 0 0 0 2px rgba(160, 185, 215, 0.55);
+}
+
+.login-forgot {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #f31c32;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    text-shadow 150ms ease;
+}
+
+.login-forgot:hover {
+  color: #ff3042;
+  text-shadow: 0 0 8px rgba(240, 20, 45, 0.1);
+}
+
+.login-submit {
+  position: relative;
+  margin-top: 31px;
+  height: clamp(58px, 8vh, 75px);
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 47, 64, 0.82);
+  /* Capa 1: sheen vertical (más vivo arriba, algo más profundo abajo). Capa 2: burgundy -> crimson
+     -> rojo vivo de izquierda a derecha. Nunca un rojo plano. */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0) 45%, rgba(40, 0, 8, 0.08) 100%),
+    linear-gradient(105deg, #a90f25 0%, #b81327 36%, #c91a27 68%, #dd2528 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 120, 128, 0.1),
+    0 8px 22px rgba(150, 0, 24, 0.17);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.login-submit:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.login-submit:not(:disabled):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 130, 140, 0.12),
+    0 10px 26px rgba(175, 0, 26, 0.22);
+}
+
+.login-submit:not(:disabled):active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.login-submit-label {
+  text-transform: uppercase;
+  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: clamp(17px, 1.8vw, 23px);
+  letter-spacing: 0.035em;
+  color: #f8f8f9;
+}
+
+.login-submit-arrow {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Grid 1fr/auto/1fr (no flex + widths a ojo): ::before y ::after quedan como el primer y último
+   hijo del grid, ocupando exactamente la primera y tercera columna -- garantiza matemáticamente
+   que ambas líneas midan lo mismo y el texto quede en el centro real, sin márgenes manuales. */
+.login-secure {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 34px;
+  margin-top: clamp(36px, 6vh, 64px);
+}
+
+.login-secure::before,
+.login-secure::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1px;
+}
+
+.login-secure::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(151, 164, 180, 0.52) 100%);
+}
+
+.login-secure::after {
+  background: linear-gradient(90deg, rgba(151, 164, 180, 0.52) 0%, transparent 100%);
+}
+
+.login-secure-text {
+  white-space: nowrap;
+  text-transform: uppercase;
+  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-align: center;
+  color: rgba(185, 195, 208, 0.82);
+}
+
+@media (max-width: 560px) {
+  .login-card {
+    width: calc(100% - 32px);
+    padding: 28px 24px 26px;
+    border-radius: 18px;
+  }
+
+  .login-logo-img {
+    width: clamp(95px, 24vw, 115px);
+  }
+
+  .login-title {
+    font-size: clamp(20px, 5.5vw, 23px);
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
+  }
+
+  .login-options {
+    gap: 8px;
+  }
+
+  .login-remember {
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .login-checkbox-input,
+  .login-checkbox-box {
+    width: 24px;
+    height: 24px;
+  }
+
+  .login-forgot {
+    font-size: 13.5px;
+  }
+
+  .login-secure {
+    column-gap: 18px;
+  }
+}
+
+@media (max-height: 800px) {
+  .login-brand {
+    margin-bottom: 14px;
+    min-height: 44px;
+  }
+
+  .login-logo-img {
+    width: clamp(85px, 9vw, 110px);
+  }
+
+  .login-form {
+    margin-top: 20px;
+  }
+
+  .login-options {
+    margin-top: 18px;
+  }
+
+  .login-submit {
+    margin-top: 22px;
+  }
+
+  .login-secure {
+    margin-top: clamp(22px, 4vh, 36px);
+  }
+}

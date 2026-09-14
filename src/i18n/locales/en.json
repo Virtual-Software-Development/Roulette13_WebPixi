@@ -78,5 +78,21 @@
   "leftStatsSidebar": {
     "top10Title": "TOP 10 MOST BET NUMBERS",
     "disclaimer": "Amounts shown on each number are total bets by all players in the current round."
+  },
+  "login": {
+    "title": "ADMIN ACCESS",
+    "subtitle": "Sign in to manage roulette and lottery operations",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Username",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "secureAccessOnly": "Secure access only",
+    "error": "Invalid username or password."
   }
 }
