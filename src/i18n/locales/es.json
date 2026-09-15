@@ -2,6 +2,7 @@
   "header": {
     "roulette": "ROULETTE",
     "lottery": "LOTTERY",
+    "admin": "ADMIN",
     "balanceLabel": "TU SALDO"
   },
   "media": {
@@ -94,5 +95,91 @@
     "signingIn": "Iniciando sesión…",
     "secureAccessOnly": "Acceso seguro únicamente",
     "error": "Usuario o contraseña inválidos."
+  },
+  "admin": {
+    "header": {
+      "userName": "Admin",
+      "userRole": "Administrador",
+      "logout": "Cerrar sesión"
+    },
+    "nav": {
+      "sectionTitle": "Panel Admin",
+      "dashboard": "Dashboard",
+      "events": "Eventos",
+      "nextResults": "Próximos Resultados",
+      "roulette": "Ruleta",
+      "lottery": "Lotería",
+      "gameRounds": "Rondas de Juego",
+      "payouts": "Pagos",
+      "users": "Usuarios",
+      "rtp": "RTP",
+      "rtpDashboard": "Dashboard",
+      "rtpManagement": "Administración",
+      "history": "Historial",
+      "reports": "Reportes",
+      "videos": "Videos",
+      "videosRouletteLibrary": "Biblioteca de Ruleta",
+      "videosLotteryVideoStatus": "Estado de Videos de Lotería",
+      "videosUploadHistory": "Historial de Subidas",
+      "schedule": "Programación",
+      "settings": "Configuración",
+      "logs": "Registros",
+      "system": "Sistema"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Resumen de la actividad del sistema y el rendimiento de los juegos",
+      "dateRange": "Rango de fechas",
+      "today": "Hoy",
+      "last24Hours": "Últimas 24 horas",
+      "dateRangeOptions": {
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "last7Days": "Últimos 7 días",
+        "last30Days": "Últimos 30 días",
+        "thisMonth": "Este mes"
+      },
+      "activityRangeOptions": {
+        "last24Hours": "Últimas 24 horas",
+        "last7Days": "Últimos 7 días",
+        "last30Days": "Últimos 30 días"
+      },
+      "kpi": {
+        "rouletteRounds": "Rondas de Ruleta",
+        "pick3Rounds": "Rondas Pick 3",
+        "pick4Rounds": "Rondas Pick 4",
+        "activeUsers": "Usuarios Activos",
+        "vsYesterday": "vs. ayer",
+        "onlineNow": "en línea ahora"
+      },
+      "gamesActivity": {
+        "title": "Actividad de Juegos",
+        "roulette": "Ruleta",
+        "pick3": "Pick 3",
+        "pick4": "Pick 4"
+      },
+      "gamesDistribution": {
+        "title": "Distribución de Juegos",
+        "totalRounds": "Rondas Totales"
+      },
+      "recentRounds": {
+        "title": "Rondas Recientes",
+        "time": "Hora",
+        "game": "Juego",
+        "result": "Resultado",
+        "roundNumber": "Ronda #"
+      },
+      "systemStatus": {
+        "title": "Estado del Sistema",
+        "allOperational": "Todos los sistemas operativos",
+        "rouletteEngine": "Motor de Ruleta",
+        "lotteryEngine": "Motor de Lotería",
+        "database": "Base de Datos",
+        "recordingService": "Servicio de Grabación",
+        "api": "API",
+        "online": "En línea",
+        "offline": "Fuera de línea"
+      }
+    }
   }
 }

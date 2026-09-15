@@ -1,0 +1,202 @@
+/* Admin Dashboard -- DOM puro (sin Pixi/canvas), mismo criterio que LoginPage.tsx: pantalla
+   independiente que ocupa todo el viewport por sí misma, reutilizando el Header real del proyecto
+   (ver Header.tsx: activeTab='admin') en vez de duplicarlo. Todos los tokens de color/spacing de
+   esta sección quedan scopeados a .admin-dashboard (no se tocan los :root globales de index.css,
+   que hoy no los usa ningún componente real del proyecto -- ver investigación previa). */
+.admin-dashboard {
+  --admin-red: #f32635;
+  --admin-blue: #2588ff;
+  --admin-purple: #9256f5;
+  --admin-green: #43e86a;
+  --admin-text-primary: #f5f7fa;
+  --admin-text-secondary: #8ea0b5;
+  --admin-border: rgba(100, 140, 170, 0.22);
+  --admin-radius: 10px;
+  --admin-panel-bg: linear-gradient(180deg, rgba(11, 20, 30, 0.88) 0%, rgba(6, 13, 20, 0.92) 100%);
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  box-sizing: border-box;
+  color: var(--admin-text-primary);
+  font-family: 'Poppins', Arial, sans-serif;
+
+  /* Fondo oscuro con variación tonal (nunca un negro plano) -- azul petróleo/noche muy oscuro,
+     con dos manchas de luz extremadamente tenues para dar profundidad, mismo criterio que
+     loginPage.css/login-card. */
+  background:
+    radial-gradient(circle at 14% 0%, rgba(30, 70, 100, 0.1) 0%, transparent 45%),
+    radial-gradient(circle at 88% 92%, rgba(90, 15, 25, 0.06) 0%, transparent 50%),
+    linear-gradient(160deg, #07131c 0%, #050d14 45%, #030a10 100%);
+}
+
+.admin-body {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  box-sizing: border-box;
+  /* Espacio para el Header real, que vive fixed por encima (top:2px + height:65px, ver
+     header.css) -- mismo valor que HEADER_BAR_HEIGHT_PX usa para el canvas de Pixi
+     (layout.constants.ts), + el margen de 2px + un respiro extra. */
+  padding-top: 79px;
+}
+
+.admin-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 26px clamp(20px, 2.2vw, 32px) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.admin-main-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-main-title {
+  margin: 0;
+  font-size: clamp(26px, 2vw, 33px);
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-main-subtitle {
+  margin: 5px 0 0;
+  font-size: clamp(14px, 1vw, 16px);
+  font-weight: 400;
+  color: var(--admin-text-secondary);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Grid de KPI -- 4 en una fila en desktop grande, 2+2 en medium (auto-fit resuelve el reflow sin
+   breakpoints manuales, ver AdminStatCard). */
+.admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Fila de gráficos -- Games Activity ~58%, Games Distribution ~42%; pasa a una columna si no
+   entra legible. */
+.admin-charts-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 1080px) {
+  .admin-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------------------------
+   Fila inferior -- Recent Rounds ~60%, System Status ~40% (reemplaza el espacio que ocuparía
+   Quick Actions, que este panel NO implementa -- requisito explícito). */
+.admin-bottom-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .admin-bottom-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------------------------
+   Lenguaje visual compartido por todos los panels (Games Activity/Distribution, Recent Rounds,
+   System Status) -- fondo oscuro translúcido, borde de 1px muy tenue, radius moderado, sombra
+   suave. Nada de gradients fuertes acá: el color vivo queda reservado a acentos puntuales. */
+.admin-panel {
+  box-sizing: border-box;
+  padding: 20px 22px;
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-panel-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.admin-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.admin-panel-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Menú desplegable compartido por los selectores del dashboard (DateRangeControl, el rango de
+   Games Activity) -- ambos son un <button> disparador + este mismo menú flotante debajo. */
+.admin-dropdown {
+  position: relative;
+}
+
+.admin-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 5;
+  min-width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(11, 20, 30, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-dropdown-option {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.admin-dropdown-option:hover {
+  background: rgba(150, 180, 210, 0.07);
+  color: var(--admin-text-primary);
+}
+
+.admin-dropdown-option[data-selected='true'] {
+  background: rgba(243, 38, 53, 0.14);
+  color: var(--admin-text-primary);
+  font-weight: 600;
+}
+

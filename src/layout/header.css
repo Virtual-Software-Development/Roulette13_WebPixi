@@ -79,10 +79,12 @@
 }
 
 /* -------------------------------------------------------------------------------------------
-   Tabs -- geometría trapezoidal/paralelogramo vía clip-path, NO border-radius. Ambos tabs
-   comparten el mismo --skew para que la diagonal derecha de Roulette y la izquierda de Lottery
-   caigan exactamente sobre la misma línea (ver margin-left negativo en Lottery más abajo) y la
-   transición entre ambos se sienta continua, sin gap. */
+   Tabs -- geometría trapezoidal/paralelogramo vía clip-path, NO border-radius. Los tres tabs
+   comparten el mismo --skew para que cada diagonal derecha caiga exactamente sobre la diagonal
+   izquierda del siguiente (ver margin-left negativo más abajo) y la transición entre ellos se
+   sienta continua, sin gap. El look "activo" (rojo/glow) vs "inactivo" (oscuro) ya no está atado
+   a un tab en particular -- se resuelve por [data-active] (ver Header.tsx: activeTab), así
+   cualquiera de los tres puede ser el activo según la sección actual. */
 .app-header-nav {
   display: flex;
   align-items: stretch;
@@ -102,6 +104,18 @@
   white-space: nowrap;
   text-transform: uppercase;
   font-family: Arial, sans-serif;
+  /* Solo los tabs con destino real (ver Header.tsx: onClick) son clickeables -- Lottery se queda
+     en 'auto' (cursor:default heredado). */
+}
+
+.app-header-tab + .app-header-tab {
+  margin-left: calc(var(--skew) * -1);
+}
+
+/* z-index: el tab activo siempre pinta por encima de sus vecinos (su glow/diagonal debe ganar
+   cualquier hairline de antialiasing en el borde compartido), sin importar en qué posición esté. */
+.app-header-tab {
+  z-index: 1;
 }
 
 .app-header-tab-label {
@@ -117,18 +131,26 @@
   flex-shrink: 0;
 }
 
-/* Roulette -- tab activo (única sección real del proyecto hoy, ver Header.tsx: ACTIVE_TAB). */
 .app-header-tab--roulette {
-  z-index: 2;
   min-width: clamp(190px, 15.5vw, 250px);
+}
+
+.app-header-tab--lottery,
+.app-header-tab--admin {
+  min-width: clamp(150px, 11vw, 210px);
+}
+
+/* Estado ACTIVO -- fondo rojo en degradado + glow LOCALIZADO a los bordes del paralelogramo
+   (drop-shadow sigue la silueta ya recortada por clip-path, a diferencia de box-shadow que
+   seguiría el rectángulo completo) -- dos capas: una ceñida y brillante, otra más ancha y suave
+   (halo hacia el área negra de abajo). Nada de un halo grande/uniforme. */
+.app-header-tab[data-active='true'] {
+  cursor: default;
+  z-index: 3;
   color: #f5f5f5;
   font-size: clamp(13px, 0.95vw, 16px);
   background: linear-gradient(110deg, #7c060a 0%, #ab0a0e 32%, #c8121a 62%, #8f1013 100%);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-  /* Glow rojo LOCALIZADO a los bordes del paralelogramo (drop-shadow sigue la silueta ya
-     recortada por clip-path, a diferencia de box-shadow que seguiría el rectángulo completo) --
-     dos capas: una ceñida y brillante, otra más ancha y suave (halo hacia el área negra de
-     abajo). Nada de un halo grande/uniforme. */
   filter:
     drop-shadow(0 0 3px rgba(255, 40, 45, 0.55))
     drop-shadow(0 4px 14px rgba(200, 10, 15, 0.35));
@@ -136,7 +158,7 @@
 
 /* Línea superior más brillante, ceñida al borde -- pseudo-elemento propio (mismo clip-path,
    --skew se hereda) en vez de un border-top uniforme. */
-.app-header-tab--roulette::before {
+.app-header-tab[data-active='true']::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -145,34 +167,34 @@
   pointer-events: none;
 }
 
-.app-header-tab--roulette .app-header-tab-icon {
+.app-header-tab[data-active='true'] .app-header-tab-icon {
   color: #f5f5f5;
 }
 
-/* Lottery -- continúa la misma barra (mismo --skew), superpuesta hacia la izquierda para que su
-   diagonal izquierda coincida exactamente con la diagonal derecha de Roulette. z-index menor:
-   ante cualquier hairline de antialiasing en el borde compartido, que gane el rojo. */
-.app-header-tab--lottery {
-  --skew: 23px;
-  margin-left: calc(var(--skew) * -1);
-  z-index: 1;
-  min-width: clamp(150px, 11vw, 210px);
+/* Estado INACTIVO -- oscuro, continúa la misma barra. */
+.app-header-tab[data-active='false'] {
   color: #99999e;
   font-size: clamp(12px, 0.85vw, 15px);
   background: linear-gradient(110deg, #07090d 0%, #030509 55%, #06080c 100%);
 }
 
-.app-header-tab--lottery .app-header-tab-label {
+.app-header-tab[data-active='false'].app-header-tab--clickable {
+  cursor: pointer;
+}
+
+.app-header-tab[data-active='false'] .app-header-tab-label {
   font-weight: 500;
 }
 
-.app-header-tab--lottery .app-header-tab-icon {
+.app-header-tab[data-active='false'] .app-header-tab-icon {
   color: #b7b7b9;
 }
 
-/* Diagonal derecha de Lottery -- tinte rojo/gris muy sutil (no gris plano), última huella del
-   rojo de Roulette perdiéndose hacia el negro. */
-.app-header-tab--lottery::after {
+/* Diagonal izquierda del tab inactivo que sigue inmediatamente al activo -- tinte rojo/gris muy
+   sutil (no gris plano), última huella del rojo del vecino perdiéndose hacia el negro. Se resuelve
+   con un selector de hermano adyacente (no atado a "lottery" en particular) para que el efecto
+   viaje con el tab activo sea cual sea. */
+.app-header-tab[data-active='true'] + .app-header-tab[data-active='false']::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -242,4 +264,104 @@
   font-weight: 600;
   line-height: 1;
   color: #f5f5f5;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Bloque derecho en modo admin (activeTab='admin') -- reemplaza a YOUR BALANCE, que no tiene
+   sentido en el panel de administración. Reusa .app-header-divider entre bloques (mismo criterio
+   visual que el resto del header). */
+.app-header-admin-meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.4vw, 22px);
+  padding: 0 clamp(14px, 1.4vw, 22px) 0 0;
+}
+
+.app-header-admin-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.app-header-admin-date {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(10px, 0.75vw, 12px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: #a4a4a8;
+}
+
+.app-header-admin-time {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(14px, 1.1vw, 18px);
+  font-weight: 600;
+  line-height: 1;
+  color: #f5f5f5;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-header-admin-user {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.8vw, 12px);
+}
+
+.app-header-admin-user-icon {
+  width: clamp(26px, 1.9vw, 32px);
+  height: auto;
+  flex-shrink: 0;
+}
+
+.app-header-admin-user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.app-header-admin-user-name {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(13px, 1vw, 15px);
+  font-weight: 600;
+  line-height: 1.3;
+  color: #f5f5f5;
+}
+
+.app-header-admin-user-role {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(10px, 0.75vw, 12px);
+  font-weight: 500;
+  line-height: 1.3;
+  color: #a4a4a8;
+}
+
+.app-header-admin-logout {
+  flex: 0 0 auto;
+  width: clamp(34px, 2.4vw, 40px);
+  height: clamp(34px, 2.4vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(115, 125, 135, 0.28);
+  background: rgba(120, 10, 20, 0.12);
+  color: #e4a3a8;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.app-header-admin-logout:hover {
+  background: rgba(180, 15, 25, 0.22);
+  border-color: rgba(200, 40, 48, 0.55);
+  color: #ffb3b8;
+}
+
+.app-header-logout-icon-svg {
+  width: 18px;
+  height: 18px;
 }
