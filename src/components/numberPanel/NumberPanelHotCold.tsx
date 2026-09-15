@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { extend } from '@pixi/react'
-import { Container, Graphics, Text, TextStyle } from 'pixi.js'
+import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
 import { useTranslation } from 'react-i18next'
 import { useViewport } from '../../hooks/useViewport'
@@ -11,9 +11,16 @@ import { easeInOutCubic } from '../../utils/easing'
 import { drawRoundedPanel } from '../../utils/roundedPanel'
 import { createHorizontalGradient, createVerticalGradient } from '../../utils/gradients'
 import { LAYOUT } from '../../layout/layout.constants'
+import { useTexture } from '../../hooks/useTexture'
+import { buildMediaUrl } from '../../utils/media'
 import { InfoIcon } from '../common/InfoIcon'
 
-extend({ Container, Graphics, Text })
+extend({ Container, Graphics, Sprite, Text })
+
+// Set Website_svg_icons (ver local-media/) -- reemplazan a los íconos de llama/copo de nieve
+// dibujados a mano en los headers de las secciones Hot/Cold.
+const FIRE_ICON_URL = buildMediaUrl('Website_svg_icons/31_flame_red.svg')
+const SNOWFLAKE_ICON_URL = buildMediaUrl('Website_svg_icons/32_snowflake_blue.svg')
 
 // -----------------------------------------------------------------------------------------------
 // Layout: panel vertical con dos secciones (HOT arriba, COLD abajo), cada una con hasta
@@ -40,6 +47,9 @@ const HEADER_SEPARATOR_COLOR = 0x182433
 const HEADER_TO_SECTION_GAP = 16
 
 const SECTION_HEADER_HEIGHT = 20
+// Antes 15 -- pedido explícito de agrandar los íconos de fuego/copo de nieve del header de
+// sección (ver FireIcon/SnowflakeIcon).
+const SECTION_ICON_SIZE = 20
 const SECTION_HEADER_TO_ROWS_GAP = 12
 // Antes 38 -- subido para que el panel completo (HOT + COLD + leyenda + footer) alcance la misma
 // altura visual que el panel de historial (LastGame + GameList) y que SpinStatsPanel, pedido
@@ -74,9 +84,7 @@ const BAR_MIN_FILL_WIDTH = 6
 const HITS_COLUMN_X = BAR_X + BAR_WIDTH + 22
 const PERCENT_COLUMN_X = PANEL_WIDTH - PANEL_PADDING
 
-const HOT_ICON_COLOR = 0xff5a35
 const HOT_LABEL_COLOR = 0xff5a35
-const COLD_ICON_COLOR = 0x258de8
 const COLD_LABEL_COLOR = 0x258de8
 const COLUMN_HEADER_COLOR = 0xa9a7a8
 
@@ -148,66 +156,18 @@ const centerAnchor = { x: 0.5, y: 0.5 }
 // con Graphics, mismo criterio que StatsBarsIcon en GameList.tsx.
 // -----------------------------------------------------------------------------------------------
 
-// Llama estilizada -- un polígono en zigzag (no una curva realista), suficiente como pictograma a
-// este tamaño.
-function FireIcon({ x, y, size = 15, color = HOT_ICON_COLOR }: { x: number; y: number; size?: number; color?: number }) {
-  const draw = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      const s = size / 16
-      g.poly([
-        8 * s, 0,
-        12 * s, 5 * s,
-        10 * s, 8 * s,
-        14 * s, 12 * s,
-        8 * s, 16 * s,
-        2 * s, 12 * s,
-        6 * s, 8 * s,
-        4 * s, 5 * s,
-      ])
-      g.fill(color)
-    },
-    [size, color],
-  )
-  return <pixiGraphics draw={draw} x={x} y={y} />
+// Llama -- Website_svg_icons/31_ (ver FIRE_ICON_URL).
+function FireIcon({ x, y, size = 15 }: { x: number; y: number; size?: number }) {
+  const { texture } = useTexture(FIRE_ICON_URL)
+  if (!texture) return null
+  return <pixiSprite texture={texture} x={x} y={y} width={size} height={size} />
 }
 
-// Copo de nieve -- 3 líneas por el centro a 60° con una pequeña marca perpendicular cerca de cada
-// punta, en vez de un asterisco liso.
-function SnowflakeIcon({ x, y, size = 15, color = COLD_ICON_COLOR }: { x: number; y: number; size?: number; color?: number }) {
-  const draw = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      const r = size / 2
-      const cx = r
-      const cy = r
-      const tickLength = r * 0.32
-      g.setStrokeStyle({ width: 1.4, color })
-      for (let i = 0; i < 3; i++) {
-        const angle = (i * Math.PI) / 3
-        const dx = Math.cos(angle)
-        const dy = Math.sin(angle)
-        const x0 = cx - dx * r
-        const y0 = cy - dy * r
-        const x1 = cx + dx * r
-        const y1 = cy + dy * r
-        g.moveTo(x0, y0)
-        g.lineTo(x1, y1)
-
-        const px = -dy
-        const py = dx
-        for (const sign of [1, -1]) {
-          const tx = cx + dx * r * 0.55 * sign
-          const ty = cy + dy * r * 0.55 * sign
-          g.moveTo(tx - px * tickLength, ty - py * tickLength)
-          g.lineTo(tx + px * tickLength, ty + py * tickLength)
-        }
-      }
-      g.stroke()
-    },
-    [size, color],
-  )
-  return <pixiGraphics draw={draw} x={x} y={y} />
+// Copo de nieve -- Website_svg_icons/32_ (ver SNOWFLAKE_ICON_URL).
+function SnowflakeIcon({ x, y, size = 15 }: { x: number; y: number; size?: number }) {
+  const { texture } = useTexture(SNOWFLAKE_ICON_URL)
+  if (!texture) return null
+  return <pixiSprite texture={texture} x={x} y={y} width={size} height={size} />
 }
 
 function Separator({ x, y, width, color = LONG_SEPARATOR_COLOR, alpha = 1 }: { x: number; y: number; width: number; color?: number; alpha?: number }) {
@@ -307,14 +267,14 @@ function Section({ y, labelText, icon, labelStyle, entries, maxHits, barGradient
   return (
     <pixiContainer x={0} y={y}>
       {icon === 'fire' ? (
-        <FireIcon x={PANEL_PADDING} y={(SECTION_HEADER_HEIGHT - 15) / 2} />
+        <FireIcon x={PANEL_PADDING} y={(SECTION_HEADER_HEIGHT - SECTION_ICON_SIZE) / 2} size={SECTION_ICON_SIZE} />
       ) : (
-        <SnowflakeIcon x={PANEL_PADDING} y={(SECTION_HEADER_HEIGHT - 15) / 2} />
+        <SnowflakeIcon x={PANEL_PADDING} y={(SECTION_HEADER_HEIGHT - SECTION_ICON_SIZE) / 2} size={SECTION_ICON_SIZE} />
       )}
       <pixiText
         text={labelText}
         style={labelStyle}
-        x={PANEL_PADDING + 22}
+        x={PANEL_PADDING + SECTION_ICON_SIZE + 7}
         y={SECTION_HEADER_HEIGHT / 2}
         anchor={leftAnchor}
       />

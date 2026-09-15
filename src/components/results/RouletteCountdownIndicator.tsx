@@ -1,9 +1,15 @@
 import { useCallback } from 'react'
 import { extend } from '@pixi/react'
-import { Container, Graphics } from 'pixi.js'
+import { Container, Graphics, Sprite } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
+import { useTexture } from '../../hooks/useTexture'
+import { buildMediaUrl } from '../../utils/media'
 
-extend({ Container, Graphics })
+extend({ Container, Graphics, Sprite })
+
+// Set Website_svg_icons (ver local-media/) -- reemplaza al ícono de ruleta dibujado a mano en el
+// centro del indicador.
+const CENTER_ICON_URL = buildMediaUrl('Website_svg_icons/03_clock_red_circle.svg')
 
 const SEGMENT_COUNT = 28
 const GAP_FRACTION = 0.24
@@ -17,17 +23,15 @@ interface RouletteCountdownIndicatorProps {
   urgent?: boolean
 }
 
-const CENTER_ICON_SPOKE_COUNT = 8
-const CENTER_ICON_COLOR = 0xffffff
-
 // Indicador decorativo (NO un spinner de loading genérico): un aro de segmentos radiales cortos
-// -- como las marcas de un dial de ruleta -- alrededor de un pequeño ícono de ruleta central, fijo
-// y blanco (sin cuello/aguja, sin animación propia). 100% procedural (sin importar una imagen). Se
-// redibuja solo cuando cambian `size`/`urgent`/`progress` -- progress cambia ~1 vez por segundo
-// (mismo tick que el countdown de texto, ver useCountdown), NO por ticker de Pixi, así que sigue
-// sin haber una animación continua por frame, solo un valor que avanza a un ritmo real.
+// -- como las marcas de un dial de ruleta -- alrededor de un ícono central (Website_svg_icons/03_,
+// ver CENTER_ICON_URL). Se redibuja solo cuando cambian `size`/`urgent`/`progress` -- progress
+// cambia ~1 vez por segundo (mismo tick que el countdown de texto, ver useCountdown), NO por
+// ticker de Pixi, así que sigue sin haber una animación continua por frame, solo un valor que
+// avanza a un ritmo real.
 export function RouletteCountdownIndicator({ size, progress = 0, urgent = false }: RouletteCountdownIndicatorProps) {
   const clampedProgress = Math.min(1, Math.max(0, progress))
+  const { texture: centerIconTexture } = useTexture(CENTER_ICON_URL)
 
   const draw = useCallback(
     (g: PixiGraphics) => {
@@ -62,29 +66,25 @@ export function RouletteCountdownIndicator({ size, progress = 0, urgent = false 
         ])
         g.fill(i < filledCount ? segmentColorFilled : segmentColorEmpty)
       }
-
-      // 3. ícono de ruleta central -- circulo exterior + hub interior + rayos, blanco, estático
-      // (mismo lenguaje visual que RouletteTabIcon en Header.tsx, pero dibujado con Graphics en vez
-      // de SVG porque acá vive dentro del canvas de Pixi).
-      const iconRadius = size * 0.24
-      const iconHubRadius = size * 0.07
-      const iconStrokeWidth = Math.max(1, size * 0.016)
-
-      g.circle(cx, cy, iconRadius)
-      g.stroke({ width: iconStrokeWidth, color: CENTER_ICON_COLOR })
-
-      g.circle(cx, cy, iconHubRadius)
-      g.stroke({ width: iconStrokeWidth, color: CENTER_ICON_COLOR })
-
-      for (let i = 0; i < CENTER_ICON_SPOKE_COUNT; i++) {
-        const angle = (i / CENTER_ICON_SPOKE_COUNT) * Math.PI * 2
-        g.moveTo(cx + iconHubRadius * Math.cos(angle), cy + iconHubRadius * Math.sin(angle))
-        g.lineTo(cx + iconRadius * Math.cos(angle), cy + iconRadius * Math.sin(angle))
-        g.stroke({ width: iconStrokeWidth, color: CENTER_ICON_COLOR })
-      }
     },
     [size, urgent, clampedProgress],
   )
 
-  return <pixiGraphics draw={draw} />
+  const iconSize = size * 0.48
+
+  return (
+    <pixiContainer>
+      <pixiGraphics draw={draw} />
+      {centerIconTexture && (
+        <pixiSprite
+          texture={centerIconTexture}
+          x={size / 2}
+          y={size / 2}
+          width={iconSize}
+          height={iconSize}
+          anchor={{ x: 0.5, y: 0.5 }}
+        />
+      )}
+    </pixiContainer>
+  )
 }

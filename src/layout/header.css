@@ -110,7 +110,9 @@
 }
 
 .app-header-tab-icon {
-  width: clamp(16px, 1.2vw, 21px);
+  /* Antes clamp(16px, 1.2vw, 21px) -- agrandado (pedido explícito) junto con el resto de íconos
+     del set Website_svg_icons. */
+  width: clamp(22px, 1.7vw, 30px);
   height: auto;
   flex-shrink: 0;
 }

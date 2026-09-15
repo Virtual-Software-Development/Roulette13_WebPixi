@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
+import { buildMediaUrl } from '../utils/media'
 import './header.css'
+
+// Íconos del set Website_svg_icons (ver local-media/) -- reemplazan a los SVG inline dibujados a
+// mano que tenía antes el header.
+const ROULETTE_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/19_wheel_white_detailed.svg')
+const LOTTERY_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/12_dice_white.svg')
+const BALANCE_ICON_URL = buildMediaUrl('Website_svg_icons/41_payouts.svg')
 
 // Única pantalla del proyecto es la ruleta (ver RouletteLobby.tsx) -- no hay router ni una
 // segunda screen de lotería todavía, así que no hay nada real a lo que "navegar". El tab
@@ -13,43 +20,15 @@ type HeaderTab = 'roulette' | 'lottery'
 const ACTIVE_TAB: HeaderTab = 'roulette'
 
 function RouletteTabIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="app-header-tab-icon" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="12" cy="12" r="2.1" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <path
-        d="M12 3.6v3.2M12 17.2v3.2M20.4 12h-3.2M6.8 12H3.6M17.7 6.3l-2.3 2.3M8.6 15.1l-2.3 2.3M17.7 17.7l-2.3-2.3M8.6 8.9L6.3 6.6"
-        stroke="currentColor"
-        strokeWidth="1.1"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
+  return <img src={ROULETTE_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
 }
 
 function LotteryTabIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="app-header-tab-icon" aria-hidden="true" focusable="false">
-      <rect x="3.2" y="3.2" width="17.6" height="17.6" rx="4.2" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="8.1" cy="8.1" r="1.3" fill="currentColor" />
-      <circle cx="15.9" cy="8.1" r="1.3" fill="currentColor" />
-      <circle cx="12" cy="12" r="1.3" fill="currentColor" />
-      <circle cx="8.1" cy="15.9" r="1.3" fill="currentColor" />
-      <circle cx="15.9" cy="15.9" r="1.3" fill="currentColor" />
-    </svg>
-  )
+  return <img src={LOTTERY_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
 }
 
 function CoinsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="app-header-balance-icon" aria-hidden="true" focusable="false">
-      <g fill="none" stroke="currentColor" strokeWidth="1.4">
-        <path d="M4 8.6c0-1.77 3.58-3.2 8-3.2s8 1.43 8 3.2-3.58 3.2-8 3.2-8-1.43-8-3.2z" />
-        <path d="M4 8.6v3.8c0 1.77 3.58 3.2 8 3.2s8-1.43 8-3.2V8.6" />
-        <path d="M4 12.4v3.8c0 1.77 3.58 3.2 8 3.2s8-1.43 8-3.2v-3.8" />
-      </g>
-    </svg>
-  )
+  return <img src={BALANCE_ICON_URL} className="app-header-balance-icon" alt="" />
 }
 
 export function Header() {

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { extend, useTick } from '@pixi/react'
-import { BlurFilter, Container, Graphics, Text, TextStyle } from 'pixi.js'
+import { BlurFilter, Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
 import { GlowFilter } from 'pixi-filters'
 import { useTranslation } from 'react-i18next'
 import { useViewport } from '../../hooks/useViewport'
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress'
 import { useDrawCycleStore } from '../../store/useDrawCycleStore'
+import { useTexture } from '../../hooks/useTexture'
 import { LAYOUT } from '../../layout/layout.constants'
 import { easeInOutCubic } from '../../utils/easing'
 import { drawRoundedPanel } from '../../utils/roundedPanel'
@@ -15,10 +16,14 @@ import { createVerticalGradient } from '../../utils/gradients'
 import { getRouletteColor } from '../../utils/rouletteColors'
 import { getColumnGroupPockets } from '../../utils/columnGroups'
 import { formatMoney } from '../../utils/moneyFormat'
+import { buildMediaUrl } from '../../utils/media'
 import type { WheelPocket } from '../../types/wheel'
 import type { LiveTableBetsData, NumberBetTotal } from '../../types/liveTableBets'
 
-extend({ Container, Graphics, Text })
+extend({ Container, Graphics, Sprite, Text })
+
+// Set Website_svg_icons (ver local-media/) -- reemplaza al stack de fichas doradas dibujado a mano.
+const CHIP_STACK_ICON_URL = buildMediaUrl('Website_svg_icons/06_gold_chips_stack.svg')
 
 // -----------------------------------------------------------------------------------------------
 // HUD de distribución de apuestas (LIVE TABLE BETS) -- overlay puramente informativo, se muestra
@@ -164,11 +169,6 @@ const HIGHLIGHT_TRACK_COLOR = 0x9e1715
 const HIGHLIGHT_TRACK_ALPHA = 0.4
 const HIGHLIGHT_TINT_COLOR = 0xff6825
 const HIGHLIGHT_TINT_ALPHA = 0.08
-
-const CHIP_DARK_EDGE = 0xa95a00
-const CHIP_GOLD = 0xe89b00
-const CHIP_BRIGHT = 0xffc51c
-const CHIP_HIGHLIGHT = 0xffe16a
 
 const DIAMOND_RED_FILL = createVerticalGradient([
   { offset: 0, color: 0xb51517 },
@@ -384,23 +384,24 @@ function pocketKey(pocket: WheelPocket): string {
   return String(pocket)
 }
 
-// Stack pequeño de fichas doradas (3 elipses superpuestas) -- decorativo, independiente del
-// highlight (ver NumberCell: showChipStack y highlighted nunca se asumen juntos). Encogido para
-// caber en las celdas mucho más chicas de la grilla vertical (antes 110x74, ahora 120x40).
+// Stack de fichas doradas -- decorativo, independiente del highlight (ver NumberCell:
+// showChipStack y highlighted nunca se asumen juntos). Encogido para caber en las celdas mucho más
+// chicas de la grilla vertical (antes 110x74, ahora 120x40).
+const CHIP_STACK_SIZE = 20
+
 function ChipStack({ x, y }: { x: number; y: number }) {
-  const draw = useCallback((g: PixiGraphics) => {
-    g.clear()
-    for (let i = 0; i < 3; i++) {
-      const cy = -i * 2.6
-      g.ellipse(0, cy, 6.5, 2.6)
-      g.fill(i === 2 ? CHIP_BRIGHT : CHIP_GOLD)
-      g.stroke({ width: 0.8, color: CHIP_DARK_EDGE, alpha: 0.7 })
-    }
-    // pequeño highlight en la ficha de arriba
-    g.ellipse(-1.8, -5.1, 2.2, 0.8)
-    g.fill({ color: CHIP_HIGHLIGHT, alpha: 0.75 })
-  }, [])
-  return <pixiGraphics draw={draw} x={x} y={y} />
+  const { texture } = useTexture(CHIP_STACK_ICON_URL)
+  if (!texture) return null
+  return (
+    <pixiSprite
+      texture={texture}
+      x={x}
+      y={y}
+      width={CHIP_STACK_SIZE}
+      height={CHIP_STACK_SIZE}
+      anchor={{ x: 0.5, y: 0.5 }}
+    />
+  )
 }
 
 // Borde "circuito" estático + tinte muy tenue -- la base sobre la que corre AnimatedEdgeGlow (ver
