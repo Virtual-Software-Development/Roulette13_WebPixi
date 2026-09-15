@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { extend } from '@pixi/react'
-import { Container, Graphics, Text, TextStyle } from 'pixi.js'
+import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
 import { GlowFilter } from 'pixi-filters'
 import { useTranslation } from 'react-i18next'
@@ -9,18 +9,28 @@ import { useViewport } from '../../hooks/useViewport'
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress'
 import { useDrawCycleStore } from '../../store/useDrawCycleStore'
 import { useHotColdWindow } from '../../hooks/useHotColdWindow'
+import { useTexture } from '../../hooks/useTexture'
 import { LAYOUT } from '../../layout/layout.constants'
 import { easeInOutCubic } from '../../utils/easing'
 import { drawRoundedPanel } from '../../utils/roundedPanel'
 import { createVerticalGradient } from '../../utils/gradients'
 import { getRouletteColor } from '../../utils/rouletteColors'
 import { formatMoney } from '../../utils/moneyFormat'
+import { buildMediaUrl } from '../../utils/media'
 import { InfoIcon } from '../common/InfoIcon'
 import type { HotColdEntry } from '../../utils/hotColdNumbers'
 import type { WheelPocket } from '../../types/wheel'
 import type { LiveTableBetsData } from '../../types/liveTableBets'
 
-extend({ Container, Graphics, Text })
+extend({ Container, Graphics, Sprite, Text })
+
+// Set Website_svg_icons (ver local-media/) -- reemplazan a los íconos de llama/copo de nieve
+// dibujados a mano en los headers de Hot/Cold, a la estrella dorada del header de Top 10, y al
+// stack de fichas doradas de cada fila del Top 10.
+const FLAME_ICON_URL = buildMediaUrl('Website_svg_icons/31_flame_red.svg')
+const SNOWFLAKE_ICON_URL = buildMediaUrl('Website_svg_icons/32_snowflake_blue.svg')
+const STAR_ICON_URL = buildMediaUrl('Website_svg_icons/21_star_gold.svg')
+const CHIPS_ICON_URL = buildMediaUrl('Website_svg_icons/06_gold_chips_stack.svg')
 
 // -----------------------------------------------------------------------------------------------
 // Sidebar de estadísticas del lado IZQUIERDO -- espejo arquitectónico de LiveTableBetsPanel.tsx
@@ -91,8 +101,9 @@ const RANK_STYLE = new TextStyle({ fontFamily: 'Arial', fontSize: 14, fill: TEXT
 const AMOUNT_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '600', fontSize: 16, fill: TEXT_PRIMARY })
 const PLACEHOLDER_STYLE = new TextStyle({ fontFamily: 'Arial', fontSize: 12, fill: TEXT_MUTED })
 // Exclusivo de Hot/Cold desde que Top10 tiene su propio TOP10_TITLE_STYLE -- agrandado a juego
-// (pedido explícito: "Hot/Cold Numbers deben ser más grandes").
-const MODULE_TITLE_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '700', fontSize: 15, letterSpacing: 0.6, fill: TEXT_PRIMARY })
+// (pedido explícito: "Hot/Cold Numbers deben ser más grandes"), y subido de nuevo (15 -> 18) junto
+// con FlameIcon/SnowflakeIcon (pedido explícito de agrandar también el título).
+const MODULE_TITLE_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '700', fontSize: 18, letterSpacing: 0.6, fill: TEXT_PRIMARY })
 // Título del Top 10 más grande que MODULE_TITLE_STYLE (Hot/Cold) a propósito -- constante propia
 // para no agrandar también los títulos de Hot/Cold, que comparten MODULE_TITLE_STYLE.
 const TOP10_TITLE_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '700', fontSize: 15, letterSpacing: 0.6, fill: TEXT_PRIMARY })
@@ -170,23 +181,11 @@ function RouletteChip({ pocket, size = 26, fontSize }: { pocket: WheelPocket; si
   )
 }
 
-// Stack de fichas doradas -- mismo lenguaje visual que ChipStack (LiveTableBetsPanel.tsx) y
-// CoinStackIcon (ResultStatsPanel.tsx), redibujado localmente a propósito (ninguno de los tres
-// paneles importa el ícono de otro, mismo criterio ya establecido en esta sesión).
+// Stack de fichas doradas -- Website_svg_icons/06_ (ver CHIPS_ICON_URL).
 function ChipsIcon({ size = 15 }: { size?: number }) {
-  const draw = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      for (let i = 0; i < 3; i++) {
-        const cy = -i * size * 0.16
-        g.ellipse(0, cy, size * 0.42, size * 0.16)
-        g.fill(i === 2 ? 0xffbf33 : 0xf79b0b)
-        g.stroke({ width: 0.8, color: 0xac6a00, alpha: 0.7 })
-      }
-    },
-    [size],
-  )
-  return <pixiGraphics draw={draw} filters={[CHIPS_GLOW]} />
+  const { texture } = useTexture(CHIPS_ICON_URL)
+  if (!texture) return null
+  return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[CHIPS_GLOW]} />
 }
 
 // Ícono de "ronda en curso" -- no existe un asset ni ícono equivalente en el proyecto (revisado:
@@ -215,72 +214,27 @@ function CurrentGameIcon({ size = 20 }: { size?: number }) {
   return <pixiGraphics draw={draw} />
 }
 
-// Estrella dorada (header del Top 10) -- construida a mano (5 puntas), sin asset/librería.
+// Estrella dorada (header del Top 10) -- Website_svg_icons/21_ (ver STAR_ICON_URL).
 function StarIcon({ size = 14 }: { size?: number }) {
-  const draw = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      const outer = size / 2
-      const inner = outer * 0.45
-      const step = Math.PI / 5
-      let rot = -Math.PI / 2
-      g.moveTo(Math.cos(rot) * outer, Math.sin(rot) * outer)
-      for (let i = 0; i < 5; i++) {
-        rot += step
-        g.lineTo(Math.cos(rot) * inner, Math.sin(rot) * inner)
-        rot += step
-        g.lineTo(Math.cos(rot) * outer, Math.sin(rot) * outer)
-      }
-      g.closePath()
-      g.fill(GOLD_COLOR)
-    },
-    [size],
-  )
-  return <pixiGraphics draw={draw} filters={[GOLD_GLOW]} />
+  const { texture } = useTexture(STAR_ICON_URL)
+  if (!texture) return null
+  return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[GOLD_GLOW]} />
 }
 
-// Llama (header de Hot Numbers) -- silueta armada con dos bezier por mitad + núcleo interior más
-// claro, sin asset/librería.
+const iconCenterAnchor = { x: 0.5, y: 0.5 }
+
+// Llama (header de Hot Numbers) -- Website_svg_icons/31_ (ver FLAME_ICON_URL).
 function FlameIcon({ size = 14 }: { size?: number }) {
-  const draw = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      const s = size
-      g.moveTo(0, s * 0.5)
-      g.bezierCurveTo(-s * 0.5, s * 0.15, -s * 0.32, -s * 0.35, 0, -s * 0.5)
-      g.bezierCurveTo(s * 0.34, -s * 0.12, s * 0.4, s * 0.28, 0, s * 0.5)
-      g.closePath()
-      g.fill(FLAME_COLOR)
-      g.moveTo(0, s * 0.32)
-      g.bezierCurveTo(-s * 0.2, s * 0.1, -s * 0.12, -s * 0.15, 0, -s * 0.2)
-      g.bezierCurveTo(s * 0.14, -s * 0.02, s * 0.16, s * 0.18, 0, s * 0.32)
-      g.closePath()
-      g.fill({ color: 0xffb238, alpha: 0.85 })
-    },
-    [size],
-  )
-  return <pixiGraphics draw={draw} filters={[FLAME_GLOW]} />
+  const { texture } = useTexture(FLAME_ICON_URL)
+  if (!texture) return null
+  return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[FLAME_GLOW]} />
 }
 
-// Copo de nieve (header de Cold Numbers) -- 3 líneas cruzadas, abstracción mínima suficiente a
-// este tamaño, sin asset/librería.
+// Copo de nieve (header de Cold Numbers) -- Website_svg_icons/32_ (ver SNOWFLAKE_ICON_URL).
 function SnowflakeIcon({ size = 14 }: { size?: number }) {
-  const draw = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      const r = size / 2
-      for (let i = 0; i < 3; i++) {
-        const a = (i / 3) * Math.PI
-        const dx = Math.cos(a) * r
-        const dy = Math.sin(a) * r
-        g.moveTo(-dx, -dy)
-        g.lineTo(dx, dy)
-        g.stroke({ width: 1.4, color: COLD_COLOR, alpha: 0.9, cap: 'round' })
-      }
-    },
-    [size],
-  )
-  return <pixiGraphics draw={draw} filters={[COLD_GLOW]} />
+  const { texture } = useTexture(SNOWFLAKE_ICON_URL)
+  if (!texture) return null
+  return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[COLD_GLOW]} />
 }
 
 function drawCard(g: PixiGraphics, width: number, height: number, fill: ReturnType<typeof createVerticalGradient> | { color: number; alpha: number }) {
@@ -393,8 +347,8 @@ function TopBetNumbersCard({ width, height, rows, title }: { width: number; heig
     <pixiContainer>
       <pixiGraphics draw={drawBg} />
       <pixiContainer x={CARD_PADDING_X} y={24}>
-        <StarIcon size={18} />
-        <pixiText text={title} style={TOP10_TITLE_STYLE} x={20} anchor={{ x: 0, y: 0.5 }} />
+        <StarIcon size={26} />
+        <pixiText text={title} style={TOP10_TITLE_STYLE} x={24} anchor={{ x: 0, y: 0.5 }} />
       </pixiContainer>
       <pixiGraphics draw={drawHeaderSeparator} x={CARD_PADDING_X} y={40} />
       <pixiContainer x={CARD_PADDING_X} y={rowsTop}>
@@ -431,7 +385,7 @@ function HotColdModule({ width, height, icon, title, entries }: { width: number;
       <pixiGraphics draw={drawBg} />
       <pixiContainer x={CARD_PADDING_X} y={24}>
         {icon}
-        <pixiText text={title} style={MODULE_TITLE_STYLE} x={20} anchor={{ x: 0, y: 0.5 }} />
+        <pixiText text={title} style={MODULE_TITLE_STYLE} x={24} anchor={{ x: 0, y: 0.5 }} />
       </pixiContainer>
       {slots.map((entry, i) => (
         <pixiContainer key={i} x={CARD_PADDING_X + i * slotWidth + slotWidth / 2} y={slotsY}>
@@ -517,10 +471,10 @@ export function LeftStatsSidebar({ data }: { data: LiveTableBetsData }) {
         <TopBetNumbersCard width={SIDEBAR_WIDTH} height={top10Height} rows={top10} title={t('leftStatsSidebar.top10Title')} />
       </pixiContainer>
       <pixiContainer y={hotY}>
-        <HotColdModule width={SIDEBAR_WIDTH} height={HOT_COLD_HEIGHT} icon={<FlameIcon size={18} />} title={t('numbers.hot')} entries={hotEntries} />
+        <HotColdModule width={SIDEBAR_WIDTH} height={HOT_COLD_HEIGHT} icon={<FlameIcon size={26} />} title={t('numbers.hot')} entries={hotEntries} />
       </pixiContainer>
       <pixiContainer y={coldY}>
-        <HotColdModule width={SIDEBAR_WIDTH} height={HOT_COLD_HEIGHT} icon={<SnowflakeIcon size={18} />} title={t('numbers.cold')} entries={coldEntries} />
+        <HotColdModule width={SIDEBAR_WIDTH} height={HOT_COLD_HEIGHT} icon={<SnowflakeIcon size={26} />} title={t('numbers.cold')} entries={coldEntries} />
       </pixiContainer>
       <pixiContainer y={infoY}>
         <InfoFooterCard width={SIDEBAR_WIDTH} height={INFO_FOOTER_HEIGHT} text={t('leftStatsSidebar.disclaimer')} />

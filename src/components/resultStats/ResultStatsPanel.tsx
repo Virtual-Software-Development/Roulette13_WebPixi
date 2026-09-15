@@ -1,18 +1,26 @@
 import { useCallback, useMemo } from 'react'
 import { extend } from '@pixi/react'
-import { Container, FillGradient, Graphics, Text, TextStyle } from 'pixi.js'
+import { Container, FillGradient, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
 import { GlowFilter } from 'pixi-filters'
 import { useTranslation } from 'react-i18next'
 import { useViewport } from '../../hooks/useViewport'
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress'
 import { useDrawCycleStore } from '../../store/useDrawCycleStore'
+import { useTexture } from '../../hooks/useTexture'
 import { easeOutCubic, easeInCubic } from '../../utils/easing'
 import { drawRoundedPanel } from '../../utils/roundedPanel'
 import { formatCurrency } from '../../utils/currencyFormat'
+import { buildMediaUrl } from '../../utils/media'
 import type { ResultStatsData } from '../../types/resultStats'
 
-extend({ Container, Graphics, Text })
+extend({ Container, Graphics, Sprite, Text })
+
+// Set Website_svg_icons (ver local-media/) -- reemplazan a los íconos de usuarios/monedas
+// dibujados a mano de ACTIVE BETS / TOTAL POT.
+const USERS_ICON_URL = buildMediaUrl('Website_svg_icons/24_users_gray.svg')
+const COIN_STACK_ICON_URL = buildMediaUrl('Website_svg_icons/06_gold_chips_stack.svg')
+const iconCenterAnchor = { x: 0.5, y: 0.5 }
 
 // -----------------------------------------------------------------------------------------------
 // Mini-dashboard de estadísticas (ACTIVE BETS / TOTAL POT) mostrado durante el video de resultado.
@@ -63,57 +71,23 @@ const SUBLABEL_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '600', f
 const VALUE_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '600', fontSize: 46, fill: TEXT_VALUE_COLOR })
 const POT_VALUE_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '600', fontSize: 40, fill: TEXT_VALUE_COLOR })
 
-// Icono "users" -- no hay librería de íconos ni asset en el proyecto (mismo criterio que
-// InfoIcon/TrophyIcon), así que se dibuja a mano: dos cabezas (círculos) + dos cuerpos (elipses)
-// superpuestos, blanco roto, sin stroke ni glow.
-const USERS_ICON_COLOR = 0xe4e1d8
-
+// Icono "users" -- Website_svg_icons/24_ (ver USERS_ICON_URL).
 function UsersIcon({ size = 15 }: { size?: number }) {
-  const draw = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      const r = size * 0.22
-      // persona de atrás, levemente más chica y corrida a la derecha
-      g.circle(size * 0.28, -size * 0.14, r * 0.82)
-      g.fill({ color: USERS_ICON_COLOR, alpha: 0.55 })
-      g.ellipse(size * 0.28, size * 0.24, r * 1.1, r * 0.95)
-      g.fill({ color: USERS_ICON_COLOR, alpha: 0.55 })
-      // persona de adelante
-      g.circle(-size * 0.12, -size * 0.18, r)
-      g.fill(USERS_ICON_COLOR)
-      g.ellipse(-size * 0.12, size * 0.22, r * 1.3, r * 1.05)
-      g.fill(USERS_ICON_COLOR)
-    },
-    [size],
-  )
-  return <pixiGraphics draw={draw} />
+  const { texture } = useTexture(USERS_ICON_URL)
+  if (!texture) return null
+  return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} />
 }
 
-// Stack de monedas doradas -- mismo lenguaje que ChipStack de LiveTableBetsPanel (elipses
-// superpuestas), pero redibujado localmente a propósito: ambos componentes deben poder cambiar de
-// look sin tocarse entre sí.
-const COIN_HIGHLIGHT = 0xffd273
-const COIN_GOLD = 0xe9a33a
-const COIN_DARK_GOLD = 0xaa6423
+// Stack de monedas doradas -- Website_svg_icons/06_ (ver COIN_STACK_ICON_URL).
 const COIN_HALO_COLOR = 0xe1922f
 
 function CoinStackIcon({ size = 16 }: { size?: number }) {
-  const draw = useCallback(
-    (g: PixiGraphics) => {
-      g.clear()
-      for (let i = 0; i < 3; i++) {
-        const cy = -i * size * 0.16
-        g.ellipse(0, cy, size * 0.42, size * 0.17)
-        g.fill(i === 2 ? COIN_HIGHLIGHT : COIN_GOLD)
-        g.stroke({ width: 0.8, color: COIN_DARK_GOLD, alpha: 0.7 })
-      }
-    },
-    [size],
-  )
+  const { texture } = useTexture(COIN_STACK_ICON_URL)
   // Halo cálido MUY controlado (sección "ICONO" de TOTAL POT del brief) -- mismo criterio de glow
   // chico y contenido que ya usa LiveIndicator en LiveTableBetsPanel, no un blur pesado.
   const glow = useMemo(() => new GlowFilter({ distance: 5, outerStrength: 1, innerStrength: 0, color: COIN_HALO_COLOR, quality: 0.4, alpha: 0.35 }), [])
-  return <pixiGraphics draw={draw} filters={[glow]} />
+  if (!texture) return null
+  return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[glow]} />
 }
 
 // Línea superior fina (sección "LÍNEA SUPERIOR" del brief): un hairline oscuro casi imperceptible
@@ -257,8 +231,8 @@ export function ResultStatsPanel({ data }: { data: ResultStatsData }) {
       <pixiContainer x={leftBlockX}>
         <pixiGraphics draw={drawLeftBlockBox} />
         <pixiContainer x={20} y={headerY}>
-          <UsersIcon size={15} />
-          <pixiText text={activeBetsLabel} style={LABEL_STYLE} x={14} anchor={{ x: 0, y: 0.5 }} />
+          <UsersIcon size={22} />
+          <pixiText text={activeBetsLabel} style={LABEL_STYLE} x={18} anchor={{ x: 0, y: 0.5 }} />
         </pixiContainer>
         <pixiText text={String(data.activeBets)} style={VALUE_STYLE} x={20} y={valueY} anchor={{ x: 0, y: 0.5 }} />
         <pixiText text={playersInRoundLabel} style={SUBLABEL_STYLE} x={20} y={sublabelY} anchor={{ x: 0, y: 0.5 }} />
@@ -268,8 +242,8 @@ export function ResultStatsPanel({ data }: { data: ResultStatsData }) {
       <pixiContainer x={rightBlockX}>
         <pixiGraphics draw={drawRightBlockBox} />
         <pixiContainer x={20} y={headerY}>
-          <CoinStackIcon size={16} />
-          <pixiText text={totalPotLabel} style={LABEL_STYLE} x={16} anchor={{ x: 0, y: 0.5 }} />
+          <CoinStackIcon size={22} />
+          <pixiText text={totalPotLabel} style={LABEL_STYLE} x={19} anchor={{ x: 0, y: 0.5 }} />
         </pixiContainer>
         <pixiText text={formatCurrency(data.totalPot)} style={POT_VALUE_STYLE} x={20} y={valueY} anchor={{ x: 0, y: 0.5 }} />
       </pixiContainer>
