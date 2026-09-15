@@ -1,0 +1,118 @@
+.admin-recent-rounds {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-recent-rounds-table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-recent-rounds-table thead th {
+  text-align: left;
+  padding: 10px 14px;
+  background: rgba(140, 165, 190, 0.05);
+  color: var(--admin-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-recent-rounds-table thead th:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.admin-recent-rounds-table thead th:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.admin-recent-rounds-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.08);
+  color: var(--admin-text-primary);
+}
+
+.admin-recent-rounds-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-recent-rounds-table tbody tr {
+  transition: background 150ms ease;
+}
+
+.admin-recent-rounds-table tbody tr:hover {
+  background: rgba(150, 180, 210, 0.035);
+}
+
+.admin-recent-rounds-time {
+  color: var(--admin-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-recent-rounds-number {
+  color: var(--admin-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-recent-rounds-game {
+  font-weight: 600;
+}
+
+.admin-recent-rounds-game--roulette {
+  color: var(--admin-red);
+}
+
+.admin-recent-rounds-game--pick3 {
+  color: var(--admin-blue);
+}
+
+.admin-recent-rounds-game--pick4 {
+  color: var(--admin-purple);
+}
+
+.admin-round-pill-group {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.admin-round-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #f5f7fa;
+}
+
+.admin-round-pill[data-tone='red'] {
+  background: linear-gradient(145deg, #d81c2a 0%, #971018 100%);
+}
+
+.admin-round-pill[data-tone='green'] {
+  background: linear-gradient(145deg, #2fbf60 0%, #17843c 100%);
+}
+
+.admin-round-pill[data-tone='blue'] {
+  background: linear-gradient(145deg, #1c3f5c 0%, #0d2136 100%);
+  border: 1px solid rgba(37, 136, 255, 0.4);
+  color: var(--admin-blue);
+}
+
+.admin-round-pill[data-tone='purple'] {
+  background: linear-gradient(145deg, #3a2557 0%, #1c1230 100%);
+  border: 1px solid rgba(146, 86, 245, 0.4);
+  color: var(--admin-purple);
+}

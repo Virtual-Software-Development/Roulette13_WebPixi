@@ -1,0 +1,96 @@
+.admin-games-distribution {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-games-distribution-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  margin-top: 8px;
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.admin-games-distribution-donut {
+  position: relative;
+  width: min(200px, 90%);
+}
+
+.admin-games-distribution-donut svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.admin-games-distribution-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.admin-games-distribution-total {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  line-height: 1;
+}
+
+.admin-games-distribution-total-label {
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-games-distribution-legend {
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-games-distribution-legend-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  column-gap: 18px;
+  font-size: 14px;
+}
+
+.admin-games-distribution-legend-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--admin-text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.admin-games-distribution-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.admin-games-distribution-legend-value {
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  text-align: right;
+  min-width: 46px;
+}
+
+.admin-games-distribution-legend-percent {
+  color: var(--admin-text-secondary);
+  text-align: right;
+  min-width: 46px;
+}
