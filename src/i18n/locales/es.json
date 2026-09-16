@@ -180,6 +180,221 @@
         "online": "En línea",
         "offline": "Fuera de línea"
       }
+    },
+    "rtp": {
+      "title": "RTP Dashboard",
+      "subtitle": "Monitorea el rendimiento de pagos actual en todos los juegos.",
+      "current": "Actual",
+      "target": "Objetivo",
+      "status": {
+        "withinBand": "Dentro de Banda",
+        "aboveTarget": "Sobre el Objetivo",
+        "onTarget": "En el Objetivo"
+      },
+      "metrics": {
+        "rouletteTitle": "RTP de Ruleta",
+        "pick3Title": "RTP de Pick 3",
+        "pick4Title": "RTP de Pick 4"
+      },
+      "houseMargin": {
+        "title": "Margen de la Casa",
+        "trendLabel": "vs. últimos 7 días"
+      },
+      "manualOverrides": {
+        "title": "Anulaciones Manuales",
+        "activeOverrides": "anulaciones activas",
+        "details": "Detalles"
+      },
+      "trendChart": {
+        "title": "RTP Actual vs Objetivo",
+        "actualSuffix": "(Actual)",
+        "targetSuffix": "(Objetivo)",
+        "rangeOptions": {
+          "twoWeeks": "2 Semanas",
+          "threeWeeks": "3 Semanas",
+          "oneMonth": "1 Mes"
+        }
+      },
+      "currentBands": {
+        "title": "Bandas Actuales",
+        "bandWidth": "Ancho de Banda: {{value}}%",
+        "footnote": "Las bandas definen el rango de RTP permitido para cada juego."
+      },
+      "changes": {
+        "title": "Cambios Recientes de RTP",
+        "game": "Juego",
+        "previousTarget": "Objetivo Anterior",
+        "newTarget": "Nuevo Objetivo",
+        "changedBy": "Modificado Por",
+        "dateTime": "Fecha / Hora",
+        "status": "Estado",
+        "autoApplied": "Auto Aplicado",
+        "applied": "Aplicado",
+        "showingCount": "Mostrando {{shown}} de {{total}} cambios"
+      },
+      "importantNote": {
+        "title": "Nota Importante",
+        "paragraph1": "Los cambios de RTP afectan solo a eventos futuros y no alteran los resultados de rondas ya completadas.",
+        "paragraph2": "Todos los cambios requieren confirmación y pueden estar sujetos a revisión de cumplimiento."
+      },
+      "footer": {
+        "timezone": "Zona horaria: {{value}}",
+        "lastUpdated": "Última actualización: {{value}}",
+        "live": "En vivo"
+      },
+      "management": {
+      "title": "Administración de RTP",
+      "subtitle": "Configura el RTP, simula cambios y programa perfiles de RTP.",
+      "viewDashboard": "Ver RTP Dashboard",
+      "gameSelectLabel": "Juego",
+      "tabs": {
+        "settings": "Configuración",
+        "simulator": "Simulador",
+        "scheduling": "Programación de RTP"
+      },
+      "settings": {
+        "title": "Configuración de RTP",
+        "subtitle": "Configura los valores de RTP objetivo y los parámetros del sistema para cada juego.",
+        "spinsUnit": "rondas",
+        "targetRtp": { "label": "RTP Objetivo", "description": "Retorno al jugador deseado a largo plazo." },
+        "minBand": { "label": "Banda Mínima de RTP", "description": "Valor mínimo de RTP permitido." },
+        "maxBand": { "label": "Banda Máxima de RTP", "description": "Valor máximo de RTP permitido." },
+        "correctionWindow": {
+          "label": "Ventana de Corrección",
+          "description": "Cantidad de rondas usadas para calcular el RTP.",
+          "unlimitedToggle": "Usar todas las rondas (sin límite de ventana)",
+          "unlimitedHint": "Se usan todas las rondas registradas para calcular el RTP; el número de arriba se ignora mientras esto esté activo."
+        },
+        "maxCorrection": { "label": "Corrección Máxima por Evento", "description": "Cambio relativo máximo por evento." },
+        "smoothingFactor": { "label": "Factor de Suavizado", "description": "Peso de los resultados recientes (0 - 1)." },
+        "effectiveDate": { "label": "Fecha de Vigencia", "description": "Cuándo entrará en vigencia esta configuración." },
+        "infoBanner": {
+          "title": "Los cambios se aplicarán solo a rondas futuras.",
+          "description": "Las partidas en curso no se verán afectadas."
+        },
+        "resetToDefaults": "Restablecer Valores",
+        "saveSettings": "Guardar Configuración",
+        "confirm": {
+          "title": "Confirmar Cambio de Configuración de RTP",
+          "game": "Juego",
+          "currentTarget": "Objetivo Actual",
+          "newTarget": "Nuevo Objetivo",
+          "effectiveDate": "Fecha de Vigencia",
+          "cancel": "Cancelar",
+          "confirm": "Confirmar y Guardar"
+        },
+        "lock": {
+          "badge": "Bloqueado",
+          "reason": "Temporalmente bloqueado mientras la configuración de RTP actual está activa.",
+          "bannerTitle": "Algunos parámetros de RTP están temporalmente bloqueados.",
+          "bannerDescription": "Puedes revisar sus valores actuales, pero no se pueden editar por el momento."
+        },
+        "save": {
+          "noChangesReason": "Todavía no hay cambios para guardar.",
+          "allLockedReason": "Todos los parámetros editables están temporalmente bloqueados."
+        }
+      },
+      "simulator": {
+        "title": "Simulador de RTP",
+        "subtitle": "Prueba distintos valores de RTP y mira el impacto proyectado antes de aplicar cambios.",
+        "simulationType": "Tipo de Simulación",
+        "simulationTypeOptions": { "projectedResults": "Resultados Proyectados" },
+        "currentTargetRtp": "RTP Objetivo Actual",
+        "proposedTargetRtp": "RTP Objetivo Propuesto",
+        "sampleSize": { "label": "Tamaño de Muestra", "description": "Cantidad de rondas simuladas.", "unit": "tiradas" },
+        "estimatedAverageBet": { "label": "Apuesta Promedio Estimada", "description": "Monto de apuesta promedio por ronda." },
+        "volatilityModel": {
+          "label": "Modelo de Volatilidad",
+          "description": "Usa el modelo de volatilidad estándar del juego."
+        },
+        "volatilityModelOptions": { "standard": "Estándar", "conservative": "Conservador", "aggressive": "Agresivo" },
+        "runSimulation": "Ejecutar Simulación",
+        "results": {
+          "title": "Resultados de la Simulación",
+          "subtitle": "Resultado estimado según la configuración propuesta.",
+          "currentRtp": "RTP Actual",
+          "proposedRtp": "RTP Propuesto",
+          "difference": "Diferencia",
+          "riskLevel": "Nivel de Riesgo",
+          "risk": { "low": "BAJO", "medium": "MEDIO", "high": "ALTO" },
+          "totalBets": "Apuestas Totales",
+          "projectedPayout": "Pago Proyectado",
+          "projectedHouseReturn": "Retorno de Casa Proyectado",
+          "expectedRtp": "RTP Esperado"
+        },
+        "disclaimer": "Esta es una simulación basada en modelos estadísticos. Los resultados reales pueden variar."
+      },
+      "scheduling": {
+        "title": "Programación de RTP",
+        "subtitle": "Programa perfiles de RTP por horario, día o campaña.",
+        "createProfile": "Crear Perfil de RTP",
+        "scheduledProfiles": "Perfiles Programados",
+        "recentActivity": "Actividad Reciente de Perfiles",
+        "empty": "No se encontraron perfiles de RTP.",
+        "table": {
+          "profile": "Perfil",
+          "game": "Juego",
+          "targetRtp": "RTP Objetivo",
+          "schedule": "Programación",
+          "start": "Inicio",
+          "expires": "Vence",
+          "status": "Estado",
+          "actions": "Acciones"
+        },
+        "activityTable": {
+          "profile": "Perfil",
+          "game": "Juego",
+          "event": "Evento",
+          "activePeriod": "Período Activo",
+          "changedBy": "Modificado Por",
+          "dateTime": "Fecha / Hora",
+          "status": "Estado"
+        },
+        "actionsMenu": {
+          "disable": "Deshabilitar",
+          "enable": "Habilitar"
+        },
+        "status": {
+          "active": "Activo",
+          "scheduled": "Programado",
+          "expiringSoon": "Por Vencer",
+          "expired": "Vencido",
+          "disabled": "Deshabilitado",
+          "replaced": "Reemplazado"
+        },
+        "activityStatus": {
+          "completed": "Completado",
+          "active": "Activo",
+          "expired": "Vencido"
+        },
+        "event": {
+          "activated": "Activado",
+          "expired": "Vencido",
+          "disabled": "Deshabilitado",
+          "replaced": "Reemplazado",
+          "scheduled": "Programado",
+          "edited": "Editado"
+        },
+        "form": {
+          "createTitle": "Crear Perfil de RTP",
+          "profileName": "Nombre del Perfil",
+          "targetRtp": "RTP Objetivo",
+          "minBand": "Banda Mínima de RTP",
+          "maxBand": "Banda Máxima de RTP",
+          "activeDays": "Días Activos",
+          "restrictHours": "Restringir a un horario específico cada día",
+          "startTime": "Hora de Inicio",
+          "endTime": "Hora de Fin",
+          "effectiveFrom": "Vigente Desde",
+          "expires": "Vence",
+          "cancel": "Cancelar",
+          "save": "Guardar Perfil",
+          "overlapWarningTitle": "Este juego ya tiene un perfil activo o programado.",
+          "overlapWarningDescription": "Revisa que no se superpongan los horarios antes de guardar.",
+          "days": { "mon": "Lun", "tue": "Mar", "wed": "Mié", "thu": "Jue", "fri": "Vie", "sat": "Sáb", "sun": "Dom" }
+        }
+      }
     }
+  }
   }
 }

@@ -1,0 +1,200 @@
+/* Botones compartidos por Settings/Simulator/Scheduling (Save Settings, Reset to Defaults, Run
+   Simulation, Create RTP Profile, confirm bars) -- un solo lenguaje de botón primario/ghost en vez
+   de que cada tab reinvente el suyo (pedido explícito: "mismo card system... mismos borders"). */
+.admin-rtp-mgmt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 22px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 80ms ease;
+}
+
+.admin-rtp-mgmt-btn svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.admin-rtp-mgmt-btn:active {
+  transform: translateY(1px);
+}
+
+.admin-rtp-mgmt-btn--ghost {
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-secondary);
+}
+
+.admin-rtp-mgmt-btn--ghost:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+/* Ghost con más presencia -- ej. "Reset to Defaults" junto a un primary (Save Settings): sin
+   quedar tan apagado como el resto de los ghost buttons (Cancel de los confirm bars, etc, que se
+   mantienen discretos a propósito), pero sin competir con el rojo del primary. */
+.admin-rtp-mgmt-btn--ghost-strong {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.38);
+}
+
+.admin-rtp-mgmt-btn--ghost-strong:hover {
+  border-color: rgba(120, 155, 185, 0.6);
+  background: rgba(150, 180, 210, 0.06);
+}
+
+.admin-rtp-mgmt-btn--primary {
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+  color: #fff;
+  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--admin-red) 55%, transparent);
+}
+
+.admin-rtp-mgmt-btn--primary:hover {
+  filter: brightness(1.06);
+}
+
+.admin-rtp-mgmt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: none;
+}
+
+/* Primary disabled (ej. Save Settings sin cambios pendientes) -- pedido explícito: un rojo
+   apagado sigue leyéndose como "acción peligrosa/error", que no es lo que significa acá (solo
+   "no hay nada que guardar todavía" o "todo lo editable está bloqueado"). Neutral gris/azulado en
+   vez de dimmed-red, mismo fondo oscuro que un ghost button. */
+.admin-rtp-mgmt-btn--primary:disabled {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  border-color: var(--admin-border);
+  color: var(--admin-text-secondary);
+  box-shadow: none;
+}
+
+/* Barra de confirmación inline (Save Settings) -- mismo lenguaje que InfoBanner pero con acciones,
+   el proyecto no tiene modal/dialog (ver investigación previa). */
+.admin-rtp-mgmt-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--admin-blue) 40%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-blue) 8%, rgba(9, 17, 26, 0.7));
+}
+
+.admin-rtp-mgmt-confirm-title {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-rtp-mgmt-confirm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+}
+
+.admin-rtp-mgmt-confirm-grid dt {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-rtp-mgmt-confirm-grid dd {
+  margin: 3px 0 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.admin-rtp-mgmt-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Toggle switch -- ningún componente de este tipo existía en el proyecto (ver investigación
+   previa). Usado por "Restrict to specific hours each day" (RtpProfileForm.tsx) y por
+   "Use all spins" junto a Correction Window (RtpSettingsPanel.tsx). El <input> real queda
+   oculto pero accesible (foco/teclado/lector de pantalla), el track+thumb son puramente
+   visuales y reaccionan a :checked vía sibling selector.
+*/
+.admin-rtp-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-rtp-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-rtp-toggle-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.9);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.admin-rtp-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--admin-text-secondary);
+  transition:
+    transform 150ms ease,
+    background 150ms ease;
+}
+
+.admin-rtp-toggle-input:checked + .admin-rtp-toggle-track {
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+}
+
+.admin-rtp-toggle-input:checked + .admin-rtp-toggle-track .admin-rtp-toggle-thumb {
+  transform: translateX(18px);
+  background: #fff;
+}
+
+.admin-rtp-toggle-input:focus-visible + .admin-rtp-toggle-track {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-red) 25%, transparent);
+}
+
+.admin-rtp-toggle-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
