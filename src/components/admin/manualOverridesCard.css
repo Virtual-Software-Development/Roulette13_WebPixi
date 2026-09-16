@@ -1,0 +1,25 @@
+.admin-manual-overrides-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-manual-overrides-caption {
+  margin-top: -6px;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-manual-overrides-details {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(240, 168, 60, 0.35);
+  background: rgba(240, 168, 60, 0.08);
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: default;
+}

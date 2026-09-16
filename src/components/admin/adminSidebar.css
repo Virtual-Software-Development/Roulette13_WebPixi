@@ -24,6 +24,7 @@
 }
 
 .admin-sidebar-nav {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 }
@@ -135,6 +136,18 @@
   color: #cdd6e0;
 }
 
+.admin-sidebar-subitem--clickable {
+  cursor: pointer;
+}
+
+/* Sub-item activo (ej. RTP > Management) -- mismo lenguaje que .admin-sidebar-item[data-active],
+   con menor peso visual (sin línea de acento a la izquierda, ya la tiene el padre). */
+.admin-sidebar-subitem[data-active='true'] {
+  color: #f5f7fa;
+  font-weight: 600;
+  background: linear-gradient(90deg, rgba(243, 38, 53, 0.16) 0%, rgba(243, 38, 53, 0.05) 60%, transparent 100%);
+}
+
 .admin-sidebar-subitem-dot {
   width: 6px;
   height: 6px;
@@ -142,4 +155,56 @@
   flex-shrink: 0;
   background: var(--admin-red);
   box-shadow: 0 0 6px color-mix(in srgb, var(--admin-red) 65%, transparent);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Footer del sidebar -- estado operacional + versión, siempre pegado al piso vía flex:1 en
+   .admin-sidebar-nav. Es parte del layout administrativo general (no un componente de RTP), así
+   que vive acá y ambas páginas admin lo heredan gratis al compartir este mismo AdminSidebar. */
+.admin-sidebar-footer {
+  flex: 0 0 auto;
+  padding: 14px 20px 4px;
+  border-top: 1px solid rgba(100, 140, 170, 0.14);
+}
+
+.admin-sidebar-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: rgba(67, 232, 106, 0.08);
+  border: 1px solid rgba(67, 232, 106, 0.22);
+}
+
+.admin-sidebar-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--admin-green);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--admin-green) 65%, transparent);
+}
+
+.admin-sidebar-status-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  line-height: 1.25;
+}
+
+.admin-sidebar-status-wave {
+  width: 40px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--admin-green);
+}
+
+.admin-sidebar-version {
+  display: block;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--admin-text-secondary);
 }

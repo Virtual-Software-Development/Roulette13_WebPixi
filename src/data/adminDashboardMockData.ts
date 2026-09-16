@@ -14,7 +14,12 @@ import type {
 // ningún componente: todos reciben estos datos por props.
 
 export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
-  { id: 'dashboard', labelKey: 'admin.nav.dashboard', icon: buildMediaUrl('Website_svg_icons/35_house_white.svg') },
+  {
+    id: 'dashboard',
+    labelKey: 'admin.nav.dashboard',
+    icon: buildMediaUrl('Website_svg_icons/35_house_white.svg'),
+    view: 'admin',
+  },
   {
     id: 'events',
     labelKey: 'admin.nav.events',
@@ -60,11 +65,10 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
   {
     id: 'rtp',
     labelKey: 'admin.nav.rtp',
-    icon: buildMediaUrl('Website_svg_icons/18_chart_white.svg'),
-    disabled: true,
+    icon: buildMediaUrl('Website_svg_icons/05_target_white.svg'),
     children: [
-      { id: 'rtpDashboard', labelKey: 'admin.nav.rtpDashboard' },
-      { id: 'rtpManagement', labelKey: 'admin.nav.rtpManagement' },
+      { id: 'rtpDashboard', labelKey: 'admin.nav.rtpDashboard', view: 'admin-rtp-dashboard' },
+      { id: 'rtpManagement', labelKey: 'admin.nav.rtpManagement', view: 'admin-rtp-management' },
     ],
   },
   {

@@ -1,0 +1,77 @@
+/* Reglas específicas del RTP Dashboard -- el shell/tokens/panel base compartidos con el resto de
+   páginas del Admin Panel viven en components/admin/adminLayout.css (ver AdminLayout.tsx). */
+
+/* 5 KPI cards en una fila en desktop grande, reflow automático en medium (auto-fit, sin
+   breakpoints manuales a mano). */
+.admin-rtp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+/* Actual vs Target RTP ~65-70%, Current Bands ~30-35% -- sin "RTP Distribution by Game" (
+   eliminado, requisito explícito), el chart absorbe todo ese ancho. */
+.admin-rtp-trend-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 1080px) {
+  .admin-rtp-trend-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Recent RTP Changes ~70%, Important Note ~30%. */
+.admin-rtp-bottom-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2.3fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .admin-rtp-bottom-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------------------------
+   Footer discreto de la página -- timezone/last-updated/live, no compite visualmente con las
+   cards (texto pequeño, gris, alineado a la derecha). */
+.admin-rtp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 2px;
+  padding-top: 4px;
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-rtp-footer-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(120, 145, 170, 0.22);
+}
+
+.admin-rtp-footer-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--admin-green);
+  font-weight: 600;
+}
+
+.admin-rtp-footer-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--admin-green);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--admin-green) 65%, transparent);
+}

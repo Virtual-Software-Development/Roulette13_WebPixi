@@ -4,16 +4,19 @@ import './index.css'
 import './i18n'
 import App from './App.tsx'
 import { LoginPage } from './screens/LoginPage.tsx'
-import { AdminDashboardPage } from './screens/AdminDashboardPage.tsx'
+import { AdminPanel } from './screens/AdminPanel.tsx'
 
-// Preview temporal vía ?preview=<login|admin> -- todavía no hay router en el proyecto (ver
-// conversación), así que la elección de pantalla se resuelve leyendo el query string acá, el
-// mismo mecanismo ad-hoc que ya existía para LoginPage. El Header (ver Header.tsx) navega entre
-// estas pantallas reescribiendo window.location.search con el mismo parámetro.
+// Preview temporal vía ?preview=<login|admin|admin-rtp-dashboard|admin-rtp-management> -- todavía
+// no hay router en el proyecto (ver conversación), así que la elección de pantalla de nivel
+// superior (Roulette lobby / Login / Admin Panel) se resuelve leyendo el query string acá, una
+// sola vez al montar. Dentro del Admin Panel, AdminPanel.tsx navega entre sus propias vistas
+// (Dashboard/RTP Dashboard/RTP Management) en memoria (useState), sin volver a pasar por acá.
+const ADMIN_PREVIEW_VALUES = ['admin', 'admin-rtp-dashboard', 'admin-rtp-management']
+
 function resolveScreen() {
   const preview = new URLSearchParams(window.location.search).get('preview')
   if (preview === 'login') return <LoginPage />
-  if (preview === 'admin') return <AdminDashboardPage />
+  if (preview && ADMIN_PREVIEW_VALUES.includes(preview)) return <AdminPanel />
   return <App />
 }
 

@@ -1,0 +1,38 @@
+/* Único panel de la página con acento ámbar de fondo (no solo borde) -- comunica "presta
+   atención" sin romper la estética dark ni convertirse en una alerta amarilla brillante. */
+.admin-rtp-important-note {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-color: color-mix(in srgb, var(--admin-amber) 38%, var(--admin-border));
+  background:
+    linear-gradient(180deg, rgba(70, 48, 10, 0.22) 0%, rgba(11, 20, 30, 0.9) 55%),
+    var(--admin-panel-bg);
+}
+
+.admin-rtp-important-note-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-rtp-important-note-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.admin-rtp-important-note-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--admin-amber);
+}
+
+.admin-rtp-important-note-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--admin-text-primary);
+  opacity: 0.92;
+}

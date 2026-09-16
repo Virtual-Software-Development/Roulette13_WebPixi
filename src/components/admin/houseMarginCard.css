@@ -1,0 +1,11 @@
+.admin-house-margin-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-house-margin-trend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-green);
+}
