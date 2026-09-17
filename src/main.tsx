@@ -11,7 +11,13 @@ import { AdminPanel } from './screens/AdminPanel.tsx'
 // superior (Roulette lobby / Login / Admin Panel) se resuelve leyendo el query string acá, una
 // sola vez al montar. Dentro del Admin Panel, AdminPanel.tsx navega entre sus propias vistas
 // (Dashboard/RTP Dashboard/RTP Management) en memoria (useState), sin volver a pasar por acá.
-const ADMIN_PREVIEW_VALUES = ['admin', 'admin-rtp-dashboard', 'admin-rtp-management']
+const ADMIN_PREVIEW_VALUES = [
+  'admin',
+  'admin-rtp-dashboard',
+  'admin-rtp-management',
+  'admin-next-results',
+  'admin-next-results-quick-money',
+]
 
 function resolveScreen() {
   const preview = new URLSearchParams(window.location.search).get('preview')

@@ -1,0 +1,33 @@
+/* Reglas específicas de Next Results -- el shell/tokens/panel base compartidos con el resto de
+   páginas del Admin viven en components/admin/adminLayout.css; el lenguaje visual propio de los
+   paneles Roulette/Quick Money vive en components/admin/nextResults/nextResults.css. */
+
+/* Roulette | Quick Money lado a lado en desktop; apila en vertical antes de comprimir controles
+   (pedido explícito: prioridad absoluta a la fidelidad desktop). */
+.admin-next-results-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .admin-next-results-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Roulette y Quick Money viven en vistas separadas -- una sola columna, con un ancho tope para
+   que el panel no se estire a todo el ancho de la página. Roulette necesita ancho para su "mesa"
+   (0/00 + 12 columnas de números); Quick Money lo necesita para Pick 3 y Pick 4 lado a lado. */
+.admin-next-results-grid[data-single='true'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-next-results-grid[data-single='true'][data-section='roulette'] {
+  max-width: 1280px;
+}
+
+.admin-next-results-grid[data-single='true'][data-section='quickMoney'] {
+  max-width: 1280px;
+}

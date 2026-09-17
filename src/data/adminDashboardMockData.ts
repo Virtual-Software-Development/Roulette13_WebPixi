@@ -30,10 +30,9 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     id: 'nextResults',
     labelKey: 'admin.nav.nextResults',
     icon: buildMediaUrl('Website_svg_icons/33_calendar_white.svg'),
-    disabled: true,
     children: [
-      { id: 'roulette', labelKey: 'admin.nav.roulette' },
-      { id: 'lottery', labelKey: 'admin.nav.lottery' },
+      { id: 'roulette', labelKey: 'admin.nav.roulette', view: 'admin-next-results' },
+      { id: 'lottery', labelKey: 'admin.nav.lottery', view: 'admin-next-results-quick-money' },
     ],
   },
   {
