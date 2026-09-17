@@ -3,21 +3,37 @@ import { AdminLayout } from '../components/admin/AdminLayout'
 import { AdminDashboardPage } from './AdminDashboardPage'
 import { RtpDashboardPage } from './RtpDashboardPage'
 import { RtpManagementPage } from './RtpManagementPage'
+import { NextResultsPage } from './NextResultsPage'
 
-type AdminView = 'admin' | 'admin-rtp-dashboard' | 'admin-rtp-management'
+type AdminView =
+  | 'admin'
+  | 'admin-rtp-dashboard'
+  | 'admin-rtp-management'
+  | 'admin-next-results'
+  | 'admin-next-results-quick-money'
 
-// Los valores acá son ids de SUB-item (rtpDashboard/rtpManagement), no del padre 'rtp' -- así
-// AdminSidebar puede resaltar cuál de los dos hijos de RTP está activo (antes solo resaltaba la
-// fila padre). AdminSidebar sigue resaltando el padre también cuando alguno de sus hijos coincide
-// (ver hasActiveChild ahí).
+// Los valores acá son ids de SUB-item (rtpDashboard/rtpManagement/roulette/lottery), no del padre
+// 'rtp'/'nextResults' -- así AdminSidebar puede resaltar cuál de los hijos está activo (antes solo
+// resaltaba la fila padre). AdminSidebar sigue resaltando el padre también cuando alguno de sus
+// hijos coincide (ver hasActiveChild ahí). Next Results tiene dos hijos (Roulette/Quick Money) --
+// cada uno con su propio `view`, que renderiza NextResultsPage con el `section` correspondiente
+// (Roulette y Quick Money son vistas separadas, no una sola pantalla combinada).
 const ACTIVE_SIDEBAR_ID_BY_VIEW: Record<AdminView, string> = {
   admin: 'dashboard',
   'admin-rtp-dashboard': 'rtpDashboard',
   'admin-rtp-management': 'rtpManagement',
+  'admin-next-results': 'roulette',
+  'admin-next-results-quick-money': 'lottery',
 }
 
 function isAdminView(value: string | null): value is AdminView {
-  return value === 'admin' || value === 'admin-rtp-dashboard' || value === 'admin-rtp-management'
+  return (
+    value === 'admin' ||
+    value === 'admin-rtp-dashboard' ||
+    value === 'admin-rtp-management' ||
+    value === 'admin-next-results' ||
+    value === 'admin-next-results-quick-money'
+  )
 }
 
 function getInitialView(): AdminView {
@@ -52,6 +68,8 @@ export function AdminPanel() {
       {view === 'admin' && <AdminDashboardPage />}
       {view === 'admin-rtp-dashboard' && <RtpDashboardPage />}
       {view === 'admin-rtp-management' && <RtpManagementPage onNavigate={handleNavigate} />}
+      {view === 'admin-next-results' && <NextResultsPage section="roulette" />}
+      {view === 'admin-next-results-quick-money' && <NextResultsPage section="quickMoney" />}
     </AdminLayout>
   )
 }

@@ -1,0 +1,841 @@
+/* Estilos compartidos por RouletteNextResultPanel/QuickMoneyNextResultPanel/PickResultPanel/
+   ResultBall -- mismo criterio que rtpManagementShared.css (varios componentes de una misma
+   sección del Admin compartiendo un único stylesheet). Se apoya en los tokens/clases base de
+   adminLayout.css (.admin-panel, --admin-*) pero define su propio lenguaje de bordes/gradients
+   por acento (red/purple/blue) porque esta sección, a diferencia del resto del Admin, sí necesita
+   bordes de color fuertes en los paneles principales (pedido explícito de diseño). */
+
+.admin-next-results-panel {
+  box-sizing: border-box;
+  padding: 20px 22px 24px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(10, 22, 32, 0.98), rgba(5, 15, 23, 0.98));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Mismo lenguaje que Quick Money (ver más abajo): borde neutro + acento de 2px arriba, en vez de
+   un borde rojo sólido alrededor de todo el panel -- consistente con el resto de la sección tras
+   el rediseño de Pick 3/Pick 4. */
+.admin-next-results-panel[data-accent='red'] {
+  background: linear-gradient(145deg, rgba(8, 20, 30, 0.98), rgba(5, 14, 22, 0.98));
+  border: 1px solid rgba(71, 96, 116, 0.42);
+  border-top: 2px solid rgba(255, 36, 55, 0.65);
+  box-shadow: none;
+}
+
+/* Quick Money -- el borde exterior ya NO es morado vivo (pedido explícito: no debe competir
+   visualmente con Pick 3/Pick 4) -- queda oscuro/neutral, la identidad morada sigue viva en el
+   ícono del header y en el accent de Pick 3. */
+.admin-next-results-panel[data-accent='purple'] {
+  background: linear-gradient(145deg, rgba(8, 20, 30, 0.98), rgba(5, 14, 22, 0.98));
+  border: 1px solid rgba(71, 96, 116, 0.42);
+  box-shadow: none;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Header de panel -- ícono con halo + título/subtítulo a la izquierda, badge Scheduled a la
+   derecha (ver ScheduledBadge inline, no hace falta componente propio: es un único uso repetido
+   3 veces con el mismo markup). */
+.admin-next-results-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.admin-next-results-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.admin-next-results-icon-halo {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Roulette (red), Quick Money/Pick 3 (purple) y Pick 4 (blue) -- glow reducido ~35% respecto al
+   halo original (pedido explícito: "elegante y con iluminación suave, no un elemento neon
+   dominante"). */
+.admin-next-results-icon-halo[data-accent='red'] {
+  background: radial-gradient(circle at 35% 30%, rgba(255, 60, 80, 0.36), rgba(180, 10, 25, 0.16) 60%, transparent 82%);
+  box-shadow: 0 0 11px rgba(255, 25, 50, 0.22);
+}
+
+.admin-next-results-icon-halo[data-accent='purple'] {
+  background: radial-gradient(circle at 35% 30%, rgba(169, 72, 255, 0.36), rgba(58, 23, 108, 0.18) 60%, transparent 82%);
+  box-shadow: 0 0 11px rgba(154, 70, 247, 0.22);
+}
+
+.admin-next-results-icon-halo[data-accent='blue'] {
+  background: radial-gradient(circle at 35% 30%, rgba(60, 140, 255, 0.36), rgba(10, 45, 120, 0.18) 60%, transparent 82%);
+  box-shadow: 0 0 11px rgba(20, 127, 255, 0.22);
+}
+
+.admin-next-results-icon-halo img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.admin-next-results-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #f4f6f9;
+  line-height: 1.2;
+}
+
+.admin-next-results-subtitle {
+  margin: 4px 0 0;
+  font-size: 19px;
+  font-weight: 400;
+  color: #b7c2d6;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Round/Draw info card -- dividida 60/40 por un separador vertical (izquierda: countdown,
+   derecha: round#/draw# + scheduled time). Reutilizada por Roulette (Next Round) y por cada
+   PickResultPanel (Next Draw) -- mismo componente visual, distinta label key. */
+.admin-next-results-round-card {
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(180deg, #0b1f2c, #071522);
+  border: 1px solid rgba(75, 112, 136, 0.28);
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.admin-next-results-round-left {
+  flex: 0 0 60%;
+  min-width: 0;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-next-results-round-right {
+  flex: 1 1 40%;
+  min-width: 0;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+}
+
+.admin-next-results-round-divider {
+  width: 1px;
+  flex-shrink: 0;
+  background: rgba(75, 112, 136, 0.28);
+}
+
+.admin-next-results-round-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a8b6ca;
+}
+
+.admin-next-results-round-label img {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-next-results-timer {
+  font-size: 40px;
+  font-weight: 700;
+  color: #f3f5f8;
+  line-height: 1.05;
+}
+
+/* Estados del countdown (Pick 3/Pick 4) -- data-state solo lo fijan esas cards (ver
+   PickResultPanel), así que esto queda inerte para Roulette. "due": en vez de quedarse trabado en
+   00:00 para siempre (el admin no tiene forma de saber si eso es normal o un error), un texto
+   explícito + el mismo tono ámbar de los últimos segundos. */
+.admin-next-results-timer[data-state='urgent'],
+.admin-next-results-timer[data-state='due'] {
+  color: #facc15;
+}
+
+.admin-next-results-timer[data-state='due'] {
+  font-size: 27px;
+  letter-spacing: 0.03em;
+}
+
+.admin-next-results-timer-units {
+  display: flex;
+  gap: 28px;
+  font-size: 13px;
+  color: #abb8ca;
+}
+
+.admin-next-results-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-next-results-info-label {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9bafc4;
+  font-weight: 600;
+}
+
+.admin-next-results-info-value {
+  font-size: 19px;
+  font-weight: 600;
+  color: #f4f6f8;
+}
+
+/* Draw # con más peso que Scheduled Time (Pick 3/Pick 4) -- evita que la fecha compita con el
+   countdown como elemento principal de la card. */
+.admin-next-results-info-value--emphasis {
+  font-size: 22px;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Secciones internas (Current/Change Next Result) + divisor entre ellas. */
+.admin-next-results-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-next-results-section-heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e8edf3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-next-results-divider {
+  height: 1px;
+  background: rgba(180, 205, 220, 0.5);
+}
+
+/* Current Next Result (Roulette) -- número grande + color/parity/range al costado. */
+.admin-next-results-current-result {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.admin-next-results-number-box {
+  flex: 0 0 auto;
+  width: 100px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 54px;
+  font-weight: 700;
+  color: #ffffff;
+  border: 2px solid #ff263b;
+  box-shadow:
+    0 0 20px rgba(255, 25, 50, 0.18),
+    inset 0 1px 4px rgba(255, 255, 255, 0.15);
+}
+
+.admin-next-results-number-box[data-color='red'] {
+  background: linear-gradient(145deg, #f72b3a 0%, #d91524 45%, #a60713 100%);
+}
+
+.admin-next-results-number-box[data-color='black'] {
+  background: linear-gradient(145deg, #2b3742 0%, #17232c 45%, #0a1218 100%);
+  border-color: rgba(130, 150, 165, 0.5);
+  box-shadow:
+    0 0 16px rgba(150, 170, 190, 0.12),
+    inset 0 1px 4px rgba(255, 255, 255, 0.1);
+}
+
+.admin-next-results-number-box[data-color='green'] {
+  background: linear-gradient(145deg, #1fcb5c 0%, #10a947 45%, #078a36 100%);
+  border-color: #2fe070;
+  box-shadow:
+    0 0 20px rgba(20, 220, 100, 0.2),
+    inset 0 1px 4px rgba(255, 255, 255, 0.15);
+}
+
+.admin-next-results-detail-row {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.admin-next-results-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(140, 165, 190, 0.22);
+}
+
+.admin-next-results-detail:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.admin-next-results-detail-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #98aabf;
+  font-weight: 600;
+}
+
+.admin-next-results-detail-value {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 17.5px;
+  font-weight: 600;
+  color: #eff3f7;
+}
+
+.admin-next-results-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.admin-next-results-color-dot[data-color='red'] {
+  background: #fa2434;
+  box-shadow: 0 0 6px rgba(250, 36, 52, 0.6);
+}
+
+.admin-next-results-color-dot[data-color='black'] {
+  background: #3a4a58;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 6px rgba(58, 74, 88, 0.5);
+}
+
+.admin-next-results-color-dot[data-color='green'] {
+  background: #2fe070;
+  box-shadow: 0 0 6px rgba(47, 224, 112, 0.6);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Change Next Result (Roulette) -- mesa real: columna 0/00 a la izquierda + grid de 1-36 en
+   columnas de 3 (1,2,3 / 4,5,6 / ... / 34,35,36, leyendo cada columna de arriba a abajo), igual
+   que el paño de una mesa de ruleta americana en vez de una lista lineal 0-36. */
+.admin-next-results-table {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-next-results-table-zero {
+  flex: 0 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-next-results-table-zero .admin-next-results-number-cell {
+  flex: 1 1 0;
+  height: auto;
+  font-size: 16px;
+}
+
+.admin-next-results-table-grid {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-rows: repeat(3, 76px);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.admin-next-results-number-cell {
+  height: 100%;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition:
+    filter 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.admin-next-results-number-cell:hover {
+  filter: brightness(1.15);
+}
+
+.admin-next-results-number-cell[data-color='black'] {
+  background: linear-gradient(180deg, #17232c, #0a1218);
+  border-color: rgba(130, 150, 165, 0.35);
+}
+
+.admin-next-results-number-cell[data-color='red'] {
+  background: linear-gradient(180deg, #ca2731, #a4111e);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-next-results-number-cell[data-color='green'] {
+  background: linear-gradient(180deg, #17b14d, #078a36);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Selected state -- SIEMPRE el mismo anillo blanco + glow rojo, sin importar el color de fondo
+   del número (rojo/negro/verde), para que 17 (rojo) y 0 (verde) se vean igual de destacados. */
+.admin-next-results-number-cell[data-selected='true'] {
+  border: 2px solid #ffffff;
+  box-shadow:
+    0 0 0 2px rgba(255, 30, 50, 0.65),
+    0 0 14px rgba(255, 25, 45, 0.85);
+}
+
+.admin-next-results-selected-summary {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.admin-next-results-selected-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c7d2e1;
+}
+
+.admin-next-results-selected-box {
+  min-width: 52px;
+  height: 40px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: rgba(8, 18, 26, 0.9);
+  border: 1px solid rgba(90, 120, 145, 0.4);
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.admin-next-results-selected-box[data-color='red'] {
+  color: #ff5a68;
+}
+
+.admin-next-results-selected-box[data-color='green'] {
+  color: #3aef70;
+}
+
+/* Selected Number resaltado cuando difiere del Current Result (mismo lenguaje que los selects
+   modificados de Quick Money: borde + fondo tenue del acento, nunca solo color de texto). */
+.admin-next-results-selected-box[data-changed='true'] {
+  border-color: #ff3b4c;
+  background: linear-gradient(180deg, rgba(255, 56, 76, 0.16), rgba(255, 56, 76, 0.05));
+}
+
+.admin-next-results-selected-summary > .admin-next-results-changed-tag {
+  height: auto;
+  visibility: visible;
+  color: #ff6b76;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Botones Update/Clear -- Update ~2/3, Clear ~1/3 (flex 2/1). Update cambia de gradiente según
+   el juego (accent red/purple/blue), Clear siempre es el mismo estilo neutro oscuro. */
+.admin-next-results-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-next-results-btn-update {
+  flex: 2 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  border-radius: 8px;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+
+.admin-next-results-btn-update:hover {
+  filter: brightness(1.08);
+}
+
+/* Disabled (Pick 3/Pick 4, cuando no hay cambios pendientes o mientras status==='updating') --
+   inerte para Roulette, que nunca fija el atributo `disabled` en estos botones. pointer-events:
+   none evita que :hover siga aplicando su propio brightness mientras está deshabilitado. */
+.admin-next-results-btn-update:disabled,
+.admin-next-results-btn-clear:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.admin-next-results-btn-update img {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-next-results-btn-update[data-accent='red'] {
+  background: linear-gradient(135deg, #ff1534 0%, #ea0b2a 55%, #c90023 100%);
+}
+
+.admin-next-results-btn-update[data-accent='purple'] {
+  background: linear-gradient(135deg, #9345f2, #6d27d3 55%, #5518b5);
+  border-top-color: rgba(190, 130, 255, 0.65);
+}
+
+.admin-next-results-btn-update[data-accent='blue'] {
+  background: linear-gradient(135deg, #147fff, #0864f2 55%, #074ad1);
+  box-shadow: 0 0 12px rgba(0, 115, 255, 0.2);
+}
+
+.admin-next-results-btn-clear {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  border-radius: 8px;
+  background: rgba(10, 20, 28, 0.6);
+  border: 1px solid #405567;
+  color: #cad3df;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.admin-next-results-btn-clear:hover {
+  background: rgba(20, 32, 42, 0.75);
+}
+
+.admin-next-results-btn-clear svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Quick Money -- Pick 3 y Pick 4 lado a lado, cada uno como una card independiente y completa
+   (header + timer/draw info + current->new + acciones), no un formulario flotando sobre otro
+   contenedor. Borde neutro + una línea de acento de 2px arriba (morado para Pick 3, azul para
+   Pick 4, ver data-accent) es la única "identidad de color" fuerte del card en sí -- el resto del
+   morado/azul vive en ícono, botón primario y estados de cambio. */
+.admin-next-results-picks-row {
+  display: grid;
+  /* Pick 4 tiene un selector más que Pick 3 (4 dígitos vs 3) -- con 1fr 1fr parejo, esos 4
+     selectores no entran en el mismo ancho y el último terminaba saliéndose de la card (grid
+     "1fr" no encoge por debajo del min-content del contenido salvo que sea minmax(0, 1fr), ver
+     fix abajo en .admin-next-results-pick-columns). Reparto 1fr / 1.15fr para darle a Pick 4 el
+     espacio extra que necesita. */
+  grid-template-columns: 1fr 1.15fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .admin-next-results-picks-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-next-results-pick {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border-radius: 11px;
+  border: 1px solid rgba(60, 92, 113, 0.45);
+  border-top-width: 2px;
+  background: linear-gradient(150deg, rgba(10, 27, 39, 0.96), rgba(6, 18, 27, 0.96));
+}
+
+.admin-next-results-pick[data-accent='purple'] {
+  border-top-color: rgba(168, 85, 247, 0.65);
+}
+
+.admin-next-results-pick[data-accent='blue'] {
+  border-top-color: rgba(37, 140, 255, 0.65);
+}
+
+/* Current Result -> New Result -- 3 columnas (la del medio solo aloja la flecha) en vez de un
+   50/50 plano, para que la relación "esto es lo programado, esto es lo que estoy preparando" se
+   lea de un vistazo. */
+.admin-next-results-pick-columns {
+  display: grid;
+  /* minmax(0, 1fr) en vez de 1fr -- así la columna "New Result" puede encoger por debajo del
+     min-content de sus 4 selectores (Pick 4) en vez de forzar overflow fuera de la card. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .admin-next-results-pick-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-next-results-result-arrow {
+    display: none;
+  }
+}
+
+.admin-next-results-result-label {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9bafc4;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-next-results-result-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c7186;
+}
+
+.admin-next-results-result-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-next-results-balls-row {
+  display: flex;
+  gap: 11px;
+}
+
+.admin-next-results-selects-row {
+  display: flex;
+  gap: 11px;
+}
+
+.admin-next-results-selects-row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Slot de cada selector de "New Result" -- envuelve AdminSelect para: (a) reservar una fila fija
+   para la etiqueta "Changed" (así los selects de una fila no saltan de alto según cuál cambió) y
+   (b) sobreescribir el trigger interno de AdminSelect SOLO acá adentro, sin tocar adminSelect.css
+   (compartido con RTP Management). */
+.admin-next-results-select-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-next-results-changed-tag {
+  height: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9bafc4;
+  visibility: hidden;
+}
+
+.admin-next-results-select-slot[data-changed='true'] .admin-next-results-changed-tag {
+  visibility: visible;
+}
+
+.admin-next-results-select-slot[data-changed='true'][data-accent='purple'] .admin-next-results-changed-tag {
+  color: #a855f7;
+}
+
+.admin-next-results-select-slot[data-changed='true'][data-accent='blue'] .admin-next-results-changed-tag {
+  color: #258cff;
+}
+
+.admin-next-results-select-slot .admin-select-trigger {
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 7px;
+  background: #07141e;
+  border-color: #294354;
+  color: #edf3f8;
+  font-size: 17px;
+  font-weight: 600;
+  justify-content: center;
+}
+
+.admin-next-results-select-slot .admin-select-trigger-text {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.admin-next-results-select-slot .admin-select-trigger:hover {
+  border-color: rgba(160, 180, 200, 0.55);
+}
+
+.admin-next-results-select-slot[data-accent='purple'] .admin-select-trigger[aria-expanded='true'] {
+  border-color: #8f3df0;
+}
+
+.admin-next-results-select-slot[data-accent='blue'] .admin-select-trigger[aria-expanded='true'] {
+  border-color: #1682ff;
+}
+
+/* Únicamente el/los selects modificados quedan resaltados (nunca toda la fila) -- color + fondo
+   tenue + la etiqueta "Changed" de arriba, para no depender solo del color. */
+.admin-next-results-select-slot[data-changed='true'][data-accent='purple'] .admin-select-trigger {
+  border-color: #a855f7;
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.14), rgba(168, 85, 247, 0.05));
+}
+
+.admin-next-results-select-slot[data-changed='true'][data-accent='blue'] .admin-select-trigger {
+  border-color: #258cff;
+  background: linear-gradient(180deg, rgba(37, 140, 255, 0.14), rgba(37, 140, 255, 0.05));
+}
+
+/* -------------------------------------------------------------------------------------------
+   Confirmación inline antes de aplicar un cambio de resultado -- mismo patrón que ya usa RTP
+   Settings (bloque inline con Cancel/Confirm, sin modal/overlay: el proyecto no tiene ningún
+   sistema de dialog genérico, ver investigación previa), adaptado al lenguaje visual de esta
+   sección en vez de reutilizar las clases de rtpManagementShared.css. */
+.admin-next-results-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(60, 92, 113, 0.5);
+  background: rgba(6, 14, 22, 0.6);
+}
+
+.admin-next-results-confirm-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e8edf3;
+}
+
+.admin-next-results-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-next-results-confirm-row svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #5c7186;
+}
+
+.admin-next-results-confirm-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-next-results-confirm-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f4f6f8;
+  letter-spacing: 0.04em;
+}
+
+.admin-next-results-confirm-value--accent[data-accent='purple'] {
+  color: #c084fc;
+}
+
+.admin-next-results-confirm-value--accent[data-accent='blue'] {
+  color: #5eb0ff;
+}
+
+.admin-next-results-confirm-value--accent[data-accent='red'] {
+  color: #ff6b76;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Feedback de éxito/error tras Update -- reemplaza a console.error(): el admin siempre ve algo,
+   nunca un click que aparentemente no hizo nada. Se retira solo (ver SUCCESS_FEEDBACK_MS). */
+.admin-next-results-feedback {
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.admin-next-results-feedback[data-variant='success'] {
+  color: #4ade80;
+  background: rgba(22, 163, 74, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.admin-next-results-feedback[data-variant='error'] {
+  color: #f87171;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.32);
+}
+
+.admin-next-results-spinner {
+  width: 16px;
+  height: 16px;
+  animation: admin-next-results-spin 0.8s linear infinite;
+}
+
+@keyframes admin-next-results-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* -------------------------------------------------------------------------------------------
+   Result ball (Pick 3/Pick 4) -- esfera blanca/metálica, no un círculo plano. */
+.admin-result-ball {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 25%, #ffffff 0%, #f2f4f6 25%, #d2d7dc 58%, #9da6ae 82%, #737d86 100%);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.28),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.12),
+    inset 0 2px 3px rgba(255, 255, 255, 0.55);
+}
+
+.admin-result-ball-number {
+  font-size: 30px;
+  font-weight: 700;
+  color: #111820;
+}

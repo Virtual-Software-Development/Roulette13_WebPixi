@@ -20,9 +20,11 @@ interface AdminLayoutProps {
 // estado de navegación -- así el fetch de gameInfo de acá abajo corre una sola vez por sesión de
 // Admin Panel, no en cada cambio de vista).
 export function AdminLayout({ activeId, onNavigate, children }: AdminLayoutProps) {
-  // Solo trae gameName/logoUrl (para que el Header no muestre el fallback "Logo not found") --
-  // deliberadamente NO reusa applyGameInfo() completo, que además siembra history/i18n/nextDraw,
-  // datos que pertenecen al ciclo de sorteo de la lobby y no tienen nada que ver con el admin panel.
+  // gameName/logoUrl (para que el Header no muestre el fallback "Logo not found") + drawNumber/
+  // nextDrawStartTime (Next Round de RouletteNextResultPanel, ver Next Results -- pedido
+  // explícito: debe leer la MISMA fuente que alimenta el lobby) -- deliberadamente NO reusa
+  // applyGameInfo() completo, que además siembra history/i18n vía hydrateHistory, datos que
+  // pertenecen al ciclo de video de la lobby y no tienen nada que ver con el admin panel.
   useEffect(() => {
     let cancelled = false
     fetchGameInfo()
@@ -31,6 +33,8 @@ export function AdminLayout({ activeId, onNavigate, children }: AdminLayoutProps
         useGameConfigStore.getState().setGameConfig({
           gameName: data.gameName,
           logoUrl: buildMediaUrl(data.logo),
+          drawNumber: data.nextDraw.drawNo,
+          nextDrawStartTime: data.nextDraw.startTime,
         })
       })
       .catch((err) => console.error('No se pudo obtener /gameInfo', err))
