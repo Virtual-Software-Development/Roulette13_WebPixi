@@ -5,6 +5,7 @@ import { LastGame } from '../components/results/LastGame'
 import { GameList } from '../components/results/GameList'
 import { NumberPanelHotCold } from '../components/numberPanel/NumberPanelHotCold'
 import { SpinStatsPanel } from '../components/spinStats/SpinStatsPanel'
+import { LobbyLiveBetsPanel } from '../components/lobbyLiveBets/LobbyLiveBetsPanel'
 
 export function RouletteLobby() {
   const setGameConfig = useGameConfigStore((state) => state.setGameConfig)
@@ -23,6 +24,7 @@ export function RouletteLobby() {
         <LastGame />
         <GameList />
       </SharedLayout>
+      <LobbyLiveBetsPanel />
     </>
   )
 }

@@ -1,7 +1,7 @@
 {
   "header": {
     "roulette": "ROULETTE",
-    "lottery": "LOTTERY",
+    "lottery": "QUICK MONEY",
     "admin": "ADMIN",
     "balanceLabel": "TU SALDO"
   },
@@ -71,6 +71,19 @@
     "red": "ROJO",
     "black": "NEGRO"
   },
+  "lobbyLiveBets": {
+    "title": "APUESTAS EN VIVO",
+    "firstDozen": "1ra 12",
+    "secondDozen": "2da 12",
+    "thirdDozen": "3ra 12",
+    "column": "2 A 1",
+    "low": "1 al 18",
+    "even": "PAR",
+    "odd": "IMPAR",
+    "high": "19 al 36",
+    "red": "ROJO",
+    "black": "NEGRO"
+  },
   "resultStats": {
     "activeBets": "APUESTAS ACTIVAS",
     "playersInRound": "JUGADORES EN RONDA",
@@ -105,26 +118,22 @@
     "nav": {
       "sectionTitle": "Panel Admin",
       "dashboard": "Dashboard",
-      "events": "Eventos",
+      "gameEvents": "Eventos de Juego",
       "nextResults": "Próximos Resultados",
       "roulette": "Ruleta",
-      "lottery": "Lotería",
-      "gameRounds": "Rondas de Juego",
+      "lottery": "Quick Money",
       "payouts": "Pagos",
       "users": "Usuarios",
       "rtp": "RTP",
       "rtpDashboard": "Dashboard",
       "rtpManagement": "Administración",
-      "history": "Historial",
+      "systemLogs": "Registros del Sistema",
       "reports": "Reportes",
       "videos": "Videos",
       "videosRouletteLibrary": "Biblioteca de Ruleta",
       "videosLotteryVideoStatus": "Estado de Videos de Lotería",
       "videosUploadHistory": "Historial de Subidas",
-      "schedule": "Programación",
-      "settings": "Configuración",
-      "logs": "Registros",
-      "system": "Sistema"
+      "settings": "Configuración"
     },
     "dashboard": {
       "title": "Dashboard",

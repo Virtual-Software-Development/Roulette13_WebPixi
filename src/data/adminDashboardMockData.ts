@@ -21,8 +21,8 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     view: 'admin',
   },
   {
-    id: 'events',
-    labelKey: 'admin.nav.events',
+    id: 'gameEvents',
+    labelKey: 'admin.nav.gameEvents',
     icon: buildMediaUrl('Website_svg_icons/33_calendar_white.svg'),
     disabled: true,
   },
@@ -31,24 +31,10 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     labelKey: 'admin.nav.nextResults',
     icon: buildMediaUrl('Website_svg_icons/33_calendar_white.svg'),
     disabled: true,
-  },
-  {
-    id: 'roulette',
-    labelKey: 'admin.nav.roulette',
-    icon: buildMediaUrl('Website_svg_icons/19_wheel_white_detailed.svg'),
-    disabled: true,
-  },
-  {
-    id: 'lottery',
-    labelKey: 'admin.nav.lottery',
-    icon: buildMediaUrl('Website_svg_icons/12_dice_white.svg'),
-    disabled: true,
-  },
-  {
-    id: 'gameRounds',
-    labelKey: 'admin.nav.gameRounds',
-    icon: buildMediaUrl('Website_svg_icons/30_clock_white.svg'),
-    disabled: true,
+    children: [
+      { id: 'roulette', labelKey: 'admin.nav.roulette' },
+      { id: 'lottery', labelKey: 'admin.nav.lottery' },
+    ],
   },
   {
     id: 'payouts',
@@ -72,8 +58,8 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     ],
   },
   {
-    id: 'history',
-    labelKey: 'admin.nav.history',
+    id: 'systemLogs',
+    labelKey: 'admin.nav.systemLogs',
     icon: buildMediaUrl('Website_svg_icons/38_copy_documents_white.svg'),
     disabled: true,
   },
@@ -95,27 +81,9 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     ],
   },
   {
-    id: 'schedule',
-    labelKey: 'admin.nav.schedule',
-    icon: buildMediaUrl('Website_svg_icons/01_refresh_clock_white.svg'),
-    disabled: true,
-  },
-  {
     id: 'settings',
     labelKey: 'admin.nav.settings',
     icon: buildMediaUrl('Website_svg_icons/17_gear_white.svg'),
-    disabled: true,
-  },
-  {
-    id: 'logs',
-    labelKey: 'admin.nav.logs',
-    icon: buildMediaUrl('Website_svg_icons/11_document_white.svg'),
-    disabled: true,
-  },
-  {
-    id: 'system',
-    labelKey: 'admin.nav.system',
-    icon: buildMediaUrl('Website_svg_icons/20_monitor_white.svg'),
     disabled: true,
   },
 ]
