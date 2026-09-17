@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { buildMediaUrl } from '../utils/media'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
-import { WHEEL_DISPLAY_SCALE, WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC } from '../layout/wheelGeometry.constants'
+import { WHEEL_DISPLAY_SCALE, WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC, WHEEL_VERTICAL_OFFSET_PX } from '../layout/wheelGeometry.constants'
 import { WHEEL_VIDEO_GEOMETRY } from '../layout/wheelVideoGeometry.constants'
 import { ACTIVE_WHEEL_TYPE } from '../data/wheelOrder'
 import { getEffectiveWheelRenderMode } from '../data/wheelRenderMode'
@@ -139,10 +139,12 @@ export function LobbyBackgroundLayer() {
           detrás/alrededor de la rueda, no solo como fallback mientras algo carga. */}
       {backgroundUrl && <img src={backgroundUrl} className="lobby-background-image" alt="" />}
       {/* Envuelve la rueda (imagen o video) y TODOS sus overlays -- un solo scale acá los achica
-          juntos, anclado al punto central-inferior de la pantalla (ver WHEEL_DISPLAY_SCALE). La
+          juntos, anclado al punto central-superior de la pantalla (ver WHEEL_DISPLAY_SCALE). La
           foto de fondo (lobby-background-image, arriba) queda afuera a propósito: solo la rueda
-          debe achicarse, no el fondo. */}
-      <div className="lobby-wheel-scale" style={{ transform: `scale(${WHEEL_DISPLAY_SCALE})` }}>
+          debe achicarse, no el fondo. translateY antes de scale (ver WHEEL_VERTICAL_OFFSET_PX) para
+          reposicionarla verticalmente en píxeles fijos de pantalla, sin que ese corrimiento
+          también quede achicado por el scale. */}
+      <div className="lobby-wheel-scale" style={{ transform: `translateY(${WHEEL_VERTICAL_OFFSET_PX}px) scale(${WHEEL_DISPLAY_SCALE})` }}>
         {WHEEL_RENDER_MODE === 'video' && WHEEL_VIDEO_URL ? (
           <>
             <video

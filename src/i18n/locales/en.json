@@ -1,7 +1,7 @@
 {
   "header": {
     "roulette": "ROULETTE",
-    "lottery": "LOTTERY",
+    "lottery": "QUICK MONEY",
     "admin": "ADMIN",
     "balanceLabel": "YOUR BALANCE"
   },
@@ -71,6 +71,19 @@
     "red": "RED",
     "black": "BLACK"
   },
+  "lobbyLiveBets": {
+    "title": "LIVE BETS",
+    "firstDozen": "1st 12",
+    "secondDozen": "2nd 12",
+    "thirdDozen": "3rd 12",
+    "column": "2 TO 1",
+    "low": "1 to 18",
+    "even": "EVEN",
+    "odd": "ODD",
+    "high": "19 to 36",
+    "red": "RED",
+    "black": "BLACK"
+  },
   "resultStats": {
     "activeBets": "ACTIVE BETS",
     "playersInRound": "PLAYERS IN ROUND",
@@ -105,26 +118,22 @@
     "nav": {
       "sectionTitle": "Admin Panel",
       "dashboard": "Dashboard",
-      "events": "Events",
+      "gameEvents": "Game Events",
       "nextResults": "Next Results",
       "roulette": "Roulette",
-      "lottery": "Lottery",
-      "gameRounds": "Game Rounds",
+      "lottery": "Quick Money",
       "payouts": "Payouts",
       "users": "Users",
       "rtp": "RTP",
       "rtpDashboard": "Dashboard",
       "rtpManagement": "Management",
-      "history": "History",
+      "systemLogs": "System Logs",
       "reports": "Reports",
       "videos": "Videos",
       "videosRouletteLibrary": "Roulette Library",
       "videosLotteryVideoStatus": "Lottery Video Status",
       "videosUploadHistory": "Upload History",
-      "schedule": "Schedule",
-      "settings": "Settings",
-      "logs": "Logs",
-      "system": "System"
+      "settings": "Settings"
     },
     "dashboard": {
       "title": "Dashboard",

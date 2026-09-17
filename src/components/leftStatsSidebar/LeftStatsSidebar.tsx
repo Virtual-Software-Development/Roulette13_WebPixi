@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { extend } from '@pixi/react'
 import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
@@ -150,7 +150,10 @@ const centerAnchor = { x: 0.5, y: 0.5 }
 // `fontSize` opcional -- por defecto usa CHIP_TEXT_STYLE tal cual (HotColdSlot no lo pasa, sigue
 // exactamente igual); Top10 (ver TopBetNumbersRow) pide un tamaño más grande para número+monto sin
 // afectar el tamaño de las fichas de Hot/Cold, que comparten este mismo componente.
-function RouletteChip({ pocket, size = 26, fontSize }: { pocket: WheelPocket; size?: number; fontSize?: number }) {
+// memo: usada hasta 20 veces (10 filas del Top10 + 10 slots de Hot/Cold) -- pocket/size/fontSize
+// son siempre primitivos/literales estables en cada call site, así que evita reconciliar las 20
+// instancias en cada tick de la animación de entrada/salida del sidebar.
+const RouletteChip = memo(function RouletteChip({ pocket, size = 26, fontSize }: { pocket: WheelPocket; size?: number; fontSize?: number }) {
   const color = getRouletteColor(pocket)
   const fill = color === 'red' ? RED_CHIP_FILL : color === 'green' ? GREEN_CHIP_FILL : BLACK_CHIP_FILL
   const textStyle = useMemo(
@@ -179,19 +182,22 @@ function RouletteChip({ pocket, size = 26, fontSize }: { pocket: WheelPocket; si
       <pixiText text={String(pocket)} style={textStyle} anchor={centerAnchor} />
     </pixiContainer>
   )
-}
+})
 
 // Stack de fichas doradas -- Website_svg_icons/06_ (ver CHIPS_ICON_URL).
-function ChipsIcon({ size = 15 }: { size?: number }) {
+//
+// memo: usada 10 veces (una por fila del Top10) con el mismo `size` literal siempre.
+const ChipsIcon = memo(function ChipsIcon({ size = 15 }: { size?: number }) {
   const { texture } = useTexture(CHIPS_ICON_URL)
   if (!texture) return null
   return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[CHIPS_GLOW]} />
-}
+})
 
 // Ícono de "ronda en curso" -- no existe un asset ni ícono equivalente en el proyecto (revisado:
 // solo InfoIcon en components/common), así que se dibuja a mano: un aro con marcas radiales +
 // centro, evocando la rueda/ronda en vez de un ícono genérico sin relación.
-function CurrentGameIcon({ size = 20 }: { size?: number }) {
+// memo: instancia única, pero evita re-ejecutar su draw en cada tick de entrada/salida del sidebar.
+const CurrentGameIcon = memo(function CurrentGameIcon({ size = 20 }: { size?: number }) {
   const draw = useCallback(
     (g: PixiGraphics) => {
       g.clear()
@@ -212,30 +218,30 @@ function CurrentGameIcon({ size = 20 }: { size?: number }) {
     [size],
   )
   return <pixiGraphics draw={draw} />
-}
+})
 
 // Estrella dorada (header del Top 10) -- Website_svg_icons/21_ (ver STAR_ICON_URL).
-function StarIcon({ size = 14 }: { size?: number }) {
+const StarIcon = memo(function StarIcon({ size = 14 }: { size?: number }) {
   const { texture } = useTexture(STAR_ICON_URL)
   if (!texture) return null
   return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[GOLD_GLOW]} />
-}
+})
 
 const iconCenterAnchor = { x: 0.5, y: 0.5 }
 
 // Llama (header de Hot Numbers) -- Website_svg_icons/31_ (ver FLAME_ICON_URL).
-function FlameIcon({ size = 14 }: { size?: number }) {
+const FlameIcon = memo(function FlameIcon({ size = 14 }: { size?: number }) {
   const { texture } = useTexture(FLAME_ICON_URL)
   if (!texture) return null
   return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[FLAME_GLOW]} />
-}
+})
 
 // Copo de nieve (header de Cold Numbers) -- Website_svg_icons/32_ (ver SNOWFLAKE_ICON_URL).
-function SnowflakeIcon({ size = 14 }: { size?: number }) {
+const SnowflakeIcon = memo(function SnowflakeIcon({ size = 14 }: { size?: number }) {
   const { texture } = useTexture(SNOWFLAKE_ICON_URL)
   if (!texture) return null
   return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[COLD_GLOW]} />
-}
+})
 
 function drawCard(g: PixiGraphics, width: number, height: number, fill: ReturnType<typeof createVerticalGradient> | { color: number; alpha: number }) {
   g.clear()
@@ -252,7 +258,19 @@ function drawCard(g: PixiGraphics, width: number, height: number, fill: ReturnTy
 
 // -----------------------------------------------------------------------------------------------
 
-function CurrentGameCard({ width, height, drawNo, label }: { width: number; height: number; drawNo: string | undefined; label: string }) {
+// memo: width/height son constantes, drawNo un primitivo del store y label un string (comparado
+// por valor) -- evita reconciliar esta tarjeta en cada tick de entrada/salida del sidebar.
+const CurrentGameCard = memo(function CurrentGameCard({
+  width,
+  height,
+  drawNo,
+  label,
+}: {
+  width: number
+  height: number
+  drawNo: string | undefined
+  label: string
+}) {
   const drawBg = useCallback(
     (g: PixiGraphics) => {
       drawCard(g, width, height, CARD_BG_FILL)
@@ -289,7 +307,7 @@ function CurrentGameCard({ width, height, drawNo, label }: { width: number; heig
       <pixiText text={drawNo ?? '--'} style={CURRENT_GAME_VALUE_STYLE} x={iconCx + 32} y={height / 2 + 10} anchor={{ x: 0, y: 0.5 }} />
     </pixiContainer>
   )
-}
+})
 
 // -----------------------------------------------------------------------------------------------
 
@@ -298,7 +316,21 @@ interface TopBetRow {
   total: number
 }
 
-function TopBetNumbersRow({ width, height, rank, row, showSeparator }: { width: number; height: number; rank: number; row: TopBetRow | undefined; showSeparator: boolean }) {
+// memo: usada 10 veces -- `row` viene de `top10`, memoizado por `data.numbers` en
+// LeftStatsSidebar, así que no cambia de referencia durante los ticks de entrada/salida.
+const TopBetNumbersRow = memo(function TopBetNumbersRow({
+  width,
+  height,
+  rank,
+  row,
+  showSeparator,
+}: {
+  width: number
+  height: number
+  rank: number
+  row: TopBetRow | undefined
+  showSeparator: boolean
+}) {
   const drawSeparator = useCallback(
     (g: PixiGraphics) => {
       g.clear()
@@ -324,9 +356,21 @@ function TopBetNumbersRow({ width, height, rank, row, showSeparator }: { width: 
       </pixiContainer>
     </pixiContainer>
   )
-}
+})
 
-function TopBetNumbersCard({ width, height, rows, title }: { width: number; height: number; rows: (TopBetRow | undefined)[]; title: string }) {
+// memo: `rows` es el array memoizado `top10` (LeftStatsSidebar), title un string comparado por
+// valor -- evita reconciliar la tarjeta completa (y su .map() de 10 filas) en cada tick.
+const TopBetNumbersCard = memo(function TopBetNumbersCard({
+  width,
+  height,
+  rows,
+  title,
+}: {
+  width: number
+  height: number
+  rows: (TopBetRow | undefined)[]
+  title: string
+}) {
   const drawBg = useCallback((g: PixiGraphics) => drawCard(g, width, height, CARD_BG_FILL), [width, height])
   const drawHeaderSeparator = useCallback(
     (g: PixiGraphics) => {
@@ -360,18 +404,36 @@ function TopBetNumbersCard({ width, height, rows, title }: { width: number; heig
       </pixiContainer>
     </pixiContainer>
   )
-}
+})
 
 // -----------------------------------------------------------------------------------------------
 
 // Solo el número (ficha) -- pedido explícito: sin la cantidad de repeticiones (`entry.hits`)
 // debajo. Ficha agrandada a juego con el resto del módulo (antes 26) -- `fontSize` explícito
 // (antes usaba el default de CHIP_TEXT_STYLE, 12.5, que quedaba chico dentro de una ficha de 42).
-function HotColdSlot({ entry }: { entry: HotColdEntry | undefined }) {
+//
+// memo: usada 10 veces (5 slots x 2 módulos) -- `entry` viene de hotEntries/coldEntries
+// (useHotColdWindow, memoizado por rawResults), estable durante los ticks de entrada/salida.
+const HotColdSlot = memo(function HotColdSlot({ entry }: { entry: HotColdEntry | undefined }) {
   return <pixiContainer>{entry ? <RouletteChip pocket={entry.pocket} size={42} fontSize={20} /> : <pixiText text="--" style={PLACEHOLDER_STYLE} anchor={centerAnchor} />}</pixiContainer>
-}
+})
 
-function HotColdModule({ width, height, icon, title, entries }: { width: number; height: number; icon: ReactNode; title: string; entries: HotColdEntry[] }) {
+// memo: `icon` debe ser un elemento estable en el call site (ver FLAME_ICON_ELEMENT/
+// SNOWFLAKE_ICON_ELEMENT más abajo) -- un <FlameIcon .../> inline en JSX se recrea como objeto
+// nuevo en cada render del padre y rompería la comparación por referencia de memo.
+const HotColdModule = memo(function HotColdModule({
+  width,
+  height,
+  icon,
+  title,
+  entries,
+}: {
+  width: number
+  height: number
+  icon: ReactNode
+  title: string
+  entries: HotColdEntry[]
+}) {
   const drawBg = useCallback((g: PixiGraphics) => drawCard(g, width, height, { color: MODULE_BG_COLOR, alpha: MODULE_BG_ALPHA }), [width, height])
   const slots: (HotColdEntry | undefined)[] = Array.from({ length: 5 }, (_, i) => entries[i])
   const contentWidth = width - CARD_PADDING_X * 2
@@ -394,11 +456,12 @@ function HotColdModule({ width, height, icon, title, entries }: { width: number;
       ))}
     </pixiContainer>
   )
-}
+})
 
 // -----------------------------------------------------------------------------------------------
 
-function InfoFooterCard({ width, height, text }: { width: number; height: number; text: string }) {
+// memo: width/height constantes, text un string comparado por valor.
+const InfoFooterCard = memo(function InfoFooterCard({ width, height, text }: { width: number; height: number; text: string }) {
   const drawBg = useCallback((g: PixiGraphics) => drawCard(g, width, height, { color: MODULE_BG_COLOR, alpha: MODULE_BG_ALPHA }), [width, height])
 
   return (
@@ -408,24 +471,34 @@ function InfoFooterCard({ width, height, text }: { width: number; height: number
       <pixiText text={text} style={FOOTER_TEXT_STYLE} x={CARD_PADDING_X + 26} y={height / 2} anchor={{ x: 0, y: 0.5 }} />
     </pixiContainer>
   )
-}
+})
 
 // -----------------------------------------------------------------------------------------------
 
 const TRANSITION_DURATION_MS = 200
 const ENTRY_OFFSET_PX = 16
 
+// Elementos estables (no creados inline en el JSX de LeftStatsSidebar) para el prop `icon` de
+// HotColdModule -- un `<FlameIcon size={26} />` inline se recrea como objeto nuevo en cada render
+// del padre, lo que rompería la comparación por referencia de React.memo en HotColdModule (el
+// tamaño nunca cambia en estos dos call sites, así que un elemento módulo-level alcanza).
+const FLAME_ICON_ELEMENT = <FlameIcon size={26} />
+const SNOWFLAKE_ICON_ELEMENT = <SnowflakeIcon size={26} />
+
 export function LeftStatsSidebar({ data }: { data: LiveTableBetsData }) {
   const { t } = useTranslation()
   const { visibleLeft, visibleTop, visibleBottom } = useViewport()
   const active = useDrawCycleStore((state) => state.active)
+  const videoArrived = useDrawCycleStore((state) => state.videoArrived)
   const pendingDrawNo = useDrawCycleStore((state) => state.pendingResult?.drawNo)
   // MISMA fuente que NumberPanelHotCold (el panel de hot/cold del Lobby) -- no se recalcula acá,
   // solo se ignora su `shouldShow` (esa es la ventana de tiempo DEL LOBBY; la visibilidad de este
   // sidebar es la del video de resultado, `active`, ver más abajo).
   const { hotEntries, coldEntries } = useHotColdWindow()
 
-  const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
+  // Espera a videoArrived para entrar (ver useDrawCycleStore.videoArrived y el mismo criterio en
+  // LiveTableBetsPanel) -- la salida sigue atada solo a `active`.
+  const progress = useAnimatedProgress(active && videoArrived ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
   const eased = easeInOutCubic(progress)
 
   // Top 10 Most Bet Numbers -- ordena la MISMA `data` que ya recibe LiveTableBetsPanel (misma prop,
@@ -471,10 +544,10 @@ export function LeftStatsSidebar({ data }: { data: LiveTableBetsData }) {
         <TopBetNumbersCard width={SIDEBAR_WIDTH} height={top10Height} rows={top10} title={t('leftStatsSidebar.top10Title')} />
       </pixiContainer>
       <pixiContainer y={hotY}>
-        <HotColdModule width={SIDEBAR_WIDTH} height={HOT_COLD_HEIGHT} icon={<FlameIcon size={26} />} title={t('numbers.hot')} entries={hotEntries} />
+        <HotColdModule width={SIDEBAR_WIDTH} height={HOT_COLD_HEIGHT} icon={FLAME_ICON_ELEMENT} title={t('numbers.hot')} entries={hotEntries} />
       </pixiContainer>
       <pixiContainer y={coldY}>
-        <HotColdModule width={SIDEBAR_WIDTH} height={HOT_COLD_HEIGHT} icon={<SnowflakeIcon size={26} />} title={t('numbers.cold')} entries={coldEntries} />
+        <HotColdModule width={SIDEBAR_WIDTH} height={HOT_COLD_HEIGHT} icon={SNOWFLAKE_ICON_ELEMENT} title={t('numbers.cold')} entries={coldEntries} />
       </pixiContainer>
       <pixiContainer y={infoY}>
         <InfoFooterCard width={SIDEBAR_WIDTH} height={INFO_FOOTER_HEIGHT} text={t('leftStatsSidebar.disclaimer')} />

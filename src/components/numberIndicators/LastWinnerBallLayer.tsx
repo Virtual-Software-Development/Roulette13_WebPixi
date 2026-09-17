@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ACTIVE_WHEEL_TYPE } from '../../data/wheelOrder'
 import { getEffectiveWheelRenderMode } from '../../data/wheelRenderMode'
 import { WHEEL_CANVAS_HEIGHT, WHEEL_CANVAS_WIDTH, WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC } from '../../layout/wheelGeometry.constants'
 import { WHEEL_VIDEO_GEOMETRY } from '../../layout/wheelVideoGeometry.constants'
 import { useCountdown } from '../../hooks/useCountdown'
-import { useRafProgress } from '../../hooks/useRafProgress'
 import { useDrawCycleStore } from '../../store/useDrawCycleStore'
 import { useGameConfigStore } from '../../store/useGameConfigStore'
 import { useResultsStore } from '../../store/useResultsStore'
 import { buildMediaUrl } from '../../utils/media'
-import { easeInOutCubic, easeOutCubic } from '../../utils/easing'
+import { easeOutCubic } from '../../utils/easing'
 import { getPocketAngleDegForGeometry, getPocketPositionForGeometry, getPolarPoint } from '../../utils/wheelPositions'
 import type { PocketGeometry } from '../../utils/wheelPositions'
 import { WheelRotorGroup } from '../wheel/WheelRotorGroup'
@@ -39,18 +38,23 @@ const BALL_VIDEO_RADIUS_OFFSET = 0
 const BALL_DOCK_ANGLE_DEG = 180
 const BALL_DOCK_RADIUS = 580.5
 
+// Pedido explícito: deshabilitada por ahora -- la bolita se queda pinneada al número ganador
+// (LastWinnerBall) hasta el próximo sorteo, sin despegar ni animar el regreso a la base. Volver a
+// `true` reactiva LastWinnerBallReturning tal cual estaba (sin tocar el resto de esta lógica).
+const BALL_RETURN_ANIMATION_ENABLED = false
+
 // Cuánto antes del próximo sorteo (countdown real, useCountdown -- mismo criterio que
 // useHotColdWindow/useSpinStatsCycle) la bolita "despega" del número ganador y empieza a volver a
 // la marca de la base.
 const BALL_RETURN_AT_REMAINING_SECONDS = 10
 
-// Duración de cada fase del regreso: primero sale disparada hacia el borde interno (radio, ángulo
-// fijo, easeOutCubic -- rápida y directa desde el primer instante, ver más abajo), después recorre
-// ese borde hasta la marca de la base (ángulo, radio fijo, easeInOutCubic). Ajustar a mano.
-const BALL_LIFTOFF_DURATION_MS = 300
-const BALL_TRAVEL_DURATION_MS = 3000
-const BALL_RETURN_TOTAL_DURATION_MS = BALL_LIFTOFF_DURATION_MS + BALL_TRAVEL_DURATION_MS
-const BALL_LIFTOFF_FRACTION = BALL_LIFTOFF_DURATION_MS / BALL_RETURN_TOTAL_DURATION_MS
+// Duración total del regreso. A diferencia de un diseño anterior (dos fases con sus propias
+// duraciones, incluso con una ventana de superposición entre ambas) esto ya NO se reparte en
+// tramos de tiempo independientes -- ver el comentario largo en LastWinnerBallReturning sobre por
+// qué (verificado numéricamente: cualquier corte por TIEMPO entre "salir disparada" y "bordear el
+// rin", superpuesto o no, seguía produciendo una caída de velocidad real a mitad de camino, se
+// notaba como un tirón). Ajustar a mano.
+const BALL_RETURN_TOTAL_DURATION_MS = 3300
 
 // rawResults / /api/results reporta 37 para la casilla '00' (ver useResultsStore.ts) -- el mismo
 // endpoint de sorteo alimenta currentWinner, así que se traduce acá antes de buscar la casilla:
@@ -99,7 +103,7 @@ export function LastWinnerBallLayer({ wheelType = ACTIVE_WHEEL_TYPE }: LastWinne
   const pocket = toBallPocket(winningNumber)
   // La marca de la base solo está medida en modo imagen (ver comentario de BALL_DOCK_ANGLE_DEG) --
   // en modo video la bolita se queda pinneada al número ganador todo el tiempo, sin el regreso.
-  const returning = mode !== 'video' && remainingSeconds <= BALL_RETURN_AT_REMAINING_SECONDS
+  const returning = BALL_RETURN_ANIMATION_ENABLED && mode !== 'video' && remainingSeconds <= BALL_RETURN_AT_REMAINING_SECONDS
 
   return (
     <svg className="last-winner-ball-layer" viewBox={`0 0 ${canvasWidth} ${canvasHeight}`} preserveAspectRatio="xMidYMid meet">
@@ -163,11 +167,33 @@ interface LastWinnerBallReturningProps {
 
 // Bolita "despegada" del rotor -- vive en el frame FIJO del <svg> (mismas coordenadas que la marca
 // impresa en Base_American.png, que no gira), a diferencia de LastWinnerBall (dentro del <g>
-// rotante de WheelRotorGroup). Anima en dos fases sobre un único progreso 0..1 (useRafProgress,
-// no depende de Pixi -- este layer vive fuera de <Application>): primero el radio (número ->
-// borde interno, ángulo fijo), después el ángulo (borde interno -> marca de la base, radio fijo).
+// rotante de WheelRotorGroup). Recorre dos tramos geométricos -- recto (número -> borde interno) y
+// luego de arco (borde interno -> marca de la base) -- pero a diferencia de un diseño anterior
+// (cada tramo con su propia duración/easing en el tiempo, con o sin superposición entre ambos) acá
+// se miden las DISTANCIAS de los dos tramos, se sacan un total, y UNA sola curva de easing
+// (easeOutCubic, ver más abajo) controla cuánta distancia total ya se recorrió en cada instante.
+// Cortar por tiempo entre dos curvas independientes (con easeOutCubic terminando en velocidad cero
+// y easeInOutCubic arrancando en velocidad cero) seguía produciendo una caída de velocidad real
+// justo en el corte, superposición mediante -- confirmado numéricamente antes de este cambio. Con
+// una sola curva sobre la distancia total, la velocidad (derivada de easeOutCubic, que es
+// monótonamente decreciente) es continua de punta a punta: nunca sube ni baja de golpe a mitad de
+// camino, solo cambia de dirección en el punto donde el tramo recto termina y arranca el de arco
+// (a velocidad constante ahí, sin frenar) -- mismo criterio físico que un objeto que sale
+// disparado y se va frenando hasta encastrar en su lugar, en vez de acelerar de nuevo a mitad de
+// camino.
+//
+// Posicionamiento 100% imperativo (ref + rAF propio escribiendo `transform` directo por DOM), NO
+// vía React state -- a diferencia de un diseño anterior (useRafProgress, que hacía forceRender en
+// cada frame). Bajo CPU normal ambos enfoques se ven idénticos, pero confirmado con CPU throttling
+// 4x (mismo que usa el usuario en DevTools): re-renderizar TODO el componente + reescribir x/y del
+// <image> en cada frame competía por el mismo hilo principal ya reducido a 1/4, así que el
+// navegador terminaba pintando menos frames de los que el propio rAF pedía (el trayecto llegaba
+// bien al destino, pero con saltos perceptibles entre frames). Mover el trabajo por frame a una
+// sola escritura de atributo sobre un <g> (sin pasar por render de React) saca esa competencia del
+// medio.
 function LastWinnerBallReturning({ pocket, wheelType }: LastWinnerBallReturningProps) {
   const geometry = WHEEL_GEOMETRY[wheelType]
+  const groupRef = useRef<SVGGElement>(null)
 
   // Ángulo/radio de partida, "congelados" una sola vez al montar (lazy initializer -- corre
   // sincrónico en el primer render, no en un efecto) -- captura dónde estaba la bolita DE VERDAD
@@ -184,25 +210,48 @@ function LastWinnerBallReturning({ pocket, wheelType }: LastWinnerBallReturningP
   })
   const [startRadius] = useState(() => geometry.radius + BALL_RADIUS_OFFSET)
 
-  const rawProgress = useRafProgress(1, BALL_RETURN_TOTAL_DURATION_MS)
+  useEffect(() => {
+    // Distancias de cada tramo, en px lineales -- se miden una sola vez al montar (dependen solo
+    // de los valores "congelados" de arriba). arcDeltaDeg puede ser 0 (la bolita ya arrancó justo
+    // en el ángulo de la marca) -- Math.sign(...|| 1) evita un NaN al no dividir por 0 más abajo en
+    // ese caso límite, sin afectar el resultado (arcDistance también da 0 ahí).
+    const arcDeltaDeg = shortestAngleDeltaDeg(startAngleDeg, BALL_DOCK_ANGLE_DEG)
+    const liftoffDistance = BALL_DOCK_RADIUS - startRadius
+    const arcDistance = BALL_DOCK_RADIUS * Math.abs(arcDeltaDeg) * (Math.PI / 180)
+    const totalDistance = liftoffDistance + arcDistance
+    const arcSign = Math.sign(arcDeltaDeg || 1)
 
-  let radius: number
-  let angleDeg: number
-  if (rawProgress <= BALL_LIFTOFF_FRACTION) {
-    const phaseProgress = easeOutCubic(rawProgress / BALL_LIFTOFF_FRACTION)
-    radius = startRadius + (BALL_DOCK_RADIUS - startRadius) * phaseProgress
-    angleDeg = startAngleDeg
-  } else {
-    const phaseProgress = easeInOutCubic((rawProgress - BALL_LIFTOFF_FRACTION) / (1 - BALL_LIFTOFF_FRACTION))
-    radius = BALL_DOCK_RADIUS
-    angleDeg = startAngleDeg + shortestAngleDeltaDeg(startAngleDeg, BALL_DOCK_ANGLE_DEG) * phaseProgress
-  }
+    let rafId: number
+    const startTime = performance.now()
 
-  const { x, y } = getPolarPoint(geometry.center, radius, angleDeg)
+    const tick = (now: number) => {
+      const rawProgress = Math.min((now - startTime) / BALL_RETURN_TOTAL_DURATION_MS, 1)
+      const traveledDistance = easeOutCubic(rawProgress) * totalDistance
+
+      let radius: number
+      let angleDeg: number
+      if (traveledDistance <= liftoffDistance) {
+        radius = startRadius + traveledDistance
+        angleDeg = startAngleDeg
+      } else {
+        radius = BALL_DOCK_RADIUS
+        const arcTraveled = traveledDistance - liftoffDistance
+        angleDeg = startAngleDeg + (arcTraveled / BALL_DOCK_RADIUS) * (180 / Math.PI) * arcSign
+      }
+
+      const { x, y } = getPolarPoint(geometry.center, radius, angleDeg)
+      groupRef.current?.setAttribute('transform', `translate(${x}, ${y})`)
+
+      if (rawProgress < 1) rafId = requestAnimationFrame(tick)
+    }
+
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [geometry, startAngleDeg, startRadius])
 
   return (
-    <g data-number={pocket}>
-      <image href={BALL_URL} x={x - BALL_SIZE / 2} y={y - BALL_SIZE / 2} width={BALL_SIZE} height={BALL_SIZE} />
+    <g ref={groupRef} data-number={pocket}>
+      <image href={BALL_URL} x={-BALL_SIZE / 2} y={-BALL_SIZE / 2} width={BALL_SIZE} height={BALL_SIZE} />
     </g>
   )
 }

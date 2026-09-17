@@ -13,6 +13,24 @@ interface DrawCycleState {
   // y por los elementos de RouletteLobby que salen/vuelven de escena en simultáneo.
   active: boolean
   setActive: (active: boolean) => void
+  // true recién cuando el <video> de resultado terminó de cargar Y de subir del todo a su posición
+  // final (RouletteVideoView: `ready && arrived`) -- publicado acá para que los overlays
+  // informativos (LiveTableBetsPanel, ResultStatsPanel, LeftStatsSidebar) esperen esto antes de
+  // arrancar su propio fade-in, en vez de aparecer apenas `active` pasa a true.
+  //
+  // OJO -- no alcanza con esperar solo a que el video esté "cargado" (intento anterior, ver
+  // historial): en la práctica el video YA está precargado para cuando `active` pasa a true
+  // (App.tsx espera `videoReadyPromise` antes de activar la ronda), así que ese gate solo tapaba el
+  // caso raro de una carga lenta y no el real: el slide-up del video (RouletteVideoView,
+  // VIDEO_WHEEL_TRANSITION_DURATION_MS = 900ms) es DELIBERADAMENTE más lento que el fade-in de
+  // estos paneles (TRANSITION_DURATION_MS = 550ms, ver layout.constants.ts) para que su movimiento
+  // se perciba bien -- con el gate viejo, el panel arrancaba apenas el video terminaba de cargar
+  // (casi al instante) y llegaba a mostrar el highlight/glow ~350-500ms antes de que el video
+  // terminara de subir y arrancara a reproducirse. Esperar a `arrived` (progreso===1 del slide, no
+  // solo `ready`) cierra ese hueco de verdad. La SALIDA de estos paneles sigue atada solo a
+  // `active` (no a esto), así que dejan de verse en el mismo instante en que el video se retira.
+  videoArrived: boolean
+  setVideoArrived: (videoArrived: boolean) => void
   // Progreso 0..1 ya-easeado de la subida/bajada del video (ver RouletteVideoView, que lo
   // escribe en cada tick de su propia animación) -- publicado acá porque LobbyBackgroundLayer
   // vive fuera del árbol de Pixi y no puede usar useAnimatedProgress (depende de useTick).
@@ -42,6 +60,8 @@ export const useDrawCycleStore = create<DrawCycleState>((set) => ({
   setPendingResult: (pendingResult) => set({ pendingResult }),
   active: false,
   setActive: (active) => set({ active }),
+  videoArrived: false,
+  setVideoArrived: (videoArrived) => set({ videoArrived }),
   videoSlideProgress: 0,
   setVideoSlideProgress: (videoSlideProgress) => set({ videoSlideProgress }),
   winnerPanelNumber: null,

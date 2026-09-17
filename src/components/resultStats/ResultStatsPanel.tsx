@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 import { extend } from '@pixi/react'
 import { Container, FillGradient, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
@@ -72,23 +72,27 @@ const VALUE_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '600', font
 const POT_VALUE_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '600', fontSize: 40, fill: TEXT_VALUE_COLOR })
 
 // Icono "users" -- Website_svg_icons/24_ (ver USERS_ICON_URL).
-function UsersIcon({ size = 15 }: { size?: number }) {
+//
+// memo: `size` es un literal fijo en su único call site -- evita re-ejecutar useTexture en cada
+// tick de la animación de entrada/salida del panel (useAnimatedProgress más abajo).
+const UsersIcon = memo(function UsersIcon({ size = 15 }: { size?: number }) {
   const { texture } = useTexture(USERS_ICON_URL)
   if (!texture) return null
   return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} />
-}
+})
 
 // Stack de monedas doradas -- Website_svg_icons/06_ (ver COIN_STACK_ICON_URL).
 const COIN_HALO_COLOR = 0xe1922f
 
-function CoinStackIcon({ size = 16 }: { size?: number }) {
+// memo: mismo criterio que UsersIcon.
+const CoinStackIcon = memo(function CoinStackIcon({ size = 16 }: { size?: number }) {
   const { texture } = useTexture(COIN_STACK_ICON_URL)
   // Halo cálido MUY controlado (sección "ICONO" de TOTAL POT del brief) -- mismo criterio de glow
   // chico y contenido que ya usa LiveIndicator en LiveTableBetsPanel, no un blur pesado.
   const glow = useMemo(() => new GlowFilter({ distance: 5, outerStrength: 1, innerStrength: 0, color: COIN_HALO_COLOR, quality: 0.4, alpha: 0.35 }), [])
   if (!texture) return null
   return <pixiSprite texture={texture} width={size} height={size} anchor={iconCenterAnchor} filters={[glow]} />
-}
+})
 
 // Línea superior fina (sección "LÍNEA SUPERIOR" del brief): un hairline oscuro casi imperceptible
 // de punta a punta, con un segundo trazo horizontal-gradient transparente->rojo oscuro->transparente
@@ -135,9 +139,13 @@ export function ResultStatsPanel({ data }: { data: ResultStatsData }) {
   const { t } = useTranslation()
   const { visibleLeft, visibleRight, visibleBottom } = useViewport()
   const active = useDrawCycleStore((state) => state.active)
+  const videoArrived = useDrawCycleStore((state) => state.videoArrived)
+  // Espera a videoArrived para entrar (ver useDrawCycleStore.videoArrived y el mismo criterio en
+  // LiveTableBetsPanel) -- la salida sigue atada solo a `active`.
+  const entering = active && videoArrived
 
-  const rawProgress = useAnimatedProgress(active ? 1 : 0, active ? ENTER_DURATION_MS : EXIT_DURATION_MS, { startAtTarget: true })
-  const eased = active ? easeOutCubic(rawProgress) : easeInCubic(rawProgress)
+  const rawProgress = useAnimatedProgress(entering ? 1 : 0, entering ? ENTER_DURATION_MS : EXIT_DURATION_MS, { startAtTarget: true })
+  const eased = entering ? easeOutCubic(rawProgress) : easeInCubic(rawProgress)
 
   const drawBackground = useCallback(
     (g: PixiGraphics) => {

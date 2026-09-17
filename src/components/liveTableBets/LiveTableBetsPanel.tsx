@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { extend, useTick } from '@pixi/react'
-import { BlurFilter, Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
+import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js'
 import type { Graphics as PixiGraphics } from 'pixi.js'
 import { GlowFilter } from 'pixi-filters'
 import { useTranslation } from 'react-i18next'
+import { EdgeGlowFilter, EDGE_GLOW_TAIL_FRACTION } from '../../pixi/filters/EdgeGlowFilter'
 import { useViewport } from '../../hooks/useViewport'
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress'
 import { useDrawCycleStore } from '../../store/useDrawCycleStore'
@@ -234,6 +235,12 @@ const OUTSIDE_AMOUNT_STYLE = new TextStyle({ fontFamily: 'Arial', fontWeight: '6
 // -----------------------------------------------------------------------------------------------
 
 const EDGE_GLOW_DURATION_MS = 2800
+// Mismo problema y mismo fix que useAnimatedProgress.ts (ver su comentario largo ahí): Pixi Ticker
+// clampea deltaMS a 100ms por tick, lo que estira esta animación (permanente mientras la celda
+// esté destacada) bajo CPU throttling agresivo -- se mide con performance.now() en vez de confiar
+// en ticker.deltaMS más abajo (AnimatedEdgeGlow), el ticker de Pixi sigue usándose solo para saber
+// CUÁNDO re-evaluar (useTick), no para la magnitud del paso.
+const EDGE_GLOW_MAX_STEP_MS = 250
 // Fracción del perímetro "encendida" en un momento dado -- el resto queda como el track tenue
 // estático (HIGHLIGHT_TRACK_COLOR, ver sección 21 del brief: "70-80% del perímetro apagado"). OJO:
 // la cola tiene una longitud FIJA en px (esta fracción * el perímetro de la celda), no relativa a
@@ -242,136 +249,57 @@ const EDGE_GLOW_DURATION_MS = 2800
 // queda partida por las dos esquinas a la vez, y se ve difusa/como "oculta" en esos dos lados
 // aunque arriba/abajo (el lado largo, 107px) se vea perfecta. 0.22 daba ~74px de cola (> 62px) --
 // bajado a 0.12 (~40px) para que quepa entera incluso en el lado más corto.
-const EDGE_GLOW_TAIL_FRACTION = 0.12
-// Cada segmento se dibuja como una línea corta con cap:'round' (ver drawEdgeGlowTrail) -- si un
-// segmento mide MENOS que el ancho de su propio trazo (EDGE_GLOW_BLOOM_WIDTH, el más ancho de los
-// dos), la línea deja de leerse lisa: se ve como una fila de "perlas" redondas superpuestas, con
-// grosor irregular según cuánto se pisen. Con la cola en 0.12 (~40px de largo), 26 segmentos daban
-// ~1.5px cada uno (< 3.5px de bloom) -- bajado a 14 para que cada segmento (~2.9px) vuelva a ser
-// más largo que el trazo más ancho. Si TAIL_FRACTION o el tamaño de celda cambian, mantené
-// (tail_px / SEGMENTS) claramente por encima de EDGE_GLOW_BLOOM_WIDTH.
-const EDGE_GLOW_SEGMENTS = 35
-const EDGE_GLOW_SHARP_WIDTH = 1.6
-const EDGE_GLOW_BLOOM_WIDTH = 3.5
-const EDGE_GLOW_BLOOM_ALPHA = 0.4
-const EDGE_GLOW_BLUR_STRENGTH = 4
-
-// dark red (cola) -> hot red -> orange red -> hot orange -> hot core -> tip amarillo cálido, SOLO
-// como hot spot puntual al final (sección 20 del brief: "el amarillo solamente como hot spot").
-const EDGE_GLOW_STOPS: { t: number; color: number }[] = [
-  { t: 0, color: 0x9e1715 },
-  { t: 0.35, color: 0xe8321d },
-  { t: 0.6, color: 0xff4b1f },
-  { t: 0.82, color: 0xff7426 },
-  { t: 0.95, color: 0xffb24a },
-  { t: 1, color: 0xffd07a },
-]
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t
-}
-
-// Interpola linealmente entre los EDGE_GLOW_STOPS según t (0 = cola vieja/tenue, 1 = punta/hot
-// spot) -- mismo criterio de interpolación RGB manual que ya usa gradients.ts (FillGradient), pero
-// acá hace falta muestrear color POR SEGMENTO (no hay soporte nativo de Pixi para un gradiente a
-// lo largo de un stroke con forma arbitraria).
-function edgeGlowColorAt(t: number): number {
-  const clamped = Math.min(1, Math.max(0, t))
-  for (let i = 0; i < EDGE_GLOW_STOPS.length - 1; i++) {
-    const a = EDGE_GLOW_STOPS[i]
-    const b = EDGE_GLOW_STOPS[i + 1]
-    if (clamped > b.t) continue
-    const localT = b.t === a.t ? 0 : (clamped - a.t) / (b.t - a.t)
-    const ar = (a.color >> 16) & 0xff
-    const ag = (a.color >> 8) & 0xff
-    const ab = a.color & 0xff
-    const br = (b.color >> 16) & 0xff
-    const bg = (b.color >> 8) & 0xff
-    const bb = b.color & 0xff
-    return (Math.round(lerp(ar, br, localT)) << 16) | (Math.round(lerp(ag, bg, localT)) << 8) | Math.round(lerp(ab, bb, localT))
-  }
-  return EDGE_GLOW_STOPS[EDGE_GLOW_STOPS.length - 1].color
-}
-
-// Punto sobre el perímetro de un rectángulo width×height en sentido horario (top -> right ->
-// bottom -> left), arrancando en la esquina superior izquierda -- `f` es una fracción 0..1 de
-// vuelta completa (se normaliza fuera de [0,1), así los cálculos de cola pueden dar valores
-// negativos sin romper nada).
-function perimeterPoint(f: number, width: number, height: number): { x: number; y: number } {
-  const norm = ((f % 1) + 1) % 1
-  const perimeter = 2 * (width + height)
-  const d = norm * perimeter
-  if (d < width) return { x: d, y: 0 }
-  if (d < width + height) return { x: width, y: d - width }
-  if (d < 2 * width + height) return { x: width - (d - width - height), y: height }
-  return { x: 0, y: height - (d - 2 * width - height) }
-}
-
-// Dibuja la cola de luz (EDGE_GLOW_SEGMENTS tramos cortos, cada uno con su propio color/alpha) que
-// termina justo en `headProgress` -- se llama una vez por capa (sharp/bloom) en cada tick mientras
-// la celda esté highlighted. Las esquinas pueden "cortarse" levemente en el tramo que cruza de un
-// lado a otro del rectángulo (línea recta entre dos puntos de lados distintos en vez de seguir el
-// ángulo exacto) -- imperceptible dado lo corto de cada segmento frente al perímetro total.
-function drawEdgeGlowTrail(g: PixiGraphics, width: number, height: number, headProgress: number, strokeWidth: number, alphaScale: number) {
-  g.clear()
-  let prev = perimeterPoint(headProgress - EDGE_GLOW_TAIL_FRACTION, width, height)
-  for (let i = 1; i <= EDGE_GLOW_SEGMENTS; i++) {
-    const t = i / EDGE_GLOW_SEGMENTS
-    const point = perimeterPoint(headProgress - EDGE_GLOW_TAIL_FRACTION * (1 - t), width, height)
-    const color = edgeGlowColorAt(t)
-    const alpha = Math.pow(t, 1.4) * alphaScale
-    g.moveTo(prev.x, prev.y)
-    g.lineTo(point.x, point.y)
-    g.stroke({ width: strokeWidth, color, alpha, cap: 'round' })
-    prev = point
-  }
-}
-
-// pixiGraphics exige `draw` -- acá el dibujo real es imperativo (vía ref, ver AnimatedEdgeGlow),
-// así que se le pasa este no-op estable en vez de recrear una función vacía en cada render.
-function noopDraw() {}
-
 // Respeta prefers-reduced-motion (sección 40 del brief): el highlight sigue visible (borde +
 // posición fija de la "cola"), simplemente no se mueve.
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
 }
 
-// Dos capas -- sharp (definición del borde) + bloom (blur chico detrás, simula el soft glow) --
-// ambas viajan sincronizadas porque comparten el mismo progressRef. Mutación DIRECTA de los
-// Graphics vía ref en cada tick (sin pasar por React state/re-render, a diferencia de
-// useAnimatedProgress) para que animar esto en loop infinito no cueste un re-render de React 60
-// veces por segundo por cada celda destacada -- importante porque este panel vive encima del video
-// (ver sección 39 del brief, "evitar... causar layout constantemente").
-function AnimatedEdgeGlow({ width, height, blurFilter }: { width: number; height: number; blurFilter: BlurFilter }) {
-  const sharpRef = useRef<PixiGraphics>(null)
-  const bloomRef = useRef<PixiGraphics>(null)
+// El cometa (cola de luz + halo) se calcula enteramente en GPU vía EdgeGlowFilter (ver
+// src/pixi/filters/EdgeGlowFilter.ts) -- la geometría base (un rect transparente) se dibuja UNA
+// sola vez al montar/redimensionar, y el único trabajo por frame es reescribir el uniform
+// `progress` del filtro (sin re-render de React, sin rebuild de Graphics). Reemplaza al enfoque
+// anterior (35 segmentos de Graphics + BlurFilter por celda, redibujados cada tick).
+function AnimatedEdgeGlow({ width, height }: { width: number; height: number }) {
+  const filter = useMemo(() => new EdgeGlowFilter({ width, height }), []) // eslint-disable-line react-hooks/exhaustive-deps -- instancia estable por celda, width/height se actualizan vía setters abajo
   const reducedMotion = useMemo(prefersReducedMotion, [])
   const progressRef = useRef(reducedMotion ? EDGE_GLOW_TAIL_FRACTION : 0)
+  // null mientras reducedMotion (nunca tickea) -- mismo criterio que useAnimatedProgress.lastTimeRef.
+  const lastTimeRef = useRef<number | null>(null)
 
-  const drawBoth = useCallback(() => {
-    if (sharpRef.current) drawEdgeGlowTrail(sharpRef.current, width, height, progressRef.current, EDGE_GLOW_SHARP_WIDTH, 1)
-    if (bloomRef.current) drawEdgeGlowTrail(bloomRef.current, width, height, progressRef.current, EDGE_GLOW_BLOOM_WIDTH, EDGE_GLOW_BLOOM_ALPHA)
-  }, [width, height])
+  useEffect(() => {
+    filter.width = width
+    filter.height = height
+  }, [filter, width, height])
 
-  useTick((ticker) => {
+  useEffect(() => () => filter.destroy(), [filter])
+
+  useTick(() => {
     if (reducedMotion) return
-    progressRef.current = (progressRef.current + ticker.deltaMS / EDGE_GLOW_DURATION_MS) % 1
-    drawBoth()
+
+    const now = performance.now()
+    const elapsedMs = lastTimeRef.current === null ? 0 : Math.min(now - lastTimeRef.current, EDGE_GLOW_MAX_STEP_MS)
+    lastTimeRef.current = now
+
+    progressRef.current = (progressRef.current + elapsedMs / EDGE_GLOW_DURATION_MS) % 1
+    filter.progress = progressRef.current
   })
 
-  // Primer frame (y cada vez que cambian width/height, ej. al agrandar el panel) -- sin esto la
-  // celda queda sin dibujar hasta el próximo tick real.
+  // Primer frame -- sin esto el filtro queda con progress=0 hasta el próximo tick real.
   useEffect(() => {
-    drawBoth()
-  }, [drawBoth])
+    filter.progress = progressRef.current
+  }, [filter])
 
-  return (
-    <pixiContainer>
-      <pixiGraphics ref={bloomRef} draw={noopDraw} filters={[blurFilter]} />
-      <pixiGraphics ref={sharpRef} draw={noopDraw} />
-    </pixiContainer>
+  const drawBase = useCallback(
+    (g: PixiGraphics) => {
+      g.clear()
+      g.rect(0, 0, width, height)
+      g.fill({ color: 0xffffff, alpha: 0 })
+    },
+    [width, height],
   )
+
+  return <pixiGraphics draw={drawBase} filters={[filter]} />
 }
 
 const centerAnchor = { x: 0.5, y: 0.5 }
@@ -426,15 +354,19 @@ function drawHighlightTrack(g: PixiGraphics, width: number, height: number, high
 // highlight se veía completo solo en el borde de arriba y "se ocultaba" en los otros tres. Pintar
 // esto en una pasada aparte, después de toda la grilla, lo deja siempre completo sin importar la
 // posición de la celda dentro de la grilla.
-function CellHighlight({ x, y, width, height, blurFilter }: { x: number; y: number; width: number; height: number; blurFilter: BlurFilter }) {
+// memo: x/y/width/height son primitivos derivados de `data`/layout, ninguno depende de `eased` --
+// sin esto, cada tick de la animación de entrada/salida del panel (useAnimatedProgress, ver
+// LiveTableBetsPanel) reconciliaba las hasta 10 instancias de CellHighlight/AnimatedEdgeGlow de
+// nuevo aunque nada suyo hubiera cambiado.
+const CellHighlight = memo(function CellHighlight({ x, y, width, height }: { x: number; y: number; width: number; height: number }) {
   const drawTrack = useCallback((g: PixiGraphics) => drawHighlightTrack(g, width, height, true), [width, height])
   return (
     <pixiContainer x={x} y={y}>
       <pixiGraphics draw={drawTrack} />
-      <AnimatedEdgeGlow width={width} height={height} blurFilter={blurFilter} />
+      <AnimatedEdgeGlow width={width} height={height} />
     </pixiContainer>
   )
-}
+})
 
 interface NumberCellProps {
   pocket: number
@@ -450,7 +382,12 @@ interface NumberCellProps {
 // (ver sección 42 del brief: "el componente no decide qué número lleva highlight"). TABLE_ROWS
 // solo trae pockets 1-36 (0/00 los maneja ZeroArea aparte), así que nunca hace falta pasar por
 // toWheelPocket acá. El track/glow de highlight NO se dibuja acá -- ver CellHighlight.
-function NumberCell({ pocket, bet, x, y, width, height }: NumberCellProps) {
+//
+// memo: `bet` viene de un Map memoizado por `data.numbers` (ver betsByPocket en
+// LiveTableBetsPanel) -- durante los ticks de la animación de entrada/salida del panel (que no
+// tocan `data`), la referencia de `bet` no cambia para ninguna de las 36 celdas, así que memo
+// evita reconciliarlas todas en cada tick.
+const NumberCell = memo(function NumberCell({ pocket, bet, x, y, width, height }: NumberCellProps) {
   const color = getRouletteColor(pocket)
   const fill = color === 'red' ? RED_FILL : color === 'green' ? GREEN_FILL : BLACK_FILL
   const showChipStack = bet?.showChipStack ?? false
@@ -475,7 +412,7 @@ function NumberCell({ pocket, bet, x, y, width, height }: NumberCellProps) {
       {showChipStack && <ChipStack x={width - 12} y={12} />}
     </pixiContainer>
   )
-}
+})
 
 interface ZeroHalfProps {
   label: string
@@ -502,7 +439,9 @@ function ZeroHalf({ label, bet, width, height }: ZeroHalfProps) {
 // (00 a la izquierda, 0 a la derecha, dividido por una línea vertical) -- esquinas superiores
 // redondeadas para seguir el radius del panel (mismo criterio que la versión horizontal, girado
 // 90°, ver sección 9 del brief).
-function ZeroArea({
+// memo: mismo criterio que NumberCell -- zeroBet/doubleZeroBet vienen del mismo Map memoizado, no
+// cambian de referencia durante los ticks de entrada/salida del panel.
+const ZeroArea = memo(function ZeroArea({
   x,
   y,
   width,
@@ -562,7 +501,7 @@ function ZeroArea({
       </pixiContainer>
     </pixiContainer>
   )
-}
+})
 
 interface CellCorners {
   topLeft?: number
@@ -570,6 +509,14 @@ interface CellCorners {
   bottomLeft?: number
   bottomRight?: number
 }
+
+// Objetos `corners` estables (no literales inline en el JSX) -- DozenBetCell/OutsideBetCell están
+// memoizados (ver más abajo) comparando props por referencia; un literal `{ bottomLeft: 10 }`
+// nuevo en cada render del padre haría que memo viera "cambió" en cada tick de la animación de
+// entrada/salida del panel, aunque el valor sea idéntico.
+const BOTTOM_LEFT_CORNER: CellCorners = { bottomLeft: 10 }
+const TOP_RIGHT_CORNER: CellCorners = { topRight: 10 }
+const BOTTOM_RIGHT_CORNER: CellCorners = { bottomRight: 10 }
 
 // `corners` opcional -- solo lo usa la primera celda de la columna lateral ("1st 12"), que ahora
 // es la que realmente toca la esquina superior derecha del panel (ver comentario en ZeroArea de
@@ -601,7 +548,10 @@ function OutsideCellBackground({ width, height, corners }: { width: number; heig
   return <pixiGraphics draw={draw} />
 }
 
-function DozenBetCell({
+// memo: label/amount/corners son primitivos (o undefined) que no cambian durante los ticks de
+// entrada/salida del panel -- evita reconciliar las 6 instancias (3 columnas + 3 docenas) en cada
+// uno de esos ticks.
+const DozenBetCell = memo(function DozenBetCell({
   x,
   y,
   width,
@@ -625,7 +575,7 @@ function DozenBetCell({
       <pixiText text={formatMoney(amount)} style={DOZEN_AMOUNT_STYLE} x={width / 2} y={height / 2 + 4} anchor={bottomAnchor} />
     </pixiContainer>
   )
-}
+})
 
 function RedDiamond({ size = 17 }: { size?: number }) {
   const draw = useCallback(
@@ -669,7 +619,9 @@ const DIAMOND_SIZE = 26
 // de la celda, positivo lo acerca al centro/texto. Ajustá este valor para moverlo más o menos.
 const DIAMOND_OFFSET_X = -10
 
-function OutsideBetCell({ x, y, width, height, label, amount, diamond, corners }: OutsideBetCellProps) {
+// memo: label/amount/diamond/corners son todos primitivos (o las constantes CORNER de arriba),
+// estables durante los ticks de entrada/salida del panel.
+const OutsideBetCell = memo(function OutsideBetCell({ x, y, width, height, label, amount, diamond, corners }: OutsideBetCellProps) {
   const hasAmount = typeof amount === 'number' && amount > 0
   // Siempre centrado en el ancho total de la celda -- independiente de dónde quede el diamante
   // (DIAMOND_ZONE_WIDTH/pixiContainer x del diamante, más abajo), así moverlo no corre el texto.
@@ -687,11 +639,14 @@ function OutsideBetCell({ x, y, width, height, label, amount, diamond, corners }
       {hasAmount && <pixiText text={formatMoney(amount)} style={OUTSIDE_AMOUNT_STYLE} x={textZoneX} y={height / 2 + 4} anchor={bottomAnchor} />}
     </pixiContainer>
   )
-}
+})
 
 // Lucecita de estado (base #E50914, centro más brillante #FF2028) -- glow chico y contenido, no
 // un neon dot grande (sección 14 del brief).
-function LiveIndicator({ x, y }: { x: number; y: number }) {
+//
+// memo: instancia única, pero evita re-ejecutar el componente (y reconciliar su Graphics con
+// filtro) en cada tick de entrada/salida del panel -- x/y son constantes fijas del header.
+const LiveIndicator = memo(function LiveIndicator({ x, y }: { x: number; y: number }) {
   const drawDot = useCallback((g: PixiGraphics) => {
     g.clear()
     g.circle(0, 0, 5)
@@ -701,7 +656,7 @@ function LiveIndicator({ x, y }: { x: number; y: number }) {
   }, [])
   const glow = useMemo(() => new GlowFilter({ distance: 6, outerStrength: 1.1, innerStrength: 0, color: LIVE_DOT_CORE_COLOR, quality: 0.4, alpha: 0.6 }), [])
   return <pixiGraphics draw={drawDot} x={x} y={y} filters={[glow]} />
-}
+})
 
 // -----------------------------------------------------------------------------------------------
 
@@ -709,8 +664,14 @@ export function LiveTableBetsPanel({ data }: { data: LiveTableBetsData }) {
   const { t } = useTranslation()
   const { visibleRight, visibleTop, visibleBottom } = useViewport()
   const active = useDrawCycleStore((state) => state.active)
+  const videoArrived = useDrawCycleStore((state) => state.videoArrived)
 
-  const progress = useAnimatedProgress(active ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
+  // Espera a que el video termine de subir del todo antes de entrar (ver
+  // useDrawCycleStore.videoArrived) -- si no, este panel (highlight/glow incluido) termina su
+  // propio fade-in (550ms) bastante antes de que el video termine el suyo (900ms, deliberadamente
+  // más lento), mismo `active` no dice nada sobre eso. La SALIDA no espera nada: `active` en false
+  // ya alcanza para bajar a 0 en el mismo instante que antes.
+  const progress = useAnimatedProgress(active && videoArrived ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
   const eased = easeInOutCubic(progress)
 
   const betsByPocket = useMemo(() => {
@@ -718,13 +679,6 @@ export function LiveTableBetsPanel({ data }: { data: LiveTableBetsData }) {
     for (const bet of data.numbers) map.set(pocketKey(bet.pocket), bet)
     return map
   }, [data.numbers])
-
-  // Un solo BlurFilter compartido por la capa "bloom" de todas las celdas destacadas en este frame
-  // -- parámetros fijos (no dependen del color/estado de ninguna celda), así que una única
-  // instancia alcanza en vez de crear una por celda (mismo criterio que ya usaba el GlowFilter
-  // compartido de SpinStatsPanel/AccentStatRow). Blur chico (4px) a propósito -- sección 39 del
-  // brief: nada de blur pesado mientras esto vive encima del video.
-  const edgeGlowBlurFilter = useMemo(() => new BlurFilter({ strength: EDGE_GLOW_BLUR_STRENGTH, quality: 2 }), [])
 
   const contentWidth = PANEL_WIDTH - PANEL_PADDING * 2
   const columnWidth = NUMBERS_COLUMN_WIDTH / 3
@@ -749,26 +703,36 @@ export function LiveTableBetsPanel({ data }: { data: LiveTableBetsData }) {
   // Todas las celdas destacadas (grilla 1-36 + 0/00) se resuelven ACÁ para pintar su track/glow en
   // una única pasada por encima de TODA la grilla -- ver CellHighlight y su comentario sobre por
   // qué no se dibuja dentro de cada celda.
+  //
+  // panelFullyEntered: el highlight (track+glow animado) solo se enciende una vez que el panel
+  // TERMINÓ su propia animación de entrada (progress===1), en vez de encenderse a la par del
+  // fade-in -- si no, el comet trail ya se ve corriendo (y el halo ya visible) desde la mitad de
+  // la transición de opacidad del panel, dando la sensación de que el highlight "llega antes" que
+  // el propio panel. La salida sigue sin esperar nada (progress deja de ser 1 apenas empieza a
+  // bajar, así que el highlight se apaga de inmediato junto con el resto).
+  const panelFullyEntered = progress === 1
   const highlightedCells: { key: string; x: number; y: number; width: number; height: number }[] = []
-  if (doubleZeroBet?.highlighted) {
-    highlightedCells.push({ key: '00', x: PANEL_PADDING, y: zeroTop, width: numbersHalfWidth, height: ZERO_ROW_HEIGHT })
-  }
-  if (zeroBet?.highlighted) {
-    highlightedCells.push({ key: '0', x: PANEL_PADDING + numbersHalfWidth, y: zeroTop, width: numbersHalfWidth, height: ZERO_ROW_HEIGHT })
-  }
-  VERTICAL_ROWS.forEach((row, rowIndex) => {
-    row.forEach((pocket, colIndex) => {
-      if (betsByPocket.get(pocketKey(pocket))?.highlighted) {
-        highlightedCells.push({
-          key: String(pocket),
-          x: PANEL_PADDING + colIndex * columnWidth + NUMBER_CELL_GAP_X / 2,
-          y: gridTop + rowIndex * rowHeight + NUMBER_CELL_GAP_Y / 2,
-          width: columnWidth - NUMBER_CELL_GAP_X,
-          height: rowHeight - NUMBER_CELL_GAP_Y,
-        })
-      }
+  if (panelFullyEntered) {
+    if (doubleZeroBet?.highlighted) {
+      highlightedCells.push({ key: '00', x: PANEL_PADDING, y: zeroTop, width: numbersHalfWidth, height: ZERO_ROW_HEIGHT })
+    }
+    if (zeroBet?.highlighted) {
+      highlightedCells.push({ key: '0', x: PANEL_PADDING + numbersHalfWidth, y: zeroTop, width: numbersHalfWidth, height: ZERO_ROW_HEIGHT })
+    }
+    VERTICAL_ROWS.forEach((row, rowIndex) => {
+      row.forEach((pocket, colIndex) => {
+        if (betsByPocket.get(pocketKey(pocket))?.highlighted) {
+          highlightedCells.push({
+            key: String(pocket),
+            x: PANEL_PADDING + colIndex * columnWidth + NUMBER_CELL_GAP_X / 2,
+            y: gridTop + rowIndex * rowHeight + NUMBER_CELL_GAP_Y / 2,
+            width: columnWidth - NUMBER_CELL_GAP_X,
+            height: rowHeight - NUMBER_CELL_GAP_Y,
+          })
+        }
+      })
     })
-  })
+  }
 
   // Columna lateral (docenas + apuestas exteriores) -- misma altura total que 0/00 + grilla
   // (dividida en partes iguales, una fila por cada uno de los 9 datos: 3 docenas + 6 apuestas
@@ -890,14 +854,14 @@ export function LiveTableBetsPanel({ data }: { data: LiveTableBetsData }) {
           height={COLUMN_ROW_HEIGHT}
           label={columnBetLabel}
           amount={amount}
-          corners={colIndex === 0 ? { bottomLeft: 10 } : undefined}
+          corners={colIndex === 0 ? BOTTOM_LEFT_CORNER : undefined}
         />
       ))}
 
       {/* Track+glow de las celdas destacadas, pintado DESPUÉS de toda la grilla -- ver
           CellHighlight (por qué vive acá y no dentro de cada celda). */}
       {highlightedCells.map((cell) => (
-        <CellHighlight key={cell.key} x={cell.x} y={cell.y} width={cell.width} height={cell.height} blurFilter={edgeGlowBlurFilter} />
+        <CellHighlight key={cell.key} x={cell.x} y={cell.y} width={cell.width} height={cell.height} />
       ))}
 
       {/* Columna lateral pegada a la derecha de la grilla -- docenas arriba, apuestas exteriores
@@ -912,7 +876,7 @@ export function LiveTableBetsPanel({ data }: { data: LiveTableBetsData }) {
           height={sideCellHeight}
           label={label}
           amount={dozenAmounts[index]}
-          corners={index === 0 ? { topRight: 10 } : undefined}
+          corners={index === 0 ? TOP_RIGHT_CORNER : undefined}
         />
       ))}
 
@@ -929,7 +893,7 @@ export function LiveTableBetsPanel({ data }: { data: LiveTableBetsData }) {
         diamond="black"
         label={t('liveTableBets.black')}
         amount={data.outside?.black}
-        corners={{ bottomRight: 10 }}
+        corners={BOTTOM_RIGHT_CORNER}
       />
     </pixiContainer>
   )

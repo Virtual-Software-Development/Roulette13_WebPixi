@@ -42,14 +42,20 @@ const CELL_HIGHLIGHT_TOP_START_DEG = -6 // esquina superior izquierda
 const CELL_HIGHLIGHT_TOP_END_DEG = 6 // esquina superior derecha
 
 // Glow de las líneas laterales -- mismo color que se le envía a la casilla (style.glow). Técnica
-// de neón de dos capas (ver el filtro más abajo): un blur ancho y suave (CELL_HIGHLIGHT_GLOW_BLUR)
-// para el halo que se difumina lejos de la línea, uno angosto (CELL_HIGHLIGHT_GLOW_CORE_BLUR) para
-// que se note un núcleo brillante pegado a la línea, y la línea nítida encima de ambos -- un solo
-// feDropShadow con un blur grande (como antes) se veía "lavado" porque toda la luz quedaba
-// repartida en un área enorme sin nada de brillo concentrado cerca de la línea. Ajustar a mano.
-const CELL_HIGHLIGHT_GLOW_BLUR = 50
-const CELL_HIGHLIGHT_GLOW_CORE_BLUR = 8
+// de neón SIN blur real: en vez de un feGaussianBlur (costo de rasterizado incierto entre
+// navegadores/versiones cuando vive dentro de un grupo que rota sin parar -- ver comentario largo
+// que estaba acá antes), se apilan varios trazos SÓLIDOS de la MISMA línea, cada uno más ancho y
+// más transparente que el anterior (GLOW_LAYERS), terminando en la línea nítida de siempre encima
+// de todos. El anti-aliasing de cada trazo hace que la superposición se lea como un halo suave, sin
+// filtro -- mismo criterio que ya usa EdgeGlowFilter (falloff analítico en vez de blur real) para
+// el highlight de LiveTableBetsPanel. Ajustar a mano si hace falta más/menos difusión.
 const CELL_HIGHLIGHT_GLOW_STROKE_WIDTH = 3
+const GLOW_LAYERS: { width: number; opacity: number }[] = [
+  { width: 36, opacity: 0.06 },
+  { width: 22, opacity: 0.12 },
+  { width: 13, opacity: 0.22 },
+  { width: 7, opacity: 0.4 },
+]
 
 // Cuánto se corren las líneas hacia ADENTRO del rectángulo (grados, restados del ángulo real de
 // cada esquina) antes de dibujarlas -- las líneas viven recortadas al propio rectángulo
@@ -59,38 +65,33 @@ const CELL_HIGHLIGHT_GLOW_STROKE_WIDTH = 3
 const CELL_HIGHLIGHT_GLOW_INSET_DEG = 1
 
 // Color final (fill+glow) de una casilla -- explícito (categoría de useCategoryHighlightEntries)
-// o, a falta de uno, el color real de ruleta de la propia casilla. Exportado para que
-// NumberCellHighlightLayer pueda calcular el conjunto de colores DISTINTOS realmente en uso (ver
-// numberCellHighlightGlowFilterId más abajo) sin duplicar esta regla de fallback.
+// o, a falta de uno, el color real de ruleta de la propia casilla.
 export function resolveNumberCellHighlightColor(pocket: WheelPocket, color?: string): string {
   return color ?? NUMBER_CELL_HIGHLIGHT_STYLES[getRouletteColor(pocket)].fill
 }
 
-// Id del <filter> de glow compartido para un color dado (ver NumberCellHighlightLayer: arma UN
-// <filter> por color distinto en vez de que cada NumberCellHighlight declare el suyo propio --
-// hasta 18 casillas pueden compartir la misma categoría/color a la vez, así que antes esto eran
-// hasta 18 subárboles de filtro idénticos, doble feGaussianBlur cada uno, reconciliando en cada
-// re-render del padre). Sanitiza el color (p.ej. "#3aa8ff" -> "3aa8ff") para que sea un id de SVG
-// válido.
-export function numberCellHighlightGlowFilterId(color: string): string {
-  return `number-cell-highlight-glow-${color.replace(/[^a-zA-Z0-9]/g, '')}`
-}
-
-// El <filter> de glow en sí (dos feGaussianBlur + feMerge, ver comentario de
-// CELL_HIGHLIGHT_GLOW_BLUR) -- NumberCellHighlightLayer renderiza uno de estos por cada color
-// DISTINTO presente en sus entries (ver numberCellHighlightGlowFilterId), en vez de que cada
-// NumberCellHighlight de acá abajo declare el suyo propio.
-export function NumberCellHighlightGlowDef({ color }: { color: string }) {
+// Un "borde" del highlight (línea de abajo a arriba, ver glowInnerStart/glowOuterStart más abajo)
+// -- apila GLOW_LAYERS (trazos anchos/tenues) y termina con la línea nítida encima, todo sólido,
+// sin filtro. Componente propio (no inline) para no repetir el array de capas dos veces (borde de
+// inicio + borde de fin de la casilla).
+function GlowEdge({ x1, y1, x2, y2, color }: { x1: number; y1: number; x2: number; y2: number; color: string }) {
   return (
-    <filter id={numberCellHighlightGlowFilterId(color)} x="-150%" y="-150%" width="400%" height="400%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation={CELL_HIGHLIGHT_GLOW_BLUR} result="wideHalo" />
-      <feGaussianBlur in="SourceGraphic" stdDeviation={CELL_HIGHLIGHT_GLOW_CORE_BLUR} result="coreHalo" />
-      <feMerge>
-        <feMergeNode in="wideHalo" />
-        <feMergeNode in="coreHalo" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
+    <>
+      {GLOW_LAYERS.map((layer) => (
+        <line
+          key={layer.width}
+          className="number-cell-highlight-glow-line"
+          x1={x1}
+          y1={y1}
+          x2={x2}
+          y2={y2}
+          stroke={color}
+          strokeWidth={layer.width}
+          strokeOpacity={layer.opacity}
+        />
+      ))}
+      <line className="number-cell-highlight-glow-line" x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={CELL_HIGHLIGHT_GLOW_STROKE_WIDTH} />
+    </>
   )
 }
 
@@ -147,14 +148,12 @@ function NumberCellHighlightComponent({ pocket, wheelType, phase, delayMs = 0, c
 
   const path = describeCellFlarePath(center, bottomRadius, topRadius, bottomStartDeg, bottomEndDeg, topStartDeg, topEndDeg)
   const resolvedColor = resolveNumberCellHighlightColor(pocket, color)
-  const glowId = numberCellHighlightGlowFilterId(resolvedColor)
 
   // Puntos de las líneas de glow -- corridos levemente hacia adentro (ver
   // CELL_HIGHLIGHT_GLOW_INSET_DEG) respecto de las esquinas reales del rectángulo, para que no
   // queden exactamente pegadas al borde del path de relleno (que sí usa las esquinas reales sin
-  // este corrimiento). El halo del feDropShadow se deja SIN clipear (ver más abajo) para que se
-  // note el brillo difuminándose hacia afuera -- clipearlo a la forma angosta del propio
-  // rectángulo cortaba casi todo el blur antes de que llegara a verse, dejando solo dos líneas
+  // este corrimiento). El halo (GlowEdge) se deja SIN clipear a la forma angosta del rectángulo --
+  // clipearlo cortaba casi todo el halo antes de que llegara a verse, dejando solo dos líneas
   // duras sin halo visible.
   const glowInnerStart = getPolarPoint(center, bottomRadius, bottomStartDeg + CELL_HIGHLIGHT_GLOW_INSET_DEG)
   const glowInnerEnd = getPolarPoint(center, bottomRadius, bottomEndDeg - CELL_HIGHLIGHT_GLOW_INSET_DEG)
@@ -204,33 +203,11 @@ function NumberCellHighlightComponent({ pocket, wheelType, phase, delayMs = 0, c
             style={maskRectStyle}
           />
         </clipPath>
-        {/* El <filter> de glow YA NO se declara acá -- lo renderiza NumberCellHighlightLayer una
-            sola vez por cada color distinto en uso (ver numberCellHighlightGlowFilterId), no una
-            vez por casilla. Con hasta 18 casillas activas compartiendo la misma categoría/color,
-            evita hasta 18 subárboles de filtro idénticos (doble feGaussianBlur cada uno). */}
       </defs>
       <g clipPath={`url(#${maskClipId})`}>
         <path className="number-cell-highlight-path" d={path} fill={resolvedColor} data-number={pocket} />
-        <line
-          className="number-cell-highlight-glow-line"
-          x1={glowInnerStart.x}
-          y1={glowInnerStart.y}
-          x2={glowOuterStart.x}
-          y2={glowOuterStart.y}
-          stroke={resolvedColor}
-          strokeWidth={CELL_HIGHLIGHT_GLOW_STROKE_WIDTH}
-          filter={`url(#${glowId})`}
-        />
-        <line
-          className="number-cell-highlight-glow-line"
-          x1={glowInnerEnd.x}
-          y1={glowInnerEnd.y}
-          x2={glowOuterEnd.x}
-          y2={glowOuterEnd.y}
-          stroke={resolvedColor}
-          strokeWidth={CELL_HIGHLIGHT_GLOW_STROKE_WIDTH}
-          filter={`url(#${glowId})`}
-        />
+        <GlowEdge x1={glowInnerStart.x} y1={glowInnerStart.y} x2={glowOuterStart.x} y2={glowOuterStart.y} color={resolvedColor} />
+        <GlowEdge x1={glowInnerEnd.x} y1={glowInnerEnd.y} x2={glowOuterEnd.x} y2={glowOuterEnd.y} color={resolvedColor} />
       </g>
     </>
   )

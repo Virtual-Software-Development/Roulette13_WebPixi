@@ -74,6 +74,19 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
     }
   }, [videoUrlFromStore])
 
+  // Publica cuándo el video real ya terminó de cargar Y de subir del todo a su posición final --
+  // ver useDrawCycleStore.videoArrived (por qué hace falta esperar las DOS cosas, no solo la
+  // carga). `ready` de por sí ya casi seguro es true para cuando `arrived` lo es (900ms le sobran
+  // de margen a una carga que además ya viene precargada desde App.tsx), pero incluirlo igual cierra
+  // la ventana rara en que no fuera así: sin `ready`, el transform real del <video> (gateado por
+  // `!ready` más abajo) todavía podría no haberse aplicado aunque el progreso ya diga 1. Se resetea
+  // a false en el cleanup, no solo cuando pasa a true.
+  useEffect(() => {
+    const videoArrived = ready && arrived
+    useDrawCycleStore.getState().setVideoArrived(videoArrived)
+    return () => useDrawCycleStore.getState().setVideoArrived(false)
+  }, [ready, arrived])
+
   useEffect(() => {
     if (!ready) return
 
