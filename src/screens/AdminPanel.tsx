@@ -4,9 +4,11 @@ import { AdminDashboardPage } from './AdminDashboardPage'
 import { RtpDashboardPage } from './RtpDashboardPage'
 import { RtpManagementPage } from './RtpManagementPage'
 import { NextResultsPage } from './NextResultsPage'
+import { GameEventsPage } from './GameEventsPage'
 
 type AdminView =
   | 'admin'
+  | 'admin-game-events'
   | 'admin-rtp-dashboard'
   | 'admin-rtp-management'
   | 'admin-next-results'
@@ -20,6 +22,7 @@ type AdminView =
 // (Roulette y Quick Money son vistas separadas, no una sola pantalla combinada).
 const ACTIVE_SIDEBAR_ID_BY_VIEW: Record<AdminView, string> = {
   admin: 'dashboard',
+  'admin-game-events': 'gameEvents',
   'admin-rtp-dashboard': 'rtpDashboard',
   'admin-rtp-management': 'rtpManagement',
   'admin-next-results': 'roulette',
@@ -29,6 +32,7 @@ const ACTIVE_SIDEBAR_ID_BY_VIEW: Record<AdminView, string> = {
 function isAdminView(value: string | null): value is AdminView {
   return (
     value === 'admin' ||
+    value === 'admin-game-events' ||
     value === 'admin-rtp-dashboard' ||
     value === 'admin-rtp-management' ||
     value === 'admin-next-results' ||
@@ -66,6 +70,7 @@ export function AdminPanel() {
   return (
     <AdminLayout activeId={ACTIVE_SIDEBAR_ID_BY_VIEW[view]} onNavigate={handleNavigate}>
       {view === 'admin' && <AdminDashboardPage />}
+      {view === 'admin-game-events' && <GameEventsPage />}
       {view === 'admin-rtp-dashboard' && <RtpDashboardPage />}
       {view === 'admin-rtp-management' && <RtpManagementPage onNavigate={handleNavigate} />}
       {view === 'admin-next-results' && <NextResultsPage section="roulette" />}

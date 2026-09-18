@@ -24,7 +24,7 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     id: 'gameEvents',
     labelKey: 'admin.nav.gameEvents',
     icon: buildMediaUrl('Website_svg_icons/33_calendar_white.svg'),
-    disabled: true,
+    view: 'admin-game-events',
   },
   {
     id: 'nextResults',

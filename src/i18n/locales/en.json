@@ -190,6 +190,92 @@
         "offline": "Offline"
       }
     },
+    "gameEvents": {
+      "subtitle": "Manage and monitor all scheduled and past game events",
+      "search": { "placeholder": "Search events..." },
+      "filter": { "allStatuses": "All Statuses" },
+      "status": {
+        "completed": "Completed",
+        "live": "Live",
+        "scheduled": "Scheduled"
+      },
+      "table": {
+        "id": "ID",
+        "name": "Name",
+        "game": "Game",
+        "startTime": "Start Time",
+        "status": "Status"
+      },
+      "list": {
+        "showingCount": "Showing {{from}}–{{to}} of {{total}} events",
+        "empty": "No events match your search.",
+        "pagination": "Pagination",
+        "previousPage": "Previous page",
+        "nextPage": "Next page"
+      },
+      "detail": {
+        "emptyTitle": "Select an event",
+        "emptyDescription": "Choose an event from the list to see its details."
+      },
+      "metadata": {
+        "date": "Date",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "duration": "Duration",
+        "durationMinutes": "{{count}} minutes",
+        "notApplicable": "—"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "payouts": "Payouts"
+      },
+      "overview": {
+        "statusTimeline": {
+          "title": "Status Timeline",
+          "pending": "Pending",
+          "steps": {
+            "created": "Event Created",
+            "started": "Started",
+            "drawCompleted": "Draw Completed",
+            "resultsPublished": "Results Published"
+          }
+        },
+        "result": {
+          "title": "Result",
+          "drawnOn": "Drawn on {{date}}",
+          "pending": "Result not available yet"
+        },
+        "statistics": {
+          "title": "Statistics",
+          "totalBets": "Total Bets",
+          "totalPayout": "Total Payout",
+          "uniquePlayers": "Unique Players",
+          "status": "Status",
+          "empty": "Statistics not available yet"
+        }
+      },
+      "payouts": {
+        "table": {
+          "player": "Player",
+          "bet": "Bet Amount",
+          "payout": "Payout Amount",
+          "status": "Status"
+        },
+        "status": {
+          "paid": "Paid",
+          "pending": "Pending"
+        },
+        "empty": "No payouts recorded for this event."
+      },
+      "actions": {
+        "viewDrawLog": "View Draw Log"
+      },
+      "drawLog": {
+        "title": "Draw Log",
+        "close": "Close",
+        "empty": "No log entries available."
+      }
+    },
     "nextResults": {
       "title": "Next Results & Manual Control",
       "subtitle": "View upcoming results and manually set or change results for Roulette and Quick Money games.",
