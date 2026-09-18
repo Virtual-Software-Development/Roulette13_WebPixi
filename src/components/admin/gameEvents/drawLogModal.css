@@ -1,0 +1,112 @@
+.admin-draw-log-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 7, 11, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.admin-draw-log-dialog {
+  width: min(520px, 100%);
+  max-height: min(600px, 100%);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 22px 24px;
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(12, 22, 32, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.admin-draw-log-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.admin-draw-log-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-draw-log-subtitle {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-draw-log-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-draw-log-close:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-draw-log-close:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+}
+
+.admin-draw-log-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.admin-draw-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-draw-log-entry {
+  display: flex;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.1);
+}
+
+.admin-draw-log-entry:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.admin-draw-log-entry-timestamp {
+  flex-shrink: 0;
+  width: 128px;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-draw-log-entry-message {
+  font-size: 13.5px;
+  color: var(--admin-text-primary);
+}

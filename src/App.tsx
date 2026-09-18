@@ -171,6 +171,31 @@ function App() {
     useBetsSummaryStore.getState().clearHighlights()
   }, [active])
 
+  // Watchdog -- ninguno de los fetches/promesas encadenados dentro de scheduleDraw (fetchDrawResult,
+  // pickRandomDrawResultVideoUrl, loadVideoSrc esperando 'loadedmetadata') tiene timeout: si
+  // cualquiera de ellos se cuelga (no falla, nunca resuelve ni rechaza -- red lenta/rota, video que
+  // nunca dispara su evento), showVideo() nunca corre, RouletteVideoView nunca se monta, su onEnded
+  // nunca dispara handleRoundEnded, y como ese es el único punto que vuelve a llamar scheduleDraw(),
+  // nextDrawStartTime queda congelado y el countdown se clava en 00:00 para siempre (ver
+  // conversación). Esta red de seguridad no ataca esos cuelgues uno por uno -- solo detecta "pasó
+  // un margen generoso desde nextDrawStartTime y la ronda sigue sin arrancar" y fuerza un
+  // scheduleDraw() nuevo (mismo mecanismo que handleRoundEnded), que reagenda todo desde /gameInfo.
+  useEffect(() => {
+    const STUCK_GRACE_MS = 20_000
+    const CHECK_INTERVAL_MS = 5_000
+    const interval = setInterval(() => {
+      if (active || videoMounted) return
+      const nextDrawStartTime = useGameConfigStore.getState().nextDrawStartTime
+      if (!nextDrawStartTime) return
+      const msPastStart = Date.now() - parseApiDateTime(nextDrawStartTime).getTime()
+      if (msPastStart > STUCK_GRACE_MS) {
+        console.warn('El sorteo no arrancó a tiempo, reagendando...', { nextDrawStartTime })
+        scheduleDraw(() => false, false)
+      }
+    }, CHECK_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [active, videoMounted, scheduleDraw])
+
   // Se llama apenas el video termina de reproducirse (bien antes del
   // freeze-hold/slide-down) — agenda el próximo sorteo ahí, no cuando vuelve
   // a mostrarse el lobby, para que Header/LastGame ya tengan los datos

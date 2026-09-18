@@ -1,0 +1,234 @@
+/* Panel izquierdo (master) de Game Events -- se apoya en .admin-panel (adminLayout.css) para el
+   fondo/borde/radius base; el ancho de la columna lo decide el grid de gameEventsPage.css, este
+   componente solo llena su celda (height:100%, flex column). */
+.admin-game-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.admin-game-events-list-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.admin-game-events-search {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.admin-game-events-search svg {
+  position: absolute;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  color: var(--admin-text-secondary);
+  pointer-events: none;
+}
+
+.admin-game-events-search-input {
+  width: 100%;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 14px 0 40px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 150ms ease;
+}
+
+.admin-game-events-search-input::placeholder {
+  color: var(--admin-text-secondary);
+}
+
+.admin-game-events-search-input:hover {
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-game-events-search-input:focus-visible {
+  outline: none;
+  border-color: rgba(120, 155, 185, 0.55);
+}
+
+.admin-game-events-list-toolbar .admin-select-field {
+  flex: 0 0 150px;
+}
+
+.admin-game-events-table-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: auto;
+  min-height: 0;
+}
+
+.admin-game-events-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-game-events-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 10px;
+  text-align: left;
+  background: rgba(7, 14, 21, 0.98);
+  color: var(--admin-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+/* Ajusta el pill genérico de StatusBadge (Game/Status) solo dentro de esta tabla angosta -- sigue
+   siendo el mismo componente/variantes compartidos, únicamente más compacto acá. */
+.admin-game-events-table .admin-status-badge {
+  padding: 2px 7px;
+  font-size: 11px;
+}
+
+.admin-game-events-table tbody tr {
+  cursor: pointer;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.08);
+  transition:
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-game-events-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.admin-game-events-table tbody td {
+  padding: 10px 10px;
+  color: var(--admin-text-primary);
+  vertical-align: middle;
+}
+
+.admin-game-events-table tbody tr:hover {
+  background: rgba(150, 180, 210, 0.04);
+}
+
+.admin-game-events-table tbody tr:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: -2px;
+}
+
+/* Fila seleccionada -- gradiente burgundy oscuro + borde rojo brillante + glow interno muy sutil
+   (pedido explícito: debe conservar profundidad, nunca un rojo plano cubriendo toda la fila). */
+.admin-game-events-table tbody tr[data-selected='true'] {
+  background: linear-gradient(90deg, rgba(155, 15, 25, 0.32) 0%, rgba(90, 10, 18, 0.14) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 60, 72, 0.5),
+    inset 0 0 16px rgba(243, 38, 53, 0.12);
+}
+
+.admin-game-events-table tbody tr[data-selected='true']:hover {
+  background: linear-gradient(90deg, rgba(155, 15, 25, 0.38) 0%, rgba(90, 10, 18, 0.18) 100%);
+}
+
+.admin-game-events-id,
+.admin-game-events-secondary {
+  color: var(--admin-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.admin-game-events-name {
+  max-width: 130px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.admin-game-events-empty {
+  margin: 0;
+  padding: 16px 14px;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-game-events-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-game-events-count {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+  white-space: nowrap;
+}
+
+/* Paginación -- real (pagina el array ya filtrado, ver GameEventsList.tsx), no decorativa: solo se
+   renderiza cuando hay más de una página. */
+.admin-game-events-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-game-events-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.admin-game-events-page-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-game-events-page-btn:hover:not(:disabled) {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-game-events-page-btn:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: 1px;
+}
+
+.admin-game-events-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-game-events-page-btn[data-active='true'] {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+}

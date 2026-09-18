@@ -1,0 +1,24 @@
+/* Layout master/detail de Game Events -- columna izquierda (lista) más ancha que la derecha
+   (pedido explícito: la tabla de 5 columnas se veía comprimida), dentro de un rango flexible
+   (min/max), columna derecha ocupa el resto. Ninguna dimensión rígida: en pantallas angostas la
+   grid pasa a una sola columna, lista arriba y detalle abajo, para no aplastar ninguna de las dos
+   por debajo de su ancho legible. */
+.admin-game-events-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(560px, 54%) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+@media (max-width: 1180px) {
+  .admin-game-events-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: min-content;
+  }
+
+  .admin-game-events-layout > :first-child {
+    max-height: 420px;
+  }
+}

@@ -190,6 +190,92 @@
         "offline": "Fuera de línea"
       }
     },
+    "gameEvents": {
+      "subtitle": "Gestiona y monitorea todos los eventos de juego programados y pasados",
+      "search": { "placeholder": "Buscar eventos..." },
+      "filter": { "allStatuses": "Todos los Estados" },
+      "status": {
+        "completed": "Completado",
+        "live": "En Vivo",
+        "scheduled": "Programado"
+      },
+      "table": {
+        "id": "ID",
+        "name": "Nombre",
+        "game": "Juego",
+        "startTime": "Hora de Inicio",
+        "status": "Estado"
+      },
+      "list": {
+        "showingCount": "Mostrando {{from}}–{{to}} de {{total}} eventos",
+        "empty": "Ningún evento coincide con tu búsqueda.",
+        "pagination": "Paginación",
+        "previousPage": "Página anterior",
+        "nextPage": "Página siguiente"
+      },
+      "detail": {
+        "emptyTitle": "Selecciona un evento",
+        "emptyDescription": "Elige un evento de la lista para ver sus detalles."
+      },
+      "metadata": {
+        "date": "Fecha",
+        "startTime": "Hora de Inicio",
+        "endTime": "Hora de Fin",
+        "duration": "Duración",
+        "durationMinutes": "{{count}} minutos",
+        "notApplicable": "—"
+      },
+      "tabs": {
+        "overview": "Resumen",
+        "payouts": "Pagos"
+      },
+      "overview": {
+        "statusTimeline": {
+          "title": "Línea de Tiempo del Estado",
+          "pending": "Pendiente",
+          "steps": {
+            "created": "Evento Creado",
+            "started": "Iniciado",
+            "drawCompleted": "Sorteo Completado",
+            "resultsPublished": "Resultados Publicados"
+          }
+        },
+        "result": {
+          "title": "Resultado",
+          "drawnOn": "Sorteado el {{date}}",
+          "pending": "Resultado no disponible todavía"
+        },
+        "statistics": {
+          "title": "Estadísticas",
+          "totalBets": "Apuestas Totales",
+          "totalPayout": "Pago Total",
+          "uniquePlayers": "Jugadores Únicos",
+          "status": "Estado",
+          "empty": "Estadísticas no disponibles todavía"
+        }
+      },
+      "payouts": {
+        "table": {
+          "player": "Jugador",
+          "bet": "Monto Apostado",
+          "payout": "Monto Pagado",
+          "status": "Estado"
+        },
+        "status": {
+          "paid": "Pagado",
+          "pending": "Pendiente"
+        },
+        "empty": "No hay pagos registrados para este evento."
+      },
+      "actions": {
+        "viewDrawLog": "Ver Registro de Sorteo"
+      },
+      "drawLog": {
+        "title": "Registro de Sorteo",
+        "close": "Cerrar",
+        "empty": "No hay entradas de registro disponibles."
+      }
+    },
     "nextResults": {
       "title": "Próximos Resultados y Control Manual",
       "subtitle": "Consulta los próximos resultados y configura o cambia manualmente los resultados de Ruleta y Quick Money.",

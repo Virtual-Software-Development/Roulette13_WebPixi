@@ -1,10 +1,17 @@
-import { StrictMode } from 'react'
+import { lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './i18n'
-import App from './App.tsx'
-import { LoginPage } from './screens/LoginPage.tsx'
-import { AdminPanel } from './screens/AdminPanel.tsx'
+
+// Lazy en vez de import estático -- App.tsx carga @pixi/react + todo el motor de renderizado/video/
+// física de la ruleta, que Login/Admin no necesitan para nada. Con import estático, main.tsx los
+// traía a los tres siempre juntos (mismo bundle/módulo de entrada), así que visitar ?preview=admin
+// igual forzaba descargar y evaluar todo el motor Pixi antes de poder pintar el Admin Panel (ver
+// conversación: eso es lo que hacía lenta esa transición). Con lazy(), cada pantalla es su propio
+// chunk -- Admin/Login ya no arrastran Pixi.
+const App = lazy(() => import('./App.tsx'))
+const LoginPage = lazy(() => import('./screens/LoginPage.tsx').then((m) => ({ default: m.LoginPage })))
+const AdminPanel = lazy(() => import('./screens/AdminPanel.tsx').then((m) => ({ default: m.AdminPanel })))
 
 // Preview temporal vía ?preview=<login|admin|admin-rtp-dashboard|admin-rtp-management> -- todavía
 // no hay router en el proyecto (ver conversación), así que la elección de pantalla de nivel
@@ -13,6 +20,7 @@ import { AdminPanel } from './screens/AdminPanel.tsx'
 // (Dashboard/RTP Dashboard/RTP Management) en memoria (useState), sin volver a pasar por acá.
 const ADMIN_PREVIEW_VALUES = [
   'admin',
+  'admin-game-events',
   'admin-rtp-dashboard',
   'admin-rtp-management',
   'admin-next-results',
@@ -26,4 +34,17 @@ function resolveScreen() {
   return <App />
 }
 
-createRoot(document.getElementById('root')!).render(<StrictMode>{resolveScreen()}</StrictMode>)
+// Fallback mientras carga el chunk lazy de la pantalla elegida -- deliberadamente NO es
+// LoadingView.tsx (ese SÍ depende de Pixi/useTick, pensado para mostrarse adentro de la
+// <Application> de App.tsx una vez que Pixi ya está cargado, no acá arriba de todo). Un div oscuro
+// vacío evita el flash blanco mientras se resuelve el import(), sin arrastrar Pixi solo para
+// mostrar un loader.
+function ScreenFallback() {
+  return <div style={{ position: 'fixed', inset: 0, background: '#05090d' }} />
+}
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <Suspense fallback={<ScreenFallback />}>{resolveScreen()}</Suspense>
+  </StrictMode>,
+)
