@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import './confirmDialog.css'
 
 interface ConfirmDialogProps {
@@ -9,6 +10,11 @@ interface ConfirmDialogProps {
   // Estilo del botón de confirmar -- true para acciones irreversibles (ej. Factory Reset), el rojo
   // de "peligro" en vez del rojo primario normal del Admin.
   danger?: boolean
+  // Ambos opcionales -- Factory Reset (Settings > System) sigue sin usarlos, su onConfirm es
+  // síncrono e instantáneo. Delete User (Users) sí los usa: mientras loading=true, deshabilita
+  // ambos botones y bloquea Escape/backdrop/Tab-out para evitar doble submit mientras "elimina".
+  loading?: boolean
+  confirmLoadingLabel?: string
   onConfirm: () => void
   onCancel: () => void
 }
@@ -16,23 +22,43 @@ interface ConfirmDialogProps {
 // Generaliza el overlay de DrawLogModal.tsx (Game Events) -- ese quedó deliberadamente
 // autocontenido con el comentario "si aparece un segundo caso de uso, ahí sí vale la pena
 // generalizar" (ver conversación). Este es ese segundo caso: una confirmación genérica título/
-// descripción/Cancel/Confirm para cualquier acción destructiva del Admin (hoy: Factory Reset en
-// Settings > System), sin duplicar el mecanismo de backdrop/foco/Escape.
-export function ConfirmDialog({ title, description, confirmLabel, cancelLabel, danger, onConfirm, onCancel }: ConfirmDialogProps) {
+// descripción/Cancel/Confirm para cualquier acción destructiva del Admin (Factory Reset en
+// Settings > System, Delete User en Users), sin duplicar el mecanismo de backdrop/foco/Escape.
+export function ConfirmDialog({
+  title,
+  description,
+  confirmLabel,
+  cancelLabel,
+  danger,
+  loading,
+  confirmLoadingLabel,
+  onConfirm,
+  onCancel,
+}: ConfirmDialogProps) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null)
+
+  useFocusTrap(dialogRef, true)
 
   useEffect(() => {
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null
     cancelButtonRef.current?.focus()
+    return () => previouslyFocusedRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onCancel()
+      if (e.key === 'Escape' && !loading) onCancel()
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onCancel])
+  }, [onCancel, loading])
 
   return (
-    <div className="admin-confirm-dialog-backdrop" onClick={onCancel}>
+    <div className="admin-confirm-dialog-backdrop" onClick={loading ? undefined : onCancel}>
       <div
+        ref={dialogRef}
         className="admin-confirm-dialog"
         role="alertdialog"
         aria-modal="true"
@@ -47,15 +73,22 @@ export function ConfirmDialog({ title, description, confirmLabel, cancelLabel, d
           {description}
         </p>
         <div className="admin-confirm-dialog-actions">
-          <button ref={cancelButtonRef} type="button" className="admin-confirm-dialog-btn admin-confirm-dialog-btn--ghost" onClick={onCancel}>
+          <button
+            ref={cancelButtonRef}
+            type="button"
+            className="admin-confirm-dialog-btn admin-confirm-dialog-btn--ghost"
+            disabled={loading}
+            onClick={onCancel}
+          >
             {cancelLabel}
           </button>
           <button
             type="button"
             className={`admin-confirm-dialog-btn ${danger ? 'admin-confirm-dialog-btn--danger' : 'admin-confirm-dialog-btn--primary'}`}
+            disabled={loading}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {loading ? (confirmLoadingLabel ?? confirmLabel) : confirmLabel}
           </button>
         </div>
       </div>

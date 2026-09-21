@@ -445,6 +445,73 @@
         }
       }
     },
+    "users": {
+      "title": "Users",
+      "subtitle": "Manage user accounts, roles and access to the system.",
+      "addUser": "Add User",
+      "search": { "placeholder": "Search users by name, email or username..." },
+      "filter": {
+        "label": "Filter",
+        "role": "Role",
+        "status": "Status",
+        "allRoles": "All Roles",
+        "allStatuses": "All Statuses",
+        "clear": "Clear filters"
+      },
+      "role": { "admin": "Admin", "operator": "Operator", "viewer": "Viewer" },
+      "status": { "active": "Active", "inactive": "Inactive" },
+      "stats": { "total": "Total Users", "active": "Active Users", "inactive": "Inactive Users", "admins": "Admin Users" },
+      "list": {
+        "title": "User List",
+        "empty": "No users found.",
+        "showingCount": "Showing {{from}} to {{to}} of {{total}} users",
+        "pagination": "Pagination",
+        "previousPage": "Previous page",
+        "nextPage": "Next page"
+      },
+      "table": {
+        "name": "Name",
+        "username": "Username",
+        "email": "Email",
+        "role": "Role",
+        "status": "Status",
+        "lastLogin": "Last Login",
+        "actions": "Actions",
+        "neverLoggedIn": "Never logged in"
+      },
+      "actions": { "edit": "Edit user", "delete": "Delete user" },
+      "modal": {
+        "createTitle": "Create User",
+        "editTitle": "Edit User",
+        "close": "Close",
+        "fullName": "Full Name",
+        "fullNamePlaceholder": "Enter full name",
+        "username": "Username",
+        "usernamePlaceholder": "Enter username",
+        "email": "Email Address",
+        "emailPlaceholder": "Enter email address",
+        "password": "Password",
+        "passwordPlaceholder": "Enter password",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
+        "role": "Role",
+        "status": "Status",
+        "cancel": "Cancel",
+        "createSubmit": "Create User",
+        "saveSubmit": "Save Changes",
+        "creating": "Creating...",
+        "saving": "Saving...",
+        "createError": "Unable to create user. Try again.",
+        "editError": "Unable to save changes. Try again."
+      },
+      "deleteConfirm": {
+        "title": "Delete User",
+        "description": "Are you sure you want to delete {{name}}? This action cannot be undone.",
+        "confirm": "Delete User",
+        "deleting": "Deleting...",
+        "cancel": "Cancel"
+      }
+    },
     "nextResults": {
       "title": "Next Results & Manual Control",
       "subtitle": "View upcoming results and manually set or change results for Roulette and Quick Money games.",

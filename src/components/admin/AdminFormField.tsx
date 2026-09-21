@@ -19,7 +19,12 @@ interface AdminFormFieldProps {
   readOnly?: boolean
   disabled?: boolean
   emphasized?: boolean
-  type?: 'text' | 'number' | 'date' | 'datetime-local' | 'password'
+  type?: 'text' | 'number' | 'date' | 'datetime-local' | 'password' | 'email'
+  placeholder?: string
+  // Validación nativa del navegador (required + type="email") -- el proyecto no tiene ninguna
+  // librería/sistema de validación de formularios (ver investigación para Users), así que esto se
+  // apoya en el constraint validation API nativo en vez de inventar uno.
+  required?: boolean
   step?: string
   min?: string
   max?: string
@@ -65,6 +70,8 @@ export function AdminFormField({
   disabled,
   emphasized,
   type = 'text',
+  placeholder,
+  required,
   step,
   min,
   max,
@@ -87,6 +94,8 @@ export function AdminFormField({
           className="admin-form-field-input"
           type={type}
           value={value}
+          placeholder={placeholder}
+          required={required}
           step={step}
           min={min}
           max={max}

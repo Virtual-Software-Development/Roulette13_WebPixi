@@ -445,6 +445,73 @@
         }
       }
     },
+    "users": {
+      "title": "Usuarios",
+      "subtitle": "Gestiona las cuentas de usuario, roles y acceso al sistema.",
+      "addUser": "Agregar Usuario",
+      "search": { "placeholder": "Buscar usuarios por nombre, email o usuario..." },
+      "filter": {
+        "label": "Filtrar",
+        "role": "Rol",
+        "status": "Estado",
+        "allRoles": "Todos los Roles",
+        "allStatuses": "Todos los Estados",
+        "clear": "Limpiar filtros"
+      },
+      "role": { "admin": "Admin", "operator": "Operador", "viewer": "Espectador" },
+      "status": { "active": "Activo", "inactive": "Inactivo" },
+      "stats": { "total": "Usuarios Totales", "active": "Usuarios Activos", "inactive": "Usuarios Inactivos", "admins": "Usuarios Admin" },
+      "list": {
+        "title": "Lista de Usuarios",
+        "empty": "No se encontraron usuarios.",
+        "showingCount": "Mostrando {{from}} a {{to}} de {{total}} usuarios",
+        "pagination": "Paginación",
+        "previousPage": "Página anterior",
+        "nextPage": "Página siguiente"
+      },
+      "table": {
+        "name": "Nombre",
+        "username": "Usuario",
+        "email": "Email",
+        "role": "Rol",
+        "status": "Estado",
+        "lastLogin": "Último Acceso",
+        "actions": "Acciones",
+        "neverLoggedIn": "Nunca inició sesión"
+      },
+      "actions": { "edit": "Editar usuario", "delete": "Eliminar usuario" },
+      "modal": {
+        "createTitle": "Crear Usuario",
+        "editTitle": "Editar Usuario",
+        "close": "Cerrar",
+        "fullName": "Nombre Completo",
+        "fullNamePlaceholder": "Ingresa el nombre completo",
+        "username": "Usuario",
+        "usernamePlaceholder": "Ingresa el usuario",
+        "email": "Correo Electrónico",
+        "emailPlaceholder": "Ingresa el correo electrónico",
+        "password": "Contraseña",
+        "passwordPlaceholder": "Ingresa la contraseña",
+        "showPassword": "Mostrar contraseña",
+        "hidePassword": "Ocultar contraseña",
+        "role": "Rol",
+        "status": "Estado",
+        "cancel": "Cancelar",
+        "createSubmit": "Crear Usuario",
+        "saveSubmit": "Guardar Cambios",
+        "creating": "Creando...",
+        "saving": "Guardando...",
+        "createError": "No se pudo crear el usuario. Intenta de nuevo.",
+        "editError": "No se pudieron guardar los cambios. Intenta de nuevo."
+      },
+      "deleteConfirm": {
+        "title": "Eliminar Usuario",
+        "description": "¿Estás seguro de que deseas eliminar a {{name}}? Esta acción no se puede deshacer.",
+        "confirm": "Eliminar Usuario",
+        "deleting": "Eliminando...",
+        "cancel": "Cancelar"
+      }
+    },
     "nextResults": {
       "title": "Próximos Resultados y Control Manual",
       "subtitle": "Consulta los próximos resultados y configura o cambia manualmente los resultados de Ruleta y Quick Money.",
