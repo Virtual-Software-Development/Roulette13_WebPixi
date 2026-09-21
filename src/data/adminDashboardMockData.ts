@@ -45,7 +45,7 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     id: 'users',
     labelKey: 'admin.nav.users',
     icon: buildMediaUrl('Website_svg_icons/16_user_white_circle.svg'),
-    disabled: true,
+    view: 'admin-users',
   },
   {
     id: 'rtp',
