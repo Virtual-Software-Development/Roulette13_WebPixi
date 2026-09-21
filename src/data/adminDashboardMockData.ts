@@ -83,7 +83,7 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     id: 'settings',
     labelKey: 'admin.nav.settings',
     icon: buildMediaUrl('Website_svg_icons/17_gear_white.svg'),
-    disabled: true,
+    view: 'admin-settings',
   },
 ]
 

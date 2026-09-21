@@ -56,6 +56,32 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
+  /* Sin esto, el scrollbar overlay del navegador ocupa 0px de ancho y solo aparece un instante al
+     arrastrar -- en páginas más largas que el viewport (ej. Settings con sus tres cards, ver
+     conversación) eso hace que el contenido de abajo se vea "cortado" en vez de "hay que scrollear".
+     Un scrollbar fino y siempre visible, con el mismo lenguaje de color que el resto del Admin. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 155, 185, 0.35) transparent;
+}
+
+.admin-main::-webkit-scrollbar {
+  width: 10px;
+}
+
+.admin-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-main::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 155, 185, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.admin-main::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(120, 155, 185, 0.55);
+  background-clip: padding-box;
 }
 
 .admin-main-topbar {

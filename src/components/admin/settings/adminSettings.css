@@ -1,0 +1,1012 @@
+/* Admin Settings -- compartido por AdminSettingsTabs/GeneralSettingsTab/SiteInformationCard/
+   VideoLibrarySettingsCard/OtherSettingsCard (mismo criterio que nextResults.css/
+   rtpManagementShared.css: varios componentes de una misma sección compartiendo un único
+   stylesheet). Se apoya en los tokens de adminLayout.css (--admin-*) y en .admin-panel/
+   .admin-panel-header/.admin-panel-title (título/borde/fondo de card ya estandarizados) -- define
+   sus propias clases para tabs/botones/toggle (nunca reutiliza literalmente las de RTP Management,
+   aunque el lenguaje visual sea el mismo, mismo criterio ya establecido en Game Events). */
+
+/* -------------------------------------------------------------------------------------------
+   Tabs -- General/Video Libraries/System/Notifications, las cuatro ocupan el mismo espacio
+   (pedido explícito) en vez de ajustarse a su contenido como en RTP Management. */
+.admin-settings-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: rgba(6, 13, 20, 0.55);
+}
+
+.admin-settings-tab {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 52px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.admin-settings-tab:hover {
+  color: var(--admin-text-primary);
+  background: rgba(150, 180, 210, 0.06);
+}
+
+.admin-settings-tab:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: 2px;
+}
+
+.admin-settings-tab[data-active='true'] {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+  box-shadow:
+    0 6px 18px -4px color-mix(in srgb, var(--admin-red) 55%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.admin-settings-tab-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.admin-settings-tab-icon--inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+.admin-settings-tab-icon--inline svg {
+  width: 17px;
+  height: 17px;
+}
+
+@media (max-width: 720px) {
+  .admin-settings-tabs {
+    flex-wrap: wrap;
+  }
+
+  .admin-settings-tab {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+/* -------------------------------------------------------------------------------------------
+   Tab content -- stack vertical de cards, mismo spacing que .admin-main (22px). */
+.admin-settings-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.admin-settings-empty {
+  margin: 0;
+  padding: 40px 20px;
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-panel-bg);
+  text-align: center;
+  font-size: 14px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-settings-card-subtitle {
+  margin: 5px 0 0;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Grids de dos columnas -- Site Information, Other Settings. */
+.admin-settings-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-settings-column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+@media (max-width: 720px) {
+  .admin-settings-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* -------------------------------------------------------------------------------------------
+   Video Library Settings -- dos columnas (Roulette / Quick Money) con un divider vertical tenue. */
+.admin-settings-video-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+@media (max-width: 780px) {
+  .admin-settings-video-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-settings-video-divider {
+    display: none;
+  }
+}
+
+.admin-settings-video-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.admin-settings-video-column-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-settings-video-column-title img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.admin-settings-video-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--admin-border);
+}
+
+.admin-settings-path-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.admin-settings-path-row .admin-form-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-settings-browse-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-settings-browse-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.admin-settings-browse-btn:hover:not(:disabled) {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-settings-browse-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Toggles -- ningún componente de este tipo se reutiliza literalmente de rtpManagementShared.css
+   (mismo criterio de namespaces separados que el resto de esta hoja), pero el lenguaje visual es
+   idéntico: track+thumb puramente visuales reaccionando a :checked vía sibling selector. A
+   diferencia de RTP (que pone el label a la derecha del track, en línea), acá cada opción lleva
+   label+description apiladas junto al track (pedido explícito: "[toggle] Título / Descripción"). */
+.admin-settings-toggle-list {
+  gap: 16px;
+}
+
+.admin-settings-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-settings-toggle {
+  /* Ancla el containing block del input absolutamente posicionado (ver .admin-settings-toggle-input
+     más abajo) a ESTE wrapper en vez de dejarlo resolver al ancestro posicionado más cercano en todo
+     el árbol (.admin-shell, position:fixed) -- sin esto, al enfocar el checkbox (foco nativo del
+     navegador al hacer click) el auto-scroll-into-view calculaba mal el destino dentro de .admin-main
+     y dejaba la página con un scroll gigante hacia una posición vacía ("se corta todo", ver
+     conversación). Buena práctica general para cualquier hijo position:absolute, no solo el fix de
+     este bug puntual. */
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  padding-top: 2px;
+}
+
+.admin-settings-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-settings-toggle-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.9);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.admin-settings-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--admin-text-secondary);
+  transition:
+    transform 150ms ease,
+    background 150ms ease;
+}
+
+.admin-settings-toggle-input:checked + .admin-settings-toggle-track {
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+}
+
+.admin-settings-toggle-input:checked + .admin-settings-toggle-track .admin-settings-toggle-thumb {
+  transform: translateX(18px);
+  background: #fff;
+}
+
+.admin-settings-toggle-input:focus-visible + .admin-settings-toggle-track {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-red) 25%, transparent);
+}
+
+.admin-settings-toggle-label {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.admin-settings-toggle-description {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Actions -- Reset to Defaults / Save Changes, alineados a la derecha (pedido explícito). */
+.admin-settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .admin-settings-actions {
+    flex-wrap: wrap;
+  }
+}
+
+.admin-settings-save-feedback {
+  margin-right: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-green);
+}
+
+.admin-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 22px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 80ms ease;
+}
+
+.admin-settings-btn img,
+.admin-settings-btn svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.admin-settings-btn:active {
+  transform: translateY(1px);
+}
+
+/* Ghost neutro -- Test Connection/Backup Database/Clear Cache/Rebuild Index/Restart Services/Open
+   in File Explorer (pedido explícito: "secondary, NO deben utilizar el rojo principal"). Distinto
+   de --ghost-strong (texto full-bright, usado para Reset to Defaults): este queda con el texto
+   secundario, un poco más discreto, ya que acá hay varios botones de este tipo por card. */
+.admin-settings-btn--ghost {
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-secondary);
+}
+
+.admin-settings-btn--ghost:hover:not(:disabled) {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-settings-btn--ghost:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-settings-btn--full {
+  width: 100%;
+}
+
+.admin-settings-btn--ghost-strong {
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.38);
+}
+
+.admin-settings-btn--ghost-strong:hover {
+  border-color: rgba(120, 155, 185, 0.6);
+  background: rgba(150, 180, 210, 0.06);
+}
+
+.admin-settings-btn--primary {
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+  color: #fff;
+  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--admin-red) 55%, transparent);
+}
+
+.admin-settings-btn--primary:hover {
+  filter: brightness(1.06);
+}
+
+/* Primary disabled (sin cambios pendientes) -- mismo criterio que admin-rtp-mgmt-btn--primary:
+   un rojo apagado se leería como "acción peligrosa/error", que no es lo que significa acá. */
+.admin-settings-btn--primary:disabled {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  border-color: var(--admin-border);
+  color: var(--admin-text-secondary);
+  box-shadow: none;
+  cursor: not-allowed;
+  filter: none;
+}
+
+/* Actions con dos botones ocupando el mismo ancho (Test Connection / Backup Database) en vez de
+   alineados a la derecha -- distinto de .admin-settings-actions (Reset/Save, flex-end). */
+.admin-settings-actions--split {
+  justify-content: stretch;
+}
+
+.admin-settings-actions--split .admin-settings-btn {
+  flex: 1 1 0;
+}
+
+/* Barra de confirmación inline -- mismo lenguaje que admin-rtp-mgmt-confirm (RTP Management) y el
+   confirm de GameEventDetailPanel, namespace propio (ver criterio general de esta hoja). Usada
+   únicamente por Restart Services (System Operations), no por Factory Reset (ese usa ConfirmDialog
+   por ser irreversible). */
+.admin-settings-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--admin-blue) 40%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-blue) 8%, rgba(9, 17, 26, 0.7));
+}
+
+.admin-settings-confirm-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Card heading -- icono + título/subtítulo, usado por Database/Storage/System Operations/System
+   Information (Site Information y Other Settings del tab General no llevan icono en su header,
+   así que esto es nuevo para System). */
+.admin-settings-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-settings-card-heading-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+}
+
+.admin-settings-card-heading-icon--inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-text-primary);
+}
+
+.admin-settings-card-heading-icon--inline svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Connection Status -- status inline compacto (pedido explícito: "no un badge enorme"), mismo
+   lenguaje que el status dot del footer del sidebar (.admin-sidebar-status-dot). */
+.admin-settings-status-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-settings-status-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.admin-settings-status-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.admin-settings-status-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--admin-text-secondary);
+}
+
+.admin-settings-status-dot[data-status='connected'] {
+  background: var(--admin-green);
+  box-shadow: 0 0 6px rgba(67, 232, 106, 0.55);
+}
+
+.admin-settings-status-dot[data-status='disconnected'] {
+  background: var(--admin-red);
+  box-shadow: 0 0 6px rgba(243, 38, 53, 0.5);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Host + Port -- Host más ancho que Port (pedido explícito, ~60/40). */
+.admin-settings-host-port-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 18px;
+}
+
+@media (max-width: 480px) {
+  .admin-settings-host-port-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* -------------------------------------------------------------------------------------------
+   Show/hide password -- vive DENTRO del control del AdminFormField (ver suffix ahora ReactNode en
+   AdminFormField.tsx), no como .admin-settings-browse-btn (que es un botón aparte al lado). */
+.admin-settings-eye-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+}
+
+.admin-settings-eye-btn:hover {
+  color: var(--admin-text-primary);
+}
+
+.admin-settings-eye-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* -------------------------------------------------------------------------------------------
+   System Operations -- tres operaciones de igual ancho, cada una botón + descripción apilados. */
+.admin-settings-operations-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .admin-settings-operations-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-settings-operation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-settings-operation-description {
+  margin: 0;
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+  text-align: center;
+}
+
+/* -------------------------------------------------------------------------------------------
+   System Information -- tabla visual simple, sin borders entre filas (pedido explícito). */
+.admin-settings-info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-settings-info-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-settings-info-label {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-settings-info-value {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  text-align: right;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Danger Zone -- ancho completo, acento rojo puntual (pedido explícito: "NO una gran card
+   completamente roja"). */
+.admin-settings-danger-zone {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  border-color: color-mix(in srgb, var(--admin-red) 30%, var(--admin-border));
+}
+
+.admin-settings-danger-zone-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.admin-settings-danger-zone-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-red);
+  margin-top: 1px;
+}
+
+.admin-settings-danger-zone-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.admin-settings-danger-zone-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--admin-red);
+}
+
+.admin-settings-danger-zone-description {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-settings-btn--danger-ghost {
+  flex-shrink: 0;
+  background: rgba(220, 20, 40, 0.12);
+  border-color: color-mix(in srgb, var(--admin-red) 65%, transparent);
+  color: #ff5a6c;
+}
+
+.admin-settings-btn--danger-ghost svg {
+  color: #ff5a6c;
+}
+
+.admin-settings-btn--danger-ghost:hover {
+  background: rgba(220, 20, 40, 0.2);
+  border-color: var(--admin-red);
+  color: #ff8290;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Notifications -- filas superior/inferior con proporciones asimétricas (pedido explícito de la
+   referencia: Notification Channels ~43% / Email Settings ~57%, Notification Events ~35% /
+   Recent Notifications ~65%), a diferencia de .admin-settings-row (50/50) usado por General. */
+.admin-settings-row--notification-channels {
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
+}
+
+.admin-settings-row--notification-events {
+  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1fr);
+}
+
+@media (max-width: 900px) {
+  .admin-settings-row--notification-channels,
+  .admin-settings-row--notification-events {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Notification Channels -- una fila por canal: icono + título/descripción + toggle a la derecha,
+   ocupando el ancho completo de la card (pedido explícito). */
+.admin-settings-channel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-settings-channel-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 11px 4px;
+  border-radius: 8px;
+  transition: background 150ms ease;
+}
+
+.admin-settings-channel-row:hover {
+  background: rgba(150, 180, 210, 0.045);
+}
+
+.admin-settings-channel-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.9);
+  color: var(--admin-text-primary);
+}
+
+.admin-settings-channel-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.admin-settings-channel-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-settings-channel-label {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.admin-settings-channel-description {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+}
+
+/* SMTP Server + Port -- mismo criterio visual que .admin-settings-host-port-row (System/Database)
+   pero namespace propio: acá el ancho mayor es "SMTP Server", no "Host", así que no se reutiliza
+   literalmente la clase de otra card por una coincidencia de layout. */
+.admin-settings-smtp-port-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 18px;
+}
+
+@media (max-width: 480px) {
+  .admin-settings-smtp-port-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Notification Events -- checkbox cuadrado pequeño (pedido explícito, distinto del toggle
+   track/thumb usado por Notification Channels/General) mismo patrón de "input oculto + span
+   decorativo con checkmark vía border-trick" ya establecido en login-checkbox
+   (screens/loginPage.css), namespace propio y bastante más compacto (18px vs 28px). */
+.admin-settings-event-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 2px;
+}
+
+.admin-settings-checkbox {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.admin-settings-checkbox-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-settings-checkbox-box {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.9);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.admin-settings-checkbox-box::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 4.5px;
+  height: 8.5px;
+  border: solid #fff;
+  border-width: 0 1.6px 1.6px 0;
+  transform: translate(-50%, -55%) rotate(45deg);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.admin-settings-checkbox-input:checked + .admin-settings-checkbox-box {
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+}
+
+.admin-settings-checkbox-input:checked + .admin-settings-checkbox-box::after {
+  opacity: 1;
+}
+
+.admin-settings-checkbox-input:focus-visible + .admin-settings-checkbox-box {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-red) 25%, transparent);
+}
+
+.admin-settings-event-label {
+  font-size: 13px;
+  color: var(--admin-text-primary);
+}
+
+/* Recent Notifications -- header con acción a la derecha (Refresh), reutiliza .admin-panel-header
+   (ya es flex/space-between) en vez de una clase nueva. */
+.admin-settings-card-header-actions {
+  flex-shrink: 0;
+}
+
+.admin-settings-btn--compact {
+  height: 46px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.admin-settings-btn--compact img,
+.admin-settings-btn--compact svg {
+  width: 17px;
+  height: 17px;
+}
+
+.admin-settings-refresh-icon--spinning {
+  animation: admin-settings-spin 0.8s linear infinite;
+}
+
+@keyframes admin-settings-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-settings-notifications-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-settings-notifications-table {
+  width: 100%;
+  margin-top: 6px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.admin-settings-notifications-table thead th {
+  padding: 9px 12px;
+  text-align: left;
+  background: rgba(140, 165, 190, 0.05);
+  color: var(--admin-text-secondary);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+.admin-settings-notifications-table thead th:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.admin-settings-notifications-table thead th:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.admin-settings-notifications-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.08);
+  color: var(--admin-text-primary);
+  white-space: nowrap;
+}
+
+.admin-settings-notifications-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-settings-notifications-table tbody tr {
+  transition: background 150ms ease;
+}
+
+.admin-settings-notifications-table tbody tr:hover {
+  background: rgba(150, 180, 210, 0.035);
+}
+
+.admin-settings-notifications-time {
+  color: var(--admin-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-settings-notifications-channel {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-settings-notifications-channel svg {
+  width: 14px;
+  height: 14px;
+  color: var(--admin-text-secondary);
+  flex-shrink: 0;
+}
+
+.admin-settings-table-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.admin-settings-table-status-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.admin-settings-table-status[data-status='sent'] {
+  color: var(--admin-green);
+}
+
+.admin-settings-table-status[data-status='failed'] {
+  color: var(--admin-red);
+}
+
+.admin-settings-view-all {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+/* Sin ruta real a "todas las notificaciones" todavía (el Admin Panel no tiene router, ver
+   AdminPanel.tsx: el union AdminView no incluye ninguna vista de historial de notificaciones) --
+   visible pero inerte, mismo criterio que .admin-settings-browse-btn/Open in File Explorer. */
+.admin-settings-view-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.admin-settings-view-all-link img {
+  width: 13px;
+  height: 13px;
+}

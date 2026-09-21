@@ -276,6 +276,175 @@
         "empty": "No hay entradas de registro disponibles."
       }
     },
+    "settings": {
+      "title": "Configuración General",
+      "subtitle": "Gestiona la configuración del sistema, las bibliotecas de video y otras opciones.",
+      "tabs": {
+        "general": "General",
+        "system": "Sistema",
+        "notifications": "Notificaciones"
+      },
+      "general": {
+        "siteInformation": {
+          "title": "Información del Sitio",
+          "subtitle": "Información básica sobre la plataforma.",
+          "siteName": "Nombre del Sitio",
+          "environment": "Entorno",
+          "timezone": "Zona Horaria",
+          "defaultLanguage": "Idioma Predeterminado",
+          "environmentOptions": {
+            "production": "Producción",
+            "staging": "Staging",
+            "development": "Desarrollo"
+          }
+        },
+        "videoLibrary": {
+          "title": "Configuración de Biblioteca de Video",
+          "subtitle": "Configura las opciones predeterminadas para las bibliotecas de video de ruleta y quick money.",
+          "rouletteVideos": "Videos de Ruleta",
+          "quickMoneyVideos": "Videos de Quick Money",
+          "defaultStoragePath": "Ruta de Almacenamiento Predeterminada",
+          "acceptedFormats": "Formatos Aceptados",
+          "maxFileSize": "Tamaño Máximo de Archivo",
+          "browseFolder": "Buscar carpeta"
+        },
+        "other": {
+          "title": "Otras Configuraciones",
+          "subtitle": "Opciones generales del sistema.",
+          "itemsPerPage": "Elementos por Página",
+          "dateFormat": "Formato de Fecha",
+          "enableAuditLog": { "label": "Habilitar Registro de Auditoría", "description": "Registra las acciones administrativas." },
+          "enableVideoProcessing": { "label": "Habilitar Procesamiento de Video", "description": "Procesa automáticamente los videos subidos." },
+          "maintenanceMode": { "label": "Modo de Mantenimiento", "description": "Restringe el acceso solo a administradores." }
+        },
+        "resetToDefaults": "Restablecer Valores Predeterminados",
+        "saveChanges": "Guardar Cambios",
+        "saveSuccess": "Configuración guardada."
+      },
+      "system": {
+        "database": {
+          "title": "Base de Datos",
+          "subtitle": "Conexión y mantenimiento de la base de datos.",
+          "connectionStatus": "Estado de Conexión",
+          "connectionStatusValues": { "connected": "Conectado", "disconnected": "Desconectado" },
+          "databaseType": "Tipo de Base de Datos",
+          "typeOptions": { "mysql": "MySQL", "postgresql": "PostgreSQL", "sqlite": "SQLite" },
+          "host": "Host",
+          "port": "Puerto",
+          "databaseName": "Nombre de la Base de Datos",
+          "username": "Usuario",
+          "password": "Contraseña",
+          "showPassword": "Mostrar contraseña",
+          "hidePassword": "Ocultar contraseña",
+          "testConnection": "Probar Conexión",
+          "testing": "Probando...",
+          "connectedSuccess": "Conexión exitosa",
+          "backupDatabase": "Respaldar Base de Datos",
+          "backingUp": "Respaldando...",
+          "backupSuccess": "Respaldo creado"
+        },
+        "storage": {
+          "title": "Almacenamiento",
+          "subtitle": "Gestiona el almacenamiento de archivos y las rutas del sistema.",
+          "baseDataPath": "Ruta Base de Datos",
+          "videosPath": "Ruta de Videos",
+          "logsPath": "Ruta de Registros",
+          "maxLogFileSize": "Tamaño Máximo de Archivo de Registro",
+          "keepLogsFor": "Conservar Registros Por",
+          "days": "Días",
+          "browseFolder": "Buscar carpeta",
+          "openInFileExplorer": "Abrir en el Explorador de Archivos"
+        },
+        "operations": {
+          "title": "Operaciones del Sistema",
+          "subtitle": "Mantenimiento y acciones administrativas.",
+          "clearCache": "Limpiar Caché",
+          "clearingCache": "Limpiando...",
+          "cacheCleared": "Caché limpiada",
+          "clearCacheDescription": "Elimina los archivos temporales.",
+          "rebuildIndex": "Reconstruir Índice",
+          "rebuildingIndex": "Reconstruyendo...",
+          "indexRebuilt": "Índice reconstruido",
+          "rebuildIndexDescription": "Reconstruye los índices de datos.",
+          "restartServices": "Reiniciar Servicios",
+          "restartingServices": "Reiniciando...",
+          "servicesRestarted": "Servicios reiniciados",
+          "restartServicesDescription": "Reinicia los servicios del sistema.",
+          "restartConfirmTitle": "¿Reiniciar todos los servicios del sistema ahora? Esto puede interrumpir brevemente las conexiones activas.",
+          "restartConfirmCancel": "Cancelar",
+          "restartConfirmConfirm": "Reiniciar Servicios"
+        },
+        "information": {
+          "title": "Información del Sistema",
+          "subtitle": "Estado actual del sistema e información de versión.",
+          "applicationVersion": "Versión de la Aplicación",
+          "environment": "Entorno",
+          "serverTime": "Hora del Servidor",
+          "uptime": "Tiempo Activo",
+          "availableDiskSpace": "Espacio en Disco Disponible",
+          "diskSpaceValue": "{{used}} GB / {{total}} GB"
+        },
+        "dangerZone": {
+          "title": "Zona de Peligro",
+          "description": "Acciones irreversibles. Usar con precaución.",
+          "resetToFactoryDefaults": "Restablecer a Valores de Fábrica",
+          "confirm": {
+            "title": "¿Restablecer a valores de fábrica?",
+            "description": "Esta acción restaurará la configuración de base de datos y almacenamiento a sus valores de fábrica y no se puede deshacer.",
+            "cancel": "Cancelar",
+            "confirm": "Restablecer a Valores de Fábrica"
+          }
+        }
+      },
+      "notifications": {
+        "channels": {
+          "title": "Canales de Notificación",
+          "subtitle": "Elige cómo se entregan las notificaciones.",
+          "email": { "label": "Email", "description": "Enviar notificaciones por email." },
+          "discord": { "label": "Discord", "description": "Enviar notificaciones a un canal de Discord." },
+          "slack": { "label": "Slack", "description": "Enviar notificaciones a un canal de Slack." },
+          "webhook": { "label": "Webhook", "description": "Enviar notificaciones a una URL personalizada." }
+        },
+        "email": {
+          "title": "Configuración de Email",
+          "subtitle": "Configura las notificaciones por email.",
+          "smtpServer": "Servidor SMTP",
+          "port": "Puerto",
+          "username": "Usuario",
+          "password": "Contraseña",
+          "showPassword": "Mostrar contraseña",
+          "hidePassword": "Ocultar contraseña",
+          "fromEmail": "Email de Origen",
+          "recipients": "Destinatario(s)",
+          "recipientsHelper": "Usa comas para separar varios destinatarios.",
+          "sendTestEmail": "Enviar Email de Prueba",
+          "sending": "Enviando...",
+          "sentSuccess": "Email de prueba enviado"
+        },
+        "events": {
+          "title": "Eventos de Notificación",
+          "subtitle": "Selecciona qué eventos deben activar notificaciones.",
+          "items": {
+            "gameRoundStarted": "Ronda de juego iniciada",
+            "gameRoundCompleted": "Ronda de juego completada",
+            "systemErrors": "Errores del sistema",
+            "highRtpAlert": "Alerta de RTP alto",
+            "videoProcessingCompleted": "Procesamiento de video completado",
+            "videoProcessingFailed": "Procesamiento de video fallido",
+            "newUserRegistered": "Nuevo usuario registrado"
+          }
+        },
+        "recent": {
+          "title": "Notificaciones Recientes",
+          "subtitle": "Ver las últimas notificaciones del sistema.",
+          "refresh": "Actualizar",
+          "empty": "No hay notificaciones recientes.",
+          "table": { "dateTime": "Fecha / Hora", "event": "Evento", "channel": "Canal", "status": "Estado" },
+          "status": { "sent": "Enviado", "failed": "Fallido" },
+          "viewAll": "Ver Todas las Notificaciones"
+        }
+      }
+    },
     "nextResults": {
       "title": "Próximos Resultados y Control Manual",
       "subtitle": "Consulta los próximos resultados y configura o cambia manualmente los resultados de Ruleta y Quick Money.",

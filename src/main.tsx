@@ -25,6 +25,7 @@ const ADMIN_PREVIEW_VALUES = [
   'admin-rtp-management',
   'admin-next-results',
   'admin-next-results-quick-money',
+  'admin-settings',
 ]
 
 function resolveScreen() {
