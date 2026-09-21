@@ -11,13 +11,15 @@ interface AdminFormFieldProps {
   label: string
   description?: string
   prefix?: string
-  suffix?: string
+  // ReactNode (no solo string) -- permite un botón dentro del control, ej. el toggle show/hide de
+  // un campo type="password" (ver DatabaseCard.tsx), sin duplicar el layout prefix/suffix.
+  suffix?: ReactNode
   value: string | number
   onChange?: (value: string) => void
   readOnly?: boolean
   disabled?: boolean
   emphasized?: boolean
-  type?: 'text' | 'number' | 'date' | 'datetime-local'
+  type?: 'text' | 'number' | 'date' | 'datetime-local' | 'password'
   step?: string
   min?: string
   max?: string

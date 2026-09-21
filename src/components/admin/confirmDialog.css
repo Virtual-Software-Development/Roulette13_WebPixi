@@ -1,0 +1,103 @@
+.admin-confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 7, 11, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.admin-confirm-dialog {
+  width: min(440px, 100%);
+  box-sizing: border-box;
+  padding: 22px 24px;
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(12, 22, 32, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.admin-confirm-dialog-title {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-confirm-dialog-title[data-danger='true'] {
+  color: var(--admin-red);
+}
+
+.admin-confirm-dialog-description {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--admin-text-secondary);
+}
+
+.admin-confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.admin-confirm-dialog-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.admin-confirm-dialog-btn--ghost {
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-secondary);
+}
+
+.admin-confirm-dialog-btn--ghost:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-confirm-dialog-btn--primary {
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+  color: #fff;
+}
+
+.admin-confirm-dialog-btn--primary:hover {
+  filter: brightness(1.06);
+}
+
+/* Danger -- rojo translúcido/borde, no un botón rojo sólido más (pedido explícito: distinguir
+   "guardar/confirmar normal" de "esta acción es irreversible"). */
+.admin-confirm-dialog-btn--danger {
+  background: rgba(220, 20, 40, 0.14);
+  border-color: color-mix(in srgb, var(--admin-red) 65%, transparent);
+  color: #ff5a6c;
+}
+
+.admin-confirm-dialog-btn--danger:hover {
+  background: rgba(220, 20, 40, 0.22);
+  color: #ff8290;
+}
+
+.admin-confirm-dialog-btn:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+}

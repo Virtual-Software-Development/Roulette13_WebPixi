@@ -276,6 +276,175 @@
         "empty": "No log entries available."
       }
     },
+    "settings": {
+      "title": "General Settings",
+      "subtitle": "Manage system configuration, video libraries, and other settings.",
+      "tabs": {
+        "general": "General",
+        "system": "System",
+        "notifications": "Notifications"
+      },
+      "general": {
+        "siteInformation": {
+          "title": "Site Information",
+          "subtitle": "Basic information about the platform.",
+          "siteName": "Site Name",
+          "environment": "Environment",
+          "timezone": "Timezone",
+          "defaultLanguage": "Default Language",
+          "environmentOptions": {
+            "production": "Production",
+            "staging": "Staging",
+            "development": "Development"
+          }
+        },
+        "videoLibrary": {
+          "title": "Video Library Settings",
+          "subtitle": "Configure default options for roulette and quick money video libraries.",
+          "rouletteVideos": "Roulette Videos",
+          "quickMoneyVideos": "Quick Money Videos",
+          "defaultStoragePath": "Default Storage Path",
+          "acceptedFormats": "Accepted Formats",
+          "maxFileSize": "Max File Size",
+          "browseFolder": "Browse folder"
+        },
+        "other": {
+          "title": "Other Settings",
+          "subtitle": "General system options.",
+          "itemsPerPage": "Items per Page",
+          "dateFormat": "Date Format",
+          "enableAuditLog": { "label": "Enable Audit Log", "description": "Record administrative actions." },
+          "enableVideoProcessing": { "label": "Enable Video Processing", "description": "Automatically process uploaded videos." },
+          "maintenanceMode": { "label": "Maintenance Mode", "description": "Restrict access to administrators only." }
+        },
+        "resetToDefaults": "Reset to Defaults",
+        "saveChanges": "Save Changes",
+        "saveSuccess": "Settings saved."
+      },
+      "system": {
+        "database": {
+          "title": "Database",
+          "subtitle": "Database connection and maintenance.",
+          "connectionStatus": "Connection Status",
+          "connectionStatusValues": { "connected": "Connected", "disconnected": "Disconnected" },
+          "databaseType": "Database Type",
+          "typeOptions": { "mysql": "MySQL", "postgresql": "PostgreSQL", "sqlite": "SQLite" },
+          "host": "Host",
+          "port": "Port",
+          "databaseName": "Database Name",
+          "username": "Username",
+          "password": "Password",
+          "showPassword": "Show password",
+          "hidePassword": "Hide password",
+          "testConnection": "Test Connection",
+          "testing": "Testing...",
+          "connectedSuccess": "Connected successfully",
+          "backupDatabase": "Backup Database",
+          "backingUp": "Backing up...",
+          "backupSuccess": "Backup created"
+        },
+        "storage": {
+          "title": "Storage",
+          "subtitle": "Manage file storage and system paths.",
+          "baseDataPath": "Base Data Path",
+          "videosPath": "Videos Path",
+          "logsPath": "Logs Path",
+          "maxLogFileSize": "Max Log File Size",
+          "keepLogsFor": "Keep Logs For",
+          "days": "Days",
+          "browseFolder": "Browse folder",
+          "openInFileExplorer": "Open in File Explorer"
+        },
+        "operations": {
+          "title": "System Operations",
+          "subtitle": "Maintenance and administrative actions.",
+          "clearCache": "Clear Cache",
+          "clearingCache": "Clearing...",
+          "cacheCleared": "Cache cleared",
+          "clearCacheDescription": "Remove temporary files.",
+          "rebuildIndex": "Rebuild Index",
+          "rebuildingIndex": "Rebuilding...",
+          "indexRebuilt": "Index rebuilt",
+          "rebuildIndexDescription": "Rebuild data indexes.",
+          "restartServices": "Restart Services",
+          "restartingServices": "Restarting...",
+          "servicesRestarted": "Services restarted",
+          "restartServicesDescription": "Restart system services.",
+          "restartConfirmTitle": "Restart all system services now? This may briefly interrupt active connections.",
+          "restartConfirmCancel": "Cancel",
+          "restartConfirmConfirm": "Restart Services"
+        },
+        "information": {
+          "title": "System Information",
+          "subtitle": "Current system status and version information.",
+          "applicationVersion": "Application Version",
+          "environment": "Environment",
+          "serverTime": "Server Time",
+          "uptime": "Uptime",
+          "availableDiskSpace": "Available Disk Space",
+          "diskSpaceValue": "{{used}} GB / {{total}} GB"
+        },
+        "dangerZone": {
+          "title": "Danger Zone",
+          "description": "Irreversible actions. Use with caution.",
+          "resetToFactoryDefaults": "Reset to Factory Defaults",
+          "confirm": {
+            "title": "Reset to Factory Defaults?",
+            "description": "This action will restore the database and storage configuration to their factory defaults and cannot be undone.",
+            "cancel": "Cancel",
+            "confirm": "Reset to Factory Defaults"
+          }
+        }
+      },
+      "notifications": {
+        "channels": {
+          "title": "Notification Channels",
+          "subtitle": "Choose how notifications are delivered.",
+          "email": { "label": "Email", "description": "Send notifications via email." },
+          "discord": { "label": "Discord", "description": "Send notifications to a Discord channel." },
+          "slack": { "label": "Slack", "description": "Send notifications to a Slack channel." },
+          "webhook": { "label": "Webhook", "description": "Send notifications to a custom URL." }
+        },
+        "email": {
+          "title": "Email Settings",
+          "subtitle": "Configure email notifications.",
+          "smtpServer": "SMTP Server",
+          "port": "Port",
+          "username": "Username",
+          "password": "Password",
+          "showPassword": "Show password",
+          "hidePassword": "Hide password",
+          "fromEmail": "From Email",
+          "recipients": "Recipient(s)",
+          "recipientsHelper": "Use comma to separate multiple recipients.",
+          "sendTestEmail": "Send Test Email",
+          "sending": "Sending...",
+          "sentSuccess": "Test email sent"
+        },
+        "events": {
+          "title": "Notification Events",
+          "subtitle": "Select which events should trigger notifications.",
+          "items": {
+            "gameRoundStarted": "Game round started",
+            "gameRoundCompleted": "Game round completed",
+            "systemErrors": "System errors",
+            "highRtpAlert": "High RTP alert",
+            "videoProcessingCompleted": "Video processing completed",
+            "videoProcessingFailed": "Video processing failed",
+            "newUserRegistered": "New user registered"
+          }
+        },
+        "recent": {
+          "title": "Recent Notifications",
+          "subtitle": "View the latest system notifications.",
+          "refresh": "Refresh",
+          "empty": "No recent notifications.",
+          "table": { "dateTime": "Date / Time", "event": "Event", "channel": "Channel", "status": "Status" },
+          "status": { "sent": "Sent", "failed": "Failed" },
+          "viewAll": "View All Notifications"
+        }
+      }
+    },
     "nextResults": {
       "title": "Next Results & Manual Control",
       "subtitle": "View upcoming results and manually set or change results for Roulette and Quick Money games.",
