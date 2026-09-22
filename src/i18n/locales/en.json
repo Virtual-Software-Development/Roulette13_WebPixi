@@ -2,6 +2,7 @@
   "header": {
     "roulette": "ROULETTE",
     "lottery": "QUICK MONEY",
+    "betting": "BETTING",
     "admin": "ADMIN",
     "balanceLabel": "YOUR BALANCE"
   },
@@ -108,6 +109,86 @@
     "signingIn": "Signing in…",
     "secureAccessOnly": "Secure access only",
     "error": "Invalid username or password."
+  },
+  "bettingView": {
+    "title": "Roulette Betting",
+    "mode": {
+      "player": "Player",
+      "cashier": "Cashier"
+    },
+    "board": {
+      "column2to1": "2:1",
+      "dozen": {
+        "first": "1st 12",
+        "second": "2nd 12",
+        "third": "3rd 12"
+      },
+      "outside": {
+        "low": "1 TO 18",
+        "high": "19 TO 36",
+        "even": "EVEN",
+        "odd": "ODD",
+        "red": "RED",
+        "black": "BLACK"
+      }
+    },
+    "chipSelector": {
+      "label": "Choose Chip Value"
+    },
+    "selectedBets": {
+      "title": "Selected Bets",
+      "empty": "No bets selected yet",
+      "clearAll": "Clear All",
+      "columnBet": "Bet",
+      "columnSelection": "Selection",
+      "columnAmount": "Amount",
+      "columnPayout": "Payout",
+      "removeAria": "Remove {{selection}} bet",
+      "totalStake": "Current Bet",
+      "potentialWin": "Potential Win",
+      "betLabel": {
+        "straightUp": "Straight Up",
+        "split": "Split",
+        "trio": "Trio",
+        "street": "Street",
+        "corner": "Corner",
+        "sixLine": "Six Line",
+        "column": "Column",
+        "dozen": "Dozen",
+        "redBlack": "Red/Black",
+        "oddEven": "Odd/Even",
+        "highLow": "High/Low"
+      }
+    },
+    "countdown": {
+      "label": "Next Round",
+      "round": "Round #{{number}}",
+      "placeBets": "Place your bets before the next round",
+      "closed": "Betting is closed for this round"
+    },
+    "recentResults": {
+      "title": "Recent Results"
+    },
+    "player": {
+      "balanceLabel": "Balance",
+      "placeBet": "Place Bet",
+      "placing": "Placing…",
+      "insufficientBalance": "Insufficient balance for the current bets.",
+      "betPlacedSuccess": "Bet placed successfully."
+    },
+    "cashier": {
+      "totalToCollect": "Total to Collect",
+      "confirmBet": "Confirm Bet",
+      "ticketIssued": "Ticket issued successfully.",
+      "issueTicket": "Issue Ticket",
+      "issuing": "Issuing…",
+      "ticketPreview": {
+        "title": "Ticket Preview",
+        "ticketNumber": "Ticket",
+        "drawNumber": "Draw",
+        "cancel": "Cancel"
+      }
+    }
   },
   "admin": {
     "header": {

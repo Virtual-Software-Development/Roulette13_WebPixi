@@ -1,0 +1,142 @@
+.countdown-badge {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border-radius: var(--betting-radius);
+  border: 1px solid var(--betting-border);
+  background: var(--betting-panel-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Brillo rojo sutil sangrando desde la esquina superior izquierda (donde vive el ícono de
+   reloj) -- referencia visual pedida explícitamente. Clippeado por overflow:hidden del panel. */
+.countdown-badge::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: -30px;
+  width: 130px;
+  height: 130px;
+  background: radial-gradient(circle, rgba(243, 38, 53, 0.22) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.countdown-badge-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.countdown-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1.5px solid var(--betting-red);
+  color: var(--betting-red);
+  box-shadow: 0 0 10px rgba(243, 38, 53, 0.45);
+}
+
+.countdown-badge-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--betting-text-secondary);
+}
+
+.countdown-badge-round {
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--betting-text-primary);
+}
+
+.countdown-badge-main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.countdown-badge-value {
+  /* Ancho FIJO en px (no solo flex-shrink:0) -- tabular-nums no garantiza nada si la fuente
+     (Poppins) no trae esa característica OpenType: distintos dígitos podían medir un par de px
+     distinto, y como el hint de al lado es flex:1 con min-width:0, ese vaivén se transmitía
+     directo a su ancho disponible y se veía reflowar en cada tick del countdown. */
+  flex-shrink: 0;
+  width: 108px;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--betting-text-primary);
+}
+
+.countdown-badge[data-phase='closingSoon'] .countdown-badge-value {
+  color: var(--betting-amber);
+}
+.countdown-badge[data-phase='closed'] .countdown-badge-value {
+  color: var(--betting-red);
+}
+
+.countdown-badge-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  /* Alineado a la derecha para que comparta el mismo borde derecho que countdown-badge-round (ver
+     arriba, margin-left:auto en la fila de heading) -- ambos terminan pegados al borde derecho
+     del panel, quedan alineados entre sí aunque estén en filas distintas. */
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--betting-text-secondary);
+}
+
+.countdown-badge-progress {
+  position: relative;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.countdown-badge-progress-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--betting-red), #ff5b63);
+  transition: width 200ms linear;
+}
+
+/* Punto brillante en el extremo activo de la barra -- mismo criterio que la referencia visual. */
+.countdown-badge-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -2px;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ff5b63;
+  box-shadow: 0 0 8px 2px rgba(255, 91, 99, 0.85);
+}
+
+.countdown-badge[data-phase='closingSoon'] .countdown-badge-progress-fill {
+  background: linear-gradient(90deg, var(--betting-amber), #ffcf7a);
+}
+.countdown-badge[data-phase='closingSoon'] .countdown-badge-progress-fill::after {
+  background: #ffcf7a;
+  box-shadow: 0 0 8px 2px rgba(255, 207, 122, 0.85);
+}

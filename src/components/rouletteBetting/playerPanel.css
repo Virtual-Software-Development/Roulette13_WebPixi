@@ -1,0 +1,128 @@
+.player-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: var(--betting-radius);
+  border: 1px solid var(--betting-border);
+  background: var(--betting-panel-bg);
+}
+
+.player-panel-balance {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.player-panel-balance-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--betting-text-secondary);
+}
+
+.player-panel-balance-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--betting-text-primary);
+}
+
+.player-panel-place-bet-wrap {
+  position: relative;
+}
+
+/* Popup (no banner inline fijo) -- solo aparece al intentar confirmar con saldo insuficiente (ver
+   handlePlaceBet en PlayerPanel.tsx), flota sobre el botón y se autodesvanece. */
+.player-panel-popup {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: max-content;
+  max-width: 240px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(243, 38, 53, 0.45);
+  background: linear-gradient(180deg, rgba(40, 10, 13, 0.98) 0%, rgba(25, 6, 8, 0.98) 100%);
+  color: #ffb3b8;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  animation: player-panel-popup-in 160ms ease-out;
+}
+
+/* Flechita apuntando al botón -- mismo criterio visual que un tooltip. */
+.player-panel-popup::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(243, 38, 53, 0.45);
+}
+.player-panel-popup::before {
+  content: '';
+  position: absolute;
+  top: calc(100% - 1.5px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #240709;
+}
+
+@keyframes player-panel-popup-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.player-panel-success {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(67, 232, 106, 0.4);
+  background: rgba(67, 232, 106, 0.12);
+  color: #bdf7cf;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.player-panel-place-bet {
+  display: block;
+  width: 80%;
+  margin: 0 auto;
+  height: 50px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(110deg, #7c060a 0%, #ab0a0e 32%, #c8121a 62%, #8f1013 100%);
+  color: #f5f5f5;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    filter 120ms ease,
+    opacity 120ms ease;
+}
+
+.player-panel-place-bet:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.player-panel-place-bet:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

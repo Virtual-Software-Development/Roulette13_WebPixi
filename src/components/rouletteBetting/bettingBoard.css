@@ -1,0 +1,313 @@
+/* Tablero interactivo -- CSS Grid de doble resolución (ver utils/rouletteBetZones.ts: UNIT=4
+   unidades por celda de número). Cada BetZoneButton se posiciona con gridColumn/gridRow inline
+   (calculados por buildRouletteBetZones), este archivo solo define el lenguaje visual compartido
+   por todas las zonas -- ningún selector acá conoce una posición particular. */
+.betting-board {
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: var(--betting-radius);
+  border: 1px solid var(--betting-border);
+  background: var(--betting-panel-bg);
+}
+
+.betting-board[data-disabled='true'] {
+  filter: saturate(0.55) brightness(0.82);
+}
+
+.betting-board-grid {
+  position: relative;
+  display: grid;
+  width: 100%;
+  /* aspect-ratio se fija inline (BettingBoard.tsx), derivado de BETTING_BOARD_GRID -- no
+     hardcodear acá, se desincroniza con UNIT/ROW_HEIGHT (rouletteBetZones.ts). */
+  gap: 0;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Base -- reset de <button>, cada zona se posiciona vía grid-column/grid-row inline. */
+.bet-zone {
+  position: relative;
+  box-sizing: border-box;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  font-family: 'Poppins', Arial, sans-serif;
+  color: var(--betting-text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 120ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.bet-zone:disabled {
+  cursor: not-allowed;
+}
+
+.bet-zone:focus-visible {
+  outline: 2px solid var(--betting-blue);
+  outline-offset: 2px;
+  z-index: 10;
+}
+
+.bet-zone-label {
+  font-size: clamp(13px, 1.3vw, 19px);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-align: center;
+  line-height: 1.15;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Straight up (números 0-36/00) -- única categoría con fondo de color propio. Hover: fondo más
+   luminoso + borde claro + inner glow -- nunca solo "otro rojo", ver requisito de hover feedback. */
+.bet-zone--straightUp {
+  z-index: 1;
+  border-radius: 3px;
+  border: 1px solid rgba(140, 160, 180, 0.16);
+}
+
+.bet-zone--straightUp.bet-zone--color-red {
+  background: linear-gradient(180deg, #7c1417 0%, #5c0e10 100%);
+}
+.bet-zone--straightUp.bet-zone--color-black {
+  background: linear-gradient(180deg, #171d24 0%, #0d1218 100%);
+}
+.bet-zone--straightUp.bet-zone--color-green {
+  background: linear-gradient(180deg, #0d4a33 0%, #083726 100%);
+}
+
+/* cross-highlighted: mismo feedback que :hover, pero disparado por el hover de una zona compuesta
+   (Split/Street/Corner/Six Line) que incluye este número -- ver crossHighlighted en
+   BetZoneButton.tsx/BettingBoard.tsx. Así "17" se enciende igual sea que el mouse esté encima de
+   17 directamente, o de un split/corner/street/six line que lo incluya. */
+.bet-zone--straightUp:not(:disabled):hover,
+.bet-zone--straightUp:not(:disabled):focus-visible,
+.bet-zone--straightUp.bet-zone--cross-highlighted {
+  border-color: rgba(230, 238, 245, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), inset 0 0 10px rgba(255, 255, 255, 0.12);
+}
+.bet-zone--straightUp.bet-zone--color-red:not(:disabled):hover,
+.bet-zone--straightUp.bet-zone--color-red.bet-zone--cross-highlighted {
+  background: linear-gradient(180deg, #9c1a1e 0%, #741215 100%);
+}
+.bet-zone--straightUp.bet-zone--color-black:not(:disabled):hover,
+.bet-zone--straightUp.bet-zone--color-black.bet-zone--cross-highlighted {
+  background: linear-gradient(180deg, #232b34 0%, #151b22 100%);
+}
+.bet-zone--straightUp.bet-zone--color-green:not(:disabled):hover,
+.bet-zone--straightUp.bet-zone--color-green.bet-zone--cross-highlighted {
+  background: linear-gradient(180deg, #12603f 0%, #0a4832 100%);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Split/Trio/Street/Corner/Six Line -- franjas angostas sobre el borde compartido, invisibles
+   hasta el hover (para no ensuciar el tablero) pero con hitbox real (ver geometría en
+   rouletteBetZones.ts). Trio es la apuesta de 3 números propia de la esquina 0/00 (0-1-2, 00-2-3,
+   0-00-2) -- mismo lenguaje visual que Corner (punto pequeño, z-index alto), no es "una calle".
+   El feedback principal de estas zonas NO es la franja en sí -- son los NÚMEROS que cubre (ver
+   bet-zone--cross-highlighted más arriba, disparado desde BettingBoard.tsx). Acá solo queda un
+   punto pequeño y discreto marcando "acá se apoyaría la ficha", sin competir visualmente con el
+   highlight real sobre los números. */
+.bet-zone--split,
+.bet-zone--trio,
+.bet-zone--street,
+.bet-zone--corner,
+.bet-zone--sixLine {
+  background: transparent;
+  border-radius: 3px;
+}
+.bet-zone--split {
+  z-index: 3;
+}
+.bet-zone--street {
+  z-index: 2;
+}
+.bet-zone--sixLine {
+  z-index: 3;
+}
+.bet-zone--corner,
+.bet-zone--trio {
+  z-index: 4;
+  border-radius: 50%;
+}
+
+.bet-zone--split::after,
+.bet-zone--trio::after,
+.bet-zone--street::after,
+.bet-zone--corner::after,
+.bet-zone--sixLine::after {
+  content: '';
+  width: 55%;
+  height: 55%;
+  max-width: 10px;
+  max-height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.65);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  pointer-events: none;
+}
+
+.bet-zone--split:not(:disabled):hover::after,
+.bet-zone--split:not(:disabled):focus-visible::after,
+.bet-zone--trio:not(:disabled):hover::after,
+.bet-zone--trio:not(:disabled):focus-visible::after,
+.bet-zone--street:not(:disabled):hover::after,
+.bet-zone--street:not(:disabled):focus-visible::after,
+.bet-zone--sixLine:not(:disabled):hover::after,
+.bet-zone--sixLine:not(:disabled):focus-visible::after,
+.bet-zone--corner:not(:disabled):hover::after,
+.bet-zone--corner:not(:disabled):focus-visible::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Outside bets (column 2:1, dozens, red/black, odd/even, high/low) -- zonas completas, fondo
+   sutil propio (no transparente como las inside compuestas: acá no compiten con otra hitbox
+   debajo). Hover: tinte de acento + borde, sin depender solo de un cambio de color de fondo. */
+.bet-zone--outside {
+  z-index: 1;
+  border-radius: 4px;
+  border: 1px solid var(--betting-border);
+  background: rgba(9, 17, 26, 0.55);
+}
+
+.bet-zone--outside:not(:disabled):hover,
+.bet-zone--outside:not(:disabled):focus-visible {
+  border-color: rgba(230, 238, 245, 0.5);
+  background: rgba(37, 136, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+/* Red/Black -- mismo tinte de acento que straightUp (bet-zone--color-red/black, ver
+   BetZoneButton.tsx), para que el color no dependa únicamente del texto "RED"/"BLACK". */
+.bet-zone--outside.bet-zone--color-red {
+  border-color: rgba(210, 60, 60, 0.45);
+  background: rgba(150, 25, 28, 0.28);
+}
+.bet-zone--outside.bet-zone--color-red:not(:disabled):hover {
+  background: rgba(190, 35, 38, 0.4);
+}
+.bet-zone--outside.bet-zone--color-black {
+  border-color: rgba(180, 190, 200, 0.28);
+  background: rgba(8, 11, 15, 0.75);
+}
+.bet-zone--outside.bet-zone--color-black:not(:disabled):hover {
+  background: rgba(20, 25, 32, 0.85);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Chip colocado -- marcador compacto (no una pila de fichas), agregado sobre la zona cuando hay
+   un BetSlipEntry para ese zoneId. Un solo marcador por zona incluso con múltiples clicks (ver
+   useBetSlipStore.addBet: suma stake, no duplica) -- ya resuelve "no llenar el tablero de chips
+   superpuestos" sin lógica adicional acá. */
+.bet-zone-chip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  background: radial-gradient(circle at 35% 30%, #f0a83c 0%, #b5701c 70%, #7d4c10 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* Cualquier zona con label de texto centrado (número, "2:1", "1st 12", "EVEN"/"ODD", diamante de
+   Red/Black, "1 TO 18"/"19 TO 36") tiene el mismo problema: el chip centrado (ver .bet-zone-chip
+   arriba) tapa ese label -- acá el marcador baja hacia el borde inferior de la celda en vez de al
+   centro, mismo criterio para todas. Split/Corner/Trio/Street/Six Line no llevan label (quedan
+   bien centrados, sin nada que tapar). */
+.bet-zone--straightUp .bet-zone-chip,
+.bet-zone--column .bet-zone-chip {
+  top: auto;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Dozen -- pedido explícito: centrado verticalmente (no abajo, como el resto de outside) pero
+   corrido a la derecha de la celda en vez de al centro horizontal, para no tapar "1st 12"/
+   "2nd 12"/"3rd 12". */
+.bet-zone--dozen .bet-zone-chip {
+  top: 50%;
+  left: auto;
+  right: 16px;
+  transform: translateY(-50%);
+}
+
+/* Red-Black/Odd-Even/High-Low -- mismo criterio "centrado vertical + a la derecha" que Dozen
+   (pedido explícito), pero comparten un offset propio más chico: su celda es la mitad de ancha
+   que la de Dozen (fila de 6 celdas en vez de 3, ver rouletteBetZones.ts). right:8px (no más,
+   pedido explícito de correrlo un poco de la derecha pero sin solapar) -- el margen disponible
+   antes de tocar el label es de apenas ~8.6px en la celda más ajustada (Red-Black). */
+.bet-zone--redBlack .bet-zone-chip,
+.bet-zone--oddEven .bet-zone-chip,
+.bet-zone--highLow .bet-zone-chip {
+  top: 50%;
+  left: auto;
+  right: 8px;
+  transform: translateY(-50%);
+}
+
+/* Odd-Even/High-Low -- mismo font-size reducido para las dos (pedido explícito) -- "1 TO 18"/
+   "19 TO 36" es el texto más largo de toda la fila outside, y ya comparte celda angosta con el
+   chip a la derecha (ver arriba); bajarle el tamaño le da aire a ambas por igual. */
+.bet-zone--oddEven .bet-zone-label,
+.bet-zone--highLow .bet-zone-label {
+  font-size: clamp(10px, 0.9vw, 13px);
+}
+
+.bet-zone-chip-amount {
+  font-size: clamp(8px, 0.7vw, 11px);
+  font-weight: 700;
+  color: #1a1105;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Debug overlay (dev only, ver HitAreaDebugOverlay.tsx) -- superpuesto en el MISMO grid, para que
+   las cajas calcen exactamente con las hit-areas reales sin recalcular nada. */
+.betting-hitarea-debug {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-template-rows: subgrid;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.betting-hitarea-debug-box {
+  outline: 1px dashed rgba(255, 0, 200, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.betting-hitarea-debug-box span {
+  font-size: 6px;
+  color: #ff00c8;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 2px;
+}

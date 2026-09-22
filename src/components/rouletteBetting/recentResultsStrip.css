@@ -1,0 +1,55 @@
+.recent-results-strip {
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: var(--betting-radius);
+  border: 1px solid var(--betting-border);
+  background: var(--betting-panel-bg);
+}
+
+.recent-results-strip-title {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--betting-text-secondary);
+}
+
+.recent-results-strip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recent-results-strip-empty {
+  font-size: 12px;
+  color: var(--betting-text-secondary);
+}
+
+/* Redondo de verdad (width=height fijos, no min-width+padding) -- con min-width nomás, "36" o
+   "00" quedaban más anchos que altos (óvalo, no círculo). */
+.recent-results-strip-pill {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--betting-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.recent-results-strip-pill[data-color='red'] {
+  background: linear-gradient(180deg, #8a1418 0%, #641013 100%);
+}
+.recent-results-strip-pill[data-color='black'] {
+  background: linear-gradient(180deg, #1a2027 0%, #0e131a 100%);
+}
+.recent-results-strip-pill[data-color='green'] {
+  background: linear-gradient(180deg, #0e5238 0%, #093f2a 100%);
+}

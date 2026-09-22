@@ -1,0 +1,147 @@
+.ticket-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 5, 8, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+.ticket-preview {
+  width: min(440px, 92vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 22px;
+  border-radius: var(--betting-radius);
+  border: 1px solid var(--betting-border);
+  background: linear-gradient(180deg, rgba(11, 20, 30, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  color: var(--betting-text-primary);
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
+.ticket-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--betting-amber);
+}
+.ticket-preview-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--betting-text-primary);
+}
+
+.ticket-preview-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--betting-border);
+  font-size: 12px;
+  color: var(--betting-text-secondary);
+}
+.ticket-preview-meta strong {
+  color: var(--betting-text-primary);
+}
+
+.ticket-preview-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 10px 0;
+}
+
+.ticket-preview-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 0.7fr;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.ticket-preview-row-type {
+  font-weight: 600;
+}
+.ticket-preview-row-selection {
+  color: var(--betting-red);
+  font-weight: 600;
+}
+.ticket-preview-row-amount {
+  text-align: right;
+}
+
+.ticket-preview-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--betting-border);
+  font-size: 12px;
+}
+.ticket-preview-totals > div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--betting-text-secondary);
+}
+.ticket-preview-totals-accent {
+  color: var(--betting-green);
+}
+
+.ticket-preview-total-collect {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(240, 168, 60, 0.12);
+  border: 1px solid rgba(240, 168, 60, 0.35);
+}
+.ticket-preview-total-collect span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--betting-text-secondary);
+}
+.ticket-preview-total-collect strong {
+  font-size: 20px;
+  color: var(--betting-amber);
+}
+
+.ticket-preview-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.ticket-preview-btn {
+  flex: 1 1 0;
+  height: 44px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--betting-border);
+}
+.ticket-preview-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ticket-preview-btn--ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--betting-text-primary);
+}
+.ticket-preview-btn--primary {
+  background: linear-gradient(110deg, #7c060a 0%, #ab0a0e 32%, #c8121a 62%, #8f1013 100%);
+  color: #f5f5f5;
+  border-color: transparent;
+}

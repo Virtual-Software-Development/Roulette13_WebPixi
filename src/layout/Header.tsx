@@ -10,6 +10,7 @@ import './header.css'
 // mano que tenía antes el header.
 const ROULETTE_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/19_wheel_white_detailed.svg')
 const LOTTERY_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/12_dice_white.svg')
+const BETTING_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/27_red_chip.svg')
 const ADMIN_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/17_gear_white.svg')
 const BALANCE_ICON_URL = buildMediaUrl('Website_svg_icons/41_payouts.svg')
 const USER_ICON_URL = buildMediaUrl('Website_svg_icons/16_user_white_circle.svg')
@@ -19,7 +20,7 @@ const USER_ICON_URL = buildMediaUrl('Website_svg_icons/16_user_white_circle.svg'
 // mismo mecanismo ad-hoc que ya usa main.tsx para ?preview=login). ROULETTE y ADMIN sí tienen un
 // destino real hoy (lobby / AdminDashboardPage) y son clickeables; LOTTERY sigue sin una segunda
 // pantalla a la que ir, así que se muestra sin onClick -- lista para conectarse el día que exista.
-export type HeaderTab = 'roulette' | 'lottery' | 'admin'
+export type HeaderTab = 'roulette' | 'lottery' | 'betting' | 'admin'
 
 function navigateToPreview(preview: string | null) {
   const url = new URL(window.location.href)
@@ -37,6 +38,10 @@ function RouletteTabIcon() {
 
 function LotteryTabIcon() {
   return <img src={LOTTERY_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
+}
+
+function BettingTabIcon() {
+  return <img src={BETTING_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
 }
 
 function AdminTabIcon() {
@@ -175,6 +180,16 @@ export function Header({ activeTab = 'roulette' }: { activeTab?: HeaderTab } = {
           >
             <LotteryTabIcon />
             <span className="app-header-tab-label">{t('header.lottery')}</span>
+          </div>
+          <div
+            className={`app-header-tab app-header-tab--betting${activeTab === 'betting' ? '' : ' app-header-tab--clickable'}`}
+            data-active={activeTab === 'betting'}
+            role="tab"
+            aria-selected={activeTab === 'betting'}
+            onClick={activeTab === 'betting' ? undefined : () => navigateToPreview('roulette-betting')}
+          >
+            <BettingTabIcon />
+            <span className="app-header-tab-label">{t('header.betting')}</span>
           </div>
           <div
             className={`app-header-tab app-header-tab--admin${activeTab === 'admin' ? '' : ' app-header-tab--clickable'}`}

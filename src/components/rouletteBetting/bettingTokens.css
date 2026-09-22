@@ -1,0 +1,41 @@
+/* Valores calcados de --admin-* (adminLayout.css) para consistencia visual con el resto del
+   proyecto -- deliberadamente un archivo propio, no un import de adminLayout.css: esta pantalla
+   no es parte de Admin Panel (ver Header.tsx/main.tsx), no debe acoplarse a su CSS. */
+.roulette-betting-shell {
+  --betting-red: #f32635;
+  --betting-black: #12181f;
+  --betting-green: #43e86a;
+  --betting-blue: #2588ff;
+  --betting-amber: #f0a83c;
+  --betting-text-primary: #f5f7fa;
+  --betting-text-secondary: #8ea0b5;
+  --betting-border: rgba(100, 140, 170, 0.22);
+  --betting-radius: 10px;
+  --betting-panel-bg: linear-gradient(180deg, rgba(11, 20, 30, 0.88) 0%, rgba(6, 13, 20, 0.92) 100%);
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: var(--betting-text-primary);
+  font-family: 'Poppins', Arial, sans-serif;
+
+  background:
+    radial-gradient(circle at 14% 0%, rgba(30, 70, 100, 0.1) 0%, transparent 45%),
+    radial-gradient(circle at 88% 92%, rgba(90, 15, 25, 0.06) 0%, transparent 50%),
+    linear-gradient(160deg, #07131c 0%, #050d14 45%, #030a10 100%);
+}
+
+.roulette-betting-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Espacio para el Header real, fixed por encima -- mismo valor que usa admin-body
+     (top:2px + height:65px del header, ver header.css). */
+  padding-top: 79px;
+  box-sizing: border-box;
+}
