@@ -2,6 +2,7 @@
   "header": {
     "roulette": "ROULETTE",
     "lottery": "QUICK MONEY",
+    "betting": "APUESTAS",
     "admin": "ADMIN",
     "balanceLabel": "TU SALDO"
   },
@@ -108,6 +109,86 @@
     "signingIn": "Iniciando sesión…",
     "secureAccessOnly": "Acceso seguro únicamente",
     "error": "Usuario o contraseña inválidos."
+  },
+  "bettingView": {
+    "title": "Apuestas de Ruleta",
+    "mode": {
+      "player": "Jugador",
+      "cashier": "Cajera"
+    },
+    "board": {
+      "column2to1": "2:1",
+      "dozen": {
+        "first": "1ra 12",
+        "second": "2da 12",
+        "third": "3ra 12"
+      },
+      "outside": {
+        "low": "1 AL 18",
+        "high": "19 AL 36",
+        "even": "PAR",
+        "odd": "IMPAR",
+        "red": "ROJO",
+        "black": "NEGRO"
+      }
+    },
+    "chipSelector": {
+      "label": "Elegir valor de ficha"
+    },
+    "selectedBets": {
+      "title": "Apuestas Seleccionadas",
+      "empty": "Todavía no hay apuestas seleccionadas",
+      "clearAll": "Borrar Todo",
+      "columnBet": "Apuesta",
+      "columnSelection": "Selección",
+      "columnAmount": "Monto",
+      "columnPayout": "Pago",
+      "removeAria": "Quitar apuesta {{selection}}",
+      "totalStake": "Apuesta Actual",
+      "potentialWin": "Ganancia Potencial",
+      "betLabel": {
+        "straightUp": "Pleno",
+        "split": "Caballo",
+        "trio": "Trío",
+        "street": "Calle",
+        "corner": "Cuadro",
+        "sixLine": "Línea",
+        "column": "Columna",
+        "dozen": "Docena",
+        "redBlack": "Rojo/Negro",
+        "oddEven": "Par/Impar",
+        "highLow": "Alto/Bajo"
+      }
+    },
+    "countdown": {
+      "label": "Próxima Ronda",
+      "round": "Ronda #{{number}}",
+      "placeBets": "Realiza tus apuestas antes de la próxima ronda",
+      "closed": "Las apuestas están cerradas para esta ronda"
+    },
+    "recentResults": {
+      "title": "Resultados Recientes"
+    },
+    "player": {
+      "balanceLabel": "Saldo",
+      "placeBet": "Apostar",
+      "placing": "Apostando…",
+      "insufficientBalance": "Saldo insuficiente para las apuestas actuales.",
+      "betPlacedSuccess": "Apuesta realizada con éxito."
+    },
+    "cashier": {
+      "totalToCollect": "Total a Cobrar",
+      "confirmBet": "Confirmar Apuesta",
+      "ticketIssued": "Ticket emitido con éxito.",
+      "issueTicket": "Emitir Ticket",
+      "issuing": "Emitiendo…",
+      "ticketPreview": {
+        "title": "Vista Previa del Ticket",
+        "ticketNumber": "Ticket",
+        "drawNumber": "Sorteo",
+        "cancel": "Cancelar"
+      }
+    }
   },
   "admin": {
     "header": {

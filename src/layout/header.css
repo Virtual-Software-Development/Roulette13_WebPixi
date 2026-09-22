@@ -136,6 +136,7 @@
 }
 
 .app-header-tab--lottery,
+.app-header-tab--betting,
 .app-header-tab--admin {
   min-width: clamp(150px, 11vw, 210px);
 }

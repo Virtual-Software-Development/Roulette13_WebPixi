@@ -1,0 +1,65 @@
+.cashier-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: var(--betting-radius);
+  border: 1px solid var(--betting-border);
+  background: var(--betting-panel-bg);
+}
+
+.cashier-panel-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.cashier-panel-total-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--betting-text-secondary);
+}
+
+/* Total a cobrar -- prominente, y deliberadamente distinto del acento verde de Potential Win
+   (bet-slip-totals-value--accent) para que la cajera nunca los confunda. */
+.cashier-panel-total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--betting-amber);
+}
+
+.cashier-panel-success {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(67, 232, 106, 0.4);
+  background: rgba(67, 232, 106, 0.12);
+  color: #bdf7cf;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cashier-panel-confirm {
+  height: 50px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(110deg, #7c060a 0%, #ab0a0e 32%, #c8121a 62%, #8f1013 100%);
+  color: #f5f5f5;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+.cashier-panel-confirm:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.cashier-panel-confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

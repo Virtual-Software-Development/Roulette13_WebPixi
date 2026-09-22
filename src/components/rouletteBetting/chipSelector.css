@@ -1,0 +1,66 @@
+/* Panel propio (antes flotaba sin fondo) -- el alto ya no se fija acá: comparte fila de grid con
+   player-panel/cashier-panel (grid-area: panel, ver rouletteBettingWorkspace.css), que iguala el
+   alto de ambos automáticamente al más alto de los dos. El título queda fijo arriba (no forma
+   parte del grupo centrado) y la fila de fichas ocupa el resto del alto, centrada ahí adentro --
+   ver .chip-selector-row más abajo. */
+.chip-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  padding: 12px 18px;
+  border-radius: var(--betting-radius);
+  border: 1px solid var(--betting-border);
+  background: var(--betting-panel-bg);
+}
+
+.chip-selector-title {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--betting-text-secondary);
+}
+
+.chip-selector-row {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chip-selector-chip {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: radial-gradient(circle at 35% 28%, #2a3542 0%, #10161d 70%, #060a0e 100%);
+  color: var(--betting-text-primary);
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.chip-selector-chip:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.chip-selector-chip[data-selected='true'] {
+  border-color: var(--betting-red);
+  transform: scale(1.08);
+  box-shadow: 0 0 0 2px rgba(243, 38, 53, 0.35), 0 0 14px rgba(243, 38, 53, 0.35);
+}
+
+.chip-selector-chip:focus-visible {
+  outline: 2px solid var(--betting-blue);
+  outline-offset: 2px;
+}
