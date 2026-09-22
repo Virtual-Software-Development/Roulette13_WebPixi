@@ -8,7 +8,9 @@ export function createApiProxyHandler({ target, prefix = '/api/' }) {
   return function apiProxyHandler(req, res, next) {
     if (!req.url.startsWith(prefix)) return next()
 
-    const forwardPath = req.url.slice(prefix.length - 1)
+    // Backend routes live under /api/v1 (quick_money-backend's router.go):
+    // "/api/gameInfo" -> "/api/v1/gameInfo".
+    const forwardPath = '/api/v1' + req.url.slice(prefix.length - 1)
     const options = {
       hostname: targetUrl.hostname,
       port: targetUrl.port || (targetUrl.protocol === 'https:' ? 443 : 80),

@@ -1,0 +1,57 @@
+.admin-tooltip {
+  position: relative;
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+.admin-tooltip:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--admin-blue) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* Anclado desde el borde DERECHO del trigger (no centrado) -- los dos usos actuales (badge
+   "Locked", que siempre queda a la derecha de su fila vía justify-content:space-between; y Save
+   Settings, dentro de una fila alineada a la derecha) están cerca del borde derecho del panel. Un
+   bubble centrado se saldría del viewport ahí (.admin-shell recorta con overflow:hidden, así que
+   se vería truncado en vez de solo desbordar). */
+.admin-tooltip-bubble {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: 240px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(11, 20, 30, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  color: var(--admin-text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(2px);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.admin-tooltip-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 14px;
+  border: 5px solid transparent;
+  border-top-color: rgba(6, 13, 20, 0.99);
+}
+
+.admin-tooltip:hover .admin-tooltip-bubble,
+.admin-tooltip:focus .admin-tooltip-bubble,
+.admin-tooltip:focus-within .admin-tooltip-bubble {
+  opacity: 1;
+  transform: translateY(0);
+}

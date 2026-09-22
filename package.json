@@ -11,7 +11,16 @@
     "serve": "node server.js",
     "test": "vitest run",
     "encode-alpha-video": "node scripts/encode-alpha-video.mjs",
-    "test:watch": "vitest"
+    "roulette-video-status": "node scripts/roulette-video-status.mjs",
+    "roulette-video-intake": "node scripts/roulette-video-intake.mjs",
+    "test:watch": "vitest",
+    "predev:all": "node scripts/check-ports.mjs --free",
+    "dev:all": "concurrently --kill-others-on-fail -n BACKEND,APP,ADMIN -c yellow,blue,magenta \"npm run dev:backend\" \"npm run dev\" \"npm run dev:admin\"",
+    "dev:backend": "node scripts/run-backend.mjs",
+    "dev:admin": "node scripts/wait-for-admin-deps.mjs && npm --prefix admin run dev",
+    "check-ports": "node scripts/check-ports.mjs",
+    "free-dev-ports": "node scripts/check-ports.mjs --free",
+    "check-backend": "node scripts/check-backend.mjs"
   },
   "dependencies": {
     "@pixi/react": "^8.0.5",
@@ -35,10 +44,12 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "concurrently": "^10.0.5",
     "jsdom": "^29.1.1",
     "oxlint": "^1.75.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wait-on": "^9.1.0"
   }
 }

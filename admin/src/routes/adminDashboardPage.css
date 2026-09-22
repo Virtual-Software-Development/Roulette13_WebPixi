@@ -1,0 +1,40 @@
+/* Reglas específicas del Dashboard admin -- el shell/tokens/panel base compartidos con el resto
+   de páginas del Admin Panel viven en components/admin/adminLayout.css (ver AdminLayout.tsx). */
+
+/* Grid de KPI -- 4 en una fila en desktop grande, 2+2 en medium (auto-fit resuelve el reflow sin
+   breakpoints manuales, ver AdminStatCard). */
+.admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+/* Fila de gráficos -- Games Activity ~58%, Games Distribution ~42%; pasa a una columna si no
+   entra legible. */
+.admin-charts-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 1080px) {
+  .admin-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fila inferior -- Recent Rounds ~60%, System Status ~40% (reemplaza el espacio que ocuparía
+   Quick Actions, que este panel NO implementa -- requisito explícito). */
+.admin-bottom-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .admin-bottom-row {
+    grid-template-columns: 1fr;
+  }
+}

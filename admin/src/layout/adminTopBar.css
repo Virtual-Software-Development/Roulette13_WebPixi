@@ -1,0 +1,125 @@
+/* Top bar for the real, authenticated admin app -- visual language adapted from the root app's
+   src/layout/header.css (.app-header-shell / .app-header-admin-meta), but in normal document flow
+   (not fixed over a Pixi canvas) and without the game tabs (Roulette/Lottery/Admin), since there's
+   no game view to switch to from a separately-deployed admin app. */
+.admin-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 65px;
+  padding: 0 clamp(16px, 1.8vw, 28px);
+  border-bottom: 1px solid rgba(115, 125, 135, 0.25);
+  background: linear-gradient(180deg, #07090d 0%, #020305 55%, #010203 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.admin-topbar-brand {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(15px, 1.1vw, 18px);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #f5f5f5;
+}
+
+.admin-topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.4vw, 22px);
+}
+
+.admin-topbar-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.admin-topbar-date {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(10px, 0.75vw, 12px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: #a4a4a8;
+}
+
+.admin-topbar-time {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(14px, 1.1vw, 18px);
+  font-weight: 600;
+  line-height: 1;
+  color: #f5f5f5;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-topbar-divider {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1px;
+  height: 32px;
+  background: rgba(140, 145, 150, 0.18);
+}
+
+.admin-topbar-user {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.8vw, 12px);
+}
+
+.admin-topbar-user-icon {
+  width: clamp(26px, 1.9vw, 32px);
+  height: auto;
+  flex-shrink: 0;
+}
+
+.admin-topbar-user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.admin-topbar-user-name {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(13px, 1vw, 15px);
+  font-weight: 600;
+  line-height: 1.3;
+  color: #f5f5f5;
+}
+
+.admin-topbar-user-role {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: clamp(10px, 0.75vw, 12px);
+  font-weight: 500;
+  line-height: 1.3;
+  color: #a4a4a8;
+}
+
+.admin-topbar-logout {
+  flex: 0 0 auto;
+  width: clamp(34px, 2.4vw, 40px);
+  height: clamp(34px, 2.4vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(115, 125, 135, 0.28);
+  background: rgba(120, 10, 20, 0.12);
+  color: #e4a3a8;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-topbar-logout:hover {
+  background: rgba(180, 15, 25, 0.22);
+  border-color: rgba(200, 40, 48, 0.55);
+  color: #ffb3b8;
+}
+
+.admin-topbar-logout-icon-svg {
+  width: 18px;
+  height: 18px;
+}

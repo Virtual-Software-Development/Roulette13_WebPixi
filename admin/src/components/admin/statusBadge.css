@@ -1,0 +1,53 @@
+.admin-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-status-badge[data-variant='positive'] {
+  color: var(--admin-green);
+  background: rgba(67, 232, 106, 0.12);
+  border-color: rgba(67, 232, 106, 0.35);
+}
+
+.admin-status-badge[data-variant='info'] {
+  color: var(--admin-blue);
+  background: rgba(37, 136, 255, 0.12);
+  border-color: rgba(37, 136, 255, 0.35);
+}
+
+.admin-status-badge[data-variant='warning'] {
+  color: var(--admin-amber);
+  background: rgba(240, 168, 60, 0.12);
+  border-color: rgba(240, 168, 60, 0.35);
+}
+
+.admin-status-badge[data-variant='neutral'] {
+  color: var(--admin-text-secondary);
+  background: rgba(142, 160, 181, 0.1);
+  border-color: rgba(142, 160, 181, 0.28);
+}
+
+.admin-status-badge[data-variant='danger'] {
+  color: var(--admin-red);
+  background: rgba(243, 38, 53, 0.12);
+  border-color: rgba(243, 38, 53, 0.35);
+}
+
+.admin-status-badge[data-variant='purple'] {
+  color: var(--admin-purple);
+  background: rgba(146, 86, 245, 0.12);
+  border-color: rgba(146, 86, 245, 0.35);
+}
+
+.admin-status-badge-icon {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}

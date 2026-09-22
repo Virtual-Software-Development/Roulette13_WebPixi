@@ -1,0 +1,229 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #050307;
+}
+
+.login-page__backdrop {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 900px 500px at 8% 100%, rgba(224, 32, 44, 0.16), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 92% 100%, rgba(224, 32, 44, 0.12), transparent 60%),
+    radial-gradient(ellipse 60% 45% at 15% 45%, rgba(120, 90, 40, 0.14), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 85% 45%, rgba(40, 60, 120, 0.12), transparent 70%),
+    #0a080c;
+  padding: 48px 24px;
+}
+
+.login-page__glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #e0202c, transparent);
+  filter: blur(1px);
+  opacity: 0.8;
+}
+
+.login-card {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 44px 40px;
+  border-radius: 16px;
+  background: rgba(14, 12, 17, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(224, 32, 44, 0.05);
+  backdrop-filter: blur(14px);
+}
+
+.login-card__title {
+  margin: 20px 0 4px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: #fff;
+}
+
+.login-card__subtitle {
+  margin: 0 0 28px;
+  font-size: 14px;
+  color: #8a8792;
+  text-align: center;
+}
+
+.login-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.login-field__icon {
+  width: 18px;
+  height: 18px;
+  margin-left: 16px;
+  color: #6f6c78;
+  flex-shrink: 0;
+}
+
+.login-field__input {
+  flex: 1;
+  padding: 14px 12px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+}
+
+.login-field__input::placeholder {
+  color: #6f6c78;
+}
+
+.login-field__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-right: 4px;
+  border: none;
+  background: transparent;
+  color: #6f6c78;
+  cursor: pointer;
+}
+
+.login-field__toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.login-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.login-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #d8d6dc;
+  cursor: pointer;
+}
+
+.login-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.login-checkbox__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: #e0202c;
+  color: #fff;
+}
+
+.login-checkbox__box svg {
+  width: 12px;
+  height: 12px;
+}
+
+.login-checkbox input:not(:checked) + .login-checkbox__box {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.login-card__link {
+  font-size: 14px;
+  color: #e0202c;
+  text-decoration: none;
+}
+
+.login-card__link:hover {
+  text-decoration: underline;
+}
+
+.login-card__error {
+  align-self: flex-start;
+  margin: -12px 0 16px;
+  font-size: 13px;
+  color: #ff6b6b;
+}
+
+.login-card__submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #d81c29 0%, #8f1420 100%);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(216, 28, 41, 0.35);
+}
+
+.login-card__submit:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.login-card__submit svg {
+  width: 18px;
+  height: 18px;
+}
+
+.login-card__divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-top: 28px;
+}
+
+.login-card__divider span {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.login-card__divider p {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #6f6c78;
+  white-space: nowrap;
+}

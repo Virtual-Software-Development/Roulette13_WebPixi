@@ -1,0 +1,29 @@
+.vr-mark {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.vr-mark__dot {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.vr-mark__dot--accent {
+  background: #e0202c;
+}
+
+.vr-mark__letters {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -1px;
+  background: linear-gradient(160deg, #ff4d55 0%, #b3121f 60%, #7a0d16 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

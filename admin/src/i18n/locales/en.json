@@ -1,0 +1,383 @@
+{
+  "admin": {
+    "header": {
+      "userName": "Admin",
+      "userRole": "Administrator",
+      "logout": "Log out"
+    },
+    "nav": {
+      "sectionTitle": "Admin Panel",
+      "dashboard": "Dashboard",
+      "gameEvents": "Game Events",
+      "nextResults": "Next Results",
+      "roulette": "Roulette",
+      "lottery": "Quick Money",
+      "payouts": "Payouts",
+      "users": "Users",
+      "rtp": "RTP",
+      "rtpDashboard": "Dashboard",
+      "rtpManagement": "Management",
+      "systemLogs": "System Logs",
+      "reports": "Reports",
+      "videos": "Videos",
+      "videosRouletteLibrary": "Roulette Library",
+      "videosLotteryVideoStatus": "Lottery Video Status",
+      "videosUploadHistory": "Upload History",
+      "settings": "Settings",
+      "mediaLibrary": "Media Library"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Overview of system activity and game performance",
+      "dateRange": "Date Range",
+      "today": "Today",
+      "last24Hours": "Last 24 Hours",
+      "dateRangeOptions": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days",
+        "thisMonth": "This Month"
+      },
+      "activityRangeOptions": {
+        "last24Hours": "Last 24 Hours",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days"
+      },
+      "kpi": {
+        "rouletteRounds": "Roulette Rounds",
+        "pick3Rounds": "Pick 3 Rounds",
+        "pick4Rounds": "Pick 4 Rounds",
+        "activeUsers": "Active Users",
+        "vsYesterday": "vs. yesterday",
+        "onlineNow": "online now"
+      },
+      "gamesActivity": {
+        "title": "Games Activity",
+        "roulette": "Roulette",
+        "pick3": "Pick 3",
+        "pick4": "Pick 4"
+      },
+      "gamesDistribution": {
+        "title": "Games Distribution",
+        "totalRounds": "Total Rounds"
+      },
+      "recentRounds": {
+        "title": "Recent Rounds",
+        "time": "Time",
+        "game": "Game",
+        "result": "Result",
+        "roundNumber": "Round #"
+      },
+      "systemStatus": {
+        "title": "System Status",
+        "allOperational": "All Systems Operational",
+        "rouletteEngine": "Roulette Engine",
+        "lotteryEngine": "Lottery Engine",
+        "database": "Database",
+        "recordingService": "Recording Service",
+        "api": "API",
+        "online": "Online",
+        "offline": "Offline",
+        "notImplemented": "Not implemented"
+      },
+      "loading": "Loading dashboard...",
+      "notTracked": {
+        "title": "Games activity and distribution charts are not tracked yet",
+        "description": "There is no backend endpoint with a per-game time series or breakdown -- this will be built once one exists."
+      }
+    },
+    "rtp": {
+      "title": "RTP Dashboard",
+      "subtitle": "Monitor current payout performance across all games.",
+      "current": "Current",
+      "target": "Target",
+      "status": {
+        "withinBand": "Within Band",
+        "aboveTarget": "Above Target",
+        "onTarget": "On Target"
+      },
+      "metrics": {
+        "rouletteTitle": "Roulette RTP",
+        "pick3Title": "Pick 3 RTP",
+        "pick4Title": "Pick 4 RTP"
+      },
+      "houseMargin": {
+        "title": "House Margin",
+        "trendLabel": "vs. previous 7 days"
+      },
+      "manualOverrides": {
+        "title": "Manual Overrides",
+        "activeOverrides": "active overrides",
+        "details": "Details"
+      },
+      "trendChart": {
+        "title": "Actual vs Target RTP",
+        "actualSuffix": "(Actual)",
+        "targetSuffix": "(Target)",
+        "rangeOptions": {
+          "twoWeeks": "2 Weeks",
+          "threeWeeks": "3 Weeks",
+          "oneMonth": "1 Month"
+        }
+      },
+      "currentBands": {
+        "title": "Current Bands",
+        "bandWidth": "Band Width: {{value}}%",
+        "footnote": "Bands define the allowed RTP range for each game."
+      },
+      "changes": {
+        "title": "Recent RTP Changes",
+        "game": "Game",
+        "previousTarget": "Previous Target",
+        "newTarget": "New Target",
+        "changedBy": "Changed By",
+        "dateTime": "Date / Time",
+        "status": "Status",
+        "autoApplied": "Auto Applied",
+        "applied": "Applied",
+        "showingCount": "Showing {{shown}} of {{total}} changes"
+      },
+      "importantNote": {
+        "title": "Important Note",
+        "paragraph1": "RTP changes affect future events only and do not alter the results of completed rounds.",
+        "paragraph2": "All changes require confirmation and may be subject to compliance review."
+      },
+      "footer": {
+        "timezone": "Timezone: {{value}}",
+        "lastUpdated": "Last Updated: {{value}}",
+        "live": "Live"
+      },
+      "management": {
+        "title": "RTP Management",
+        "subtitle": "Configure RTP settings, simulate changes, and schedule RTP profiles.",
+        "viewDashboard": "View RTP Dashboard",
+        "gameSelectLabel": "Game",
+        "tabs": {
+          "settings": "Settings",
+          "simulator": "Simulator",
+          "scheduling": "RTP Scheduling"
+        },
+        "settings": {
+          "title": "RTP Settings",
+          "subtitle": "Configure target RTP values and system parameters for each game.",
+          "spinsUnit": "rounds",
+          "targetRtp": {
+            "label": "Target RTP",
+            "description": "Desired long-term return to player."
+          },
+          "minBand": {
+            "label": "Minimum RTP Band",
+            "description": "Minimum allowed RTP value."
+          },
+          "maxBand": {
+            "label": "Maximum RTP Band",
+            "description": "Maximum allowed RTP value."
+          },
+          "correctionWindow": {
+            "label": "Correction Window",
+            "description": "Number of rounds used to calculate RTP.",
+            "unlimitedToggle": "Use all rounds (no window limit)",
+            "unlimitedHint": "All recorded rounds are used to calculate RTP; the number above is ignored while this is on."
+          },
+          "maxCorrection": {
+            "label": "Max Correction Per Event",
+            "description": "Maximum relative change per event."
+          },
+          "smoothingFactor": {
+            "label": "Smoothing Factor",
+            "description": "Weight for recent results (0 - 1)."
+          },
+          "effectiveDate": {
+            "label": "Effective Date",
+            "description": "When these settings will take effect."
+          },
+          "infoBanner": {
+            "title": "Changes will be applied to future rounds only.",
+            "description": "Current ongoing games will not be affected."
+          },
+          "resetToDefaults": "Reset to Defaults",
+          "saveSettings": "Save Settings",
+          "confirm": {
+            "title": "Confirm RTP Settings Change",
+            "game": "Game",
+            "currentTarget": "Current Target",
+            "newTarget": "New Target",
+            "effectiveDate": "Effective Date",
+            "cancel": "Cancel",
+            "confirm": "Confirm & Save"
+          },
+          "lock": {
+            "badge": "Locked",
+            "reason": "Temporarily locked while the current RTP configuration is active.",
+            "bannerTitle": "Some RTP settings are temporarily locked.",
+            "bannerDescription": "You can review their current values, but they cannot currently be edited."
+          },
+          "save": {
+            "noChangesReason": "No changes to save yet.",
+            "allLockedReason": "All editable settings are temporarily locked."
+          },
+          "notConfigured": {
+            "title": "No RTP configuration exists yet for {{game}}",
+            "description": "Fill in the values below and save to create its first RTP configuration."
+          }
+        },
+        "simulator": {
+          "title": "RTP Simulator",
+          "subtitle": "Test different RTP values and see the projected impact before applying changes.",
+          "simulationType": "Simulation Type",
+          "simulationTypeOptions": {
+            "projectedResults": "Projected Results"
+          },
+          "currentTargetRtp": "Current Target RTP",
+          "proposedTargetRtp": "Proposed Target RTP",
+          "sampleSize": {
+            "label": "Sample Size",
+            "description": "Number of simulated rounds.",
+            "unit": "spins"
+          },
+          "estimatedAverageBet": {
+            "label": "Estimated Average Bet",
+            "description": "Average bet amount per round."
+          },
+          "volatilityModel": {
+            "label": "Volatility Model",
+            "description": "Use game's standard volatility model."
+          },
+          "volatilityModelOptions": {
+            "standard": "Standard",
+            "conservative": "Conservative",
+            "aggressive": "Aggressive"
+          },
+          "runSimulation": "Run Simulation",
+          "results": {
+            "title": "Simulation Results",
+            "subtitle": "Estimated outcome based on the proposed settings.",
+            "currentRtp": "Current RTP",
+            "proposedRtp": "Proposed RTP",
+            "difference": "Difference",
+            "riskLevel": "Risk Level",
+            "risk": {
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            },
+            "totalBets": "Total Bets",
+            "projectedPayout": "Projected Payout",
+            "projectedHouseReturn": "Projected House Return",
+            "expectedRtp": "Expected RTP"
+          },
+          "disclaimer": "This is a simulation based on statistical models. Actual results may vary."
+        },
+        "scheduling": {
+          "title": "RTP Scheduling",
+          "subtitle": "Schedule RTP profiles by time, day, or campaign.",
+          "createProfile": "Create RTP Profile",
+          "scheduledProfiles": "Scheduled Profiles",
+          "recentActivity": "Recent Profile Activity",
+          "empty": "No RTP profiles found.",
+          "table": {
+            "profile": "Profile",
+            "game": "Game",
+            "targetRtp": "Target RTP",
+            "schedule": "Schedule",
+            "start": "Start",
+            "expires": "Expires",
+            "status": "Status",
+            "actions": "Actions"
+          },
+          "activityTable": {
+            "profile": "Profile",
+            "game": "Game",
+            "event": "Event",
+            "activePeriod": "Active Period",
+            "changedBy": "Changed By",
+            "dateTime": "Date / Time",
+            "status": "Status"
+          },
+          "actionsMenu": {
+            "disable": "Disable",
+            "enable": "Enable"
+          },
+          "status": {
+            "active": "Active",
+            "scheduled": "Scheduled",
+            "expiringSoon": "Expiring Soon",
+            "expired": "Expired",
+            "disabled": "Disabled",
+            "replaced": "Replaced"
+          },
+          "activityStatus": {
+            "completed": "Completed",
+            "active": "Active",
+            "expired": "Expired"
+          },
+          "event": {
+            "activated": "Activated",
+            "expired": "Expired",
+            "disabled": "Disabled",
+            "replaced": "Replaced",
+            "scheduled": "Scheduled",
+            "edited": "Edited"
+          },
+          "form": {
+            "createTitle": "Create RTP Profile",
+            "profileName": "Profile Name",
+            "targetRtp": "Target RTP",
+            "minBand": "Minimum RTP Band",
+            "maxBand": "Maximum RTP Band",
+            "activeDays": "Active Days",
+            "restrictHours": "Restrict to specific hours each day",
+            "startTime": "Start Time",
+            "endTime": "End Time",
+            "effectiveFrom": "Effective From",
+            "expires": "Expires",
+            "cancel": "Cancel",
+            "save": "Save Profile",
+            "overlapWarningTitle": "This game already has an active or scheduled profile.",
+            "overlapWarningDescription": "Check for overlapping schedules before saving.",
+            "days": {
+              "mon": "Mon",
+              "tue": "Tue",
+              "wed": "Wed",
+              "thu": "Thu",
+              "fri": "Fri",
+              "sat": "Sat",
+              "sun": "Sun"
+            }
+          },
+          "unavailable": {
+            "title": "Scheduling is not available yet",
+            "description": "There is no backend support for scheduled RTP profiles yet -- this tab will be connected once that feature exists."
+          }
+        },
+        "loading": "Loading RTP settings..."
+      },
+      "notConfigured": "Not configured yet",
+      "band": "Band",
+      "notTracked": {
+        "title": "House margin, manual overrides, RTP trend and change history are not tracked yet",
+        "description": "There is no backend endpoint for these -- they will show real numbers once a ledger/audit trail for RTP exists."
+      }
+    },
+    "media": {
+      "title": "Media Library",
+      "subtitle": "Roulette result video coverage, live from the video library.",
+      "loading": "Loading video library status...",
+      "loadError": "Could not load video library status.",
+      "summary": {
+        "complete": "Complete results ({{total}} total)",
+        "incomplete": "Incomplete results",
+        "totalMissing": "Total missing variants"
+      },
+      "tableTitle": "Results needing more variants",
+      "allComplete": "All results are fully covered -- nothing missing.",
+      "table": {
+        "result": "Result",
+        "missing": "Missing",
+        "status": "Status"
+      },
+      "needsMore": "Needs {{count}} more"
+    }
+  }
+}

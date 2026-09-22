@@ -20,11 +20,17 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), localMediaPlugin(env.MEDIA_ROOT ?? './local-media')],
     server: {
+      // Pinned (rather than Vite's default auto-increment-on-conflict) so the admin app's dev
+      // proxy (admin/.env: API_URL) can reliably point here — a silent port bump to 5174 would
+      // otherwise break that without any obvious error.
+      port: 5173,
+      strictPort: true,
       proxy: {
         '/api': {
           target: env.API_URL ?? 'http://localhost:3000',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          // Backend routes live under /api/v1 (quick_money-backend's router.go).
+          rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
         },
       },
     },

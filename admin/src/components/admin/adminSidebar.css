@@ -1,0 +1,210 @@
+/* Sidebar del Admin Panel -- vive dentro de .admin-body (ver adminDashboardPage.css), que ya le
+   da 100% de alto entre el borde inferior del Header y el piso de la ventana. Fondo transparente
+   a propósito: se apoya en el degradado de .admin-dashboard de atrás en vez de tener uno propio,
+   para no partir la superficie en dos paneles separados. */
+.admin-sidebar {
+  flex: 0 0 260px;
+  width: 260px;
+  box-sizing: border-box;
+  height: 100%;
+  padding: 28px 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(100, 140, 170, 0.14);
+  overflow-y: auto;
+}
+
+.admin-sidebar-title {
+  padding: 0 28px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-sidebar-nav {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 58px;
+  padding: 0 28px;
+  color: #aeb8c4;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.admin-sidebar-item:hover {
+  background: rgba(150, 180, 210, 0.045);
+}
+
+.admin-sidebar-item-icon {
+  width: 26px;
+  height: auto;
+  flex-shrink: 0;
+  opacity: 0.72;
+  transition: opacity 150ms ease;
+}
+
+.admin-sidebar-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.admin-sidebar-item--expandable {
+  cursor: pointer;
+}
+
+.admin-sidebar-item-chevron {
+  flex: 0 0 auto;
+  display: flex;
+  color: var(--admin-text-secondary);
+  transition: transform 150ms ease;
+}
+
+.admin-sidebar-item-chevron--open {
+  transform: rotate(180deg);
+}
+
+.admin-sidebar-item-chevron-svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Activo -- degradado horizontal (rojo -> transparente, NO un bloque sólido) + línea vertical de
+   acento a la izquierda + glow leve sobre el ícono. */
+.admin-sidebar-item[data-active='true'] {
+  color: #f5f7fa;
+  background: linear-gradient(90deg, rgba(243, 38, 53, 0.22) 0%, rgba(243, 38, 53, 0.08) 55%, transparent 100%);
+}
+
+.admin-sidebar-item[data-active='true']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #ff3b41 0%, #c8121a 100%);
+  box-shadow: 0 0 10px rgba(255, 40, 45, 0.55);
+}
+
+.admin-sidebar-item[data-active='true'] .admin-sidebar-item-icon {
+  opacity: 1;
+  filter: drop-shadow(0 0 4px rgba(255, 60, 64, 0.45));
+}
+
+.admin-sidebar-item[data-active='true'] .admin-sidebar-item-label {
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Submenú (RTP > Dashboard/Management, Videos > Roulette Library/Lottery Video Status/Upload
+   History en la referencia) -- indentado bajo el ícono+label del padre, sin ícono propio. */
+.admin-sidebar-submenu {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0 6px;
+}
+
+.admin-sidebar-subitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 28px 0 70px;
+  color: var(--admin-text-secondary);
+  font-size: 14px;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.admin-sidebar-subitem:hover {
+  background: rgba(150, 180, 210, 0.045);
+  color: #cdd6e0;
+}
+
+.admin-sidebar-subitem--clickable {
+  cursor: pointer;
+}
+
+/* Sub-item activo (ej. RTP > Management) -- mismo lenguaje que .admin-sidebar-item[data-active],
+   con menor peso visual (sin línea de acento a la izquierda, ya la tiene el padre). */
+.admin-sidebar-subitem[data-active='true'] {
+  color: #f5f7fa;
+  font-weight: 600;
+  background: linear-gradient(90deg, rgba(243, 38, 53, 0.16) 0%, rgba(243, 38, 53, 0.05) 60%, transparent 100%);
+}
+
+.admin-sidebar-subitem-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--admin-red);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--admin-red) 65%, transparent);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Footer del sidebar -- estado operacional + versión, siempre pegado al piso vía flex:1 en
+   .admin-sidebar-nav. Es parte del layout administrativo general (no un componente de RTP), así
+   que vive acá y ambas páginas admin lo heredan gratis al compartir este mismo AdminSidebar. */
+.admin-sidebar-footer {
+  flex: 0 0 auto;
+  padding: 14px 20px 4px;
+  border-top: 1px solid rgba(100, 140, 170, 0.14);
+}
+
+.admin-sidebar-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: rgba(67, 232, 106, 0.08);
+  border: 1px solid rgba(67, 232, 106, 0.22);
+}
+
+.admin-sidebar-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--admin-green);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--admin-green) 65%, transparent);
+}
+
+.admin-sidebar-status-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  line-height: 1.25;
+}
+
+.admin-sidebar-status-wave {
+  width: 40px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--admin-green);
+}
+
+.admin-sidebar-version {
+  display: block;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--admin-text-secondary);
+}

@@ -176,16 +176,20 @@ export function Header({ activeTab = 'roulette' }: { activeTab?: HeaderTab } = {
             <LotteryTabIcon />
             <span className="app-header-tab-label">{t('header.lottery')}</span>
           </div>
-          <div
-            className={`app-header-tab app-header-tab--admin${activeTab === 'admin' ? '' : ' app-header-tab--clickable'}`}
-            data-active={activeTab === 'admin'}
-            role="tab"
-            aria-selected={activeTab === 'admin'}
-            onClick={activeTab === 'admin' ? undefined : () => navigateToPreview('admin')}
-          >
-            <AdminTabIcon />
-            <span className="app-header-tab-label">{t('header.admin')}</span>
-          </div>
+          {/* Never shown to regular players in the lobby (no auth gates this embedded admin
+              preview) -- only rendered once you're already inside the Admin Panel itself
+              (activeTab === 'admin'), as a current-section indicator, not an entry point. */}
+          {activeTab === 'admin' && (
+            <div
+              className="app-header-tab app-header-tab--admin"
+              data-active={true}
+              role="tab"
+              aria-selected={true}
+            >
+              <AdminTabIcon />
+              <span className="app-header-tab-label">{t('header.admin')}</span>
+            </div>
+          )}
         </nav>
 
         <div className="app-header-spacer" />
