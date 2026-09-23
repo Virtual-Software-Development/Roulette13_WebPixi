@@ -1,0 +1,55 @@
+.admin-bets-payouts-chart {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-bets-payouts-legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.admin-bets-payouts-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+  white-space: nowrap;
+}
+
+.admin-bets-payouts-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.admin-bets-payouts-legend-dot[data-series='bets'] {
+  background: var(--admin-blue);
+}
+
+.admin-bets-payouts-legend-dot[data-series='payout'] {
+  background: var(--admin-red);
+}
+
+.admin-bets-payouts-svg {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1000 / 320;
+  margin-top: 10px;
+}
+
+.admin-bets-payouts-gridline {
+  stroke: rgba(120, 145, 170, 0.14);
+  stroke-width: 1;
+}
+
+.admin-bets-payouts-axis-label {
+  fill: var(--admin-text-secondary);
+  font-size: 20px;
+  font-family: inherit;
+}

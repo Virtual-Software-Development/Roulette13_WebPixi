@@ -273,7 +273,6 @@
       "nextResults": "Próximos Resultados",
       "roulette": "Ruleta",
       "lottery": "Quick Money",
-      "payouts": "Pagos",
       "users": "Usuarios",
       "rtp": "RTP",
       "rtpDashboard": "Dashboard",
@@ -339,6 +338,121 @@
         "api": "API",
         "online": "En línea",
         "offline": "Fuera de línea"
+      }
+    },
+    "reports": {
+      "title": "Reportes",
+      "subtitle": "Analiza el rendimiento del juego, la actividad de jugadores y las métricas financieras.",
+      "export": "Exportar",
+      "exportFormats": {
+        "csv": "CSV",
+        "pdf": "PDF",
+        "excel": "Excel"
+      },
+      "filters": {
+        "dateRange": "Rango de Fechas",
+        "game": "Juego",
+        "reportType": "Tipo de Reporte",
+        "groupBy": "Agrupar Por",
+        "apply": "Aplicar",
+        "reset": "Restablecer",
+        "gameOptions": {
+          "all": "Todos los Juegos",
+          "roulette": "Ruleta",
+          "pick3": "Pick 3",
+          "pick4": "Pick 4"
+        },
+        "groupByOptions": {
+          "day": "Día",
+          "week": "Semana",
+          "month": "Mes"
+        },
+        "dateRangeOptions": {
+          "last7Days": "Últimos 7 Días",
+          "last30Days": "Últimos 30 Días",
+          "thisMonth": "Este Mes",
+          "lastMonth": "Mes Pasado"
+        }
+      },
+      "types": {
+        "summary": "Resumen",
+        "gameReport": "Reporte de Juego",
+        "playerReport": "Reporte de Jugadores",
+        "financialReport": "Reporte Financiero",
+        "rtpAnalysis": "Análisis de RTP"
+      },
+      "kpi": {
+        "totalBets": "Apuestas Totales",
+        "totalPayout": "Pago Total",
+        "grossRevenue": "Ingreso Bruto",
+        "rtp": "RTP",
+        "vsPreviousPeriod": "vs. período anterior"
+      },
+      "betsAndPayouts": {
+        "title": "Apuestas y Pagos",
+        "bets": "Apuestas Totales",
+        "payout": "Pago Total"
+      },
+      "rtpTrend": {
+        "title": "Tendencia de RTP",
+        "rtp": "RTP",
+        "target": "RTP Objetivo"
+      },
+      "performanceByGame": {
+        "title": "Rendimiento por Juego",
+        "game": "Juego",
+        "totalBets": "Apuestas Totales",
+        "totalPayout": "Pago Total",
+        "grossRevenue": "Ingreso Bruto",
+        "rtp": "RTP",
+        "total": "Total"
+      },
+      "shortcuts": {
+        "title": "Accesos Rápidos de Reportes",
+        "gamePerformance": {
+          "title": "Rendimiento del Juego",
+          "description": "Estadísticas detalladas del juego"
+        },
+        "playerActivity": {
+          "title": "Actividad de Jugadores",
+          "description": "Reportes de interacción de usuarios"
+        },
+        "financialReport": {
+          "title": "Reporte Financiero",
+          "description": "Detalles de ingresos y pagos"
+        },
+        "rtpAnalysis": {
+          "title": "Análisis de RTP",
+          "description": "Tendencias y análisis de RTP"
+        }
+      },
+      "recent": {
+        "title": "Reportes Recientes",
+        "viewAll": "Ver Todos",
+        "name": "Nombre",
+        "type": "Tipo",
+        "dateRange": "Rango de Fechas",
+        "generatedBy": "Generado Por",
+        "createdAt": "Creado El",
+        "actions": "Acciones",
+        "download": "Descargar",
+        "more": "Más acciones",
+        "viewDetails": "Ver Detalles",
+        "rename": "Renombrar",
+        "delete": "Eliminar",
+        "generatedSuffix": "Reporte",
+        "empty": "Todavía no se ha generado ningún reporte.",
+        "allReportsTitle": "Todos los Reportes",
+        "allReportsCount": "{{count}} reportes",
+        "showingCount": "Mostrando {{from}}–{{to}} de {{total}} reportes",
+        "pagination": "Paginación",
+        "previousPage": "Página anterior",
+        "nextPage": "Página siguiente",
+        "detailsTitle": "Detalle del Reporte",
+        "close": "Cerrar",
+        "renameInputLabel": "Nombre del reporte",
+        "renameSave": "Guardar",
+        "renameCancel": "Cancelar"
       }
     },
     "gameEvents": {

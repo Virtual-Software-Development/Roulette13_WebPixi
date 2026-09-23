@@ -1,0 +1,92 @@
+/* Panel horizontal único con los 4 controles + Apply/Reset (pedido explícito de la referencia:
+   ~80px de alto en desktop) -- reduce el padding vertical de .admin-panel para lograrlo. */
+.admin-report-filters {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.3fr) repeat(3, minmax(140px, 1fr)) auto;
+  align-items: end;
+  gap: 16px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+@media (max-width: 1200px) {
+  .admin-report-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-report-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-report-filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 1200px) {
+  .admin-report-filters-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+/* Misma receta que .admin-settings-btn (adminSettings.css) -- namespace propio (mismo criterio ya
+   establecido en Game Events/Settings/Users: cada sección restata la receta compartida en vez de
+   importar la hoja de otra feature). */
+.admin-report-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 46px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 0 22px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    filter 150ms ease,
+    transform 80ms ease;
+}
+
+.admin-report-filters-btn img,
+.admin-report-filters-btn svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.admin-report-filters-btn:active {
+  transform: translateY(1px);
+}
+
+.admin-report-filters-btn--primary {
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+  color: #fff;
+  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--admin-red) 55%, transparent);
+}
+
+.admin-report-filters-btn--primary:hover {
+  filter: brightness(1.06);
+}
+
+.admin-report-filters-btn--ghost {
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-secondary);
+}
+
+.admin-report-filters-btn--ghost:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}

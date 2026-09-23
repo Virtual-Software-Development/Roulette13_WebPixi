@@ -157,6 +157,14 @@
   gap: 2px;
 }
 
+/* Abre hacia arriba en vez de hacia abajo -- ver hooks/useDropdownFlip.ts, usado por dropdowns
+   dentro de listas/tablas largas (Recent Reports, All Reports) donde el trigger puede quedar cerca
+   del borde inferior de la pantalla o de un contenedor con scroll. */
+.admin-dropdown-menu--up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
 .admin-dropdown-option {
   display: block;
   width: 100%;

@@ -1,0 +1,262 @@
+/* Mismo mecanismo de backdrop/dialog que DrawLogModal.tsx (../gameEvents/drawLogModal.css) --
+   namespace propio (mismo criterio ya establecido: UserModal tampoco reutiliza literalmente esa
+   hoja aunque comparta el lenguaje visual). Compartida por ReportDetailsModal y AllReportsModal
+   (ambas viven en esta misma sección, a diferencia del resto del Admin que sí separa CSS
+   cross-feature). */
+.admin-report-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 7, 11, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.admin-report-modal {
+  width: min(520px, 100%);
+  max-height: min(600px, 100%);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 22px 24px;
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(12, 22, 32, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* All Reports necesita una tabla completa, no un solo bloque de campos -- más ancho y más alto
+   (header + 10 filas paginadas + footer de paginación no entran en los 600px del resto de los
+   modales, ver reportModal-scroll más abajo, que sigue actuando de red de seguridad en viewports
+   más chicos). */
+.admin-report-modal--wide {
+  width: min(920px, 100%);
+  max-height: min(760px, 100%);
+}
+
+.admin-report-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.admin-report-modal-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-report-modal-subtitle {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-report-modal-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-report-modal-close:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-report-modal-close:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+}
+
+.admin-report-modal-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* View Details -- filas label/value apiladas, mismo lenguaje que admin-settings-info-rows. */
+.admin-report-modal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-report-modal-field {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-report-modal-field-label {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-report-modal-field-value {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  text-align: right;
+}
+
+/* All Reports -- reutiliza el mismo lenguaje de tabla que RecentReportsPanel (encabezado
+   uppercase, separadores sutiles) dentro del scroll del modal. */
+.admin-report-modal-scroll {
+  overflow-y: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.admin-report-modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-report-modal-table thead th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  padding: 9px 12px;
+  background: #0b1620;
+  color: var(--admin-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+.admin-report-modal-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.08);
+  color: var(--admin-text-primary);
+  white-space: nowrap;
+}
+
+.admin-report-modal-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-report-modal-table tbody tr:hover {
+  background: rgba(150, 180, 210, 0.035);
+}
+
+.admin-report-modal-table-name {
+  font-weight: 600;
+}
+
+.admin-report-modal-table-secondary {
+  color: var(--admin-text-secondary);
+}
+
+.admin-report-modal-table-actions-head {
+  text-align: right;
+}
+
+.admin-report-modal-table-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-report-modal-empty {
+  margin: 20px 0 4px;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}
+
+/* Footer + paginación -- mismo patrón que admin-users-footer/pagination/page-btn (UserTable.tsx),
+   namespace propio (mismo criterio de siempre: cada sección restata la receta compartida). */
+.admin-report-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-report-modal-count {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+  white-space: nowrap;
+}
+
+.admin-report-modal-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-report-modal-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.admin-report-modal-page-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-report-modal-page-btn:hover:not(:disabled) {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-report-modal-page-btn:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: 1px;
+}
+
+.admin-report-modal-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-report-modal-page-btn[data-active='true'] {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+}

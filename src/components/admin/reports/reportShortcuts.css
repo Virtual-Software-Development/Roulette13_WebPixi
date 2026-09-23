@@ -1,0 +1,90 @@
+.admin-report-shortcuts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-report-shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+@media (max-width: 640px) {
+  .admin-report-shortcuts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-report-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(150, 180, 210, 0.035);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.admin-report-shortcut:hover {
+  border-color: rgba(120, 155, 185, 0.4);
+  background: rgba(150, 180, 210, 0.06);
+}
+
+.admin-report-shortcut:hover .admin-report-shortcut-chevron {
+  transform: translateX(2px);
+  color: var(--admin-text-primary);
+}
+
+.admin-report-shortcut:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: 2px;
+}
+
+.admin-report-shortcut-icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.admin-report-shortcut-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-report-shortcut-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-report-shortcut-description {
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-report-shortcut-chevron {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--admin-text-secondary);
+  transition:
+    transform 150ms ease,
+    color 150ms ease;
+}
+
+.admin-report-shortcut-chevron svg {
+  width: 16px;
+  height: 16px;
+}

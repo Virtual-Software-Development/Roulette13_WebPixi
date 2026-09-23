@@ -1,0 +1,82 @@
+.admin-performance-by-game {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-performance-by-game-table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.admin-performance-by-game-table thead th {
+  text-align: left;
+  padding: 9px 12px;
+  background: rgba(140, 165, 190, 0.05);
+  color: var(--admin-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+.admin-performance-by-game-table thead th:first-child {
+  /* 12px (padding base) + 18px (icono) + 9px (gap) -- mismo inset que el texto de
+     admin-performance-by-game-name más abajo, para que "GAME" quede arriba de "Roulette"/"Pick 3"/
+     "Pick 4" en vez de arriba del ícono (pedido explícito: "los datos y los títulos no están
+     alineados"). */
+  padding-left: 39px;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.admin-performance-by-game-table thead th:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.admin-performance-by-game-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.08);
+  color: var(--admin-text-primary);
+  white-space: nowrap;
+}
+
+.admin-performance-by-game-table tbody tr:hover {
+  background: rgba(150, 180, 210, 0.035);
+}
+
+.admin-performance-by-game-numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-performance-by-game-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+}
+
+.admin-performance-by-game-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.admin-performance-by-game-total-row td {
+  border-bottom: none;
+  border-top: 1px solid var(--admin-border);
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+/* "Total" no lleva ícono (a diferencia de Roulette/Pick 3/Pick 4) -- mismo padding-left que el
+   header, así su texto también arranca en el mismo punto que el resto de la columna. */
+.admin-performance-by-game-total-row td:first-child {
+  padding-left: 39px;
+}
