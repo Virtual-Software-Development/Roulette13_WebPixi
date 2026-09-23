@@ -1,0 +1,93 @@
+/* .qm-card* es la base compartida entre DigitEntryCard y BetAmountCard (mismos "1"/"2" pasos
+   numerados de la referencia) -- definida acá una sola vez, betAmountCard.css solo agrega sus
+   propias clases (qm-amount-*), no repite qm-card*. */
+.qm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: var(--qm-radius);
+  border: 1px solid var(--qm-border);
+  background: var(--qm-panel-bg);
+}
+
+.qm-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.qm-card-step {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--qm-purple);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.qm-card-step--blue {
+  background: var(--qm-blue);
+}
+
+.qm-card-title {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--qm-text-primary);
+}
+
+.qm-card-subtitle {
+  margin: 0;
+  font-size: 11px;
+  color: var(--qm-text-secondary);
+}
+
+.qm-digit-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qm-digit-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--qm-accent, var(--qm-text-secondary));
+}
+
+.qm-digit-boxes {
+  display: flex;
+  gap: 10px;
+}
+
+.qm-digit-box {
+  flex: 1 1 0;
+  height: 56px;
+  border-radius: 8px;
+  border: 1.5px solid var(--qm-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--qm-text-primary);
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+}
+
+.qm-digit-box[data-active='true'] {
+  border-color: var(--qm-accent, var(--qm-purple));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--qm-accent, var(--qm-purple)) 35%, transparent);
+  background: rgba(255, 255, 255, 0.06);
+}

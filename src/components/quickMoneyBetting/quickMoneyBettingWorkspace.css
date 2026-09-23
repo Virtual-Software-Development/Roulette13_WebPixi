@@ -1,0 +1,58 @@
+/* 3 columnas (pad / entry / bet slip) + fila de tabs arriba -- mucho más simple que el grid de
+   Roulette: ninguna de estas columnas tiene una restricción tipo aspect-ratio (nada de tablero
+   cuadrado), así que no hace falta la mecánica de filas compartidas/spacer que exige ese caso.
+   Basta con que las 3 columnas compartan la misma fila (altura natural, la que pida la más alta)
+   y cada una controle su propio scroll interno si su contenido no entra. */
+.qm-workspace {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'tabs tabs tabs'
+    'pad  entry slip';
+  gap: 18px;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 16px clamp(16px, 2vw, 28px) 20px;
+}
+
+.qm-workspace > .qm-tabs {
+  grid-area: tabs;
+}
+
+.qm-workspace-pad-col {
+  grid-area: pad;
+  min-height: 0;
+  display: flex;
+}
+
+.qm-workspace-entry-col {
+  grid-area: entry;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.qm-workspace-slip-col {
+  grid-area: slip;
+  min-height: 0;
+  display: flex;
+}
+
+@media (max-width: 1100px) {
+  .qm-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      'tabs'
+      'pad'
+      'entry'
+      'slip';
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+  }
+}

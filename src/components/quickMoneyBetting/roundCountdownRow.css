@@ -1,0 +1,61 @@
+.qm-round-row {
+  display: flex;
+  gap: 12px;
+}
+
+.qm-round-badge {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: var(--qm-radius);
+  border: 1px solid var(--qm-border);
+  background: var(--qm-panel-bg);
+  min-width: 0;
+}
+
+.qm-round-badge-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1.5px solid var(--qm-accent, var(--qm-purple));
+  color: var(--qm-accent, var(--qm-purple));
+}
+
+.qm-round-badge-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.qm-round-badge-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--qm-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qm-round-badge-value {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--qm-text-primary);
+}
+
+.qm-round-badge-draw {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--qm-text-secondary);
+}

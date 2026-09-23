@@ -190,6 +190,76 @@
       }
     }
   },
+  "quickMoneyBettingView": {
+    "title": "Apuestas de Quick Money",
+    "gameType": {
+      "pick3": "Pick 3",
+      "pick4": "Pick 4",
+      "playBoth": "Jugar Ambos"
+    },
+    "numberPad": {
+      "title": "Teclado Numérico Compartido",
+      "hint": "Tocá un campo a la derecha y usá este teclado para ingresar tus números o el monto de la apuesta.",
+      "backspace": "Borrar último dígito",
+      "clear": "Borrar todos los campos",
+      "tagline": "Un solo teclado. Dos campos. Simple."
+    },
+    "digitEntry": {
+      "title": "1. Ingresá los Números",
+      "hint": "Tocá este campo y usá el teclado.",
+      "digitAria": "Dígito {{position}}"
+    },
+    "amountEntry": {
+      "title": "2. Ingresá el Monto",
+      "hint": "Tocá este campo y usá el teclado.",
+      "increase": "Aumentar monto",
+      "decrease": "Reducir monto",
+      "betTypeLabel": "Tipo de Apuesta",
+      "betType": {
+        "straight": "Directo",
+        "box": "Box",
+        "combo": "Combo"
+      },
+      "betTypeHint": "Elegí uno o varios tipos de apuesta",
+      "addToBetSlip": "Agregar a Apuestas"
+    },
+    "betSlip": {
+      "title": "Apuestas ({{count}})",
+      "clearAll": "Borrar Todo",
+      "columnGame": "Juego",
+      "columnNumbers": "Números",
+      "columnType": "Tipo",
+      "columnAmount": "Monto",
+      "empty": "Todavía no hay apuestas agregadas",
+      "removeAria": "Quitar apuesta {{digits}}",
+      "totalBet": "Apuesta Total",
+      "potentialWin": "Ganancia Potencial"
+    },
+    "countdown": {
+      "label": "Próximo Sorteo {{game}}",
+      "round": "#{{number}}"
+    },
+    "player": {
+      "balanceLabel": "Saldo",
+      "placeBet": "Apostar",
+      "placing": "Apostando…",
+      "insufficientBalance": "Saldo insuficiente para las apuestas actuales.",
+      "betPlacedSuccess": "Apuesta realizada con éxito."
+    },
+    "cashier": {
+      "totalToCollect": "Total a Cobrar",
+      "confirmBet": "Confirmar Apuesta",
+      "ticketIssued": "Ticket emitido con éxito.",
+      "issueTicket": "Emitir Ticket",
+      "issuing": "Emitiendo…",
+      "ticketPreview": {
+        "title": "Vista Previa del Ticket",
+        "ticketNumber": "Ticket",
+        "drawNumber": "Sorteo {{game}}",
+        "cancel": "Cancelar"
+      }
+    }
+  },
   "admin": {
     "header": {
       "userName": "Admin",
