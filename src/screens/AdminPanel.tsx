@@ -6,6 +6,7 @@ import { RtpManagementPage } from './RtpManagementPage'
 import { NextResultsPage } from './NextResultsPage'
 import { GameEventsPage } from './GameEventsPage'
 import { AdminSettingsPage } from './AdminSettingsPage'
+import { AdminReportsPage } from './AdminReportsPage'
 import { UsersPage } from './UsersPage'
 
 type AdminView =
@@ -17,6 +18,7 @@ type AdminView =
   | 'admin-next-results-quick-money'
   | 'admin-settings'
   | 'admin-users'
+  | 'admin-reports'
 
 // Los valores acá son ids de SUB-item (rtpDashboard/rtpManagement/roulette/lottery), no del padre
 // 'rtp'/'nextResults' -- así AdminSidebar puede resaltar cuál de los hijos está activo (antes solo
@@ -33,6 +35,7 @@ const ACTIVE_SIDEBAR_ID_BY_VIEW: Record<AdminView, string> = {
   'admin-next-results-quick-money': 'lottery',
   'admin-settings': 'settings',
   'admin-users': 'users',
+  'admin-reports': 'reports',
 }
 
 function isAdminView(value: string | null): value is AdminView {
@@ -44,7 +47,8 @@ function isAdminView(value: string | null): value is AdminView {
     value === 'admin-next-results' ||
     value === 'admin-next-results-quick-money' ||
     value === 'admin-settings' ||
-    value === 'admin-users'
+    value === 'admin-users' ||
+    value === 'admin-reports'
   )
 }
 
@@ -85,6 +89,7 @@ export function AdminPanel() {
       {view === 'admin-next-results-quick-money' && <NextResultsPage section="quickMoney" />}
       {view === 'admin-settings' && <AdminSettingsPage />}
       {view === 'admin-users' && <UsersPage />}
+      {view === 'admin-reports' && <AdminReportsPage />}
     </AdminLayout>
   )
 }

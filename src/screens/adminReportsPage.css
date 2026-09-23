@@ -1,0 +1,38 @@
+/* Reglas específicas de Reports -- el shell/tokens/panel base compartidos con el resto de páginas
+   del Admin Panel viven en components/admin/adminLayout.css (ver AdminLayout.tsx), mismo criterio
+   que adminDashboardPage.css. */
+
+.admin-reports-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+/* Bets and Payouts ~58% / RTP Trend ~42% (pedido explícito de la referencia: "55% izquierda / 45%
+   derecha"). */
+.admin-reports-charts-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 1080px) {
+  .admin-reports-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Performance by Game ~55% / Report Shortcuts ~45%. */
+.admin-reports-second-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 1080px) {
+  .admin-reports-second-row {
+    grid-template-columns: 1fr;
+  }
+}

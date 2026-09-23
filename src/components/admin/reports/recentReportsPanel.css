@@ -1,0 +1,195 @@
+.admin-recent-reports {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-recent-reports-empty {
+  margin: 20px 0 4px;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}
+
+/* "View All" abre AllReportsModal.tsx con la lista completa. */
+.admin-recent-reports-view-all {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.admin-recent-reports-view-all:hover {
+  color: var(--admin-text-primary);
+}
+
+.admin-recent-reports-view-all:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: 2px;
+}
+
+.admin-recent-reports-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-recent-reports-table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-recent-reports-table thead th {
+  text-align: left;
+  padding: 9px 12px;
+  background: rgba(140, 165, 190, 0.05);
+  color: var(--admin-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+.admin-recent-reports-table thead th:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.admin-recent-reports-table thead th:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.admin-recent-reports-actions-head {
+  text-align: right;
+}
+
+.admin-recent-reports-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.08);
+  color: var(--admin-text-primary);
+  white-space: nowrap;
+}
+
+.admin-recent-reports-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-recent-reports-table tbody tr {
+  transition: background 150ms ease;
+}
+
+.admin-recent-reports-table tbody tr:hover {
+  background: rgba(150, 180, 210, 0.035);
+}
+
+.admin-recent-reports-name {
+  font-weight: 600;
+}
+
+.admin-recent-reports-rename-input {
+  width: 100%;
+  min-width: 160px;
+  box-sizing: border-box;
+  padding: 6px 9px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--admin-red) 45%, var(--admin-border));
+  background: rgba(9, 17, 26, 0.9);
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-recent-reports-rename-input:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.45);
+  outline-offset: 1px;
+}
+
+.admin-recent-reports-secondary {
+  color: var(--admin-text-secondary);
+}
+
+.admin-recent-reports-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.admin-recent-reports-action-dropdown {
+  position: relative;
+}
+
+.admin-recent-reports-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.admin-recent-reports-icon-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.admin-recent-reports-icon-btn:hover,
+.admin-recent-reports-icon-btn[aria-expanded='true'] {
+  color: var(--admin-text-primary);
+  border-color: var(--admin-border);
+  background: rgba(150, 180, 210, 0.06);
+}
+
+.admin-recent-reports-icon-btn:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: 2px;
+}
+
+.admin-recent-reports-format-menu {
+  min-width: 120px;
+}
+
+.admin-recent-reports-row-menu {
+  right: 0;
+  min-width: 160px;
+}
+
+.admin-recent-reports-row-menu .admin-dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.admin-recent-reports-row-menu .admin-dropdown-option svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.admin-recent-reports-delete-option {
+  color: #ff5a6c;
+}
+
+.admin-recent-reports-delete-option:hover {
+  color: #ff8290;
+  background: rgba(220, 20, 40, 0.12);
+}

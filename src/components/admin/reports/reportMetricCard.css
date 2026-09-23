@@ -1,0 +1,113 @@
+/* Misma receta visual que components/admin/adminStatCard.css (icon halo + accent + trend), pero
+   con namespace propio -- mismo criterio ya establecido en Game Events/Settings: cada sección
+   restata la receta compartida en vez de importar la hoja de otra feature. */
+.admin-report-metric-card {
+  --accent: var(--admin-red);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 146px;
+  box-sizing: border-box;
+  padding: 20px 22px;
+  border-radius: var(--admin-radius);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--admin-border));
+  background: var(--admin-panel-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: border-color 150ms ease;
+}
+
+.admin-report-metric-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--admin-border));
+}
+
+.admin-report-metric-card[data-accent='red'] {
+  --accent: var(--admin-red);
+}
+
+.admin-report-metric-card[data-accent='blue'] {
+  --accent: var(--admin-blue);
+}
+
+.admin-report-metric-card[data-accent='purple'] {
+  --accent: var(--admin-purple);
+}
+
+.admin-report-metric-card[data-accent='green'] {
+  --accent: var(--admin-green);
+}
+
+.admin-report-metric-card-icon-halo {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 12%, transparent) 55%,
+    transparent 80%
+  );
+}
+
+.admin-report-metric-card-icon {
+  display: flex;
+  color: var(--accent);
+}
+
+.admin-report-metric-card-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.admin-report-metric-card-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-report-metric-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-report-metric-card-value {
+  margin-top: 6px;
+  font-size: 33px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--admin-text-primary);
+}
+
+.admin-report-metric-card-trend {
+  margin-top: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-report-metric-card-trend-value {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.admin-report-metric-card-trend-value--positive {
+  color: var(--admin-green);
+}
+
+/* RTP: la referencia pinta su variación en pp con el mismo rojo de la card, no en verde como las
+   otras tres KPI (pedido explícito por la imagen: "diferencia esta comparación de las otras"). */
+.admin-report-metric-card-trend-value--accent {
+  color: var(--accent);
+}
+
+.admin-report-metric-card-trend-label {
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}

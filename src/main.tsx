@@ -33,6 +33,7 @@ const ADMIN_PREVIEW_VALUES = [
   'admin-next-results-quick-money',
   'admin-settings',
   'admin-users',
+  'admin-reports',
 ]
 
 function resolveScreen() {
