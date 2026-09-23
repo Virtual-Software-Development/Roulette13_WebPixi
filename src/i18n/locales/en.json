@@ -190,6 +190,76 @@
       }
     }
   },
+  "quickMoneyBettingView": {
+    "title": "Quick Money Betting",
+    "gameType": {
+      "pick3": "Pick 3",
+      "pick4": "Pick 4",
+      "playBoth": "Play Both"
+    },
+    "numberPad": {
+      "title": "Shared Number Pad",
+      "hint": "Tap a field on the right, then use this keypad to enter your numbers or bet amount.",
+      "backspace": "Delete last digit",
+      "clear": "Clear all fields",
+      "tagline": "Same keypad. Two inputs. Simple."
+    },
+    "digitEntry": {
+      "title": "1. Enter Numbers",
+      "hint": "Tap this field, then use the keypad.",
+      "digitAria": "Digit {{position}}"
+    },
+    "amountEntry": {
+      "title": "2. Enter Bet Amount",
+      "hint": "Tap this field, then use the keypad.",
+      "increase": "Increase amount",
+      "decrease": "Decrease amount",
+      "betTypeLabel": "Bet Type",
+      "betType": {
+        "straight": "Straight",
+        "box": "Box",
+        "combo": "Combo"
+      },
+      "betTypeHint": "Select one or more bet types",
+      "addToBetSlip": "Add to Bet Slip"
+    },
+    "betSlip": {
+      "title": "Bet Slip ({{count}})",
+      "clearAll": "Clear All",
+      "columnGame": "Game",
+      "columnNumbers": "Numbers",
+      "columnType": "Type",
+      "columnAmount": "Amount",
+      "empty": "No bets added yet",
+      "removeAria": "Remove {{digits}} bet",
+      "totalBet": "Total Bet",
+      "potentialWin": "Potential Win"
+    },
+    "countdown": {
+      "label": "Next {{game}} Draw",
+      "round": "#{{number}}"
+    },
+    "player": {
+      "balanceLabel": "Balance",
+      "placeBet": "Place Bet",
+      "placing": "Placing…",
+      "insufficientBalance": "Insufficient balance for the current bets.",
+      "betPlacedSuccess": "Bet placed successfully."
+    },
+    "cashier": {
+      "totalToCollect": "Total to Collect",
+      "confirmBet": "Confirm Bet",
+      "ticketIssued": "Ticket issued successfully.",
+      "issueTicket": "Issue Ticket",
+      "issuing": "Issuing…",
+      "ticketPreview": {
+        "title": "Ticket Preview",
+        "ticketNumber": "Ticket",
+        "drawNumber": "{{game}} Draw",
+        "cancel": "Cancel"
+      }
+    }
+  },
   "admin": {
     "header": {
       "userName": "Admin",

@@ -15,6 +15,9 @@ const AdminPanel = lazy(() => import('./screens/AdminPanel.tsx').then((m) => ({ 
 const RouletteBettingView = lazy(() =>
   import('./screens/RouletteBettingView.tsx').then((m) => ({ default: m.RouletteBettingView })),
 )
+const QuickMoneyBettingView = lazy(() =>
+  import('./screens/QuickMoneyBettingView.tsx').then((m) => ({ default: m.QuickMoneyBettingView })),
+)
 
 // Preview temporal vía ?preview=<login|admin|admin-rtp-dashboard|admin-rtp-management> -- todavía
 // no hay router en el proyecto (ver conversación), así que la elección de pantalla de nivel
@@ -42,6 +45,10 @@ function resolveScreen() {
   // de rol real que distinga cajero de jugador (ver LoginPage.tsx, auth todavía stub).
   if (preview === 'roulette-betting') return <RouletteBettingView mode="player" />
   if (preview === 'roulette-betting-cashier') return <RouletteBettingView mode="cashier" />
+  // Player Mode tiene botón propio en el Header (tab 'lottery', ver Header.tsx). Cashier Mode
+  // queda por ahora solo accesible por URL directa -- mismo criterio ad-hoc que Roulette Betting.
+  if (preview === 'quick-money-betting') return <QuickMoneyBettingView mode="player" />
+  if (preview === 'quick-money-betting-cashier') return <QuickMoneyBettingView mode="cashier" />
   return <App />
 }
 

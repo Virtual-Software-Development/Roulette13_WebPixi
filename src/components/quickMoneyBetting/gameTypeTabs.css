@@ -1,0 +1,41 @@
+.qm-tabs {
+  display: flex;
+  gap: 12px;
+}
+
+.qm-tab {
+  flex: 1 1 0;
+  height: 46px;
+  border-radius: var(--qm-radius);
+  border: 1px solid var(--qm-border);
+  background: var(--qm-panel-bg);
+  color: var(--qm-text-secondary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.qm-tab:hover:not([data-active='true']) {
+  border-color: rgba(200, 215, 230, 0.4);
+  color: var(--qm-text-primary);
+}
+
+/* Acento morado/azul solo cuando está activo -- inactivo se ve neutro, mismo criterio que el tab
+   de Roulette en el Header (data-active). */
+.qm-tab[data-active='true'] {
+  color: #fff;
+  border-color: transparent;
+}
+.qm-tab[data-accent='pick3'][data-active='true'] {
+  background: linear-gradient(110deg, #5b21b6 0%, #7c3aed 55%, #8b5cf6 100%);
+}
+.qm-tab[data-accent='pick4'][data-active='true'] {
+  background: linear-gradient(110deg, #0a4fa8 0%, #1a6fe0 55%, #2588ff 100%);
+}

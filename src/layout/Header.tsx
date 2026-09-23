@@ -15,11 +15,10 @@ const ADMIN_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/17_gear_white.svg')
 const BALANCE_ICON_URL = buildMediaUrl('Website_svg_icons/41_payouts.svg')
 const USER_ICON_URL = buildMediaUrl('Website_svg_icons/16_user_white_circle.svg')
 
-// Única pantalla real del proyecto sigue siendo la ruleta (ver RouletteLobby.tsx) -- todavía no
-// hay router, así que "navegar" entre tabs se resuelve reescribiendo window.location.search (
-// mismo mecanismo ad-hoc que ya usa main.tsx para ?preview=login). ROULETTE y ADMIN sí tienen un
-// destino real hoy (lobby / AdminDashboardPage) y son clickeables; LOTTERY sigue sin una segunda
-// pantalla a la que ir, así que se muestra sin onClick -- lista para conectarse el día que exista.
+// Todavía no hay router en el proyecto, así que "navegar" entre tabs se resuelve reescribiendo
+// window.location.search (mismo mecanismo ad-hoc que ya usa main.tsx para ?preview=login). Los
+// 4 tabs ya tienen destino real y son clickeables: ROULETTE (lobby), BETTING (Roulette Betting
+// View), LOTTERY (Quick Money Betting View, ver QuickMoneyBettingView.tsx) y ADMIN.
 export type HeaderTab = 'roulette' | 'lottery' | 'betting' | 'admin'
 
 function navigateToPreview(preview: string | null) {
@@ -173,10 +172,11 @@ export function Header({ activeTab = 'roulette' }: { activeTab?: HeaderTab } = {
             <span className="app-header-tab-label">{t('header.roulette')}</span>
           </div>
           <div
-            className="app-header-tab app-header-tab--lottery"
+            className={`app-header-tab app-header-tab--lottery${activeTab === 'lottery' ? '' : ' app-header-tab--clickable'}`}
             data-active={activeTab === 'lottery'}
             role="tab"
             aria-selected={activeTab === 'lottery'}
+            onClick={activeTab === 'lottery' ? undefined : () => navigateToPreview('quick-money-betting')}
           >
             <LotteryTabIcon />
             <span className="app-header-tab-label">{t('header.lottery')}</span>

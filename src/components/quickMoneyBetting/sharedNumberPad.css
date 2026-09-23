@@ -1,0 +1,78 @@
+.qm-numberpad {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: var(--qm-radius);
+  border: 1px solid var(--qm-border);
+  background: var(--qm-panel-bg);
+}
+
+.qm-numberpad-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--qm-text-primary);
+}
+
+.qm-numberpad-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--qm-text-secondary);
+}
+
+.qm-numberpad-grid {
+  display: grid;
+  /* Ancho fijo (no 1fr) -- con 1fr cada tecla crecía a 1/3 del ancho del panel (~140px), mucho
+     más grande de lo necesario para un teclado numérico. justify-content:center para que el
+     grid, ya angosto, quede centrado en vez de pegado a la izquierda. */
+  grid-template-columns: repeat(3, 150px);
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.qm-numberpad-key {
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  border: 1px solid var(--qm-border);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 60%), rgba(255, 255, 255, 0.03);
+  color: var(--qm-text-primary);
+  font-family: inherit;
+  font-size: 25px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+.qm-numberpad-key:hover {
+  border-color: rgba(200, 215, 230, 0.45);
+  background: rgba(255, 255, 255, 0.07);
+}
+.qm-numberpad-key:active {
+  transform: scale(0.94);
+}
+.qm-numberpad-key--action {
+  color: var(--qm-text-secondary);
+}
+
+.qm-numberpad-tagline {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--qm-text-secondary);
+  opacity: 0.7;
+}
