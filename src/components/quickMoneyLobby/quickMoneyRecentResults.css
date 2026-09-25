@@ -3,9 +3,16 @@
   gap: 20px;
 }
 
+/* Cada tabla (Pick 3 / Pick 4) en su propia "card" (referencia visual): un tono más clara que el
+   panel, con borde sutil y la fila de header con fondo propio. */
 .qml-results-table-wrap {
   flex: 1 1 0;
   min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 12px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--qml-card-border);
+  background: var(--qml-card-bg);
 }
 
 .qml-results-table-title {
@@ -23,6 +30,7 @@
 .qml-results-table thead th {
   text-align: left;
   padding: 6px 8px;
+  background: var(--qml-card-header-bg);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.6px;

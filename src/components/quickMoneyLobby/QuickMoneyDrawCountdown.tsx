@@ -52,8 +52,11 @@ export function QuickMoneyDrawCountdown({ gameNumber }: QuickMoneyDrawCountdownP
         </div>
 
         <div className="qml-center-logo-wrap">
-          <span className="qml-center-logo-ring qml-center-logo-ring--outer" aria-hidden="true" />
-          <span className="qml-center-logo-ring qml-center-logo-ring--inner" aria-hidden="true" />
+          {/* Anillo interior DENTRO del exterior: su inset (16%) es relativo al exterior, así escala
+              con él cuando el logo crece en desktop (ver .qml-center-logo-wrap en el CSS). */}
+          <span className="qml-center-logo-ring qml-center-logo-ring--outer" aria-hidden="true">
+            <span className="qml-center-logo-ring qml-center-logo-ring--inner" />
+          </span>
           <img src={QUICK_MONEY_LOGO_URL} className="qml-center-logo" alt={t('header.lottery')} />
         </div>
 

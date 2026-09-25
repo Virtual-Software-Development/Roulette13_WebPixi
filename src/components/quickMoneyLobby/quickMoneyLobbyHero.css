@@ -10,6 +10,11 @@
   align-items: stretch;
   gap: 0;
   aspect-ratio: 4.5 / 1;
+  /* Alto mínimo explícito: en anchos donde 4.5:1 da menos (debajo de ~1820px) el Hero antes medía
+     lo que pedía el contenido del panel central (~394-405px); ahora que ese panel reparte su alto
+     en porcentajes (logo = 56% hasta la línea del medio, ver quickMoneyDrawCountdown.css) ya no
+     puede definirlo él sin volverse circular, así que el piso va acá. */
+  min-height: 405px;
   background-color: #00101d;
 }
 
@@ -20,6 +25,7 @@
   .qml-hero {
     flex-direction: column;
     aspect-ratio: auto;
+    min-height: 0;
     border-radius: var(--qml-radius);
     overflow: hidden;
     background:

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { QuickMoneyLobbyDraw } from '../../data/quickMoneyLobbyMockData'
+import type { QuickMoneyGameType } from '../../types/quickMoneyBet'
 import { computeQuickMoneyHotCold } from '../../utils/quickMoneyHotCold'
 import { buildMediaUrl } from '../../utils/media'
 import './quickMoneyFrequencyPanel.css'
@@ -12,13 +13,31 @@ interface FrequencyGroupProps {
   icon: string
   title: string
   subtitle: string
-  pick3Digits: number[]
-  pick4Digits: number[]
+  pick3: number[]
+  pick4: number[]
 }
 
-function FrequencyGroup({ icon, title, subtitle, pick3Digits, pick4Digits }: FrequencyGroupProps) {
+// Una columna por juego (Pick 3 | Pick 4, lado a lado con divisor vertical -- referencia visual):
+// etiqueta del juego y sus bolas. Sin conteo de apariciones debajo de cada bola (pedido explícito,
+// se sacó después de agregarlo).
+function FrequencyColumn({ gameType, digits }: { gameType: QuickMoneyGameType; digits: number[] }) {
   const { t } = useTranslation()
 
+  return (
+    <div className="qml-frequency-column" data-accent={gameType}>
+      <span className="qml-frequency-label">{t(`quickMoneyBettingView.gameType.${gameType}`)}</span>
+      <div className="qml-frequency-balls">
+        {digits.map((digit) => (
+          <span key={digit} className="qml-ball" data-accent={gameType}>
+            {digit}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FrequencyGroup({ icon, title, subtitle, pick3, pick4 }: FrequencyGroupProps) {
   return (
     <div className="qml-frequency-group">
       <div className="qml-frequency-heading">
@@ -29,26 +48,8 @@ function FrequencyGroup({ icon, title, subtitle, pick3Digits, pick4Digits }: Fre
         </div>
       </div>
       <div className="qml-frequency-columns">
-        <div className="qml-frequency-column" data-accent="pick3">
-          <span className="qml-frequency-label">{t('quickMoneyBettingView.gameType.pick3')}</span>
-          <div className="qml-frequency-balls">
-            {pick3Digits.map((digit, index) => (
-              <span key={index} className="qml-ball qml-ball--sm" data-accent="pick3">
-                {digit}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="qml-frequency-column" data-accent="pick4">
-          <span className="qml-frequency-label">{t('quickMoneyBettingView.gameType.pick4')}</span>
-          <div className="qml-frequency-balls">
-            {pick4Digits.map((digit, index) => (
-              <span key={index} className="qml-ball qml-ball--sm" data-accent="pick4">
-                {digit}
-              </span>
-            ))}
-          </div>
-        </div>
+        <FrequencyColumn gameType="pick3" digits={pick3} />
+        <FrequencyColumn gameType="pick4" digits={pick4} />
       </div>
     </div>
   )
@@ -68,16 +69,16 @@ export function QuickMoneyFrequencyPanel({ draws }: { draws: QuickMoneyLobbyDraw
         icon={FLAME_ICON_URL}
         title={t('quickMoneyLobby.hotNumbers.title')}
         subtitle={t('quickMoneyLobby.hotNumbers.subtitle')}
-        pick3Digits={hotCold.pick3.hot}
-        pick4Digits={hotCold.pick4.hot}
+        pick3={hotCold.pick3.hot}
+        pick4={hotCold.pick4.hot}
       />
       <div className="qml-frequency-divider" />
       <FrequencyGroup
         icon={SNOWFLAKE_ICON_URL}
         title={t('quickMoneyLobby.coldNumbers.title')}
         subtitle={t('quickMoneyLobby.coldNumbers.subtitle')}
-        pick3Digits={hotCold.pick3.cold}
-        pick4Digits={hotCold.pick4.cold}
+        pick3={hotCold.pick3.cold}
+        pick4={hotCold.pick4.cold}
       />
     </section>
   )

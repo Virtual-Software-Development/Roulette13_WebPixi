@@ -1,61 +1,140 @@
+/* Estructura según la referencia visual (pedido explícito): por grupo (Hot / Cold) un header con
+   ícono grande + título en mayúsculas + subtítulo, y debajo Pick 3 | Pick 4 lado a lado con un
+   divisor vertical. Container query: el layout depende del ancho
+   de ESTE panel (en 901-~1100px de viewport es angosto y las columnas se apilan). */
 .qml-frequency-panel {
   min-width: 260px;
+  container: qml-frequency / inline-size;
+  /* El panel se estira al alto de Recent Results (fila de abajo): los dos grupos (Hot / Cold) se
+     reparten ese alto y centran su contenido en su mitad -- pedido explícito, antes sobraba mucho
+     espacio vacío abajo. En mobile el panel mide lo que su contenido (sin efecto). */
+  display: flex;
+  flex-direction: column;
+}
+
+.qml-frequency-group {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .qml-frequency-divider {
   height: 1px;
   margin: 16px 0;
-  background: var(--qml-divider);
+  background: var(--qml-divider-strong);
 }
 
 .qml-frequency-heading {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .qml-frequency-icon {
-  width: 20px;
-  height: 20px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .qml-frequency-heading h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 1.25;
   font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
   color: var(--qml-text-primary);
 }
 
 .qml-frequency-heading p {
   margin: 2px 0 0;
   font-size: 11.5px;
+  line-height: 1.3;
   color: var(--qml-text-secondary);
 }
 
 .qml-frequency-columns {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  /* Pick 4 un poco más ancha (4 bolas vs 3) -- misma proporción que la referencia. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
 }
 
 .qml-frequency-column {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+/* Divisor vertical Pick 3 | Pick 4 -- mismo navy tenue que los divisores de las tablas. */
+.qml-frequency-column + .qml-frequency-column {
+  border-left: 1px solid var(--qml-divider);
+  padding-left: 16px;
+}
+.qml-frequency-column:first-child {
+  padding-right: 16px;
 }
 
 .qml-frequency-label {
-  font-size: 12px;
-  font-weight: 700;
+  /* cqi = % del ancho de este panel (container) -- crece con el panel, nunca más que lo que entra. */
+  font-size: clamp(15px, 3cqi, 18px);
+  font-weight: 800;
+  text-transform: uppercase;
   color: var(--qml-accent);
-  flex-shrink: 0;
 }
 
 .qml-frequency-balls {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+  gap: 10px;
+}
+/* Bolas más grandes cuanto más ancho el panel (34px en el mínimo de 2 columnas, que es lo que
+   entra justo; hasta 44px). */
+.qml-frequency-balls .qml-ball {
+  width: clamp(34px, 7.5cqi, 44px);
+  height: clamp(34px, 7.5cqi, 44px);
+  font-size: clamp(15px, 3.2cqi, 18px);
+}
+
+/* Panel angosto (Pick 3 | Pick 4 lado a lado necesita ~350px de contenido: bolas de 36px con borde): en vez de apilar las
+   columnas completas (duplicaba el alto del panel), cada juego pasa a una fila -- etiqueta a la
+   izquierda, bolas chicas a la derecha -- así el panel sigue entrando en el alto de
+   la fila de abajo. */
+@container qml-frequency (max-width: 354px) {
+  .qml-frequency-divider {
+    margin: 12px 0;
+  }
+  .qml-frequency-heading {
+    margin-bottom: 8px;
+  }
+  .qml-frequency-columns {
+    grid-template-columns: 1fr;
+  }
+  .qml-frequency-column {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .qml-frequency-column + .qml-frequency-column {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--qml-divider);
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+  .qml-frequency-column:first-child {
+    padding-right: 0;
+  }
+  .qml-frequency-label {
+    font-size: 13px;
+  }
+  .qml-frequency-balls {
+    gap: 6px;
+  }
+  .qml-frequency-balls .qml-ball {
+    width: 26px;
+    height: 26px;
+    font-size: 12.5px;
+  }
 }

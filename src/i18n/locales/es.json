@@ -270,6 +270,11 @@
   "quickMoneyLobby": {
     "previousResult": "Resultado Anterior",
     "gameNumber": "Sorteo",
+    "drawSummary": {
+      "drawDate": "Fecha del Sorteo",
+      "drawTime": "Hora del Sorteo (EST)",
+      "gameNumber": "Sorteo #"
+    },
     "tagline": "Juega Más en Grande, Juntos",
     "chooseGame": "Elige tu Juego de Quick Money",
     "nextDraw": "Próximo Sorteo",

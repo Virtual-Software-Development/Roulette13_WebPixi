@@ -270,6 +270,11 @@
   "quickMoneyLobby": {
     "previousResult": "Previous Result",
     "gameNumber": "Game",
+    "drawSummary": {
+      "drawDate": "Draw Date",
+      "drawTime": "Draw Time (EST)",
+      "gameNumber": "Game #"
+    },
     "tagline": "Play Bigger Together",
     "chooseGame": "Choose Your Quick Money Game",
     "nextDraw": "Next Draw",
