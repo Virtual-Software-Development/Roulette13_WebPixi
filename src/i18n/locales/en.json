@@ -1061,5 +1061,12 @@
       }
     }
   }
+  },
+  "errorView": {
+    "goBackHome": "Go Back Home",
+    "notFound": {
+      "title": "Page Not Found",
+      "description": "The page you're looking for doesn't exist or may have been moved."
+    }
   }
 }

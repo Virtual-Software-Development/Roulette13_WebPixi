@@ -21,6 +21,9 @@ const QuickMoneyBettingView = lazy(() =>
 const QuickMoneyLobby = lazy(() =>
   import('./screens/QuickMoneyLobby.tsx').then((m) => ({ default: m.QuickMoneyLobby })),
 )
+const NotFoundView = lazy(() =>
+  import('./screens/NotFoundView.tsx').then((m) => ({ default: m.NotFoundView })),
+)
 
 // Preview temporal vía ?preview=<login|admin|admin-rtp-dashboard|admin-rtp-management> -- todavía
 // no hay router en el proyecto (ver conversación), así que la elección de pantalla de nivel
@@ -58,7 +61,12 @@ function resolveScreen() {
   // Roulette Betting.
   if (preview === 'quick-money-betting') return <QuickMoneyBettingView mode="player" />
   if (preview === 'quick-money-betting-cashier') return <QuickMoneyBettingView mode="cashier" />
-  return <App />
+  // Sin ?preview= es la entrada normal (pantalla principal, Roulette Lobby) -- eso sigue igual.
+  // Un ?preview= presente pero que no matchea ninguna pantalla conocida de arriba (typo, link
+  // viejo, etc.) antes caía acá también y mostraba la ruleta como si nada -- ahora muestra el 404
+  // genérico en su lugar (ver NotFoundView.tsx), sin tocar ninguna de las rutas válidas de arriba.
+  if (!preview) return <App />
+  return <NotFoundView />
 }
 
 // Fallback mientras carga el chunk lazy de la pantalla elegida -- deliberadamente NO es
