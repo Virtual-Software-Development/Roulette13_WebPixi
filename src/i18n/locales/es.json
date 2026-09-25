@@ -1061,5 +1061,12 @@
       }
     }
   }
+  },
+  "errorView": {
+    "goBackHome": "Volver al inicio",
+    "notFound": {
+      "title": "Página no encontrada",
+      "description": "La página que buscas no existe o pudo haber sido movida."
+    }
   }
 }

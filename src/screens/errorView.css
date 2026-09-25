@@ -1,0 +1,103 @@
+/* Fondo navy oscuro -- mismo gradiente que AdminLayout.tsx (ver adminLayout.css), reutilizado en
+   vez de inventar un color nuevo para que la pantalla se sienta consistente con el resto de la
+   app. Responsive vía CSS puro (flex + clamp), sin JS de resize: mismo criterio que las demás
+   screens DOM del proyecto (LoginPage/AdminPanel), que no dependen de ResponsiveStage (eso es
+   solo para el canvas de Pixi). */
+.error-view {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #07131c 0%, #050d14 45%, #030a10 100%);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.error-view-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 680px;
+}
+
+/* Código del error (404/403/500/...) -- elemento principal, grande y rojo, sin límite de ancho de
+   caracteres fijo (clamp() por vw, no un tamaño fijo) para que también funcione con códigos que
+   no sean de 3 dígitos. */
+.error-view-code {
+  margin: 0;
+  font-size: clamp(112px, 16vw, 184px);
+  font-weight: 800;
+  line-height: 1;
+  color: #f31c32;
+  text-shadow: 0 0 40px rgba(243, 28, 50, 0.25);
+}
+
+.error-view-title {
+  margin: 20px 0 0;
+  font-size: clamp(36px, 4.2vw, 50px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #f5f7fa;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.error-view-description {
+  margin: 18px 0 0;
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.5;
+  color: #8a97a8;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Mismo lenguaje visual que login-submit (loginPage.css) -- gradiente rojo sólido, sin glow
+   exagerado -- pero moderado en ancho (pedido explícito: "no hagas el botón demasiado ancho"),
+   nunca full-width como el de Login. */
+.error-view-action {
+  margin-top: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 47, 64, 0.82);
+  background: linear-gradient(105deg, #a90f25 0%, #b81327 36%, #c91a27 68%, #dd2528 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 120, 128, 0.1),
+    0 8px 22px rgba(150, 0, 24, 0.17);
+  color: #fff;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.error-view-action:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 130, 140, 0.12),
+    0 10px 26px rgba(175, 0, 26, 0.22);
+}
+
+.error-view-action:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.error-view-action-icon {
+  width: 21px;
+  height: 21px;
+}
+
+@media (max-width: 480px) {
+  .error-view-action {
+    padding: 15px 26px;
+    font-size: 17px;
+  }
+}
