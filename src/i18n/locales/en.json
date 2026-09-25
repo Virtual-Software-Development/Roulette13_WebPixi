@@ -212,12 +212,12 @@
       "tagline": "Same keypad. Two inputs. Simple."
     },
     "digitEntry": {
-      "title": "1. Enter Numbers",
+      "title": "Enter Numbers",
       "hint": "Tap this field, then use the keypad.",
       "digitAria": "Digit {{position}}"
     },
     "amountEntry": {
-      "title": "2. Enter Bet Amount",
+      "title": "Enter Bet Amount",
       "hint": "Tap this field, then use the keypad.",
       "increase": "Increase amount",
       "decrease": "Decrease amount",
@@ -331,8 +331,7 @@
       },
       "kpi": {
         "rouletteRounds": "Roulette Rounds",
-        "pick3Rounds": "Pick 3 Rounds",
-        "pick4Rounds": "Pick 4 Rounds",
+        "quickMoneyRounds": "Quick Money Rounds",
         "activeUsers": "Active Users",
         "vsYesterday": "vs. yesterday",
         "onlineNow": "online now"
@@ -341,7 +340,8 @@
         "title": "Games Activity",
         "roulette": "Roulette",
         "pick3": "Pick 3",
-        "pick4": "Pick 4"
+        "pick4": "Pick 4",
+        "quickMoney": "Quick Money"
       },
       "gamesDistribution": {
         "title": "Games Distribution",
@@ -722,6 +722,58 @@
         },
         "detail": { "title": "Upload Details" },
         "actions": { "openRelated": "Open Related Video", "refresh": "Refresh" }
+      }
+    },
+    "systemLogs": {
+      "title": "System Logs",
+      "subtitle": "Monitor system activity, events, warnings and errors.",
+      "filters": {
+        "searchPlaceholder": "Search by keyword, user, or details...",
+        "dateRange": "Date Range",
+        "dateRangeOptions": { "any": "Any Time", "today": "Today", "last7Days": "Last 7 Days", "last30Days": "Last 30 Days" },
+        "user": "User",
+        "allUsers": "All Users",
+        "module": "Module",
+        "allModules": "All Modules",
+        "action": "Action",
+        "allActions": "All Actions",
+        "status": "Status",
+        "allStatuses": "All Statuses",
+        "clear": "Clear Filters"
+      },
+      "module": {
+        "roulette": "Roulette",
+        "quickMoney": "Quick Money",
+        "rtp": "RTP",
+        "users": "Users",
+        "events": "Events",
+        "videos": "Videos",
+        "reports": "Reports",
+        "settings": "Settings",
+        "system": "System"
+      },
+      "status": { "success": "Success", "warning": "Warning", "failed": "Failed" },
+      "table": {
+        "dateTime": "Date & Time",
+        "user": "User",
+        "module": "Module",
+        "action": "Action",
+        "details": "Details",
+        "status": "Status",
+        "viewDetails": "View details",
+        "empty": "No system logs found. Try changing your filters or date range.",
+        "showingCount": "Showing {{from}}–{{to}} of {{total}} entries"
+      },
+      "detail": {
+        "title": "Log Details",
+        "close": "Close",
+        "dateTime": "Date & Time",
+        "user": "User",
+        "module": "Module",
+        "action": "Action",
+        "status": "Status",
+        "changeLabel": "Change",
+        "detailsLabel": "Details"
       }
     },
     "settings": {

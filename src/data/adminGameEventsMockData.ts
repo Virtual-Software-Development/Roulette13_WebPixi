@@ -13,12 +13,13 @@ export const GAME_EVENT_STATUS_VARIANT: Record<GameEventStatus, StatusBadgeVaria
   scheduled: 'warning',
 }
 
-// game -> StatusBadgeVariant reutilizando las variantes ya existentes (ver StatusBadge.tsx) en vez
-// de inventar un sistema de color paralelo -- roulette=red(danger), pick3=blue(info), pick4=purple.
+// game -> StatusBadgeVariant reutilizando las variantes ya existentes (ver StatusBadge.tsx) --
+// roulette=red(danger), pick3=verde(positive) y pick4=amber(warning), colores reales de marca de
+// cada uno (ver quickMoneyLobbyTokens.css, pedido explícito), no los genéricos azul/morado de antes.
 export const GAME_EVENT_GAME_VARIANT: Record<GameEvent['game'], StatusBadgeVariant> = {
   roulette: 'danger',
-  pick3: 'info',
-  pick4: 'purple',
+  pick3: 'positive',
+  pick4: 'warning',
 }
 
 export const GAME_EVENTS: GameEvent[] = [

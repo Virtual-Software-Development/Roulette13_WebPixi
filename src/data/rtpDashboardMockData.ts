@@ -15,10 +15,12 @@ import type {
 // investigación previa). Reemplazar este archivo por el fetch/store real no requiere tocar
 // ningún componente: todos reciben estos datos por props.
 
+// Logos reales por juego (pedido explícito: reemplazar los pictogramas genéricos rueda/dado por
+// el logo de marca de cada uno -- ver 46_logo_option_2/49/51/43 en Website_svg_icons).
 export const RTP_GAME_ICON_URLS: Record<RtpGame, string> = {
-  roulette: buildMediaUrl('Website_svg_icons/14_roulette_red.svg'),
-  pick3: buildMediaUrl('Website_svg_icons/13_dice_blue.svg'),
-  pick4: buildMediaUrl('Website_svg_icons/44_dice_purple.svg'),
+  roulette: buildMediaUrl('Website_svg_icons/46_logo_option_2.svg'),
+  pick3: buildMediaUrl('Website_svg_icons/49_pick-3-logo-option-2.svg'),
+  pick4: buildMediaUrl('Website_svg_icons/51_pick-4-logo-option-2.svg'),
 }
 
 export const RTP_METRIC_CARDS: RtpMetricCardData[] = [
@@ -37,7 +39,7 @@ export const RTP_METRIC_CARDS: RtpMetricCardData[] = [
     id: 'pick3',
     titleKey: 'admin.rtp.metrics.pick3Title',
     icon: RTP_GAME_ICON_URLS.pick3,
-    accent: 'blue',
+    accent: 'green',
     current: 61.4,
     target: 60,
     statusLabelKey: 'admin.rtp.status.aboveTarget',
@@ -48,7 +50,7 @@ export const RTP_METRIC_CARDS: RtpMetricCardData[] = [
     id: 'pick4',
     titleKey: 'admin.rtp.metrics.pick4Title',
     icon: RTP_GAME_ICON_URLS.pick4,
-    accent: 'purple',
+    accent: 'amber',
     current: 62.1,
     target: 62,
     statusLabelKey: 'admin.rtp.status.onTarget',

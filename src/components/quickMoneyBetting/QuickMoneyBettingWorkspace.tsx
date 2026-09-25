@@ -192,6 +192,7 @@ export function QuickMoneyBettingWorkspace({ mode }: { mode: BettingMode }) {
           onToggleBetType={handleToggleBetType}
           onAdd={handleAddToSlip}
           canAdd={canAdd}
+          gameType={activeGameTypes.length === 1 ? activeGameTypes[0] : undefined}
         />
       </div>
 

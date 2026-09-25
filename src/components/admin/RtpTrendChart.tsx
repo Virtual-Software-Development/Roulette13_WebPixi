@@ -62,10 +62,10 @@ function ChevronDownIcon() {
 const SERIES: LineSeries[] = [
   { key: 'rouletteActual', color: 'var(--admin-red)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.roulette' },
   { key: 'rouletteTarget', color: 'var(--admin-red)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.roulette' },
-  { key: 'pick3Actual', color: 'var(--admin-blue)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.pick3' },
-  { key: 'pick3Target', color: 'var(--admin-blue)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.pick3' },
-  { key: 'pick4Actual', color: 'var(--admin-purple)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.pick4' },
-  { key: 'pick4Target', color: 'var(--admin-purple)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.pick4' },
+  { key: 'pick3Actual', color: 'var(--admin-green)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.pick3' },
+  { key: 'pick3Target', color: 'var(--admin-green)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.pick3' },
+  { key: 'pick4Actual', color: 'var(--admin-amber)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.pick4' },
+  { key: 'pick4Target', color: 'var(--admin-amber)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.pick4' },
 ]
 
 interface RtpTrendChartProps {

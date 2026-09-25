@@ -14,14 +14,18 @@ export interface AdminStatCardData {
   trendLabelKey?: string
 }
 
+// Pick 3 y Pick 4 se agregan en un solo valor "quickMoney" (pedido explícito: ambos pertenecen a
+// Quick Money, mismo criterio ya aplicado al admin-stat-card "Quick Money Rounds" -- ver
+// adminDashboardMockData.ts). RecentRoundGame más abajo SÍ mantiene pick3/pick4 separados: ahí cada
+// fila es una ronda real puntual, no un agregado, así que perder cuál de los dos juegos fue
+// perdería información real.
 export interface GamesActivitySeriesPoint {
   time: string
   roulette: number
-  pick3: number
-  pick4: number
+  quickMoney: number
 }
 
-export type GamesDistributionGame = 'roulette' | 'pick3' | 'pick4'
+export type GamesDistributionGame = 'roulette' | 'quickMoney'
 
 export interface GamesDistributionSegment {
   id: GamesDistributionGame

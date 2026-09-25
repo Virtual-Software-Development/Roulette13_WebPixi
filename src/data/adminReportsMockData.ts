@@ -17,10 +17,12 @@ import type {
 // (mismo criterio que adminDashboardMockData.ts/rtpDashboardMockData.ts: reemplazar esto por el
 // fetch/store real no requiere tocar ningún componente, todos reciben estos datos por props).
 
+// Logos reales por juego (mismo criterio que RTP_GAME_ICON_URLS -- pedido explícito de reemplazar
+// los pictogramas genéricos rueda/dado por el logo de marca de cada uno).
 export const REPORT_GAME_ICON_URLS: Record<ReportGame, string> = {
-  roulette: buildMediaUrl('Website_svg_icons/14_roulette_red.svg'),
-  pick3: buildMediaUrl('Website_svg_icons/13_dice_blue.svg'),
-  pick4: buildMediaUrl('Website_svg_icons/44_dice_purple.svg'),
+  roulette: buildMediaUrl('Website_svg_icons/46_logo_option_2.svg'),
+  pick3: buildMediaUrl('Website_svg_icons/49_pick-3-logo-option-2.svg'),
+  pick4: buildMediaUrl('Website_svg_icons/51_pick-4-logo-option-2.svg'),
 }
 
 export const REPORT_GAME_FILTER_OPTIONS: ReportGameFilter[] = ['all', 'roulette', 'pick3', 'pick4']

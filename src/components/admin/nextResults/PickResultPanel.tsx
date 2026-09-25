@@ -1,23 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AdminSelect, type AdminSelectOption } from '../AdminSelect'
-import { useCountdown } from '../../../hooks/useCountdown'
-import { buildMediaUrl } from '../../../utils/media'
 import { ResultBall } from './ResultBall'
+import { buildMediaUrl } from '../../../utils/media'
 import { ArrowRightIcon, CloseIcon, SpinnerIcon } from './icons'
 import './nextResults.css'
 
-const CLOCK_ICON_URL = buildMediaUrl('Website_svg_icons/30_clock_white.svg')
 const REFRESH_ICON_URL = buildMediaUrl('Website_svg_icons/39_refresh_white_clean.svg')
-const DICE_ICON_URL = buildMediaUrl('Website_svg_icons/12_dice_white.svg')
-
-const SCHEDULED_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-})
 
 const DIGIT_OPTIONS: AdminSelectOption<string>[] = Array.from({ length: 10 }, (_, n) => ({
   value: String(n),
@@ -34,28 +23,24 @@ const UPDATE_DURATION_MS = 700
 type UpdateStatus = 'idle' | 'confirming' | 'updating' | 'success' | 'error'
 
 interface PickResultPanelProps {
-  accent: 'purple' | 'blue'
+  accent: 'green' | 'amber'
+  icon: string
   title: string
   subtitle: string
   updateLabel: string
-  seedSeconds: number
-  seedDrawNumber: string
   seedDigits: number[]
 }
 
-// Pick 3 y Pick 4 comparten exactamente la misma estructura (next draw + countdown, current
-// result en bolas, new result en selects, update/reset con confirmación) -- solo cambian cantidad
-// de dígitos, color de acento y semillas. El proyecto hoy no tiene NINGÚN modelo/endpoint de
-// ronda ni de escritura para Quick Money (a diferencia de Roulette, que al menos tiene
-// GameInfoResponse.nextDraw) -- todo el estado de este panel es local, listo para reemplazar por
-// un fetch/store real más adelante (ver performUpdate).
-export function PickResultPanel({ accent, title, subtitle, updateLabel, seedSeconds, seedDrawNumber, seedDigits }: PickResultPanelProps) {
+// Pick 3 y Pick 4 comparten exactamente la misma estructura (current result en bolas, new result
+// en selects, update/reset con confirmación) -- solo cambian cantidad de dígitos, color de acento
+// y semillas. El countdown/Draw #/Scheduled Time YA NO viven acá (antes cada card tenía su propio
+// reloj independiente) -- Pick 3 y Pick 4 comparten un único draw cycle (decisión de negocio
+// confirmada, ver useQuickMoneyRoundStore.ts), así que esa info ahora es una sola card compartida
+// en QuickMoneyNextResultPanel.tsx, igual que "Next Round" en RouletteNextResultPanel. El proyecto
+// hoy no tiene NINGÚN endpoint de escritura para Quick Money -- todo el estado de esta card es
+// local, listo para reemplazar por un fetch/store real más adelante (ver performUpdate).
+export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, seedDigits }: PickResultPanelProps) {
   const { t } = useTranslation()
-  const [drawNumber] = useState(seedDrawNumber)
-  const [scheduledIso] = useState(() => new Date(Date.now() + seedSeconds * 1000).toISOString())
-  const countdown = useCountdown(scheduledIso)
-  const isDue = countdown.remainingSeconds <= 0
-  const timerState = isDue ? 'due' : countdown.urgent ? 'urgent' : 'normal'
 
   // currentDigits = lo que hoy está programado como próximo resultado; draftDigits = lo que el
   // admin está armando en los selectors, todavía sin confirmar. Solo currentDigits alimenta las
@@ -108,38 +93,11 @@ export function PickResultPanel({ accent, title, subtitle, updateLabel, seedSeco
       <div className="admin-next-results-panel-header">
         <div className="admin-next-results-header-left">
           <span className="admin-next-results-icon-halo" data-accent={accent}>
-            <img src={DICE_ICON_URL} alt="" />
+            <img src={icon} alt="" />
           </span>
           <div>
             <h3 className="admin-next-results-title">{title}</h3>
             <p className="admin-next-results-subtitle">{subtitle}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-next-results-round-card">
-        <div className="admin-next-results-round-left">
-          <div className="admin-next-results-round-label">
-            <img src={CLOCK_ICON_URL} alt="" />
-            {t('admin.nextResults.nextDraw')}
-          </div>
-          <span className="admin-next-results-timer" data-state={timerState}>
-            {isDue ? t('admin.nextResults.dueNow') : countdown.display}
-          </span>
-          <div className="admin-next-results-timer-units">
-            <span>{t('admin.nextResults.minutes')}</span>
-            <span>{t('admin.nextResults.seconds')}</span>
-          </div>
-        </div>
-        <div className="admin-next-results-round-divider" />
-        <div className="admin-next-results-round-right">
-          <div className="admin-next-results-info-block">
-            <span className="admin-next-results-info-label">{t('admin.nextResults.drawNumber')}</span>
-            <span className="admin-next-results-info-value admin-next-results-info-value--emphasis">#{drawNumber}</span>
-          </div>
-          <div className="admin-next-results-info-block">
-            <span className="admin-next-results-info-label">{t('admin.nextResults.scheduledTime')}</span>
-            <span className="admin-next-results-info-value">{SCHEDULED_TIME_FORMATTER.format(new Date(scheduledIso))}</span>
           </div>
         </div>
       </div>

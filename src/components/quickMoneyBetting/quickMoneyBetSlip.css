@@ -25,17 +25,21 @@
   color: var(--qm-text-primary);
 }
 
+/* Neutro, no morado -- Clear All no representa a ningún juego en particular (a diferencia de Add
+   to Bet Slip/Place Bet, que sí siguen el acento del gameType), así que no debería competir con el
+   verde/amber de Pick 3/Pick 4. */
 .qm-betslip-clear {
   border: none;
   background: none;
   padding: 0;
-  color: var(--qm-purple);
+  color: var(--qm-text-secondary);
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 .qm-betslip-clear:hover {
+  color: var(--qm-text-primary);
   text-decoration: underline;
 }
 

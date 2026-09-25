@@ -2,8 +2,11 @@
    ResultBall -- mismo criterio que rtpManagementShared.css (varios componentes de una misma
    sección del Admin compartiendo un único stylesheet). Se apoya en los tokens/clases base de
    adminLayout.css (.admin-panel, --admin-*) pero define su propio lenguaje de bordes/gradients
-   por acento (red/purple/blue) porque esta sección, a diferencia del resto del Admin, sí necesita
-   bordes de color fuertes en los paneles principales (pedido explícito de diseño). */
+   por acento (red/blue/green/amber) porque esta sección, a diferencia del resto del Admin, sí
+   necesita bordes de color fuertes en los paneles principales (pedido explícito de diseño). Blue =
+   Quick Money genérico (mismo azul que su KPI card en el Dashboard), Green = Pick 3 y Amber =
+   Pick 4 (colores reales de marca, ver quickMoneyLobbyTokens.css) -- ya NO purple/blue como antes,
+   que no correspondía con nada de lo ya establecido en el resto del Admin. */
 
 .admin-next-results-panel {
   box-sizing: border-box;
@@ -25,10 +28,10 @@
   box-shadow: none;
 }
 
-/* Quick Money -- el borde exterior ya NO es morado vivo (pedido explícito: no debe competir
-   visualmente con Pick 3/Pick 4) -- queda oscuro/neutral, la identidad morada sigue viva en el
-   ícono del header y en el accent de Pick 3. */
-.admin-next-results-panel[data-accent='purple'] {
+/* Quick Money -- el borde exterior no es azul vivo (pedido explícito: no debe competir
+   visualmente con Pick 3/Pick 4) -- queda oscuro/neutral, la identidad azul sigue viva en el
+   ícono del header. */
+.admin-next-results-panel[data-accent='blue'] {
   background: linear-gradient(145deg, rgba(8, 20, 30, 0.98), rgba(5, 14, 22, 0.98));
   border: 1px solid rgba(71, 96, 116, 0.42);
   box-shadow: none;
@@ -63,22 +66,27 @@
   justify-content: center;
 }
 
-/* Roulette (red), Quick Money/Pick 3 (purple) y Pick 4 (blue) -- glow reducido ~35% respecto al
-   halo original (pedido explícito: "elegante y con iluminación suave, no un elemento neon
-   dominante"). */
+/* Roulette (red), Quick Money genérico (blue), Pick 3 (green) y Pick 4 (amber) -- glow reducido
+   ~35% respecto al halo original (pedido explícito: "elegante y con iluminación suave, no un
+   elemento neon dominante"). */
 .admin-next-results-icon-halo[data-accent='red'] {
   background: radial-gradient(circle at 35% 30%, rgba(255, 60, 80, 0.36), rgba(180, 10, 25, 0.16) 60%, transparent 82%);
   box-shadow: 0 0 11px rgba(255, 25, 50, 0.22);
 }
 
-.admin-next-results-icon-halo[data-accent='purple'] {
-  background: radial-gradient(circle at 35% 30%, rgba(169, 72, 255, 0.36), rgba(58, 23, 108, 0.18) 60%, transparent 82%);
-  box-shadow: 0 0 11px rgba(154, 70, 247, 0.22);
-}
-
 .admin-next-results-icon-halo[data-accent='blue'] {
   background: radial-gradient(circle at 35% 30%, rgba(60, 140, 255, 0.36), rgba(10, 45, 120, 0.18) 60%, transparent 82%);
   box-shadow: 0 0 11px rgba(20, 127, 255, 0.22);
+}
+
+.admin-next-results-icon-halo[data-accent='green'] {
+  background: radial-gradient(circle at 35% 30%, rgba(52, 211, 153, 0.36), rgba(10, 110, 60, 0.18) 60%, transparent 82%);
+  box-shadow: 0 0 11px rgba(34, 197, 94, 0.22);
+}
+
+.admin-next-results-icon-halo[data-accent='amber'] {
+  background: radial-gradient(circle at 35% 30%, rgba(242, 184, 76, 0.36), rgba(140, 90, 10, 0.18) 60%, transparent 82%);
+  box-shadow: 0 0 11px rgba(240, 168, 60, 0.22);
 }
 
 .admin-next-results-icon-halo img {
@@ -461,7 +469,7 @@
 
 /* -------------------------------------------------------------------------------------------
    Botones Update/Clear -- Update ~2/3, Clear ~1/3 (flex 2/1). Update cambia de gradiente según
-   el juego (accent red/purple/blue), Clear siempre es el mismo estilo neutro oscuro. */
+   el juego (accent red/green/amber), Clear siempre es el mismo estilo neutro oscuro. */
 .admin-next-results-actions {
   display: flex;
   gap: 12px;
@@ -508,14 +516,14 @@
   background: linear-gradient(135deg, #ff1534 0%, #ea0b2a 55%, #c90023 100%);
 }
 
-.admin-next-results-btn-update[data-accent='purple'] {
-  background: linear-gradient(135deg, #9345f2, #6d27d3 55%, #5518b5);
-  border-top-color: rgba(190, 130, 255, 0.65);
+.admin-next-results-btn-update[data-accent='green'] {
+  background: linear-gradient(135deg, #22c55e, #16a34a 55%, #0f8a3d);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
 }
 
-.admin-next-results-btn-update[data-accent='blue'] {
-  background: linear-gradient(135deg, #147fff, #0864f2 55%, #074ad1);
-  box-shadow: 0 0 12px rgba(0, 115, 255, 0.2);
+.admin-next-results-btn-update[data-accent='amber'] {
+  background: linear-gradient(135deg, #f2b84c, #d99a1f 55%, #b87c0f);
+  box-shadow: 0 0 12px rgba(240, 168, 60, 0.2);
 }
 
 .admin-next-results-btn-clear {
@@ -546,11 +554,12 @@
 }
 
 /* -------------------------------------------------------------------------------------------
-   Quick Money -- Pick 3 y Pick 4 lado a lado, cada uno como una card independiente y completa
-   (header + timer/draw info + current->new + acciones), no un formulario flotando sobre otro
-   contenedor. Borde neutro + una línea de acento de 2px arriba (morado para Pick 3, azul para
-   Pick 4, ver data-accent) es la única "identidad de color" fuerte del card en sí -- el resto del
-   morado/azul vive en ícono, botón primario y estados de cambio. */
+   Quick Money -- Pick 3 y Pick 4 lado a lado, cada uno como una card independiente (header +
+   current->new + acciones); el countdown/Draw #/Scheduled Time compartido vive una sola vez en
+   QuickMoneyNextResultPanel.tsx, no acá adentro. Borde neutro + una línea de acento de 2px arriba
+   (verde para Pick 3, amber para Pick 4, ver data-accent -- colores reales de marca) es la única
+   "identidad de color" fuerte del card en sí -- el resto del verde/amber vive en ícono, botón
+   primario y estados de cambio. */
 .admin-next-results-picks-row {
   display: grid;
   /* Pick 4 tiene un selector más que Pick 3 (4 dígitos vs 3) -- con 1fr 1fr parejo, esos 4
@@ -582,12 +591,12 @@
   background: linear-gradient(150deg, rgba(10, 27, 39, 0.96), rgba(6, 18, 27, 0.96));
 }
 
-.admin-next-results-pick[data-accent='purple'] {
-  border-top-color: rgba(168, 85, 247, 0.65);
+.admin-next-results-pick[data-accent='green'] {
+  border-top-color: rgba(34, 197, 94, 0.65);
 }
 
-.admin-next-results-pick[data-accent='blue'] {
-  border-top-color: rgba(37, 140, 255, 0.65);
+.admin-next-results-pick[data-accent='amber'] {
+  border-top-color: rgba(240, 168, 60, 0.65);
 }
 
 /* Current Result -> New Result -- 3 columnas (la del medio solo aloja la flecha) en vez de un
@@ -673,12 +682,12 @@
   visibility: visible;
 }
 
-.admin-next-results-select-slot[data-changed='true'][data-accent='purple'] .admin-next-results-changed-tag {
-  color: #a855f7;
+.admin-next-results-select-slot[data-changed='true'][data-accent='green'] .admin-next-results-changed-tag {
+  color: #22c55e;
 }
 
-.admin-next-results-select-slot[data-changed='true'][data-accent='blue'] .admin-next-results-changed-tag {
-  color: #258cff;
+.admin-next-results-select-slot[data-changed='true'][data-accent='amber'] .admin-next-results-changed-tag {
+  color: #f2b84c;
 }
 
 .admin-next-results-select-slot .admin-select-trigger {
@@ -702,24 +711,24 @@
   border-color: rgba(160, 180, 200, 0.55);
 }
 
-.admin-next-results-select-slot[data-accent='purple'] .admin-select-trigger[aria-expanded='true'] {
-  border-color: #8f3df0;
+.admin-next-results-select-slot[data-accent='green'] .admin-select-trigger[aria-expanded='true'] {
+  border-color: #22c55e;
 }
 
-.admin-next-results-select-slot[data-accent='blue'] .admin-select-trigger[aria-expanded='true'] {
-  border-color: #1682ff;
+.admin-next-results-select-slot[data-accent='amber'] .admin-select-trigger[aria-expanded='true'] {
+  border-color: #f2b84c;
 }
 
 /* Únicamente el/los selects modificados quedan resaltados (nunca toda la fila) -- color + fondo
    tenue + la etiqueta "Changed" de arriba, para no depender solo del color. */
-.admin-next-results-select-slot[data-changed='true'][data-accent='purple'] .admin-select-trigger {
-  border-color: #a855f7;
-  background: linear-gradient(180deg, rgba(168, 85, 247, 0.14), rgba(168, 85, 247, 0.05));
+.admin-next-results-select-slot[data-changed='true'][data-accent='green'] .admin-select-trigger {
+  border-color: #22c55e;
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.14), rgba(34, 197, 94, 0.05));
 }
 
-.admin-next-results-select-slot[data-changed='true'][data-accent='blue'] .admin-select-trigger {
-  border-color: #258cff;
-  background: linear-gradient(180deg, rgba(37, 140, 255, 0.14), rgba(37, 140, 255, 0.05));
+.admin-next-results-select-slot[data-changed='true'][data-accent='amber'] .admin-select-trigger {
+  border-color: #f2b84c;
+  background: linear-gradient(180deg, rgba(240, 168, 60, 0.14), rgba(240, 168, 60, 0.05));
 }
 
 /* -------------------------------------------------------------------------------------------
@@ -770,12 +779,12 @@
   letter-spacing: 0.04em;
 }
 
-.admin-next-results-confirm-value--accent[data-accent='purple'] {
-  color: #c084fc;
+.admin-next-results-confirm-value--accent[data-accent='green'] {
+  color: #4ade80;
 }
 
-.admin-next-results-confirm-value--accent[data-accent='blue'] {
-  color: #5eb0ff;
+.admin-next-results-confirm-value--accent[data-accent='amber'] {
+  color: #fbbf5c;
 }
 
 .admin-next-results-confirm-value--accent[data-accent='red'] {

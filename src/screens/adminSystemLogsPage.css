@@ -1,0 +1,243 @@
+/* Reglas específicas de System Logs -- el shell/tokens/panel base compartidos con el resto de
+   páginas del Admin Panel viven en components/admin/adminLayout.css (ver AdminLayout.tsx), mismo
+   criterio que adminReportsPage.css. Naming calcado de admin-videos-* (la convención más reciente
+   y consistente del Admin, ver investigación previa), con namespace propio admin-system-logs-*. */
+
+.admin-system-logs-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.admin-system-logs-search-row {
+  flex: 1 1 320px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-system-logs-search {
+  position: relative;
+  flex: 1 1 260px;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-system-logs-search svg {
+  position: absolute;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  color: var(--admin-text-secondary);
+  pointer-events: none;
+}
+
+.admin-system-logs-search-input {
+  width: 100%;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 14px 0 40px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 150ms ease;
+}
+
+.admin-system-logs-search-input::placeholder {
+  color: var(--admin-text-secondary);
+}
+
+.admin-system-logs-search-input:hover {
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-system-logs-search-input:focus-visible {
+  outline: none;
+  border-color: rgba(120, 155, 185, 0.55);
+}
+
+.admin-system-logs-clear-btn {
+  flex-shrink: 0;
+  height: 46px;
+  padding: 0 20px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-system-logs-clear-btn:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-system-logs-table-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-system-logs-table-scroll {
+  overflow-x: auto;
+}
+
+.admin-system-logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-system-logs-table thead th {
+  padding: 10px;
+  text-align: left;
+  background: rgba(7, 14, 21, 0.98);
+  color: var(--admin-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+.admin-system-logs-table .admin-status-badge {
+  padding: 2px 7px;
+  font-size: 11px;
+}
+
+.admin-system-logs-table tbody tr {
+  cursor: pointer;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.08);
+  transition:
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-system-logs-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.admin-system-logs-table tbody td {
+  padding: 10px;
+  color: var(--admin-text-primary);
+  vertical-align: middle;
+}
+
+.admin-system-logs-table tbody tr:hover {
+  background: rgba(150, 180, 210, 0.04);
+}
+
+.admin-system-logs-table tbody tr:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: -2px;
+}
+
+/* Fila "seleccionada" mientras su modal está abierto -- mismo tratamiento burgundy+glow que
+   admin-videos-table, se apaga solo al cerrar el modal (no se persiste, ver SystemLogsPage.tsx). */
+.admin-system-logs-table tbody tr[data-selected='true'] {
+  background: linear-gradient(90deg, rgba(155, 15, 25, 0.32) 0%, rgba(90, 10, 18, 0.14) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 60, 72, 0.5),
+    inset 0 0 16px rgba(243, 38, 53, 0.12);
+}
+
+.admin-system-logs-table tbody tr[data-selected='true']:hover {
+  background: linear-gradient(90deg, rgba(155, 15, 25, 0.38) 0%, rgba(90, 10, 18, 0.18) 100%);
+}
+
+.admin-system-logs-cell-datetime {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.admin-system-logs-cell-date {
+  color: var(--admin-text-primary);
+}
+
+.admin-system-logs-cell-time {
+  color: var(--admin-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-system-logs-cell-secondary {
+  color: var(--admin-text-secondary);
+  white-space: nowrap;
+}
+
+/* User/Module -- ícono + texto (pedido explícito: "para que sea más fácil identificarlos"). */
+.admin-system-logs-cell-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-system-logs-cell-with-icon img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.admin-system-logs-cell-details {
+  min-width: 240px;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--admin-text-secondary);
+  white-space: normal;
+}
+
+.admin-system-logs-row-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.admin-system-logs-row-chevron:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--admin-text-primary);
+}
+
+.admin-system-logs-row-chevron svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-system-logs-empty {
+  margin: 0;
+  padding: 16px 14px;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}

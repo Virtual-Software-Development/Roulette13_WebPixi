@@ -37,16 +37,17 @@ function xFor(index: number, count: number): number {
 }
 
 interface Series {
-  key: 'roulette' | 'pick3' | 'pick4'
+  key: 'roulette' | 'quickMoney'
   labelKey: string
   color: string
   gradientId: string
 }
 
+// Pick 3 + Pick 4 se muestran como una sola serie "Quick Money" (pedido explícito, mismo criterio
+// que el admin-stat-card ya unificado) -- azul, igual que el accent nuevo de esa card.
 const SERIES: Series[] = [
   { key: 'roulette', labelKey: 'admin.dashboard.gamesActivity.roulette', color: 'var(--admin-red)', gradientId: 'admin-activity-roulette' },
-  { key: 'pick3', labelKey: 'admin.dashboard.gamesActivity.pick3', color: 'var(--admin-blue)', gradientId: 'admin-activity-pick3' },
-  { key: 'pick4', labelKey: 'admin.dashboard.gamesActivity.pick4', color: 'var(--admin-purple)', gradientId: 'admin-activity-pick4' },
+  { key: 'quickMoney', labelKey: 'admin.dashboard.gamesActivity.quickMoney', color: 'var(--admin-blue)', gradientId: 'admin-activity-quickmoney' },
 ]
 
 const RANGE_OPTIONS = ['last24Hours', 'last7Days', 'last30Days'] as const

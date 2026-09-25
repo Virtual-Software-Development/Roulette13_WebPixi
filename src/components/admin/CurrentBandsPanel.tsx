@@ -3,10 +3,12 @@ import { RTP_GAME_ICON_URLS } from '../../data/rtpDashboardMockData'
 import type { RtpBand } from '../../types/rtpDashboard'
 import './currentBandsPanel.css'
 
-const ACCENT_BY_GAME: Record<RtpBand['id'], 'red' | 'blue' | 'purple'> = {
+// Verde/amber = colores reales de marca de Pick 3/Pick 4 (ver quickMoneyLobbyTokens.css, pedido
+// explícito), no los genéricos azul/morado que tenía antes.
+const ACCENT_BY_GAME: Record<RtpBand['id'], 'red' | 'green' | 'amber'> = {
   roulette: 'red',
-  pick3: 'blue',
-  pick4: 'purple',
+  pick3: 'green',
+  pick4: 'amber',
 }
 
 function InfoIcon() {

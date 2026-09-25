@@ -9,6 +9,7 @@ import { AdminSettingsPage } from './AdminSettingsPage'
 import { AdminReportsPage } from './AdminReportsPage'
 import { UsersPage } from './UsersPage'
 import { VideoManagementPage } from './VideoManagementPage'
+import { SystemLogsPage } from './SystemLogsPage'
 
 type AdminView =
   | 'admin'
@@ -23,6 +24,7 @@ type AdminView =
   | 'admin-videos-roulette'
   | 'admin-videos-quick-money'
   | 'admin-videos-upload-history'
+  | 'admin-system-logs'
 
 // Los valores acá son ids de SUB-item (rtpDashboard/rtpManagement/roulette/lottery), no del padre
 // 'rtp'/'nextResults' -- así AdminSidebar puede resaltar cuál de los hijos está activo (antes solo
@@ -45,6 +47,7 @@ const ACTIVE_SIDEBAR_ID_BY_VIEW: Record<AdminView, string> = {
   'admin-videos-roulette': 'videos',
   'admin-videos-quick-money': 'videos',
   'admin-videos-upload-history': 'videos',
+  'admin-system-logs': 'systemLogs',
 }
 
 function isAdminView(value: string | null): value is AdminView {
@@ -60,7 +63,8 @@ function isAdminView(value: string | null): value is AdminView {
     value === 'admin-reports' ||
     value === 'admin-videos-roulette' ||
     value === 'admin-videos-quick-money' ||
-    value === 'admin-videos-upload-history'
+    value === 'admin-videos-upload-history' ||
+    value === 'admin-system-logs'
   )
 }
 
@@ -105,6 +109,7 @@ export function AdminPanel() {
       {view === 'admin-videos-roulette' && <VideoManagementPage initialTab="roulette" onNavigate={handleNavigate} />}
       {view === 'admin-videos-quick-money' && <VideoManagementPage initialTab="quickMoney" onNavigate={handleNavigate} />}
       {view === 'admin-videos-upload-history' && <VideoManagementPage initialTab="uploadHistory" onNavigate={handleNavigate} />}
+      {view === 'admin-system-logs' && <SystemLogsPage />}
     </AdminLayout>
   )
 }

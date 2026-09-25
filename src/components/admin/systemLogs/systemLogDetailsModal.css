@@ -1,0 +1,241 @@
+/* Mismo mecanismo visual que adminLogModal.css (backdrop+dialog+header), namespace propio porque
+   el contenido es distinto (resumen con ícono + grid de campos + bloque de cambio + details, en vez
+   de una lista de entries). */
+.admin-system-log-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 7, 11, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.admin-system-log-modal {
+  width: min(620px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 22px 24px;
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(12, 22, 32, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 620px) {
+  .admin-system-log-modal-backdrop {
+    padding: 12px;
+  }
+  .admin-system-log-modal {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+  }
+}
+
+.admin-system-log-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.admin-system-log-modal-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-system-log-modal-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-system-log-modal-close:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-system-log-modal-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.admin-system-log-modal-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.14);
+}
+
+/* Círculo de acento -- reusa los mismos 6 colores de StatusBadge vía data-variant, ninguno nuevo. */
+.admin-system-log-modal-summary-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.admin-system-log-modal-summary-icon[data-variant='positive'] {
+  color: var(--admin-green);
+  background: rgba(67, 232, 106, 0.15);
+  border: 1px solid rgba(67, 232, 106, 0.3);
+}
+
+.admin-system-log-modal-summary-icon[data-variant='info'] {
+  color: var(--admin-blue);
+  background: rgba(37, 136, 255, 0.15);
+  border: 1px solid rgba(37, 136, 255, 0.3);
+}
+
+.admin-system-log-modal-summary-icon[data-variant='warning'] {
+  color: var(--admin-amber);
+  background: rgba(240, 168, 60, 0.15);
+  border: 1px solid rgba(240, 168, 60, 0.3);
+}
+
+.admin-system-log-modal-summary-icon[data-variant='neutral'] {
+  color: var(--admin-text-secondary);
+  background: rgba(142, 160, 181, 0.12);
+  border: 1px solid rgba(142, 160, 181, 0.3);
+}
+
+.admin-system-log-modal-summary-icon[data-variant='danger'] {
+  color: var(--admin-red);
+  background: rgba(243, 38, 53, 0.15);
+  border: 1px solid rgba(243, 38, 53, 0.3);
+}
+
+.admin-system-log-modal-summary-icon[data-variant='purple'] {
+  color: var(--admin-purple);
+  background: rgba(146, 86, 245, 0.15);
+  border: 1px solid rgba(146, 86, 245, 0.3);
+}
+
+.admin-system-log-modal-action {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-system-log-modal-summary-text {
+  margin: 3px 0 0;
+  font-size: 14px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-system-log-modal-grid {
+  margin: 0 0 18px;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  row-gap: 14px;
+  column-gap: 12px;
+}
+
+.admin-system-log-modal-grid dt {
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-system-log-modal-grid dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--admin-text-primary);
+}
+
+.admin-system-log-modal-section {
+  padding-top: 16px;
+  border-top: 1px solid rgba(120, 145, 170, 0.14);
+}
+
+.admin-system-log-modal-section + .admin-system-log-modal-section {
+  margin-top: 16px;
+}
+
+.admin-system-log-modal-section-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-system-log-modal-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: rgba(8, 16, 24, 0.6);
+}
+
+.admin-system-log-modal-change-field {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.admin-system-log-modal-change-values {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-system-log-modal-change-before {
+  color: var(--admin-text-secondary);
+  text-decoration: line-through;
+}
+
+.admin-system-log-modal-change-arrow {
+  color: var(--admin-text-secondary);
+}
+
+.admin-system-log-modal-change-after {
+  color: var(--admin-green);
+  font-weight: 700;
+}
+
+.admin-system-log-modal-details-text {
+  margin: 0;
+  padding: 14px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: rgba(8, 16, 24, 0.6);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--admin-text-secondary);
+}
