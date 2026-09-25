@@ -1,0 +1,228 @@
+/* Desktop: el marco completo (panel verde/dorado, borde, glow, bandas diagonales) lo dibuja
+   .qml-frame (ver quickMoneyPanelFrame.css) -- ya NO es una imagen. El wrapper se superpone
+   levemente sobre el centro (margin negativo) para que la punta del marco "avance" hacia él, mismo
+   criterio que el deliverable (Preview.css) -- z-index por encima del panel central para que la
+   punta quede visualmente arriba. Estos 34%/32%/34% están ajustados para que el contenido caiga
+   dentro de la zona verde/dorada real del marco -- si se retoca la geometría de
+   quickMoneyPanelFrame.css, retocar esto también. */
+.qml-game-panel-wrap {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 34%;
+  min-width: 0;
+  display: flex;
+}
+.qml-game-panel-wrap[data-side='left'] {
+  margin-right: -18px;
+}
+.qml-game-panel-wrap[data-side='right'] {
+  margin-left: -18px;
+}
+
+/* Panel: en desktop es 100% transparente (contenido posicionado sobre .qml-frame, que es un
+   sibling detrás, ver arriba); en mobile (media query al final) recupera su propio fondo/borde --
+   ahí .qml-frame se oculta (no se puede "apilar" un marco panorámico), así que el panel necesita
+   seguir siendo autocontenido como antes de este cambio. */
+.qml-game-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+}
+
+.qml-game-panel[data-side='left'] {
+  /* padding-top MUCHO más chico que con el PNG anterior: la forma nueva (quickMoneyPanelFrame.css)
+     ocupa toda la altura del wrapper desde el borde superior (a diferencia del PNG, que tenía un
+     margen vacío grande arriba) -- el contenido arranca cerca de ese borde real, no a mitad de
+     panel. */
+  padding: 32px 62px 16px 34px;
+}
+
+.qml-game-panel[data-side='right'] {
+  padding: 32px 34px 16px 62px;
+  justify-content: flex-end;
+}
+
+.qml-game-panel-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.qml-game-panel[data-side='left'] .qml-game-panel-content {
+  align-items: flex-start;
+  text-align: left;
+}
+.qml-game-panel[data-side='right'] .qml-game-panel-content {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* Pedido explícito: heading (eyebrow+título) y Previous Result más hacia el centro -- en Pick 3
+   hacia la derecha, en Pick 4 hacia la izquierda (espejado, mismo criterio que el resto del
+   panel). Solo estos dos, no toda .qml-game-panel-content -- para tocar la posición de uno solo,
+   ajustar su margin acá. */
+.qml-game-panel[data-side='left'] .qml-game-panel-heading,
+.qml-game-panel[data-side='left'] .qml-game-panel-result {
+  margin-left: 24px;
+}
+.qml-game-panel[data-side='right'] .qml-game-panel-heading,
+.qml-game-panel[data-side='right'] .qml-game-panel-result {
+  margin-right: 24px;
+}
+
+.qml-game-panel-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--qml-accent);
+  /* Halo oscuro -- pedido explícito (se veía apagado): esta etiqueta cae justo sobre la línea de
+     borde neón del asset (la zona más brillante/ocupada del marco), y al ser del mismo color que
+     ese brillo (verde/dorado) se perdía casi por completo el contraste. El texto sigue siendo el
+     mismo color de acento, pero ahora se lee sobre cualquier fondo del asset, no solo sobre el
+     interior oscuro del panel. */
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 0, 0, 0.75),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.qml-game-panel-title {
+  margin: 2px 0 0;
+  display: flex;
+  line-height: 0;
+}
+
+/* Logo real "PICK 3"/"PICK 4" (ver QuickMoneyGameCard.tsx) -- proporción propia del SVG
+   (1107.56x575.31), ancho fluido con tope en px para que no crezca demasiado en pantallas anchas. */
+.qml-game-panel-logo {
+  width: clamp(150px, 12vw, 190px);
+  height: auto;
+}
+
+/* Superficie "Previous Result" clara y angular (no card blanca redondeada estándar) -- los dígitos
+   siguen siendo datos dinámicos (`resultFor(latestDraw, gameType)`), nunca texto de imagen. */
+.qml-game-panel-result {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #eef2f6;
+  padding: 7px 20px 7px 14px;
+}
+.qml-game-panel[data-side='left'] .qml-game-panel-result {
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+.qml-game-panel[data-side='right'] .qml-game-panel-result {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+  padding: 7px 14px 7px 20px;
+}
+
+.qml-game-panel-result-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #212a33;
+}
+.qml-game-panel-result-digits {
+  display: flex;
+  gap: 6px;
+}
+.qml-game-panel-result-digit {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--qml-accent-dark);
+}
+/* Pedido explícito: separador "-" entre dígitos (7-3-1 en vez de 7 3 1) -- vía ::before en vez de
+   tocar el .map() en QuickMoneyGameCard.tsx, no agrega nodos extra para el dato dinámico. Solo en
+   los que tienen un dígito anterior (nunca antes del primero). */
+.qml-game-panel-result-digit:not(:first-child)::before {
+  content: '-';
+  margin-right: 6px;
+  color: var(--qml-accent-dark);
+}
+
+/* Máquina real (pick-3-raffle.png/pick-4-raffle.png) -- sin deformar. z-index por debajo del
+   contenido para que Previous Result nunca quede tapado (ver comentario de tokens.css sobre
+   capas). Sin efecto hover (pedido explícito, ya no hace nada al pasar el mouse).
+
+   CÓMO MOVERLA A MANO (pedido explícito):
+   - Horizontal: `left`/`right` en las dos reglas de abajo -- cada máquina usa SOLO una de las dos
+     (la que no se usa queda en su valor `auto` por default, no hace falta tocarla). Para Pick 3
+     hoy es `right: 6%` (6% de distancia desde el borde derecho del panel); para Pick 4 es
+     `left: 6%`. Subir el % la aleja de ese borde (la mueve hacia el otro lado/centro), bajarlo la
+     acerca a ese borde (la mueve hacia afuera).
+   - Vertical: `bottom` acá abajo (18%) -- subir el % la sube, bajarlo la baja.
+   - Tamaño: `width`/`max-width` (ancho) y `max-height` (alto tope) acá abajo. */
+.qml-game-panel-machine {
+  position: absolute;
+  bottom: 8%;
+  z-index: 1;
+  width: 51%;
+  max-width: 263px;
+  height: auto;
+  max-height: 53%;
+  object-fit: contain;
+  pointer-events: none;
+}
+/* Pick 3 (panel izquierdo) -- hoy apunta hacia la DERECHA de su panel (hacia el centro/chevron).
+   Cambiar el valor o pasar a `left` para moverla hacia el otro lado. */
+.qml-game-panel[data-side='left'] .qml-game-panel-machine {
+  right: 10%;
+}
+/* Pick 4 (panel derecho) -- hoy apunta hacia la IZQUIERDA de su panel (hacia el centro/chevron).
+   Cambiar el valor o pasar a `right` para moverla hacia el otro lado. */
+.qml-game-panel[data-side='right'] .qml-game-panel-machine {
+  left: 10%;
+}
+
+/* Debajo de este ancho, .qml-hero cancela la imagen de marco (ver quickMoneyLobbyHero.css) -- acá
+   el panel vuelve a ser 100% autocontenido (fondo/borde/glow propio + layout en columna) como
+   antes de incorporar el asset, incluyendo el mismo ajuste de máquina-abajo-no-superpuesta ya
+   verificado para que no tape el título. */
+@media (max-width: 900px) {
+  .qml-frame {
+    display: none;
+  }
+  .qml-game-panel-wrap {
+    flex-basis: auto;
+    width: 100%;
+    margin: 0 !important;
+  }
+  .qml-game-panel {
+    flex-direction: column;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    padding: 20px !important;
+    border-radius: var(--qml-radius);
+    background:
+      radial-gradient(circle at 30% 15%, color-mix(in srgb, var(--qml-accent) 16%, transparent) 0%, transparent 55%),
+      linear-gradient(180deg, color-mix(in srgb, var(--qml-accent-bg) 90%, black) 0%, var(--qml-accent-bg) 100%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--qml-accent) 65%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--qml-accent) 65%, transparent),
+      inset 0 0 30px color-mix(in srgb, var(--qml-accent) 12%, transparent);
+  }
+  .qml-game-panel[data-side='left'] .qml-game-panel-content,
+  .qml-game-panel[data-side='right'] .qml-game-panel-content {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .qml-game-panel[data-side='left'] .qml-game-panel-result,
+  .qml-game-panel[data-side='right'] .qml-game-panel-result {
+    clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    padding: 7px 20px 7px 14px;
+  }
+  .qml-game-panel-machine {
+    position: static;
+    display: block;
+    width: 55%;
+    max-width: 200px;
+    margin: 10px 0 0 auto;
+  }
+}

@@ -4,6 +4,8 @@ import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useNow } from '../hooks/useNow'
 import { buildMediaUrl } from '../utils/media'
+import { navigateToPreview } from '../utils/navigatePreview'
+import { BettingGamePickerModal } from './BettingGamePickerModal'
 import './header.css'
 
 // Íconos del set Website_svg_icons (ver local-media/) -- reemplazan a los SVG inline dibujados a
@@ -16,20 +18,21 @@ const BALANCE_ICON_URL = buildMediaUrl('Website_svg_icons/41_payouts.svg')
 const USER_ICON_URL = buildMediaUrl('Website_svg_icons/16_user_white_circle.svg')
 
 // Todavía no hay router en el proyecto, así que "navegar" entre tabs se resuelve reescribiendo
-// window.location.search (mismo mecanismo ad-hoc que ya usa main.tsx para ?preview=login). Los
-// 4 tabs ya tienen destino real y son clickeables: ROULETTE (lobby), BETTING (Roulette Betting
-// View), LOTTERY (Quick Money Betting View, ver QuickMoneyBettingView.tsx) y ADMIN.
-export type HeaderTab = 'roulette' | 'lottery' | 'betting' | 'admin'
-
-function navigateToPreview(preview: string | null) {
-  const url = new URL(window.location.href)
-  if (preview) {
-    url.searchParams.set('preview', preview)
-  } else {
-    url.searchParams.delete('preview')
-  }
-  window.location.href = url.toString()
-}
+// window.location.search (mismo mecanismo ad-hoc que ya usa main.tsx para ?preview=login, ver
+// navigateToPreview en utils/navigatePreview.ts). ROULETTE, ADMIN y LOTTERY (QUICK MONEY) navegan
+// directo a su pantalla y se resaltan como "activos" al llegar a su destino. LOTTERY navega al
+// Quick Money Lobby nuevo (?preview=quick-money-lobby, ver screens/QuickMoneyLobby.tsx) -- ya no
+// abre directo una vista de apuestas, el Lobby es el punto de entrada a Pick 3/Pick 4.
+//
+// BETTING ya NO tiene un destino propio (pedido explícito, ver conversación): siempre abre
+// BettingGamePickerModal.tsx (nunca navega él mismo, nunca se resalta como "activo" -- no tiene
+// sentido combinar el estilo "activo/bloqueado" de los demás tabs con un botón que debe seguir
+// siendo clickeable siempre). Por eso 'betting' no es un valor de `activeTab`. 'none' es el valor
+// que usan ambas vistas de Betting (Roulette/Quick Money) para dejar los 4 tabs sin resaltar; qué
+// juego está activo en Betting (para bloquear su opción dentro del selector) viaja por separado en
+// `activeBettingGame`, ver más abajo.
+export type HeaderTab = 'roulette' | 'admin' | 'quickMoneyLobby' | 'none'
+export type ActiveBettingGame = 'roulette' | 'quickMoney'
 
 function RouletteTabIcon() {
   return <img src={ROULETTE_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
@@ -116,7 +119,16 @@ function AdminHeaderMeta() {
   )
 }
 
-export function Header({ activeTab = 'roulette' }: { activeTab?: HeaderTab } = {}) {
+interface HeaderProps {
+  activeTab?: HeaderTab
+  // Qué juego de Betting está activo (si el usuario ya está en Roulette o Quick Money Betting) --
+  // independiente de `activeTab` (que para ambas vistas de Betting queda en 'none', sin tab
+  // resaltado, ver arriba). Solo se usa para bloquear la opción correspondiente dentro de
+  // BettingGamePickerModal, nunca resalta nada en el header.
+  activeBettingGame?: ActiveBettingGame
+}
+
+export function Header({ activeTab = 'roulette', activeBettingGame }: HeaderProps = {}) {
   const { t } = useTranslation()
   const gameName = useGameConfigStore((state) => state.gameName)
   const logoUrl = useGameConfigStore((state) => state.logoUrl)
@@ -129,6 +141,7 @@ export function Header({ activeTab = 'roulette' }: { activeTab?: HeaderTab } = {
   // simplemente no se oculta ahí.
   const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
   const [logoFailed, setLogoFailed] = useState(false)
+  const [isBettingPickerOpen, setIsBettingPickerOpen] = useState(false)
 
   // Vuelve a intentar el logo cada vez que cambia la URL (ej: llega una nueva desde /gameInfo) en
   // vez de quedar pegado en el estado de fallo de la URL anterior.
@@ -144,82 +157,88 @@ export function Header({ activeTab = 'roulette' }: { activeTab?: HeaderTab } = {
   const isAdmin = activeTab === 'admin'
 
   return (
-    <header className="app-header" data-hidden={!lobbyInfoVisible}>
-      <div className="app-header-shell">
-        <div className="app-header-logo">
-          {showLogo && logoUrl && !logoFailed && (
-            <img
-              src={logoUrl}
-              alt={gameName}
-              className="app-header-logo-img"
-              onError={() => setLogoFailed(true)}
-            />
-          )}
-          {showLogo && (!logoUrl || logoFailed) && (
-            <span className="app-header-logo-fallback">{t('media.logoNotFound')}</span>
+    <>
+      <header className="app-header" data-hidden={!lobbyInfoVisible}>
+        <div className="app-header-shell">
+          <div className="app-header-logo">
+            {showLogo && logoUrl && !logoFailed && (
+              <img
+                src={logoUrl}
+                alt={gameName}
+                className="app-header-logo-img"
+                onError={() => setLogoFailed(true)}
+              />
+            )}
+            {showLogo && (!logoUrl || logoFailed) && (
+              <span className="app-header-logo-fallback">{t('media.logoNotFound')}</span>
+            )}
+          </div>
+
+          <nav className="app-header-nav" aria-label={t('header.roulette')}>
+            <div
+              className={`app-header-tab app-header-tab--roulette${activeTab === 'roulette' ? '' : ' app-header-tab--clickable'}`}
+              data-active={activeTab === 'roulette'}
+              role="tab"
+              aria-selected={activeTab === 'roulette'}
+              onClick={activeTab === 'roulette' ? undefined : () => navigateToPreview(null)}
+            >
+              <RouletteTabIcon />
+              <span className="app-header-tab-label">{t('header.roulette')}</span>
+            </div>
+            <div
+              className={`app-header-tab app-header-tab--lottery${activeTab === 'quickMoneyLobby' ? '' : ' app-header-tab--clickable'}`}
+              data-active={activeTab === 'quickMoneyLobby'}
+              role="tab"
+              aria-selected={activeTab === 'quickMoneyLobby'}
+              onClick={activeTab === 'quickMoneyLobby' ? undefined : () => navigateToPreview('quick-money-lobby')}
+            >
+              <LotteryTabIcon />
+              <span className="app-header-tab-label">{t('header.lottery')}</span>
+            </div>
+            <div
+              className="app-header-tab app-header-tab--betting app-header-tab--clickable"
+              data-active={false}
+              role="tab"
+              aria-selected={false}
+              onClick={() => setIsBettingPickerOpen(true)}
+            >
+              <BettingTabIcon />
+              <span className="app-header-tab-label">{t('header.betting')}</span>
+            </div>
+            <div
+              className={`app-header-tab app-header-tab--admin${activeTab === 'admin' ? '' : ' app-header-tab--clickable'}`}
+              data-active={activeTab === 'admin'}
+              role="tab"
+              aria-selected={activeTab === 'admin'}
+              onClick={activeTab === 'admin' ? undefined : () => navigateToPreview('admin')}
+            >
+              <AdminTabIcon />
+              <span className="app-header-tab-label">{t('header.admin')}</span>
+            </div>
+          </nav>
+
+          <div className="app-header-spacer" />
+
+          {isAdmin ? (
+            <AdminHeaderMeta />
+          ) : (
+            <>
+              <div className="app-header-divider" />
+              <div className="app-header-balance">
+                <CoinsIcon />
+                <div className="app-header-balance-text">
+                  <span className="app-header-balance-label">{t('header.balanceLabel')}</span>
+                  <span className="app-header-balance-value">$ {formattedBalance}</span>
+                </div>
+              </div>
+            </>
           )}
         </div>
+      </header>
 
-        <nav className="app-header-nav" aria-label={t('header.roulette')}>
-          <div
-            className={`app-header-tab app-header-tab--roulette${activeTab === 'roulette' ? '' : ' app-header-tab--clickable'}`}
-            data-active={activeTab === 'roulette'}
-            role="tab"
-            aria-selected={activeTab === 'roulette'}
-            onClick={activeTab === 'roulette' ? undefined : () => navigateToPreview(null)}
-          >
-            <RouletteTabIcon />
-            <span className="app-header-tab-label">{t('header.roulette')}</span>
-          </div>
-          <div
-            className={`app-header-tab app-header-tab--lottery${activeTab === 'lottery' ? '' : ' app-header-tab--clickable'}`}
-            data-active={activeTab === 'lottery'}
-            role="tab"
-            aria-selected={activeTab === 'lottery'}
-            onClick={activeTab === 'lottery' ? undefined : () => navigateToPreview('quick-money-betting')}
-          >
-            <LotteryTabIcon />
-            <span className="app-header-tab-label">{t('header.lottery')}</span>
-          </div>
-          <div
-            className={`app-header-tab app-header-tab--betting${activeTab === 'betting' ? '' : ' app-header-tab--clickable'}`}
-            data-active={activeTab === 'betting'}
-            role="tab"
-            aria-selected={activeTab === 'betting'}
-            onClick={activeTab === 'betting' ? undefined : () => navigateToPreview('roulette-betting')}
-          >
-            <BettingTabIcon />
-            <span className="app-header-tab-label">{t('header.betting')}</span>
-          </div>
-          <div
-            className={`app-header-tab app-header-tab--admin${activeTab === 'admin' ? '' : ' app-header-tab--clickable'}`}
-            data-active={activeTab === 'admin'}
-            role="tab"
-            aria-selected={activeTab === 'admin'}
-            onClick={activeTab === 'admin' ? undefined : () => navigateToPreview('admin')}
-          >
-            <AdminTabIcon />
-            <span className="app-header-tab-label">{t('header.admin')}</span>
-          </div>
-        </nav>
-
-        <div className="app-header-spacer" />
-
-        {isAdmin ? (
-          <AdminHeaderMeta />
-        ) : (
-          <>
-            <div className="app-header-divider" />
-            <div className="app-header-balance">
-              <CoinsIcon />
-              <div className="app-header-balance-text">
-                <span className="app-header-balance-label">{t('header.balanceLabel')}</span>
-                <span className="app-header-balance-value">$ {formattedBalance}</span>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </header>
+      {isBettingPickerOpen && (
+        <BettingGamePickerModal activeGame={activeBettingGame} onClose={() => setIsBettingPickerOpen(false)} />
+      )}
+    </>
   )
 }

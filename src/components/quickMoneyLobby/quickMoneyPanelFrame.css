@@ -1,0 +1,225 @@
+/* Marco decorativo 100% CSS -- reemplaza local-media/Lobby/Panel Quick Money.png (pedido explícito,
+   ver conversación: deliverable GreenPanel.css/GoldPanel.css). Estructura y geometría transcriptas
+   directamente del deliverable (glow blur + shape con clip-path/borde/box-shadow + doble borde
+   interior (::before) + 5 bandas diagonales de luz + 2 manchas de glow), solo renombradas al
+   namespace del proyecto y parametrizadas por [data-side] (geometría, espejada) en vez de duplicar
+   archivo por archivo. SIN texto/dato adentro (aria-hidden en el HTML) -- el contenido dinámico
+   (título, Previous Result, máquina) sigue siendo un sibling aparte, nunca vive acá.
+
+   Colores propios de ESTE marco (verde #3dff77 / dorado #ffc31c / literales rgba de abajo) --
+   deliberadamente NO usan --qml-accent (#00e85b/#ffd400, ver quickMoneyLobbyTokens.css): son la
+   paleta específica que vino con este deliverable para el marco, distinta de la que ya usan las
+   bolitas/tablas de Recent Results y Hot/Cold. */
+.qml-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.qml-frame-glow {
+  position: absolute;
+  inset: 0;
+  filter: blur(16px);
+  opacity: 0.95;
+}
+.qml-frame[data-side='left'] .qml-frame-glow {
+  background:
+    radial-gradient(circle at 3% 45%, rgba(46, 255, 122, 0.45), rgba(46, 255, 122, 0) 13%),
+    radial-gradient(circle at 4% 96%, rgba(46, 255, 122, 0.42), rgba(46, 255, 122, 0) 15%),
+    radial-gradient(circle at 68% 96%, rgba(46, 255, 122, 0.38), rgba(46, 255, 122, 0) 12%),
+    radial-gradient(circle at 83% 49%, rgba(46, 255, 122, 0.28), rgba(46, 255, 122, 0) 10%);
+}
+.qml-frame[data-side='right'] .qml-frame-glow {
+  background:
+    radial-gradient(circle at 97% 45%, rgba(255, 191, 28, 0.45), rgba(255, 191, 28, 0) 13%),
+    radial-gradient(circle at 96% 96%, rgba(255, 191, 28, 0.42), rgba(255, 191, 28, 0) 15%),
+    radial-gradient(circle at 31% 96%, rgba(255, 191, 28, 0.38), rgba(255, 191, 28, 0) 12%),
+    radial-gradient(circle at 2% 49%, rgba(255, 191, 28, 0.28), rgba(255, 191, 28, 0) 10%);
+}
+
+.qml-frame-shape {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+/* clip-path SIN chaflán en la esquina redondeada (antes tenía "0 97%, 0 3%" cortando esa esquina
+   en diagonal) -- ese chaflán competía con border-radius por la MISMA esquina: el arco del radio
+   se dibujaba hasta 22px, pero el clip-path ya cortaba antes (a ~14px), así que el arco quedaba
+   truncado a mitad de curva y se veía como un quiebre/"doble pico" en vez de una curva lisa (más
+   notorio en la esquina dorada, pedido explícito -- ver conversación). Con la esquina del polígono
+   en ángulo recto (0 0 / 0 100%), border-radius es el único que dibuja esa esquina, sin conflicto. */
+.qml-frame[data-side='left'] .qml-frame-shape {
+  clip-path: polygon(0 0, 89% 0, 100% 50%, 89% 100%, 0 100%);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.68) 0%,
+      rgba(0, 26, 9, 0.62) 8%,
+      rgba(0, 46, 14, 0.92) 18%,
+      rgba(0, 42, 14, 0.94) 38%,
+      rgba(0, 32, 11, 0.94) 60%,
+      rgba(0, 55, 19, 0.9) 78%,
+      rgba(0, 27, 10, 0.82) 100%
+    ),
+    radial-gradient(circle at 30% 30%, rgba(29, 255, 104, 0.08), rgba(29, 255, 104, 0) 40%);
+  border: 3px solid #3dff77;
+  border-radius: 30px 0 0 30px;
+  box-shadow:
+    0 0 12px rgba(61, 255, 119, 0.85),
+    0 0 26px rgba(61, 255, 119, 0.45),
+    inset 0 0 18px rgba(61, 255, 119, 0.08);
+}
+/* El borde interior (::before) y el exterior son DOS elementos con su propio border+box-shadow --
+   incluso con inset:0 (las dos puntas exactamente en el mismo punto) seguían viéndose como dos
+   picos sueltos, porque cada borde tiene su propio grosor/glow y "brilla" por separado justo en el
+   vértice (pedido explícito, ver conversación/captura: dos picos en vez de uno). La solución real
+   no es acercar las puntas sino que el borde interior NO termine en punta ahí -- se trunca un poco
+   antes (borde vertical cortito en vez de vértice) para que solo el borde EXTERIOR tenga una punta
+   real; el interior se lee como un marco doble en el resto del contorno sin competir en el vértice. */
+.qml-frame[data-side='left'] .qml-frame-shape::before {
+  content: '';
+  position: absolute;
+  inset: 16px 20px 18px 22px;
+  clip-path: polygon(0 0, 87% 0, 90% 44%, 90% 56%, 87% 100%, 0 100%);
+  border: 2px solid rgba(71, 255, 131, 0.72);
+  border-radius: 25px 0 0 25px;
+  box-shadow:
+    0 0 10px rgba(71, 255, 131, 0.45),
+    inset 0 0 16px rgba(71, 255, 131, 0.04);
+}
+
+/* Mismo criterio que el lado izquierdo -- sin chaflán en la esquina redondeada (antes "100% 3%,
+   100% 97%"), border-radius dibuja esa esquina sola, sin quiebre a mitad de curva. */
+.qml-frame[data-side='right'] .qml-frame-shape {
+  clip-path: polygon(11% 0, 100% 0, 100% 100%, 11% 100%, 0 50%);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(72, 39, 0, 0.8) 0%,
+      rgba(56, 29, 0, 0.86) 22%,
+      rgba(73, 38, 0, 0.92) 48%,
+      rgba(81, 43, 0, 0.92) 70%,
+      rgba(39, 20, 0, 0.82) 100%
+    ),
+    radial-gradient(circle at 70% 30%, rgba(255, 205, 48, 0.08), rgba(255, 205, 48, 0) 42%);
+  border: 3px solid #ffc31c;
+  border-radius: 0 30px 30px 0;
+  box-shadow:
+    0 0 12px rgba(255, 195, 28, 0.85),
+    0 0 26px rgba(255, 195, 28, 0.45),
+    inset 0 0 18px rgba(255, 195, 28, 0.08);
+}
+/* Mismo criterio que el lado izquierdo -- el borde interior se trunca antes de la punta (acá
+   izquierda) en vez de terminar en vértice, para que no compita con la punta real del borde
+   exterior. */
+.qml-frame[data-side='right'] .qml-frame-shape::before {
+  content: '';
+  position: absolute;
+  inset: 16px 22px 18px 20px;
+  clip-path: polygon(13% 0, 100% 0, 100% 100%, 13% 100%, 10% 56%, 10% 44%);
+  border: 2px solid rgba(255, 203, 58, 0.72);
+  border-radius: 0 25px 25px 0;
+  box-shadow:
+    0 0 10px rgba(255, 203, 58, 0.45),
+    inset 0 0 16px rgba(255, 203, 58, 0.04);
+}
+
+.qml-frame-vband {
+  position: absolute;
+  top: 7%;
+  bottom: 7%;
+  width: 10%;
+  filter: blur(0.4px);
+  transform-origin: bottom center;
+}
+.qml-frame[data-side='left'] .qml-frame-vband {
+  background: linear-gradient(180deg, rgba(95, 255, 140, 0.1), rgba(95, 255, 140, 0.18), rgba(95, 255, 140, 0.08));
+  opacity: 0.55;
+}
+.qml-frame[data-side='left'] .qml-frame-vband--1 {
+  left: 8%;
+  transform: skewX(27deg);
+}
+.qml-frame[data-side='left'] .qml-frame-vband--2 {
+  left: 19%;
+  transform: skewX(23deg);
+}
+.qml-frame[data-side='left'] .qml-frame-vband--3 {
+  left: 31%;
+  transform: skewX(18deg);
+}
+.qml-frame[data-side='left'] .qml-frame-vband--4 {
+  left: 44%;
+  transform: skewX(12deg);
+}
+.qml-frame[data-side='left'] .qml-frame-vband--5 {
+  left: 58%;
+  transform: skewX(8deg);
+}
+
+.qml-frame[data-side='right'] .qml-frame-vband {
+  background: linear-gradient(180deg, rgba(255, 213, 110, 0.1), rgba(255, 213, 110, 0.18), rgba(255, 213, 110, 0.08));
+  opacity: 0.46;
+}
+.qml-frame[data-side='right'] .qml-frame-vband--1 {
+  right: 8%;
+  transform: skewX(-27deg);
+}
+.qml-frame[data-side='right'] .qml-frame-vband--2 {
+  right: 19%;
+  transform: skewX(-23deg);
+}
+.qml-frame[data-side='right'] .qml-frame-vband--3 {
+  right: 31%;
+  transform: skewX(-18deg);
+}
+.qml-frame[data-side='right'] .qml-frame-vband--4 {
+  right: 44%;
+  transform: skewX(-12deg);
+}
+.qml-frame[data-side='right'] .qml-frame-vband--5 {
+  right: 58%;
+  transform: skewX(-8deg);
+}
+
+.qml-frame-mist {
+  position: absolute;
+  filter: blur(18px);
+  opacity: 0.8;
+}
+.qml-frame[data-side='left'] .qml-frame-mist--edge {
+  left: -2%;
+  bottom: 18%;
+  width: 20%;
+  height: 50%;
+  background: radial-gradient(circle at 35% 60%, rgba(58, 255, 129, 0.26), rgba(58, 255, 129, 0) 58%);
+}
+.qml-frame[data-side='left'] .qml-frame-mist--bottom {
+  left: 6%;
+  bottom: -4%;
+  width: 78%;
+  height: 20%;
+  background:
+    radial-gradient(circle at 0 50%, rgba(58, 255, 129, 0.18), rgba(58, 255, 129, 0) 28%),
+    radial-gradient(circle at 100% 50%, rgba(58, 255, 129, 0.22), rgba(58, 255, 129, 0) 20%),
+    linear-gradient(90deg, rgba(58, 255, 129, 0.07), rgba(58, 255, 129, 0.12), rgba(58, 255, 129, 0.04));
+}
+.qml-frame[data-side='right'] .qml-frame-mist--edge {
+  right: -2%;
+  bottom: 18%;
+  width: 20%;
+  height: 50%;
+  background: radial-gradient(circle at 65% 60%, rgba(255, 196, 40, 0.26), rgba(255, 196, 40, 0) 58%);
+}
+.qml-frame[data-side='right'] .qml-frame-mist--bottom {
+  right: 6%;
+  bottom: -4%;
+  width: 78%;
+  height: 20%;
+  background:
+    radial-gradient(circle at 0 50%, rgba(255, 196, 40, 0.22), rgba(255, 196, 40, 0) 20%),
+    radial-gradient(circle at 100% 50%, rgba(255, 196, 40, 0.18), rgba(255, 196, 40, 0) 28%),
+    linear-gradient(90deg, rgba(255, 196, 40, 0.04), rgba(255, 196, 40, 0.11), rgba(255, 196, 40, 0.07));
+}

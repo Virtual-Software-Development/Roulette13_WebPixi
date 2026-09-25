@@ -18,6 +18,9 @@ const RouletteBettingView = lazy(() =>
 const QuickMoneyBettingView = lazy(() =>
   import('./screens/QuickMoneyBettingView.tsx').then((m) => ({ default: m.QuickMoneyBettingView })),
 )
+const QuickMoneyLobby = lazy(() =>
+  import('./screens/QuickMoneyLobby.tsx').then((m) => ({ default: m.QuickMoneyLobby })),
+)
 
 // Preview temporal vía ?preview=<login|admin|admin-rtp-dashboard|admin-rtp-management> -- todavía
 // no hay router en el proyecto (ver conversación), así que la elección de pantalla de nivel
@@ -46,8 +49,13 @@ function resolveScreen() {
   // de rol real que distinga cajero de jugador (ver LoginPage.tsx, auth todavía stub).
   if (preview === 'roulette-betting') return <RouletteBettingView mode="player" />
   if (preview === 'roulette-betting-cashier') return <RouletteBettingView mode="cashier" />
-  // Player Mode tiene botón propio en el Header (tab 'lottery', ver Header.tsx). Cashier Mode
-  // queda por ahora solo accesible por URL directa -- mismo criterio ad-hoc que Roulette Betting.
+  // Tab 'lottery' del Header (ver Header.tsx) lleva acá -- punto de entrada a Quick Money, desde
+  // donde el usuario ve Pick 3/Pick 4 antes de entrar a apostar. Las vistas de apuesta de abajo
+  // (quick-money-betting[-cashier]) siguen existiendo tal cual, solo que ya no son el destino
+  // directo del tab del Header.
+  if (preview === 'quick-money-lobby') return <QuickMoneyLobby />
+  // Cashier Mode queda por ahora solo accesible por URL directa -- mismo criterio ad-hoc que
+  // Roulette Betting.
   if (preview === 'quick-money-betting') return <QuickMoneyBettingView mode="player" />
   if (preview === 'quick-money-betting-cashier') return <QuickMoneyBettingView mode="cashier" />
   return <App />

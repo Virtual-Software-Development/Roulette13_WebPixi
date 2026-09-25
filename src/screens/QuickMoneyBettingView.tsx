@@ -4,13 +4,16 @@ import { QuickMoneyBettingWorkspace } from '../components/quickMoneyBetting/Quic
 import '../components/quickMoneyBetting/quickMoneyBettingTokens.css'
 
 // Pantalla top-level, mismo shape que RouletteBettingView.tsx -- reusa el Header real del
-// proyecto (activeTab="lottery", el mismo tab "QUICK MONEY" que ya existía sin onClick, ver
-// Header.tsx). A diferencia de Roulette, acá NO hace falta useRoundSync: el ciclo de rondas de
-// Quick Money es 100% local/mock (ver useQuickMoneyRoundStore.ts), no depende de /api/gameInfo.
+// proyecto. A diferencia de Roulette, acá NO hace falta useRoundSync: el ciclo de rondas de Quick
+// Money es 100% local/mock (ver useQuickMoneyRoundStore.ts), no depende de /api/gameInfo.
+//
+// activeTab="none" -- ningún tab del header se resalta estando en ninguna vista de Betting (pedido
+// explícito, ver Header.tsx/RouletteBettingView.tsx). activeBettingGame="quickMoney" es lo que
+// bloquea la opción Quick Money dentro de BettingGamePickerModal cuando se reabre desde acá.
 export function QuickMoneyBettingView({ mode }: { mode: BettingMode }) {
   return (
     <div className="quick-money-betting-shell">
-      <Header activeTab="lottery" />
+      <Header activeTab="none" activeBettingGame="quickMoney" />
       <div className="quick-money-betting-body">
         <QuickMoneyBettingWorkspace mode={mode} />
       </div>

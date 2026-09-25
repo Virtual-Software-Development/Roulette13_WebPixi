@@ -1,0 +1,89 @@
+/* Marco decorativo del panel central -- transcripto de CenterPanel.css (deliverable, ver
+   conversación), reemplaza el radial-gradient simple que tenía .qml-center-panel antes. Igual que
+   quickMoneyPanelFrame.css: SIN texto/dato adentro (aria-hidden), el contenido real
+   (logo/tagline/countdown/Game #) vive en un wrapper aparte por encima (ver
+   QuickMoneyDrawCountdown.tsx). */
+.qml-frame-center {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.qml-frame-center-mist {
+  position: absolute;
+  inset: 0;
+  filter: blur(18px);
+  background:
+    radial-gradient(circle at 14% 18%, rgba(41, 153, 255, 0.16), rgba(41, 153, 255, 0) 16%),
+    radial-gradient(circle at 86% 18%, rgba(41, 153, 255, 0.16), rgba(41, 153, 255, 0) 16%),
+    radial-gradient(circle at 16% 84%, rgba(41, 153, 255, 0.09), rgba(41, 153, 255, 0) 18%),
+    radial-gradient(circle at 84% 84%, rgba(41, 153, 255, 0.09), rgba(41, 153, 255, 0) 18%);
+}
+
+.qml-frame-center-top,
+.qml-frame-center-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.qml-frame-center-top {
+  top: 0;
+  height: 46%;
+}
+.qml-frame-center-bottom {
+  bottom: 0;
+  height: 40%;
+}
+
+.qml-frame-center-top-fill {
+  position: absolute;
+  top: 10px;
+  left: 8%;
+  right: 8%;
+  bottom: 14px;
+  clip-path: polygon(5% 0, 95% 0, 84% 100%, 16% 100%);
+  background: linear-gradient(180deg, rgba(4, 23, 68, 0.34), rgba(0, 9, 32, 0.5));
+  box-shadow: inset 0 1px 0 rgba(132, 207, 255, 0.1);
+}
+
+.qml-frame-center-top-line,
+.qml-frame-center-bottom-line {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(36, 190, 255, 0.55), #37d0ff 50%, rgba(36, 190, 255, 0.55));
+  box-shadow:
+    0 0 10px rgba(55, 208, 255, 0.95),
+    0 0 22px rgba(55, 208, 255, 0.42);
+  border-radius: 999px;
+}
+.qml-frame-center-top-line {
+  top: 0;
+}
+.qml-frame-center-bottom-line {
+  left: 10%;
+  right: 10%;
+  bottom: 0;
+}
+
+.qml-frame-center-middle-line {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 56%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(30, 160, 255, 0.2), #2ac5ff 50%, rgba(30, 160, 255, 0.2));
+  box-shadow:
+    0 0 8px rgba(42, 197, 255, 0.7),
+    0 0 16px rgba(42, 197, 255, 0.26);
+}
+
+.qml-frame-center-bottom-fill {
+  position: absolute;
+  inset: 16px 14% 0 14%;
+  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, rgba(3, 19, 59, 0.1), rgba(0, 11, 39, 0.48));
+  box-shadow: inset 0 -1px 0 rgba(132, 207, 255, 0.08);
+}
