@@ -1,0 +1,176 @@
+.qml-center-panel {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Contenido real por encima de .qml-frame-center (ver quickMoneyCenterFrame.css, deliverable que
+   reemplaza el radial-gradient simple que tenía este panel antes) -- mismo layout flex que antes
+   tenía .qml-center-panel directamente, ahora en este wrapper para poder darle z-index por encima
+   del marco decorativo. */
+.qml-center-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px 26px;
+}
+
+.qml-center-logo-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(180px, 70%);
+  aspect-ratio: 1;
+}
+
+/* Anillos decorativos detrás del logo -- pedido explícito de la referencia, sutiles (no deben
+   competir con el logo). */
+.qml-center-logo-ring {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.qml-center-logo-ring--outer {
+  inset: 0;
+  border: 1px solid rgba(0, 130, 220, 0.32);
+}
+.qml-center-logo-ring--inner {
+  inset: 16%;
+  border: 1px solid rgba(0, 217, 232, 0.22);
+}
+
+.qml-center-logo {
+  position: relative;
+  width: 76%;
+  height: auto;
+}
+
+.qml-center-tagline {
+  /* Subir este margin-top también baja todo lo que sigue (choose/countdown/label/línea inferior):
+     al ser flex-column, cada sibling arranca justo después del anterior, así que empujar este
+     elemento arrastra a los de abajo con él. */
+  margin: 32px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: #00d9e8;
+  /* Mismo halo oscuro que el eyebrow de los paneles laterales (pedido explícito, se veía apagado)
+     -- el cyan claro sobre el fondo azul oscuro del centro perdía punch, sobre todo cerca de las
+     líneas/beams del asset. */
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.85),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.qml-center-choose {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+.qml-center-choose-line {
+  flex: 1 1 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00679d, #00a4d8, #00679d, transparent);
+}
+.qml-center-choose-text {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--qml-text-primary);
+  white-space: nowrap;
+}
+
+.qml-center-countdown {
+  margin-top: 18px;
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--qml-red);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--qml-red) 45%, transparent);
+}
+.qml-center-countdown[data-urgent='true'] {
+  color: #ff4d55;
+}
+
+.qml-center-countdown-label {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--qml-text-secondary);
+}
+
+.qml-center-bottom-line {
+  margin-top: 16px;
+  width: 60%;
+  max-width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 164, 216, 0.45), transparent);
+}
+
+/* Game # -- una sola vez acá (pedido explícito, ver comentario en el componente), en vez de
+   repetido en los dos paneles laterales. Mismo look de "chip" oscuro que tenía la metadata que se
+   sacó de QuickMoneyGameCard. Arriba del logo (pedido explícito), con `position: absolute` a una
+   distancia FIJA del techo del panel -- a propósito, no con margin-top negativo sobre el grupo
+   centrado (`.qml-center-content` tiene justify-content:center): un margin negativo fijo se
+   calcula contra una altura de panel puntual, así que se rompe cada vez que se cambia
+   quickMoneyLobbyHero.css (aspect-ratio) -- con position:absolute queda siempre a 16px del borde
+   superior real, sin importar cuánto mida el Hero. */
+.qml-center-game-number {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: rgba(0, 10, 16, 0.55);
+}
+.qml-center-game-number-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--qml-text-secondary);
+}
+.qml-center-game-number-value {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .qml-frame-center {
+    display: none;
+  }
+  .qml-center-panel {
+    width: 100%;
+  }
+  /* El position:absolute de arriba está pensado para flotar a una distancia fija del techo del
+     Hero de ALTURA FIJA (desktop) -- acá .qml-center-panel mide solo lo que su contenido necesita
+     (no hay Hero de altura fija en la columna mobile), así que un elemento absolute quedaría fuera
+     del flujo y tapado por/superpuesto al logo. En mobile vuelve al flujo normal, como un elemento
+     más de la columna centrada. */
+  .qml-center-game-number {
+    position: static;
+    margin-bottom: 14px;
+  }
+}

@@ -1,0 +1,61 @@
+.qml-frequency-panel {
+  min-width: 260px;
+}
+
+.qml-frequency-divider {
+  height: 1px;
+  margin: 16px 0;
+  background: var(--qml-divider);
+}
+
+.qml-frequency-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.qml-frequency-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.qml-frequency-heading h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--qml-text-primary);
+}
+
+.qml-frequency-heading p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--qml-text-secondary);
+}
+
+.qml-frequency-columns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.qml-frequency-column {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.qml-frequency-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--qml-accent);
+  flex-shrink: 0;
+}
+
+.qml-frequency-balls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}

@@ -1,0 +1,21 @@
+.qml-lower-row {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.qml-lower-row .qml-recent-results {
+  flex: 2.2 1 0;
+  min-width: 0;
+}
+
+.qml-lower-row .qml-frequency-panel {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .qml-lower-row {
+    flex-direction: column;
+  }
+}

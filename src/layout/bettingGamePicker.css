@@ -1,0 +1,147 @@
+/* Valores literales calcados de --admin-* / --betting-* (ver ticketPreview.css/adminLayout.css) --
+   deliberadamente sin depender de esos tokens: este modal puede aparecer sobre CUALQUIER pantalla
+   que monte el Header (Lobby, Admin, la otra vista de Betting), y no todas definen esas variables. */
+.betting-game-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  /* Por encima del header (2), el video de sorteo (5) y WinnerPanel (20) -- mismo z-index que
+     ticket-preview-backdrop, el único otro overlay full-screen fuera de Admin. */
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 5, 8, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+.betting-game-picker {
+  width: min(460px, 100%);
+  box-sizing: border-box;
+  padding: 26px 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 140, 170, 0.22);
+  background: linear-gradient(180deg, rgba(11, 20, 30, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  color: #f5f7fa;
+  font-family: 'Poppins', Arial, sans-serif;
+  text-align: center;
+}
+
+.betting-game-picker-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #f5f7fa;
+}
+
+.betting-game-picker-subtitle {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: #8ea0b5;
+}
+
+.betting-game-picker-options {
+  display: flex;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+@media (max-width: 420px) {
+  .betting-game-picker-options {
+    flex-direction: column;
+  }
+}
+
+.betting-game-picker-option {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  padding: 24px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 140, 170, 0.22);
+  background: rgba(150, 180, 210, 0.04);
+  color: #f5f7fa;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 80ms ease;
+}
+
+.betting-game-picker-option:hover {
+  border-color: rgba(200, 20, 30, 0.55);
+  background: rgba(200, 20, 30, 0.08);
+}
+
+.betting-game-picker-option:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+}
+
+.betting-game-picker-option:active {
+  transform: translateY(1px);
+}
+
+/* Juego ya activo (usuario ya está en esa vista de Betting) -- SOLO deshabilitado, sin ningún
+   estilo de "seleccionado/actual" (pedido explícito: "que no se vea seleccionado también"). */
+.betting-game-picker-option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.betting-game-picker-option-icon {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+/* El logo de Quick Money (43_quick-money-logo.svg) viene en un lienzo más ancho que cuadrado
+   (~1.33:1, incluye el texto "Quick"/"Money" integrado a la marca) -- ensancharlo en vez de
+   dejarlo con aire arriba/abajo como el ícono cuadrado de Roulette, para que pesen visualmente
+   parecido dentro de la misma card. */
+.betting-game-picker-option-icon--logo {
+  width: 68px;
+  height: auto;
+}
+
+.betting-game-picker-option-label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.betting-game-picker-actions {
+  margin-top: 20px;
+}
+
+.betting-game-picker-cancel {
+  height: 40px;
+  padding: 0 22px;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 140, 170, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f5f7fa;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.betting-game-picker-cancel:hover {
+  border-color: rgba(120, 155, 185, 0.4);
+  background: rgba(150, 180, 210, 0.06);
+}
+
+.betting-game-picker-cancel:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+}

@@ -4,9 +4,10 @@ export type QuickMoneyTicketStatus = 'pending' | 'issued'
 
 // Mismo shape que types/bettingTicket.ts (BettingTicket) -- sin backend de tickets todavía (ver
 // data/quickMoneyTicketMockData.ts), es lo que necesita el Ticket Preview de Cashier Mode para
-// mostrarse completo antes de emitir. `drawNumbers` en vez de un solo `drawNumber`: Pick 3 y
-// Pick 4 corren ciclos de sorteo independientes (ver store/useQuickMoneyRoundStore.ts), un ticket
-// puede llevar apuestas de ambos a la vez (pestaña "Play Both").
+// mostrarse completo antes de emitir. `drawNumbers` en vez de un solo `drawNumber`: un ticket
+// puede llevar apuestas de Pick 3 y Pick 4 a la vez (pestaña "Play Both") -- aunque ambos juegos
+// comparten hoy el mismo draw cycle (ver store/useQuickMoneyRoundStore.ts), se etiqueta cada
+// grupo por separado para no acoplar el shape del ticket a esa decisión de negocio.
 export interface QuickMoneyTicket {
   id: string
   ticketNumber: string

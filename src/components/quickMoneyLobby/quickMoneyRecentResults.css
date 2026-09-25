@@ -1,0 +1,63 @@
+.qml-recent-results-columns {
+  display: flex;
+  gap: 20px;
+}
+
+.qml-results-table-wrap {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.qml-results-table-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--qml-accent);
+}
+
+.qml-results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.qml-results-table thead th {
+  text-align: left;
+  padding: 6px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--qml-text-secondary);
+  border-bottom: 1px solid var(--qml-divider);
+}
+
+.qml-results-table tbody td {
+  padding: 8px;
+  border-bottom: 1px solid var(--qml-divider);
+  font-size: 13px;
+}
+
+.qml-results-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.qml-results-table-number {
+  color: var(--qml-text-secondary);
+  font-weight: 600;
+}
+
+.qml-results-table-date {
+  color: var(--qml-text-primary);
+  white-space: nowrap;
+}
+
+.qml-results-table-balls {
+  display: flex;
+  gap: 5px;
+}
+
+@media (max-width: 900px) {
+  .qml-recent-results-columns {
+    flex-direction: column;
+  }
+}

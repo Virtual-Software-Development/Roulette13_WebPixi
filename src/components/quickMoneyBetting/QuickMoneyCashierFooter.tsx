@@ -13,8 +13,7 @@ import './quickMoneyCashierFooter.css'
 // Ticket Preview -- Issue Ticket es un paso aparte y explícito.
 export function QuickMoneyCashierFooter() {
   const { t } = useTranslation()
-  const pick3DrawNumber = useQuickMoneyRoundStore((state) => state.pick3.drawNumber)
-  const pick4DrawNumber = useQuickMoneyRoundStore((state) => state.pick4.drawNumber)
+  const drawNumber = useQuickMoneyRoundStore((state) => state.drawNumber)
   const entries = useQuickMoneyBetSlipStore((state) => state.entries)
   const clearAll = useQuickMoneyBetSlipStore((state) => state.clearAll)
   const [stage, setStage] = useState<'building' | 'preview'>('building')
@@ -29,8 +28,8 @@ export function QuickMoneyCashierFooter() {
     if (!canConfirm) return
     const usedGameTypes = new Set(entries.map((entry) => entry.selection.gameType))
     const drawNumbers = {
-      ...(usedGameTypes.has('pick3') ? { pick3: pick3DrawNumber } : {}),
-      ...(usedGameTypes.has('pick4') ? { pick4: pick4DrawNumber } : {}),
+      ...(usedGameTypes.has('pick3') ? { pick3: drawNumber } : {}),
+      ...(usedGameTypes.has('pick4') ? { pick4: drawNumber } : {}),
     }
     setTicket(buildTicketPreview(entries, drawNumbers))
     setStage('preview')

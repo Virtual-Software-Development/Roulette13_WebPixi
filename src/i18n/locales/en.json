@@ -4,7 +4,14 @@
     "lottery": "QUICK MONEY",
     "betting": "BETTING",
     "admin": "ADMIN",
-    "balanceLabel": "YOUR BALANCE"
+    "balanceLabel": "YOUR BALANCE",
+    "bettingPicker": {
+      "title": "Choose Betting Game",
+      "subtitle": "Select the game you want to play",
+      "roulette": "Roulette",
+      "quickMoney": "Quick Money",
+      "cancel": "Cancel"
+    }
   },
   "media": {
     "logoNotFound": "Logo not found",
@@ -258,6 +265,28 @@
         "drawNumber": "{{game}} Draw",
         "cancel": "Cancel"
       }
+    }
+  },
+  "quickMoneyLobby": {
+    "previousResult": "Previous Result",
+    "gameNumber": "Game",
+    "tagline": "Play Bigger Together",
+    "chooseGame": "Choose Your Quick Money Game",
+    "nextDraw": "Next Draw",
+    "recentResults": {
+      "title": "Recent Results",
+      "subtitle": "Latest Quick Money draws",
+      "columnNumber": "#",
+      "columnTime": "Time",
+      "columnNumbers": "Numbers"
+    },
+    "hotNumbers": {
+      "title": "Hot Numbers",
+      "subtitle": "Most frequent in recent draws"
+    },
+    "coldNumbers": {
+      "title": "Cold Numbers",
+      "subtitle": "Least frequent in recent draws"
     }
   },
   "admin": {

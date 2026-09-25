@@ -1,0 +1,126 @@
+/* Paleta SOLO para el Quick Money Lobby (pedido explícito, ver conversación: no recolorear Next
+   Results/Reports/Game Events/RTP Dashboard/Betting Workspace todavía, esos siguen azul/morado).
+   Valores literales tomados de la referencia visual + de los assets reales pick-3-raffle.png
+   (verde) / pick-4-raffle.png (dorado) en local-media/Lobby/. Fondo/paneles/texto/divider según
+   sección 14 del pedido (navy casi negro + cyan oscuro, mismo lenguaje que el resto del proyecto).
+   Archivo propio, no importa adminLayout.css ni bettingTokens.css -- esta pantalla no es parte de
+   Admin ni de Roulette (mismo criterio que quickMoneyBettingTokens.css). */
+.qml-shell {
+  --qml-pick3-primary: #00e85b;
+  --qml-pick3-highlight: #00ff68;
+  --qml-pick3-dark: #003919;
+  --qml-pick3-bg: #02140d;
+
+  --qml-pick4-primary: #ffd400;
+  --qml-pick4-highlight: #ffe45c;
+  --qml-pick4-dark: #473400;
+  --qml-pick4-bg: #171303;
+
+  --qml-panel-bg-1: #031321;
+  --qml-panel-bg-2: #041a29;
+  --qml-border: rgba(0, 126, 175, 0.35);
+  --qml-divider: rgba(60, 150, 190, 0.2);
+  --qml-text-primary: #f4f7fa;
+  --qml-text-secondary: #aab4bf;
+  --qml-radius: 12px;
+  /* Rojo del countdown -- pedido explícito y reafirmado en la paleta de la sección 30 del segundo
+     pedido (#F20D2A), reemplaza el rojo de marca genérico que se usaba antes acá. Escoped a
+     .qml-shell, no toca --admin-red/el rojo del resto del proyecto. */
+  --qml-red: #f20d2a;
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: var(--qml-text-primary);
+  font-family: 'Poppins', Arial, sans-serif;
+
+  /* Negro liso pedido explícito -- reemplaza el gradient navy/cyan que tenía antes. */
+  background: #000000;
+}
+
+.qml-shell [data-accent='pick3'] {
+  --qml-accent: var(--qml-pick3-primary);
+  --qml-accent-highlight: var(--qml-pick3-highlight);
+  --qml-accent-dark: var(--qml-pick3-dark);
+  --qml-accent-bg: var(--qml-pick3-bg);
+}
+.qml-shell [data-accent='pick4'] {
+  --qml-accent: var(--qml-pick4-primary);
+  --qml-accent-highlight: var(--qml-pick4-highlight);
+  --qml-accent-dark: var(--qml-pick4-dark);
+  --qml-accent-bg: var(--qml-pick4-bg);
+}
+
+.qml-body {
+  box-sizing: border-box;
+  /* Mismo valor que roulette-betting-body/quick-money-betting-body -- espacio para el Header real,
+     fixed por encima. */
+  padding: 79px clamp(16px, 2.5vw, 40px) 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Chip de número compartido (hero/tabla de resultados/hot-cold) -- neutro por defecto (bolas
+   blancas del hero, igual que la referencia); data-accent lo tiñe donde la identidad del juego
+   importa (tabla de resultados, hot/cold). */
+.qml-ball {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(244, 247, 250, 0.1);
+  border: 1px solid rgba(244, 247, 250, 0.3);
+  color: var(--qml-text-primary);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.qml-ball--sm {
+  width: 26px;
+  height: 26px;
+  font-size: 12.5px;
+}
+
+.qml-ball[data-accent='pick3'] {
+  background: rgba(0, 232, 91, 0.12);
+  border-color: rgba(0, 232, 91, 0.45);
+  color: var(--qml-pick3-highlight);
+}
+.qml-ball[data-accent='pick4'] {
+  background: rgba(255, 212, 0, 0.12);
+  border-color: rgba(255, 212, 0, 0.45);
+  color: var(--qml-pick4-highlight);
+}
+
+.qml-panel {
+  box-sizing: border-box;
+  border-radius: var(--qml-radius);
+  border: 1px solid var(--qml-border);
+  background: linear-gradient(180deg, var(--qml-panel-bg-2) 0%, var(--qml-panel-bg-1) 100%);
+  padding: 20px 22px;
+}
+
+.qml-panel-header {
+  margin-bottom: 14px;
+}
+
+.qml-panel-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--qml-text-primary);
+}
+
+.qml-panel-subtitle {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--qml-text-secondary);
+}

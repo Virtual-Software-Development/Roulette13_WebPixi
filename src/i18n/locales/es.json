@@ -4,7 +4,14 @@
     "lottery": "QUICK MONEY",
     "betting": "APUESTAS",
     "admin": "ADMIN",
-    "balanceLabel": "TU SALDO"
+    "balanceLabel": "TU SALDO",
+    "bettingPicker": {
+      "title": "Elegí el Juego de Apuestas",
+      "subtitle": "Seleccioná el juego que querés jugar",
+      "roulette": "Ruleta",
+      "quickMoney": "Quick Money",
+      "cancel": "Cancelar"
+    }
   },
   "media": {
     "logoNotFound": "Logo no encontrado",
@@ -258,6 +265,28 @@
         "drawNumber": "Sorteo {{game}}",
         "cancel": "Cancelar"
       }
+    }
+  },
+  "quickMoneyLobby": {
+    "previousResult": "Resultado Anterior",
+    "gameNumber": "Sorteo",
+    "tagline": "Juega Más en Grande, Juntos",
+    "chooseGame": "Elige tu Juego de Quick Money",
+    "nextDraw": "Próximo Sorteo",
+    "recentResults": {
+      "title": "Resultados Recientes",
+      "subtitle": "Últimos sorteos de Quick Money",
+      "columnNumber": "#",
+      "columnTime": "Hora",
+      "columnNumbers": "Números"
+    },
+    "hotNumbers": {
+      "title": "Números Calientes",
+      "subtitle": "Más frecuentes en sorteos recientes"
+    },
+    "coldNumbers": {
+      "title": "Números Fríos",
+      "subtitle": "Menos frecuentes en sorteos recientes"
     }
   },
   "admin": {
