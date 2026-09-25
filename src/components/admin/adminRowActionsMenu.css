@@ -1,0 +1,57 @@
+.admin-row-actions {
+  position: relative;
+  display: inline-flex;
+}
+
+.admin-row-actions-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.admin-row-actions-trigger svg {
+  width: 17px;
+  height: 17px;
+}
+
+.admin-row-actions-trigger:hover {
+  color: var(--admin-text-primary);
+  background: rgba(150, 180, 210, 0.07);
+  border-color: var(--admin-border);
+}
+
+.admin-row-actions-menu {
+  min-width: 190px;
+}
+
+.admin-row-actions-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.admin-row-actions-option svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.admin-row-actions-option[data-tone='danger'] {
+  color: var(--admin-red);
+}
+
+.admin-row-actions-option[data-tone='danger']:hover {
+  background: rgba(243, 38, 53, 0.12);
+  color: var(--admin-red);
+}

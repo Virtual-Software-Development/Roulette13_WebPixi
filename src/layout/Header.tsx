@@ -10,7 +10,7 @@ import './header.css'
 
 // Íconos del set Website_svg_icons (ver local-media/) -- reemplazan a los SVG inline dibujados a
 // mano que tenía antes el header.
-const ROULETTE_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/19_wheel_white_detailed.svg')
+const ROULETTE_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg')
 const LOTTERY_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/12_dice_white.svg')
 const BETTING_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/27_red_chip.svg')
 const ADMIN_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/17_gear_white.svg')

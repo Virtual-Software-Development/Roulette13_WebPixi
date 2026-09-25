@@ -5,7 +5,9 @@ import { FolderIcon } from './icons'
 import type { VideoLibrarySettings } from '../../../types/adminSettings'
 import './adminSettings.css'
 
-const ROULETTE_ICON_URL = buildMediaUrl('Website_svg_icons/14_roulette_red.svg')
+// Logo real de marca (mismo que Login/Header/Betting Picker) -- pareja directa de
+// QUICK_MONEY_ICON_URL, que ya usa el logo real "Quick Money" en vez de un ícono genérico.
+const ROULETTE_ICON_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg')
 const QUICK_MONEY_ICON_URL = buildMediaUrl('Website_svg_icons/43_quick-money-logo.svg')
 
 interface VideoLibraryColumnProps {

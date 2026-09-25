@@ -13,12 +13,14 @@ export function AdminStatCard({ data }: { data: AdminStatCardData }) {
       <div className="admin-stat-card-body">
         <span className="admin-stat-card-title">{t(data.titleKey)}</span>
         <span className="admin-stat-card-value">{data.value}</span>
-        <div className="admin-stat-card-trend">
-          <span className={`admin-stat-card-trend-value admin-stat-card-trend-value--${data.trendDirection}`}>
-            {data.trendDirection === 'up' ? '↗' : '↘'} {data.trend}
-          </span>
-          <span className="admin-stat-card-trend-label">{t(data.trendLabelKey)}</span>
-        </div>
+        {data.trend && data.trendDirection && data.trendLabelKey && (
+          <div className="admin-stat-card-trend">
+            <span className={`admin-stat-card-trend-value admin-stat-card-trend-value--${data.trendDirection}`}>
+              {data.trendDirection === 'up' ? '↗' : '↘'} {data.trend}
+            </span>
+            <span className="admin-stat-card-trend-label">{t(data.trendLabelKey)}</span>
+          </div>
+        )}
       </div>
     </div>
   )

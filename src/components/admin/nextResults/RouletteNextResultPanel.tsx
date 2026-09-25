@@ -10,7 +10,10 @@ import type { WheelPocket } from '../../../types/wheel'
 import { ArrowRightIcon, CloseIcon, SpinnerIcon } from './icons'
 import './nextResults.css'
 
-const ROULETTE_ICON_URL = buildMediaUrl('Website_svg_icons/14_roulette_red.svg')
+// Logo real de marca (mismo que Login/Header/Betting Picker) -- pareja directa del ícono que usa
+// QuickMoneyNextResultPanel.tsx (43_quick-money-logo.svg, el logo real de Quick Money), en vez de
+// un ícono genérico de rueda.
+const ROULETTE_ICON_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg')
 const CLOCK_ICON_URL = buildMediaUrl('Website_svg_icons/30_clock_white.svg')
 const REFRESH_ICON_URL = buildMediaUrl('Website_svg_icons/39_refresh_white_clean.svg')
 

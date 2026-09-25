@@ -11,9 +11,10 @@ const REMEMBERED_USERNAME_KEY = 'login.rememberedUsername'
 // una vez que el archivo se agregue. Hasta entonces el fondo no se pintará (solo el overlay).
 const LOGIN_BACKGROUND_URL = buildMediaUrl('loginbg.png')
 
-// Pedido explícito: usar local-media/logo-central.png en el login en vez del logoUrl dinámico de
-// useGameConfigStore (que puede venir vacío si LoginPage se monta antes del fetch de /gameInfo).
-const LOGIN_LOGO_URL = buildMediaUrl('logo-central.png')
+// Logo fijo (no el logoUrl dinámico de useGameConfigStore, que puede venir vacío si LoginPage se
+// monta antes del fetch de /gameInfo) -- pedido explícito: usar el SVG de marca Roulette 13
+// (Option 2) en vez del logo-central.png anterior.
+const LOGIN_LOGO_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg')
 
 function UserIcon() {
   return (
