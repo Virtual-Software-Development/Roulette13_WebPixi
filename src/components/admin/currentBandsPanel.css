@@ -27,12 +27,12 @@
   --accent: var(--admin-red);
 }
 
-.admin-current-bands-row[data-accent='blue'] {
-  --accent: var(--admin-blue);
+.admin-current-bands-row[data-accent='green'] {
+  --accent: var(--admin-green);
 }
 
-.admin-current-bands-row[data-accent='purple'] {
-  --accent: var(--admin-purple);
+.admin-current-bands-row[data-accent='amber'] {
+  --accent: var(--admin-amber);
 }
 
 .admin-current-bands-left {
@@ -46,6 +46,7 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .admin-current-bands-name {

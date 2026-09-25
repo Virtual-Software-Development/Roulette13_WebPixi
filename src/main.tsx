@@ -43,6 +43,7 @@ const ADMIN_PREVIEW_VALUES = [
   'admin-videos-roulette',
   'admin-videos-quick-money',
   'admin-videos-upload-history',
+  'admin-system-logs',
 ]
 
 function resolveScreen() {

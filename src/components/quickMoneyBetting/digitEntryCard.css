@@ -18,6 +18,10 @@
   gap: 10px;
 }
 
+/* Neutro (gris azulado), no morado/azul -- son numeración de paso (1. Enter Numbers / 2. Enter Bet
+   Amount), no representan un juego, así que no deberían competir con el verde/amber de Pick 3/
+   Pick 4 que sí es color de identidad (ver comentario en betAmountCard.css). Dos tonos apenas
+   distintos para diferenciar paso 1 de paso 2 sin sumar un tercer color a la paleta. */
 .qm-card-step {
   flex-shrink: 0;
   display: flex;
@@ -26,13 +30,13 @@
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  background: var(--qm-purple);
+  background: #3a4a5a;
   color: #fff;
   font-size: 12px;
   font-weight: 700;
 }
 .qm-card-step--blue {
-  background: var(--qm-blue);
+  background: #55697c;
 }
 
 .qm-card-title {

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import type { QuickMoneyBetType } from '../../types/quickMoneyBet'
+import type { QuickMoneyBetType, QuickMoneyGameType } from '../../types/quickMoneyBet'
 import './betAmountCard.css'
 
 const BET_TYPES: QuickMoneyBetType[] = ['straight', 'box', 'combo']
@@ -14,6 +14,10 @@ interface BetAmountCardProps {
   onToggleBetType: (betType: QuickMoneyBetType) => void
   onAdd: () => void
   canAdd: boolean
+  // undefined cuando hay más de un gameType activo a la vez (tab "Play Both", hoy oculto -- ver
+  // GameTypeTabs.tsx) -- el bet type seleccionado y Add to Bet Slip no tienen un único color de
+  // juego al que pintarse, así que quedan neutros en vez de elegir uno arbitrariamente.
+  gameType: QuickMoneyGameType | undefined
 }
 
 // "2 ENTER BET AMOUNT" de la referencia -- el campo $ también es un botón que fija el foco activo
@@ -25,7 +29,7 @@ interface BetAmountCardProps {
 // Tipo de apuesta es multi-selección (no radio): se puede marcar Box y Combo a la vez con el
 // mismo monto, y Add to Bet Slip genera una entrada separada por cada tipo marcado (un split Box
 // y otro split Combo), en vez de forzar a repetir la carga de dígitos+monto por cada tipo.
-export function BetAmountCard({ amountCents, isActive, onFocus, onStep, betTypes, onToggleBetType, onAdd, canAdd }: BetAmountCardProps) {
+export function BetAmountCard({ amountCents, isActive, onFocus, onStep, betTypes, onToggleBetType, onAdd, canAdd, gameType }: BetAmountCardProps) {
   const { t } = useTranslation()
   const formatted = `$${(amountCents / 100).toFixed(2)}`
 
@@ -61,6 +65,7 @@ export function BetAmountCard({ amountCents, isActive, onFocus, onStep, betTypes
             type="button"
             className="qm-amount-bettype"
             data-selected={betTypes.includes(type)}
+            data-accent={gameType}
             aria-pressed={betTypes.includes(type)}
             onClick={() => onToggleBetType(type)}
           >
@@ -70,7 +75,7 @@ export function BetAmountCard({ amountCents, isActive, onFocus, onStep, betTypes
       </div>
       <p className="qm-amount-bettype-hint">{t('quickMoneyBettingView.amountEntry.betTypeHint')}</p>
 
-      <button type="button" className="qm-add-to-slip" disabled={!canAdd} onClick={onAdd}>
+      <button type="button" className="qm-add-to-slip" data-accent={gameType} disabled={!canAdd} onClick={onAdd}>
         {t('quickMoneyBettingView.amountEntry.addToBetSlip')}
       </button>
     </div>

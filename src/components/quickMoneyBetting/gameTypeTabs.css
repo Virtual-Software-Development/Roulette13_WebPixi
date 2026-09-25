@@ -27,15 +27,16 @@
   color: var(--qm-text-primary);
 }
 
-/* Acento morado/azul solo cuando está activo -- inactivo se ve neutro, mismo criterio que el tab
-   de Roulette en el Header (data-active). */
+/* Acento verde/amber solo cuando está activo -- inactivo se ve neutro, mismo criterio que el tab
+   de Roulette en el Header (data-active). Verde/amber = colores reales de marca de Pick 3/Pick 4
+   (ver quickMoneyLobbyTokens.css, pedido explícito), no el morado/azul genérico de antes. */
 .qm-tab[data-active='true'] {
   color: #fff;
   border-color: transparent;
 }
 .qm-tab[data-accent='pick3'][data-active='true'] {
-  background: linear-gradient(110deg, #5b21b6 0%, #7c3aed 55%, #8b5cf6 100%);
+  background: linear-gradient(110deg, #0f7a3d 0%, #16a34a 55%, #43e86a 100%);
 }
 .qm-tab[data-accent='pick4'][data-active='true'] {
-  background: linear-gradient(110deg, #0a4fa8 0%, #1a6fe0 55%, #2588ff 100%);
+  background: linear-gradient(110deg, #a8690f 0%, #d99a1f 55%, #f0a83c 100%);
 }

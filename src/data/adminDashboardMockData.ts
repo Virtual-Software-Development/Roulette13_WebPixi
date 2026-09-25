@@ -54,7 +54,7 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     id: 'systemLogs',
     labelKey: 'admin.nav.systemLogs',
     icon: buildMediaUrl('Website_svg_icons/38_copy_documents_white.svg'),
-    disabled: true,
+    view: 'admin-system-logs',
   },
   {
     id: 'reports',
@@ -85,29 +85,22 @@ export const ADMIN_STAT_CARDS: AdminStatCardData[] = [
     id: 'rouletteRounds',
     titleKey: 'admin.dashboard.kpi.rouletteRounds',
     value: '1,287',
-    icon: buildMediaUrl('Website_svg_icons/14_roulette_red.svg'),
+    icon: buildMediaUrl('Website_svg_icons/46_logo_option_2.svg'),
     accent: 'red',
     trend: '+12%',
     trendDirection: 'up',
     trendLabelKey: 'admin.dashboard.kpi.vsYesterday',
   },
+  // Antes dos cards separadas (Pick 3 Rounds / Pick 4 Rounds) -- unificadas en una sola (pedido
+  // explícito: "pertenecen a Quick Money Rounds"), valor = suma de ambas (432+418), trend = promedio
+  // ponderado de +8%/+5% redondeado. Usa el logo genérico de Quick Money, no el de un pick específico.
   {
-    id: 'pick3Rounds',
-    titleKey: 'admin.dashboard.kpi.pick3Rounds',
-    value: '432',
-    icon: buildMediaUrl('Website_svg_icons/13_dice_blue.svg'),
+    id: 'quickMoneyRounds',
+    titleKey: 'admin.dashboard.kpi.quickMoneyRounds',
+    value: '850',
+    icon: buildMediaUrl('Website_svg_icons/43_quick-money-logo.svg'),
     accent: 'blue',
-    trend: '+8%',
-    trendDirection: 'up',
-    trendLabelKey: 'admin.dashboard.kpi.vsYesterday',
-  },
-  {
-    id: 'pick4Rounds',
-    titleKey: 'admin.dashboard.kpi.pick4Rounds',
-    value: '418',
-    icon: buildMediaUrl('Website_svg_icons/44_dice_purple.svg'),
-    accent: 'purple',
-    trend: '+5%',
+    trend: '+7%',
     trendDirection: 'up',
     trendLabelKey: 'admin.dashboard.kpi.vsYesterday',
   },
@@ -123,19 +116,21 @@ export const ADMIN_STAT_CARDS: AdminStatCardData[] = [
   },
 ]
 
+// quickMoney = pick3 + pick4 del dataset anterior (pedido explícito: ambos son Quick Money, mismo
+// criterio que el admin-stat-card ya unificado) -- ej. 00:00: 22+14=36, 02:00: 30+20=50, etc.
 export const GAMES_ACTIVITY_SERIES: GamesActivitySeriesPoint[] = [
-  { time: '00:00', roulette: 38, pick3: 22, pick4: 14 },
-  { time: '02:00', roulette: 52, pick3: 30, pick4: 20 },
-  { time: '04:00', roulette: 61, pick3: 34, pick4: 24 },
-  { time: '06:00', roulette: 78, pick3: 44, pick4: 30 },
-  { time: '08:00', roulette: 104, pick3: 58, pick4: 38 },
-  { time: '10:00', roulette: 121, pick3: 66, pick4: 46 },
-  { time: '12:00', roulette: 118, pick3: 70, pick4: 50 },
-  { time: '14:00', roulette: 132, pick3: 76, pick4: 54 },
-  { time: '16:00', roulette: 145, pick3: 82, pick4: 58 },
-  { time: '18:00', roulette: 139, pick3: 88, pick4: 62 },
-  { time: '20:00', roulette: 150, pick3: 92, pick4: 64 },
-  { time: '22:00', roulette: 128, pick3: 80, pick4: 56 },
+  { time: '00:00', roulette: 38, quickMoney: 36 },
+  { time: '02:00', roulette: 52, quickMoney: 50 },
+  { time: '04:00', roulette: 61, quickMoney: 58 },
+  { time: '06:00', roulette: 78, quickMoney: 74 },
+  { time: '08:00', roulette: 104, quickMoney: 96 },
+  { time: '10:00', roulette: 121, quickMoney: 112 },
+  { time: '12:00', roulette: 118, quickMoney: 120 },
+  { time: '14:00', roulette: 132, quickMoney: 130 },
+  { time: '16:00', roulette: 145, quickMoney: 140 },
+  { time: '18:00', roulette: 139, quickMoney: 150 },
+  { time: '20:00', roulette: 150, quickMoney: 156 },
+  { time: '22:00', roulette: 128, quickMoney: 136 },
 ]
 
 export const GAMES_ACTIVITY_Y_MAX = 200
@@ -144,27 +139,22 @@ export const GAMES_ACTIVITY_X_LABELS = ['00:00', '04:00', '08:00', '12:00', '16:
 
 export const GAMES_DISTRIBUTION_TOTAL = 2137
 
+// pick3 (432) + pick4 (418) = 850, mismo total que "Quick Money Rounds" en ADMIN_STAT_CARDS --
+// porcentajes recalculados sobre 2137 para que sigan sumando 100.0% con 2 segmentos en vez de 3.
 export const GAMES_DISTRIBUTION: GamesDistributionSegment[] = [
   {
     id: 'roulette',
     labelKey: 'admin.dashboard.gamesActivity.roulette',
     value: 1287,
-    percent: 60.3,
+    percent: 60.2,
     color: 'var(--admin-red)',
   },
   {
-    id: 'pick3',
-    labelKey: 'admin.dashboard.gamesActivity.pick3',
-    value: 432,
-    percent: 20.2,
+    id: 'quickMoney',
+    labelKey: 'admin.dashboard.gamesActivity.quickMoney',
+    value: 850,
+    percent: 39.8,
     color: 'var(--admin-blue)',
-  },
-  {
-    id: 'pick4',
-    labelKey: 'admin.dashboard.gamesActivity.pick4',
-    value: 418,
-    percent: 19.6,
-    color: 'var(--admin-purple)',
   },
 ]
 

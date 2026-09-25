@@ -87,10 +87,21 @@
   color: var(--qm-text-primary);
   border-color: rgba(200, 215, 230, 0.4);
 }
+/* Verde/amber = colores reales de marca de Pick 3/Pick 4 (ver quickMoneyLobbyTokens.css, pedido
+   explícito de que combine con la nueva estética en vez de quedar morado/azul huérfano). Sin
+   data-accent (gameType indefinido -- ver BetAmountCardProps) cae a un gris acero claramente más
+   claro que el panel de fondo -- pedido explícito: un gris casi negro se podía confundir con
+   "deshabilitado" (esa lectura queda reservada para :disabled, que sí baja la opacidad). */
 .qm-amount-bettype[data-selected='true'] {
-  background: linear-gradient(110deg, #5b21b6 0%, #7c3aed 55%, #8b5cf6 100%);
+  background: linear-gradient(110deg, #4e6178 0%, #374350 100%);
   border-color: transparent;
   color: #fff;
+}
+.qm-amount-bettype[data-selected='true'][data-accent='pick3'] {
+  background: linear-gradient(110deg, #0f7a3d 0%, #16a34a 55%, #43e86a 100%);
+}
+.qm-amount-bettype[data-selected='true'][data-accent='pick4'] {
+  background: linear-gradient(110deg, #a8690f 0%, #d99a1f 55%, #f0a83c 100%);
 }
 
 .qm-amount-bettype-hint {
@@ -104,7 +115,7 @@
   height: 46px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(110deg, #0a4fa8 0%, #1a6fe0 55%, #2588ff 100%);
+  background: linear-gradient(110deg, #4e6178 0%, #374350 100%);
   color: #fff;
   font-family: inherit;
   font-size: 13px;
@@ -115,6 +126,12 @@
   transition:
     filter 120ms ease,
     opacity 120ms ease;
+}
+.qm-add-to-slip[data-accent='pick3'] {
+  background: linear-gradient(110deg, #0f7a3d 0%, #16a34a 55%, #43e86a 100%);
+}
+.qm-add-to-slip[data-accent='pick4'] {
+  background: linear-gradient(110deg, #a8690f 0%, #d99a1f 55%, #f0a83c 100%);
 }
 .qm-add-to-slip:hover:not(:disabled) {
   filter: brightness(1.08);

@@ -212,12 +212,12 @@
       "tagline": "Un solo teclado. Dos campos. Simple."
     },
     "digitEntry": {
-      "title": "1. Ingresá los Números",
+      "title": "Ingresá los Números",
       "hint": "Tocá este campo y usá el teclado.",
       "digitAria": "Dígito {{position}}"
     },
     "amountEntry": {
-      "title": "2. Ingresá el Monto",
+      "title": "Ingresá el Monto",
       "hint": "Tocá este campo y usá el teclado.",
       "increase": "Aumentar monto",
       "decrease": "Reducir monto",
@@ -331,8 +331,7 @@
       },
       "kpi": {
         "rouletteRounds": "Rondas de Ruleta",
-        "pick3Rounds": "Rondas Pick 3",
-        "pick4Rounds": "Rondas Pick 4",
+        "quickMoneyRounds": "Rondas Quick Money",
         "activeUsers": "Usuarios Activos",
         "vsYesterday": "vs. ayer",
         "onlineNow": "en línea ahora"
@@ -341,7 +340,8 @@
         "title": "Actividad de Juegos",
         "roulette": "Ruleta",
         "pick3": "Pick 3",
-        "pick4": "Pick 4"
+        "pick4": "Pick 4",
+        "quickMoney": "Quick Money"
       },
       "gamesDistribution": {
         "title": "Distribución de Juegos",
@@ -722,6 +722,58 @@
         },
         "detail": { "title": "Detalles de Subida" },
         "actions": { "openRelated": "Abrir Video Relacionado", "refresh": "Actualizar" }
+      }
+    },
+    "systemLogs": {
+      "title": "Registros del Sistema",
+      "subtitle": "Monitorea la actividad, eventos, advertencias y errores del sistema.",
+      "filters": {
+        "searchPlaceholder": "Buscar por palabra clave, usuario o detalles...",
+        "dateRange": "Rango de Fecha",
+        "dateRangeOptions": { "any": "Cualquier Momento", "today": "Hoy", "last7Days": "Últimos 7 Días", "last30Days": "Últimos 30 Días" },
+        "user": "Usuario",
+        "allUsers": "Todos los Usuarios",
+        "module": "Módulo",
+        "allModules": "Todos los Módulos",
+        "action": "Acción",
+        "allActions": "Todas las Acciones",
+        "status": "Estado",
+        "allStatuses": "Todos los Estados",
+        "clear": "Limpiar Filtros"
+      },
+      "module": {
+        "roulette": "Ruleta",
+        "quickMoney": "Quick Money",
+        "rtp": "RTP",
+        "users": "Usuarios",
+        "events": "Eventos",
+        "videos": "Videos",
+        "reports": "Reportes",
+        "settings": "Configuración",
+        "system": "Sistema"
+      },
+      "status": { "success": "Éxito", "warning": "Advertencia", "failed": "Fallido" },
+      "table": {
+        "dateTime": "Fecha y Hora",
+        "user": "Usuario",
+        "module": "Módulo",
+        "action": "Acción",
+        "details": "Detalles",
+        "status": "Estado",
+        "viewDetails": "Ver detalles",
+        "empty": "No se encontraron registros del sistema. Intenta cambiar tus filtros o rango de fecha.",
+        "showingCount": "Mostrando {{from}}–{{to}} de {{total}} registros"
+      },
+      "detail": {
+        "title": "Detalles del Registro",
+        "close": "Cerrar",
+        "dateTime": "Fecha y Hora",
+        "user": "Usuario",
+        "module": "Módulo",
+        "action": "Acción",
+        "status": "Estado",
+        "changeLabel": "Cambio",
+        "detailsLabel": "Detalles"
       }
     },
     "settings": {

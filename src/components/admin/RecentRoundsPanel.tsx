@@ -18,7 +18,9 @@ function ResultPills({ round }: { round: RecentRound }) {
     )
   }
 
-  const tone = round.game === 'pick3' ? 'blue' : 'purple'
+  // Pelotas de Pick 3/Pick 4 blancas con letras negras (pedido explícito) -- el color real de
+  // marca de cada juego (verde/amber) queda solo en el nombre del juego, columna GAME.
+  const tone = 'white'
   return (
     <span className="admin-round-pill-group">
       {round.result.map((value, i) => (

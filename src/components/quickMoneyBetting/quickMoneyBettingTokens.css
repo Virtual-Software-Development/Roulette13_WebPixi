@@ -1,8 +1,9 @@
 /* Mismos nombres/valores neutros que bettingTokens.css (Roulette) para consistencia de estilo --
-   panel-bg/border/radius/text/green quedan IGUAL. El acento cambia: rojo (Roulette) -> morado
-   (Pick 3) / azul (Pick 4), pedido explícito de "parecerse en estilo pero diferenciarse del
-   juego". Archivo propio, no importa bettingTokens.css ni adminLayout.css -- esta pantalla no es
-   parte de Admin ni de Roulette. */
+   panel-bg/border/radius/text quedan IGUAL. El acento cambia: rojo (Roulette) -> verde (Pick 3) /
+   amber (Pick 4), colores reales de marca de cada juego (ver quickMoneyLobbyTokens.css, pedido
+   explícito) -- antes morado/azul genéricos, que no correspondían con nada de Pick 3/Pick 4 en
+   ningún otro lado de la app. Archivo propio, no importa bettingTokens.css ni adminLayout.css --
+   esta pantalla no es parte de Admin ni de Roulette. */
 .quick-money-betting-shell {
   --qm-purple: #8b5cf6;
   --qm-blue: #2588ff;
@@ -44,8 +45,8 @@
    dígitos activo, badge de countdown, chip del bet slip) sin repetir el condicional en cada
    componente. */
 .quick-money-betting-shell [data-accent='pick3'] {
-  --qm-accent: var(--qm-purple);
+  --qm-accent: var(--qm-green);
 }
 .quick-money-betting-shell [data-accent='pick4'] {
-  --qm-accent: var(--qm-blue);
+  --qm-accent: var(--qm-amber);
 }

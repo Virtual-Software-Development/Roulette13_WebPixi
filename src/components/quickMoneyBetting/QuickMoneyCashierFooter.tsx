@@ -23,6 +23,13 @@ export function QuickMoneyCashierFooter() {
 
   const { totalStake } = useMemo(() => calculateSlipTotals(entries), [entries])
   const canConfirm = entries.length > 0 && totalStake > 0
+  // Confirm Bet actúa sobre TODO el slip, no sobre la pestaña activa -- si mezcla Pick 3 y Pick 4
+  // (posible: se puede armar una apuesta, cambiar de tab, y armar otra antes de confirmar) no hay
+  // un único color de juego al que pintarlo, así que queda neutro (ver quickMoneyCashierFooter.css).
+  const soleGameType = useMemo(() => {
+    const gameTypes = new Set(entries.map((entry) => entry.selection.gameType))
+    return gameTypes.size === 1 ? [...gameTypes][0] : undefined
+  }, [entries])
 
   function handleConfirmBet() {
     if (!canConfirm) return
@@ -65,7 +72,7 @@ export function QuickMoneyCashierFooter() {
         </p>
       )}
 
-      <button type="button" className="qm-cashier-footer-confirm" disabled={!canConfirm} onClick={handleConfirmBet}>
+      <button type="button" className="qm-cashier-footer-confirm" data-accent={soleGameType} disabled={!canConfirm} onClick={handleConfirmBet}>
         {t('quickMoneyBettingView.cashier.confirmBet')}
       </button>
 

@@ -26,6 +26,12 @@ export function QuickMoneyPlayerFooter() {
 
   const { totalStake } = useMemo(() => calculateSlipTotals(entries), [entries])
   const insufficientBalance = totalStake > balance
+  // Place Bet actúa sobre TODO el slip -- mismo criterio que Confirm Bet en QuickMoneyCashierFooter
+  // (ver su comentario): neutro cuando mezcla Pick 3 y Pick 4, coloreado solo cuando es uniforme.
+  const soleGameType = useMemo(() => {
+    const gameTypes = new Set(entries.map((entry) => entry.selection.gameType))
+    return gameTypes.size === 1 ? [...gameTypes][0] : undefined
+  }, [entries])
   // insufficientBalance queda AFUERA de canPlaceBet a propósito -- mismo criterio que
   // PlayerPanel.tsx: el botón sigue habilitado para que el click dispare el popup de aviso.
   const canPlaceBet = entries.length > 0 && totalStake > 0 && !submitting
@@ -65,7 +71,7 @@ export function QuickMoneyPlayerFooter() {
             {t('quickMoneyBettingView.player.insufficientBalance')}
           </p>
         )}
-        <button type="button" className="qm-player-footer-place-bet" disabled={!canPlaceBet} onClick={handlePlaceBet}>
+        <button type="button" className="qm-player-footer-place-bet" data-accent={soleGameType} disabled={!canPlaceBet} onClick={handlePlaceBet}>
           {submitting ? t('quickMoneyBettingView.player.placing') : t('quickMoneyBettingView.player.placeBet')}
         </button>
       </div>
