@@ -6,7 +6,7 @@ import { UserIcon, LockIcon, EyeIcon, EyeOffIcon, CheckIcon, ArrowRightIcon } fr
 import './loginPage.css'
 
 export function LoginPage() {
-  const { isAuthenticated, login } = useAuth()
+  const { status, logoutReason, login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -14,7 +14,15 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  if (isAuthenticated) return <Navigate to="/" replace />
+  if (status === 'checking') return null
+  if (status === 'authenticated') return <Navigate to="/" replace />
+
+  const notice =
+    logoutReason === 'idle'
+      ? 'You were signed out after a period of inactivity.'
+      : logoutReason === 'expired'
+        ? 'Your session has expired. Please sign in again.'
+        : null
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -84,7 +92,11 @@ export function LoginPage() {
             </a>
           </div>
 
-          {error && <p className="login-card__error">{error}</p>}
+          {error ? (
+            <p className="login-card__error">{error}</p>
+          ) : (
+            notice && <p className="login-card__error">{notice}</p>
+          )}
 
           <button type="submit" className="login-card__submit" disabled={submitting}>
             <span>{submitting ? 'Signing in…' : 'Sign In'}</span>

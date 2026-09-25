@@ -1,4 +1,4 @@
-import { apiFetch, setAuthToken } from './client'
+import { apiFetch, clearSession, setSessionFromResponse } from './client'
 
 export async function login(username: string, password: string): Promise<void> {
   // quick_money-backend mounts login at /api/v1/auth/login (see its
@@ -22,10 +22,17 @@ export async function login(username: string, password: string): Promise<void> {
   if (res.status === 401 || res.status === 403) throw new Error('Invalid username or password.')
   if (!res.ok) throw new Error('Could not reach the server. Please try again in a moment.')
 
-  const { access_token: token } = await res.json()
-  setAuthToken(token)
+  // The refresh token arrives as an HttpOnly cookie set by this same response; only the
+  // short-lived access token is in the body.
+  setSessionFromResponse(await res.json())
 }
 
-export function logout(): void {
-  setAuthToken(null)
+export async function logout(): Promise<void> {
+  clearSession()
+  try {
+    // Revokes the refresh token server-side and clears the cookie.
+    await apiFetch('/auth/logout', { method: 'POST' })
+  } catch {
+    // Backend unreachable: the cookie still expires on its own after the inactivity window.
+  }
 }
