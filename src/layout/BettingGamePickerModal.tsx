@@ -10,7 +10,7 @@ import './bettingGamePicker.css'
 // VideoLibrarySettings, ver adminReportsMockData.ts/rtpDashboardMockData.ts) -- 43_quick-money-
 // logo.svg es el único asset del set con un logo real (texto "Quick Money" integrado a la marca),
 // más distintivo que el ícono de dado genérico que ya usa el tab del Header.
-const ROULETTE_ICON_URL = buildMediaUrl('Website_svg_icons/14_roulette_red.svg')
+const ROULETTE_ICON_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg')
 const QUICK_MONEY_LOGO_URL = buildMediaUrl('Website_svg_icons/43_quick-money-logo.svg')
 
 interface BettingGamePickerModalProps {

@@ -309,9 +309,6 @@
       "systemLogs": "System Logs",
       "reports": "Reports",
       "videos": "Videos",
-      "videosRouletteLibrary": "Roulette Library",
-      "videosLotteryVideoStatus": "Lottery Video Status",
-      "videosUploadHistory": "Upload History",
       "settings": "Settings"
     },
     "dashboard": {
@@ -568,6 +565,163 @@
         "title": "Draw Log",
         "close": "Close",
         "empty": "No log entries available."
+      }
+    },
+    "videos": {
+      "title": "Video Management",
+      "subtitle": "Manage, validate and monitor video assets for Roulette and Quick Money.",
+      "tabs": { "roulette": "Roulette", "quickMoney": "Quick Money", "uploadHistory": "Upload History" },
+      "shared": {
+        "pagination": "Pagination",
+        "previousPage": "Previous page",
+        "nextPage": "Next page",
+        "rowActions": "Row actions",
+        "close": "Close",
+        "clear": "Clear",
+        "yes": "Yes",
+        "no": "No",
+        "notApplicable": "—",
+        "previewUnavailable": "Preview not available in this environment.",
+        "validation": { "passed": "Passed", "failed": "Failed", "pending": "Pending", "notApplicable": "N/A" },
+        "validationLog": { "title": "Validation Log", "empty": "No log entries available." },
+        "dateRange": { "any": "Any Time", "today": "Today", "last7Days": "Last 7 Days", "last30Days": "Last 30 Days" },
+        "detail": {
+          "emptyTitle": "Select a row",
+          "emptyDescription": "Choose a row from the table to see its details.",
+          "codec": "Codec",
+          "codecFormat": "Codec / Format",
+          "checksum": "Checksum (SHA-256)"
+        },
+        "actions": {
+          "uploadFile": "Upload File",
+          "uploadVideo": "Upload Video",
+          "replaceFile": "Replace File",
+          "viewValidationLog": "View Validation Log",
+          "retryValidation": "Retry Validation"
+        },
+        "uploadModal": {
+          "title": "Upload Video",
+          "subtitle": "Upload or replace a video asset.",
+          "game": "Game",
+          "gameRoulette": "Roulette",
+          "gameQuickMoney": "Quick Money",
+          "targetRoulette": "Result Number / Variant",
+          "targetQuickMoney": "Draw",
+          "targetPlaceholder": "Select a target...",
+          "file": "Video File",
+          "chooseFile": "Choose file...",
+          "fileHint": "Accepted formats: MP4, WebM.",
+          "cancel": "Cancel",
+          "submit": "Upload Video",
+          "currentUser": "Admin User"
+        }
+      },
+      "roulette": {
+        "summary": {
+          "expected": "Expected Assets",
+          "available": "Available",
+          "missing": "Missing",
+          "invalid": "Invalid",
+          "storage": "Storage Used"
+        },
+        "filters": {
+          "searchPlaceholder": "Search by number, variant or filename...",
+          "number": "Number",
+          "allNumbers": "All Numbers",
+          "variant": "Variant",
+          "allVariants": "All Variants",
+          "status": "Status",
+          "allStatuses": "All Statuses",
+          "validation": "Validation",
+          "allValidations": "All Validations",
+          "lastVerified": "Last Verified"
+        },
+        "status": { "available": "Available", "missing": "Missing", "invalid": "Invalid", "pendingScan": "Pending Scan" },
+        "table": {
+          "resultNumber": "Result Number",
+          "variant": "Variant",
+          "filename": "Filename",
+          "status": "Status",
+          "validation": "Validation",
+          "fileSize": "File Size",
+          "duration": "Duration",
+          "resolution": "Resolution",
+          "lastVerified": "Last Verified",
+          "actions": "Actions",
+          "empty": "No assets match your filters.",
+          "showingCount": "Showing {{from}}–{{to}} of {{total}} assets"
+        },
+        "detail": { "selectedAsset": "Selected Asset", "noFile": "No file uploaded" },
+        "actions": { "rescan": "Re-scan Library" }
+      },
+      "quickMoney": {
+        "summary": {
+          "expectedToday": "Expected Today",
+          "received": "Received",
+          "pendingValidation": "Pending Validation",
+          "lateOrMissing": "Late / Missing",
+          "storage": "Storage Used"
+        },
+        "filters": {
+          "searchPlaceholder": "Search by draw #, type or filename...",
+          "drawType": "Draw Type",
+          "allTypes": "All Types",
+          "pick3": "Pick 3",
+          "pick4": "Pick 4",
+          "eventStatus": "Event Status",
+          "allStatuses": "All Statuses",
+          "validationStatus": "Validation Status",
+          "allValidations": "All Validations"
+        },
+        "delivery": { "received": "Received", "pending": "Pending", "late": "Late", "missing": "Missing" },
+        "validation": { "ready": "Ready", "pending": "Pending", "failed": "Failed", "notApplicable": "N/A" },
+        "contingency": { "ready": "Contingency Ready", "notApplicable": "—" },
+        "table": {
+          "drawType": "Draw Type",
+          "drawNumber": "Draw #",
+          "scheduledTime": "Scheduled Time",
+          "videoFile": "Video File",
+          "deliveryStatus": "Delivery Status",
+          "validation": "Validation",
+          "receivedAt": "Received At",
+          "deadline": "Deadline",
+          "contingency": "Contingency",
+          "actions": "Actions",
+          "empty": "No draws match your filters.",
+          "showingCount": "Showing {{from}}–{{to}} of {{total}} draws"
+        },
+        "detail": { "selectedDraw": "Selected Draw", "noFile": "No file received" },
+        "actions": { "refresh": "Refresh Status" }
+      },
+      "uploadHistory": {
+        "filters": {
+          "searchPlaceholder": "Search by filename or asset/draw...",
+          "game": "Game",
+          "allGames": "All Games",
+          "status": "Status",
+          "allStatuses": "All Statuses",
+          "validation": "Validation",
+          "uploadedBy": "Uploaded By",
+          "allUploaders": "All Uploaders",
+          "date": "Date"
+        },
+        "status": { "success": "Success", "failed": "Failed", "pending": "Pending" },
+        "table": {
+          "dateTime": "Date / Time",
+          "game": "Game",
+          "related": "Video / Draw / Asset",
+          "filename": "Filename",
+          "uploadedBy": "Uploaded By",
+          "status": "Upload Status",
+          "validation": "Validation Result",
+          "fileSize": "File Size",
+          "actions": "Actions",
+          "empty": "No uploads match your filters.",
+          "showingCount": "Showing {{from}}–{{to}} of {{total}} uploads",
+          "replacement": "Replacement"
+        },
+        "detail": { "title": "Upload Details" },
+        "actions": { "openRelated": "Open Related Video", "refresh": "Refresh" }
       }
     },
     "settings": {

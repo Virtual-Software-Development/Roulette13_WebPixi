@@ -6,9 +6,12 @@ export interface AdminStatCardData {
   value: string
   icon: string
   accent: AdminStatAccent
-  trend: string
-  trendDirection: 'up' | 'down'
-  trendLabelKey: string
+  // Opcional -- Video Management (ver adminVideosMockData.ts) usa estas cards sin variación día a
+  // día real (Expected/Available/Storage no tienen un "vs ayer" con sentido), así que la fila de
+  // trend se omite por completo cuando no vienen los 3 juntos, en vez de inventar un número.
+  trend?: string
+  trendDirection?: 'up' | 'down'
+  trendLabelKey?: string
 }
 
 export interface GamesActivitySeriesPoint {

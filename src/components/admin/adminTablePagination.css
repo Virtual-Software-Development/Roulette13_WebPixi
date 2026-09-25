@@ -1,0 +1,81 @@
+/* Calcado de la paginación de gameEventsList.css -- mismo lenguaje visual, namespace propio
+   (admin-table-pagination-*) por ser ahora el genérico compartido. */
+.admin-table-pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-table-pagination-count {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+  white-space: nowrap;
+}
+
+.admin-table-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-table-pagination-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  color: var(--admin-text-secondary);
+  font-size: 12.5px;
+}
+
+.admin-table-pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.admin-table-pagination-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-table-pagination-btn:hover:not(:disabled) {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-table-pagination-btn:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: 1px;
+}
+
+.admin-table-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-table-pagination-btn[data-active='true'] {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+}

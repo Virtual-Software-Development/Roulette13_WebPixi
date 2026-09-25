@@ -8,6 +8,7 @@ import { GameEventsPage } from './GameEventsPage'
 import { AdminSettingsPage } from './AdminSettingsPage'
 import { AdminReportsPage } from './AdminReportsPage'
 import { UsersPage } from './UsersPage'
+import { VideoManagementPage } from './VideoManagementPage'
 
 type AdminView =
   | 'admin'
@@ -19,6 +20,9 @@ type AdminView =
   | 'admin-settings'
   | 'admin-users'
   | 'admin-reports'
+  | 'admin-videos-roulette'
+  | 'admin-videos-quick-money'
+  | 'admin-videos-upload-history'
 
 // Los valores acá son ids de SUB-item (rtpDashboard/rtpManagement/roulette/lottery), no del padre
 // 'rtp'/'nextResults' -- así AdminSidebar puede resaltar cuál de los hijos está activo (antes solo
@@ -36,6 +40,11 @@ const ACTIVE_SIDEBAR_ID_BY_VIEW: Record<AdminView, string> = {
   'admin-settings': 'settings',
   'admin-users': 'users',
   'admin-reports': 'reports',
+  // Las 3 pestañas de Video Management resaltan el mismo ítem 'videos' del sidebar (un solo
+  // ítem, sin submenú -- ver adminDashboardMockData.ts) sin importar cuál esté activa.
+  'admin-videos-roulette': 'videos',
+  'admin-videos-quick-money': 'videos',
+  'admin-videos-upload-history': 'videos',
 }
 
 function isAdminView(value: string | null): value is AdminView {
@@ -48,7 +57,10 @@ function isAdminView(value: string | null): value is AdminView {
     value === 'admin-next-results-quick-money' ||
     value === 'admin-settings' ||
     value === 'admin-users' ||
-    value === 'admin-reports'
+    value === 'admin-reports' ||
+    value === 'admin-videos-roulette' ||
+    value === 'admin-videos-quick-money' ||
+    value === 'admin-videos-upload-history'
   )
 }
 
@@ -90,6 +102,9 @@ export function AdminPanel() {
       {view === 'admin-settings' && <AdminSettingsPage />}
       {view === 'admin-users' && <UsersPage />}
       {view === 'admin-reports' && <AdminReportsPage />}
+      {view === 'admin-videos-roulette' && <VideoManagementPage initialTab="roulette" onNavigate={handleNavigate} />}
+      {view === 'admin-videos-quick-money' && <VideoManagementPage initialTab="quickMoney" onNavigate={handleNavigate} />}
+      {view === 'admin-videos-upload-history' && <VideoManagementPage initialTab="uploadHistory" onNavigate={handleNavigate} />}
     </AdminLayout>
   )
 }

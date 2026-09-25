@@ -309,9 +309,6 @@
       "systemLogs": "Registros del Sistema",
       "reports": "Reportes",
       "videos": "Videos",
-      "videosRouletteLibrary": "Biblioteca de Ruleta",
-      "videosLotteryVideoStatus": "Estado de Videos de Lotería",
-      "videosUploadHistory": "Historial de Subidas",
       "settings": "Configuración"
     },
     "dashboard": {
@@ -568,6 +565,163 @@
         "title": "Registro de Sorteo",
         "close": "Cerrar",
         "empty": "No hay entradas de registro disponibles."
+      }
+    },
+    "videos": {
+      "title": "Gestión de Videos",
+      "subtitle": "Administra, valida y monitorea los assets de video de Ruleta y Quick Money.",
+      "tabs": { "roulette": "Ruleta", "quickMoney": "Quick Money", "uploadHistory": "Historial de Subidas" },
+      "shared": {
+        "pagination": "Paginación",
+        "previousPage": "Página anterior",
+        "nextPage": "Página siguiente",
+        "rowActions": "Acciones de fila",
+        "close": "Cerrar",
+        "clear": "Limpiar",
+        "yes": "Sí",
+        "no": "No",
+        "notApplicable": "—",
+        "previewUnavailable": "Vista previa no disponible en este entorno.",
+        "validation": { "passed": "Aprobado", "failed": "Falló", "pending": "Pendiente", "notApplicable": "N/A" },
+        "validationLog": { "title": "Registro de Validación", "empty": "No hay entradas de registro disponibles." },
+        "dateRange": { "any": "Cualquier Momento", "today": "Hoy", "last7Days": "Últimos 7 Días", "last30Days": "Últimos 30 Días" },
+        "detail": {
+          "emptyTitle": "Selecciona una fila",
+          "emptyDescription": "Elige una fila de la tabla para ver sus detalles.",
+          "codec": "Códec",
+          "codecFormat": "Códec / Formato",
+          "checksum": "Checksum (SHA-256)"
+        },
+        "actions": {
+          "uploadFile": "Subir Archivo",
+          "uploadVideo": "Subir Video",
+          "replaceFile": "Reemplazar Archivo",
+          "viewValidationLog": "Ver Registro de Validación",
+          "retryValidation": "Reintentar Validación"
+        },
+        "uploadModal": {
+          "title": "Subir Video",
+          "subtitle": "Sube o reemplaza un asset de video.",
+          "game": "Juego",
+          "gameRoulette": "Ruleta",
+          "gameQuickMoney": "Quick Money",
+          "targetRoulette": "Número / Variante",
+          "targetQuickMoney": "Sorteo",
+          "targetPlaceholder": "Selecciona un destino...",
+          "file": "Archivo de Video",
+          "chooseFile": "Elegir archivo...",
+          "fileHint": "Formatos aceptados: MP4, WebM.",
+          "cancel": "Cancelar",
+          "submit": "Subir Video",
+          "currentUser": "Usuario Admin"
+        }
+      },
+      "roulette": {
+        "summary": {
+          "expected": "Assets Esperados",
+          "available": "Disponibles",
+          "missing": "Faltantes",
+          "invalid": "Inválidos",
+          "storage": "Almacenamiento Usado"
+        },
+        "filters": {
+          "searchPlaceholder": "Buscar por número, variante o archivo...",
+          "number": "Número",
+          "allNumbers": "Todos los Números",
+          "variant": "Variante",
+          "allVariants": "Todas las Variantes",
+          "status": "Estado",
+          "allStatuses": "Todos los Estados",
+          "validation": "Validación",
+          "allValidations": "Todas las Validaciones",
+          "lastVerified": "Última Verificación"
+        },
+        "status": { "available": "Disponible", "missing": "Faltante", "invalid": "Inválido", "pendingScan": "Escaneo Pendiente" },
+        "table": {
+          "resultNumber": "Número",
+          "variant": "Variante",
+          "filename": "Archivo",
+          "status": "Estado",
+          "validation": "Validación",
+          "fileSize": "Tamaño",
+          "duration": "Duración",
+          "resolution": "Resolución",
+          "lastVerified": "Última Verificación",
+          "actions": "Acciones",
+          "empty": "Ningún asset coincide con tus filtros.",
+          "showingCount": "Mostrando {{from}}–{{to}} de {{total}} assets"
+        },
+        "detail": { "selectedAsset": "Asset Seleccionado", "noFile": "Sin archivo subido" },
+        "actions": { "rescan": "Re-escanear Biblioteca" }
+      },
+      "quickMoney": {
+        "summary": {
+          "expectedToday": "Esperados Hoy",
+          "received": "Recibidos",
+          "pendingValidation": "Validación Pendiente",
+          "lateOrMissing": "Atrasados / Faltantes",
+          "storage": "Almacenamiento Usado"
+        },
+        "filters": {
+          "searchPlaceholder": "Buscar por sorteo #, tipo o archivo...",
+          "drawType": "Tipo de Sorteo",
+          "allTypes": "Todos los Tipos",
+          "pick3": "Pick 3",
+          "pick4": "Pick 4",
+          "eventStatus": "Estado del Evento",
+          "allStatuses": "Todos los Estados",
+          "validationStatus": "Estado de Validación",
+          "allValidations": "Todas las Validaciones"
+        },
+        "delivery": { "received": "Recibido", "pending": "Pendiente", "late": "Atrasado", "missing": "Faltante" },
+        "validation": { "ready": "Listo", "pending": "Pendiente", "failed": "Falló", "notApplicable": "N/A" },
+        "contingency": { "ready": "Contingencia Lista", "notApplicable": "—" },
+        "table": {
+          "drawType": "Tipo de Sorteo",
+          "drawNumber": "Sorteo #",
+          "scheduledTime": "Hora Programada",
+          "videoFile": "Archivo de Video",
+          "deliveryStatus": "Estado de Entrega",
+          "validation": "Validación",
+          "receivedAt": "Recibido El",
+          "deadline": "Fecha Límite",
+          "contingency": "Contingencia",
+          "actions": "Acciones",
+          "empty": "Ningún sorteo coincide con tus filtros.",
+          "showingCount": "Mostrando {{from}}–{{to}} de {{total}} sorteos"
+        },
+        "detail": { "selectedDraw": "Sorteo Seleccionado", "noFile": "Sin archivo recibido" },
+        "actions": { "refresh": "Actualizar Estado" }
+      },
+      "uploadHistory": {
+        "filters": {
+          "searchPlaceholder": "Buscar por archivo o asset/sorteo...",
+          "game": "Juego",
+          "allGames": "Todos los Juegos",
+          "status": "Estado",
+          "allStatuses": "Todos los Estados",
+          "validation": "Validación",
+          "uploadedBy": "Subido Por",
+          "allUploaders": "Todos los Usuarios",
+          "date": "Fecha"
+        },
+        "status": { "success": "Exitoso", "failed": "Falló", "pending": "Pendiente" },
+        "table": {
+          "dateTime": "Fecha / Hora",
+          "game": "Juego",
+          "related": "Video / Sorteo / Asset",
+          "filename": "Archivo",
+          "uploadedBy": "Subido Por",
+          "status": "Estado de Subida",
+          "validation": "Resultado de Validación",
+          "fileSize": "Tamaño",
+          "actions": "Acciones",
+          "empty": "Ninguna subida coincide con tus filtros.",
+          "showingCount": "Mostrando {{from}}–{{to}} de {{total}} subidas",
+          "replacement": "Reemplazo"
+        },
+        "detail": { "title": "Detalles de Subida" },
+        "actions": { "openRelated": "Abrir Video Relacionado", "refresh": "Actualizar" }
       }
     },
     "settings": {

@@ -62,16 +62,15 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     icon: buildMediaUrl('Website_svg_icons/09_analytics_white.svg'),
     view: 'admin-reports',
   },
+  // Antes un padre deshabilitado con 3 sub-items inertes (Roulette Library/Lottery Video Status/
+  // Upload History, ninguno con `view`) -- ahora un solo ítem (mismo criterio que Reports/Users):
+  // entra directo a Video Management, que resuelve las 3 secciones como tabs internos en vez de
+  // 3 niveles de navegación (pedido explícito).
   {
     id: 'videos',
     labelKey: 'admin.nav.videos',
     icon: buildMediaUrl('Website_svg_icons/34_play_white.svg'),
-    disabled: true,
-    children: [
-      { id: 'videosRouletteLibrary', labelKey: 'admin.nav.videosRouletteLibrary', indicator: true },
-      { id: 'videosLotteryVideoStatus', labelKey: 'admin.nav.videosLotteryVideoStatus', indicator: true },
-      { id: 'videosUploadHistory', labelKey: 'admin.nav.videosUploadHistory' },
-    ],
+    view: 'admin-videos-roulette',
   },
   {
     id: 'settings',
