@@ -2,7 +2,9 @@
 // BACKEND process of `npm run dev:all`: supervises the Go API from the sibling quick-money-backend
 // checkout (location/ports/DB settings come from scripts/lib/devEnv.mjs, i.e. the backend's own .env).
 //
-//   1. waits for PostgreSQL (DB_HOST/DB_PORT) -- it's never started from here (Windows service or Docker)
+//   1. makes sure PostgreSQL (DB_HOST/DB_PORT) is up: if it isn't answering and DB_HOST is local, it
+//      starts it (Windows service, else the backend's docker compose -- see lib/postgres.mjs),
+//      then waits for it
 //   2. applies pending migrations (golang-migrate `up`, same pinned version as the backend Makefile)
 //   3. builds and runs cmd/api
 //   4. watches the backend: .go/go.mod/go.sum/.env changes rebuild + restart the API, and
@@ -16,6 +18,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
 import { BACKEND_DIR, BACKEND_ENV_FILE, REPO_ROOT, hasBackend, loadBackendConfig, waitForPort } from './lib/devEnv.mjs'
+import { startLocalPostgres } from './lib/postgres.mjs'
 
 const MIGRATE_MODULE = 'github.com/golang-migrate/migrate/v4/cmd/migrate@v4.18.1'
 const isWindows = process.platform === 'win32'
@@ -133,11 +136,14 @@ process.on('exit', () => apiChild && killTree(apiChild))
 log(`Backend: ${BACKEND_DIR}`)
 const { host, port } = config.db
 if (!(await waitForPort(host, port, { timeoutMs: 3_000 }))) {
-  warn(`PostgreSQL is not answering on ${host}:${port} -- waiting for it. Start it with` +
-    (isWindows
-      ? ' `net start postgresql-x64-16` (as administrator), or Docker.'
-      : ' `docker compose -f deploy/docker-compose.yml up postgres` in the backend.'))
-  await waitForPort(host, port)
+  const started = startLocalPostgres(host, { log, warn })
+  if (!started || !(await waitForPort(host, port, { timeoutMs: 30_000 }))) {
+    warn(`PostgreSQL is not answering on ${host}:${port} -- waiting for it. Start it with` +
+      (isWindows
+        ? ' `net start postgresql-x64-16` (as administrator), or Docker.'
+        : ' `docker compose -f deploy/docker-compose.yml up postgres` in the backend.'))
+    await waitForPort(host, port)
+  }
 }
 log('PostgreSQL is up.')
 await cycle({ migrate: true })

@@ -10,7 +10,7 @@ npm run dev:all
 
 | Process | URL | Notes |
 |---------|-----|-------|
-| BACKEND | http://localhost:3000 (the backend's `HTTP_PORT`) | Waits for PostgreSQL, applies migrations, rebuilds/restarts on backend changes |
+| BACKEND | http://localhost:3000 (the backend's `HTTP_PORT`) | Starts PostgreSQL if needed, applies migrations, rebuilds/restarts on backend changes |
 | APP     | http://localhost:5173 | Game frontend; `/api` is proxied to the backend as `/api/v1` |
 | ADMIN   | http://localhost:4100 | Admin panel; `/api` and `/media` go through the APP |
 
@@ -18,7 +18,10 @@ Requirements:
 
 - `quick-money-backend` cloned **next to** this repo
   (`../quick-money-backend`), with its `.env` created from `.env.example`. Another location: set `BACKEND_DIR`.
-- Go on `PATH`, and PostgreSQL running (it is not started for you).
+- Go on `PATH`, and PostgreSQL installed. If it isn't running and `DB_HOST` is local, dev:all starts
+  it: the Windows `postgresql*` service (a UAC prompt appears if you're not an administrator), or
+  else the backend's `deploy/docker-compose.yml` `postgres` service when Docker is available.
+  Set `DEV_START_DB=0` to turn this off.
 - `local-media/` copied into this repo (it is git-ignored).
 
 `npm install` runs automatically (root and `admin/`) when a lockfile changes, e.g. after a pull.
