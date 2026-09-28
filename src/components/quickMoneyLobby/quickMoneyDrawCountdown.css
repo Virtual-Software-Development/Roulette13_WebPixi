@@ -4,6 +4,9 @@
   flex: 1 1 auto;
   min-width: 0;
   box-sizing: border-box;
+  /* Container query (ver bloque del logo en desktop, más abajo): el tamaño del logo depende del
+     ancho de ESTE panel, no del viewport. */
+  container: qml-center / inline-size;
 }
 
 /* Contenido real por encima de .qml-frame-center (ver quickMoneyCenterFrame.css, deliverable que
@@ -98,7 +101,13 @@
 
 .qml-center-countdown {
   margin-top: 18px;
-  font-size: clamp(30px, 3.4vw, 44px);
+  /* Pedido explícito (referencia visual): dígitos de ~61px de alto en 1920 -- en Poppins 800 los
+     dígitos miden ~0.77em, así que 80px (4.17vw a 1920). line-height propio (0.75em, casi justo el
+     alto de los dígitos): sin él heredaba ~26px en px y los dígitos se salían de su caja y
+     pisaban "Choose your game"/"Next draw". Para que entre sin agrandar el hero se achicaron los
+     márgenes de alrededor (ver bloque de desktop, más abajo). */
+  font-size: clamp(40px, 4.17vw, 80px);
+  line-height: 0.75;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--qml-red);
@@ -155,6 +164,92 @@
   font-size: 12.5px;
   font-weight: 700;
   color: #fff;
+}
+
+/* Desktop (hero de 3 columnas con marco): logo a lo alto de toda la mitad de arriba del panel,
+   hasta la línea del medio del marco (.qml-frame-center-middle-line, top: 56%) -- pedido explícito.
+   El contenido deja de centrarse verticalmente: la mitad de arriba es una caja fija del 56% del
+   panel para el logo, y tagline/choose/countdown arrancan justo debajo de la línea (a 6px, donde ya
+   quedaban antes con el centrado, así no se mueven). En mobile (≤900px) no hay marco ni línea del
+   medio: sigue el layout centrado de arriba, sin cambios. */
+@media (min-width: 901px) {
+  .qml-center-content {
+    justify-content: flex-start;
+    padding: 0 26px 20px;
+  }
+  /* Caja de la mitad de arriba: 12px bajo el borde superior y 8px sobre la línea del medio. Logo
+     con object-fit: contain -- lo más alto que entre sin deformarse (proporción del SVG); los
+     anillos son un círculo del alto de la caja, centrado. Sin min-height: el alto del hero no lo
+     define este panel (ver min-height de .qml-hero en quickMoneyLobbyHero.css), así la caja
+     termina siempre justo en la línea del medio. */
+  .qml-center-logo-wrap {
+    /* Pedido explícito: logo "un poco más chico" que la caja completa -- escala logo + anillos
+       juntos desde el centro (transform, no cambia el layout ni la posición del resto). */
+    --qml-center-logo-scale: 0.85;
+    flex: none;
+    width: 100%;
+    /* 56% del alto del PANEL (no del content box, que es 12px más bajo por el padding de abajo)
+       -- así termina justo en la línea del medio del marco. */
+    height: calc((100% + 12px) * 0.56);
+    aspect-ratio: auto;
+    box-sizing: border-box;
+    padding: 12px 0 8px;
+  }
+  .qml-center-logo-ring--outer {
+    inset: 12px auto 8px 50%;
+    aspect-ratio: 1;
+    transform: translateX(-50%) scale(var(--qml-center-logo-scale));
+  }
+  /* Absoluto (no en el flujo): así su tamaño intrínseco no le suma alto al panel -- en el flujo,
+     el alto del SVG agrandaba todo el hero. max-width: el chip de Game # (arriba a la derecha, ver
+     más abajo) mide ~100px dentro del padding del contenido -- el logo deja ese ancho libre de cada
+     lado para no pisarlo (margin auto lo centra). */
+  .qml-center-logo {
+    position: absolute;
+    inset: 12px 0 8px;
+    width: 100%;
+    height: calc(100% - 20px);
+    max-width: calc(100% - 216px);
+    margin: 0 auto;
+    object-fit: contain;
+    transform: scale(var(--qml-center-logo-scale));
+  }
+  .qml-center-tagline {
+    margin-top: 6px;
+  }
+  /* Márgenes más chicos alrededor del countdown grande (ver .qml-center-countdown) -- así la mitad
+     de abajo del panel sigue entrando en el mismo alto. */
+  .qml-center-content {
+    padding-bottom: 12px;
+  }
+  .qml-center-countdown {
+    margin-top: 8px;
+  }
+  .qml-center-countdown-label {
+    margin-top: 2px;
+  }
+  .qml-center-bottom-line {
+    margin-top: 6px;
+  }
+}
+
+/* Panel central angosto: al lado del chip de Game # el logo quedaría diminuto (el tope de ancho de
+   arriba se come casi todo), así que la caja del logo arranca DEBAJO del chip y el logo usa todo
+   el ancho -- sale más grande que con el tope a partir de acá hacia abajo (~490px de panel). */
+@media (min-width: 901px) {
+  @container qml-center (max-width: 489px) {
+    .qml-center-logo-wrap {
+      padding-top: 58px;
+    }
+    .qml-center-logo-ring--outer {
+      top: 58px;
+    }
+    .qml-center-logo {
+      top: 58px;
+      height: calc(100% - 66px);
+      max-width: 100%;
+    }
+  }
 }
 
 @media (max-width: 900px) {

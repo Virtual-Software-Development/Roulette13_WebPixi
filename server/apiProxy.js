@@ -8,7 +8,8 @@ export function createApiProxyHandler({ target, prefix = '/api/' }) {
   return function apiProxyHandler(req, res, next) {
     if (!req.url.startsWith(prefix)) return next()
 
-    const forwardPath = req.url.slice(prefix.length - 1)
+    // Igual que el proxy de Vite: se antepone el path de target (ej. /api/v1 del backend Go).
+    const forwardPath = targetUrl.pathname.replace(/\/$/, '') + req.url.slice(prefix.length - 1)
     const options = {
       hostname: targetUrl.hostname,
       port: targetUrl.port || (targetUrl.protocol === 'https:' ? 443 : 80),
