@@ -1,4 +1,5 @@
 import type { BetsSummaryResponse } from '../types/betsSummary'
+import { env } from '../config/env'
 
 const MAX_RETRIES = 5
 const RETRY_DELAY_MS = 1000
@@ -8,7 +9,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function fetchBetsSummaryOnce(): Promise<BetsSummaryResponse> {
-  const res = await fetch('/api/bets')
+  const res = await fetch('/api/bets', { headers: { Authorization: `Bearer ${env.apiKey}` } })
   if (!res.ok) throw new Error(`bets request failed: ${res.status}`)
   const data: BetsSummaryResponse = await res.json()
   console.log('[bets]', data)

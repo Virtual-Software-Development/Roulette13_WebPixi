@@ -1,0 +1,52 @@
+.admin-rtp-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-rtp-settings-subtitle {
+  margin: 5px 0 0;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-rtp-settings-game {
+  max-width: 360px;
+}
+
+.admin-rtp-settings-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-rtp-settings-row--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 720px) {
+  .admin-rtp-settings-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Agrupa Correction Window + su toggle "Use all spins" en una sola celda del grid (ver
+   admin-rtp-settings-row) sin tocar el layout de dos columnas existente. */
+.admin-rtp-settings-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-rtp-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 560px) {
+  .admin-rtp-settings-actions {
+    flex-direction: column;
+  }
+}

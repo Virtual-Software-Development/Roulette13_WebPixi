@@ -97,9 +97,12 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
     function handleEnded() {
       const pendingResult = useDrawCycleStore.getState().pendingResult
       if (pendingResult) {
+        const now = Date.now()
         useResultsStore.getState().addResult({
-          id: pendingResult.drawNo,
-          timestamp: Date.now(),
+          // drawNo alone isn't a safe id/React key -- see the same comment in applyGameInfo.ts
+          // (the backend resets it every calendar day).
+          id: `${now}-${pendingResult.drawNo}`,
+          timestamp: now,
           drawNumber: pendingResult.drawNo,
           winningNumber: pendingResult.result,
         })

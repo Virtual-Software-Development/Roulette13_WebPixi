@@ -1,7 +1,7 @@
 import i18n from '../i18n'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useResultsStore } from '../store/useResultsStore'
-import { buildMediaUrl } from '../utils/media'
+import { buildMediaUrlOrEmpty } from '../utils/media'
 import { parseApiDateTime } from '../utils/time'
 import type { GameInfoResponse } from '../types/gameInfo'
 
@@ -10,8 +10,8 @@ const LANGUAGE_MAP: Record<string, string> = { es: 'es', en: 'en-US' }
 export function applyGameInfo(data: GameInfoResponse, options: { seedHistory: boolean }) {
   useGameConfigStore.getState().setGameConfig({
     gameName: data.gameName,
-    logoUrl: buildMediaUrl(data.logo),
-    backgroundUrl: buildMediaUrl(data.background),
+    logoUrl: buildMediaUrlOrEmpty(data.logo),
+    backgroundUrl: buildMediaUrlOrEmpty(data.background),
     drawNumber: data.nextDraw.drawNo,
     nextDrawStartTime: data.nextDraw.startTime,
   })
@@ -27,7 +27,12 @@ export function applyGameInfo(data: GameInfoResponse, options: { seedHistory: bo
   if (options.seedHistory) {
     resultsStore.hydrateHistory(
       data.history.map((draw) => ({
-        id: draw.drawNo,
+        // drawNo alone isn't a safe id/React key: the backend explicitly resets it every
+        // calendar day ("numero_evento repeats daily", internal/events/repository.go), so two
+        // entries from different days can share the same drawNo. `time` (this entry's own
+        // timestamp) disambiguates that; `drawNumber` below is unaffected and still shows the
+        // plain per-day number, which is the correct display value.
+        id: `${draw.time}-${draw.drawNo}`,
         timestamp: parseApiDateTime(draw.time).getTime(),
         drawNumber: draw.drawNo,
         winningNumber: draw.result,

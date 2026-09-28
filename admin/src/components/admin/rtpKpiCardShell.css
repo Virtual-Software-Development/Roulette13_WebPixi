@@ -1,0 +1,74 @@
+.admin-rtp-kpi-card {
+  --accent: var(--admin-red);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 158px;
+  box-sizing: border-box;
+  padding: 18px 20px;
+  border-radius: var(--admin-radius);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--admin-border));
+  background: var(--admin-panel-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: border-color 150ms ease;
+}
+
+.admin-rtp-kpi-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--admin-border));
+}
+
+.admin-rtp-kpi-card[data-accent='red'] {
+  --accent: var(--admin-red);
+}
+
+.admin-rtp-kpi-card[data-accent='blue'] {
+  --accent: var(--admin-blue);
+}
+
+.admin-rtp-kpi-card[data-accent='purple'] {
+  --accent: var(--admin-purple);
+}
+
+.admin-rtp-kpi-card[data-accent='green'] {
+  --accent: var(--admin-green);
+}
+
+.admin-rtp-kpi-card[data-accent='amber'] {
+  --accent: var(--admin-amber);
+}
+
+.admin-rtp-kpi-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Halo circular -- radial-gradient centrado, brillante en el medio y apagándose hacia afuera, NO
+   un blur exagerado (el ícono se mantiene nítido). ~52px de diámetro (pedido explícito). */
+.admin-rtp-kpi-card-icon-halo {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--accent) 32%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 12%, transparent) 55%,
+    transparent 80%
+  );
+}
+
+.admin-rtp-kpi-card-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.admin-rtp-kpi-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}

@@ -3,7 +3,7 @@ import { Header } from '../../layout/Header'
 import { AdminSidebar } from './AdminSidebar'
 import { fetchGameInfo } from '../../api/gameInfo'
 import { useGameConfigStore } from '../../store/useGameConfigStore'
-import { buildMediaUrl } from '../../utils/media'
+import { buildMediaUrlOrEmpty } from '../../utils/media'
 import { ADMIN_SIDEBAR_ITEMS } from '../../data/adminDashboardMockData'
 import './adminLayout.css'
 
@@ -32,9 +32,7 @@ export function AdminLayout({ activeId, onNavigate, children }: AdminLayoutProps
         if (cancelled) return
         useGameConfigStore.getState().setGameConfig({
           gameName: data.gameName,
-          logoUrl: buildMediaUrl(data.logo),
-          drawNumber: data.nextDraw.drawNo,
-          nextDrawStartTime: data.nextDraw.startTime,
+          logoUrl: buildMediaUrlOrEmpty(data.logo),
         })
       })
       .catch((err) => console.error('No se pudo obtener /gameInfo', err))

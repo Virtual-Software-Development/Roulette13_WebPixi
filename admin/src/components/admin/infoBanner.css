@@ -1,0 +1,44 @@
+.admin-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--admin-blue) 35%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-blue) 10%, rgba(9, 17, 26, 0.6));
+}
+
+.admin-info-banner[data-variant='warning'] {
+  border-color: color-mix(in srgb, var(--admin-amber) 38%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-amber) 10%, rgba(9, 17, 26, 0.6));
+}
+
+.admin-info-banner-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--admin-blue);
+}
+
+.admin-info-banner[data-variant='warning'] .admin-info-banner-icon {
+  color: var(--admin-amber);
+}
+
+.admin-info-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.admin-info-banner-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.admin-info-banner-description {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--admin-text-secondary);
+}

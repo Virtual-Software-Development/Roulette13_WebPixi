@@ -8,9 +8,8 @@ import { useViewport } from '../../hooks/useViewport'
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress'
 import { useAnimatedNumber } from '../../hooks/useAnimatedNumber'
 import { usePulseScale } from '../../hooks/usePulseScale'
-import { useLobbyBetsSimulation } from '../../hooks/useLobbyBetsSimulation'
 import { useDrawCycleStore } from '../../store/useDrawCycleStore'
-import { useLobbyLiveBetsSimStore } from '../../store/useLobbyLiveBetsSimStore'
+import { useBetsSummaryStore } from '../../store/useBetsSummaryStore'
 import { LAYOUT } from '../../layout/layout.constants'
 import { easeInOutCubic } from '../../utils/easing'
 import { drawRoundedPanel } from '../../utils/roundedPanel'
@@ -19,7 +18,8 @@ import { createVerticalGradient } from '../../utils/gradients'
 import { getRouletteColor } from '../../utils/rouletteColors'
 import { getColumnGroupPockets } from '../../utils/columnGroups'
 import { formatMoney } from '../../utils/moneyFormat'
-import type { LobbyGroupKey } from '../../types/lobbyLiveBets'
+import type { LobbyGroupBets, LobbyGroupKey, LobbyNumberBets } from '../../types/lobbyLiveBets'
+import type { LiveTableBetsData } from '../../types/liveTableBets'
 
 extend({ Container, Graphics, Text })
 
@@ -29,9 +29,13 @@ extend({ Container, Graphics, Text })
 // resultado): este vive en el lobby (useDrawCycleStore.lobbyInfoVisible, no `active`), no tiene
 // chip-stacks, y sus totales suben con una animación incremental (useAnimatedNumber). El feedback de
 // "acá entró una apuesta" es un pulso de escala (usePulseScale) en el número/monto, no un highlight
-// sostenido -- se probó con glow y quedaba más ruidoso que útil para este panel. Los datos
-// (useLobbyLiveBetsSimStore) son simulados en el cliente por ahora -- no existe todavía un feed real
-// de apuestas individuales en tiempo real (ver useLobbyBetsSimulation).
+// sostenido -- se probó con glow y quedaba más ruidoso que útil para este panel. Los datos vienen de
+// useBetsSummaryStore -- los mismos totales reales de /api/bets que ya alimentan
+// LiveTableBetsPanel/ResultStatsPanel/LeftStatsSidebar (ver App.tsx: fetchBetsSummary, BETS_LEAD_MS
+// antes del video) -- nada de datos simulados/random acá. Como esa store solo se actualiza una vez
+// por ronda (no hay todavía un feed en vivo de apuestas individuales), este panel arranca en 0 y
+// salta directo al total real de la ronda cuando ese fetch resuelve, en vez de ir subiendo de a
+// eventos individuales -- fiel a lo que el backend realmente expone hoy.
 //
 // Layout: mesa real de 3 filas x 12 columnas (columna 0/00 a la izquierda, apuesta de columna
 // "2:1" a la derecha, docenas y apuestas exteriores debajo) -- no una tira plana de 38 celdas.
@@ -162,14 +166,10 @@ interface NumberCellProps {
 // pulsa (pedido explícito) -- el número/pocket queda fijo, así que el wrapper que escala envuelve
 // nada más que el pixiText del monto, no el par completo (ver comentario de GroupCell más abajo).
 //
-// memo: useLobbyLiveBetsSimStore.registerNumberBet actualiza `numbers` de a una clave por vez
-// (spread + reemplazo de solo el pocket afectado, ver el store), así que `total` llega como
-// primitivo y NO cambia de valor para ninguna celda salvo la que recibió la apuesta -- sin memo,
-// cada apuesta simulada (cada 0.5-1.5s) re-renderiza las ~50 celdas del panel entero en vez de solo
-// la que cambió. Esto depende de que ese update siga siendo por-clave: si el día de mañana el feed
-// de MQTT reemplaza `numbers`/`groups` completos por un snapshot en cada mensaje (en vez de llamar
-// a registerNumberBet/registerGroupBet por evento), esta garantía se pierde y el memo deja de
-// frenar nada -- sin error visible, solo vuelve el re-render en cascada.
+// memo: `total` llega como primitivo (toLobbyBets construye un objeto nuevo por celda en cada
+// fetch, pero React.memo compara props primitivas, no identidad del objeto padre) -- una celda solo
+// re-renderiza cuando su propio total realmente cambió entre dos snapshots de /api/bets, no en cada
+// fetch entero.
 const NumberCell = memo(function NumberCell({ pocket, total, x, y, width, height }: NumberCellProps) {
   const color = getRouletteColor(pocket)
   const fill = color === 'red' ? RED_FILL : BLACK_FILL
@@ -210,8 +210,7 @@ const NumberCell = memo(function NumberCell({ pocket, total, x, y, width, height
 // total -- ese es exactamente el peor caso para el anti-aliasing de texto (queda repartido entre
 // dos filas de píxeles y se ve borroso), por eso ambos centros se redondean antes de usarlos.
 // memo: mismo criterio que NumberCell -- zeroTotal/doubleZeroTotal llegan como primitivos y solo
-// cambian cuando efectivamente cae una apuesta a 0/00, así que esta celda no necesita re-renderizar
-// en cada apuesta simulada a otro pocket/grupo.
+// cambian cuando el total real de 0/00 efectivamente cambia entre dos snapshots de /api/bets.
 const ZeroColumn = memo(function ZeroColumn({
   x,
   y,
@@ -304,9 +303,8 @@ function BlackDiamond() {
 // no el valor que sube, así que no deberían "saltar" cada vez que entra una apuesta (pedido
 // explícito: solo el monto pulsa).
 //
-// memo: mismo criterio que NumberCell -- `total` llega como primitivo desde
-// useLobbyLiveBetsSimStore.registerGroupBet (update por-clave), así que solo re-renderiza el grupo
-// que efectivamente recibió la apuesta.
+// memo: mismo criterio que NumberCell -- `total` llega como primitivo, así que solo re-renderiza el
+// grupo cuyo total efectivamente cambió entre dos snapshots de /api/bets.
 const GroupCell = memo(function GroupCell({ x, y, width, height, label, total, diamond }: GroupCellProps) {
   const animatedTotal = useAnimatedNumber(total, 600)
   const pulseScale = usePulseScale(total)
@@ -360,6 +358,48 @@ function LiveIndicator({ x, y }: { x: number; y: number }) {
 const OUTSIDE_KEYS: LobbyGroupKey[] = ['low', 'even', 'red', 'black', 'odd', 'high']
 const DOZEN_KEYS: LobbyGroupKey[] = ['firstDozen', 'secondDozen', 'thirdDozen']
 
+const ALL_NUMBER_KEYS: string[] = ['0', '00', ...Array.from({ length: 36 }, (_, i) => String(i + 1))]
+const ALL_GROUP_KEYS: LobbyGroupKey[] = [
+  'firstDozen',
+  'secondDozen',
+  'thirdDozen',
+  'firstColumn',
+  'secondColumn',
+  'thirdColumn',
+  'low',
+  'high',
+  'even',
+  'odd',
+  'red',
+  'black',
+]
+
+// Traduce el snapshot real de /api/bets (useBetsSummaryStore) a la forma que este panel necesita --
+// todas las claves presentes y en 0 por defecto (no solo las que vinieron con apuestas), para que
+// cada celda siga pudiendo leer `numbers[key]`/`groups[key]` sin checks extra en el render.
+function toLobbyBets(data: LiveTableBetsData | null): { numbers: LobbyNumberBets; groups: LobbyGroupBets } {
+  const numbers: LobbyNumberBets = {}
+  for (const key of ALL_NUMBER_KEYS) numbers[key] = { total: 0 }
+  for (const bet of data?.numbers ?? []) numbers[String(bet.pocket)] = { total: bet.total }
+
+  const groups: LobbyGroupBets = {} as LobbyGroupBets
+  for (const key of ALL_GROUP_KEYS) groups[key] = { total: 0 }
+  if (data?.dozens?.firstDozen != null) groups.firstDozen = { total: data.dozens.firstDozen }
+  if (data?.dozens?.secondDozen != null) groups.secondDozen = { total: data.dozens.secondDozen }
+  if (data?.dozens?.thirdDozen != null) groups.thirdDozen = { total: data.dozens.thirdDozen }
+  if (data?.columns?.firstColumn != null) groups.firstColumn = { total: data.columns.firstColumn }
+  if (data?.columns?.secondColumn != null) groups.secondColumn = { total: data.columns.secondColumn }
+  if (data?.columns?.thirdColumn != null) groups.thirdColumn = { total: data.columns.thirdColumn }
+  if (data?.outside?.low != null) groups.low = { total: data.outside.low }
+  if (data?.outside?.high != null) groups.high = { total: data.outside.high }
+  if (data?.outside?.even != null) groups.even = { total: data.outside.even }
+  if (data?.outside?.odd != null) groups.odd = { total: data.outside.odd }
+  if (data?.outside?.red != null) groups.red = { total: data.outside.red }
+  if (data?.outside?.black != null) groups.black = { total: data.outside.black }
+
+  return { numbers, groups }
+}
+
 interface LaidOutGroupCell {
   key: LobbyGroupKey
   x: number
@@ -372,10 +412,9 @@ export function LobbyLiveBetsPanel() {
   const { t } = useTranslation()
   const { visibleLeft, visibleRight, visibleBottom } = useViewport()
   const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
-  useLobbyBetsSimulation(lobbyInfoVisible)
 
-  const numbers = useLobbyLiveBetsSimStore((state) => state.numbers)
-  const groups = useLobbyLiveBetsSimStore((state) => state.groups)
+  const liveTableBetsData = useBetsSummaryStore((state) => state.liveTableBetsData)
+  const { numbers, groups } = useMemo(() => toLobbyBets(liveTableBetsData), [liveTableBetsData])
 
   const progress = useAnimatedProgress(lobbyInfoVisible ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
   const eased = easeInOutCubic(progress)
