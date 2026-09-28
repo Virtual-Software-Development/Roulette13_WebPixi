@@ -3,6 +3,10 @@ import { useResultsStore } from '../../store/useResultsStore'
 import { getRouletteColor, toWheelPocket } from '../../utils/rouletteColors'
 import './recentResultsStrip.css'
 
+// Tope propio de este strip -- independiente de maxResults (de /gameInfo), que sigue acotando
+// `history` para GameList/LastGame en el lobby Pixi.
+const MAX_RECENT_RESULTS = 13
+
 // Misma fuente que ya alimenta GameList/LastGame (useResultsStore) -- solo un render nuevo,
 // porque los existentes son Pixi y esta vista es DOM. `currentWinner` se antepone a `history` para
 // que el último resultado confirmado aparezca de inmediato, mismo criterio que esos componentes.
@@ -10,7 +14,7 @@ export function RecentResultsStrip() {
   const { t } = useTranslation()
   const history = useResultsStore((state) => state.history)
   const currentWinner = useResultsStore((state) => state.currentWinner)
-  const results = currentWinner ? [currentWinner, ...history] : history
+  const results = (currentWinner ? [currentWinner, ...history] : history).slice(0, MAX_RECENT_RESULTS)
 
   return (
     <div className="recent-results-strip">
