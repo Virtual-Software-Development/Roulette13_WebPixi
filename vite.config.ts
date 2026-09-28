@@ -27,7 +27,9 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': {
-          target: env.API_URL ?? 'http://localhost:3000',
+          // `||`, not `??`: .env.example ships an empty API_URL=, which must fall back too.
+          // Under `npm run dev:all`, scripts/run-app.mjs sets API_URL from the backend's HTTP_PORT.
+          target: env.API_URL || 'http://localhost:3000',
           changeOrigin: true,
           // Backend routes live under /api/v1 (quick_money-backend's router.go).
           rewrite: (path) => path.replace(/^\/api/, '/api/v1'),

@@ -12,11 +12,13 @@
 
 import net from 'node:net'
 import { spawnSync } from 'node:child_process'
+import { ADMIN_PORT, APP_PORT, apiPort } from './lib/devEnv.mjs'
 
 const PORTS = [
-  { port: 5173, label: 'root app (vite)' },
-  { port: 4100, label: 'admin app (vite)' },
-  { port: 3000, label: 'backend (Go)' },
+  { port: APP_PORT, label: 'root app (vite)' },
+  { port: ADMIN_PORT, label: 'admin app (vite)' },
+  // The backend's own HTTP_PORT (from its .env), not a hardcoded guess.
+  { port: Number(apiPort()), label: 'backend (Go)' },
 ]
 
 const shouldFree = process.argv.includes('--free')

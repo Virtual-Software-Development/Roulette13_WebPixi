@@ -1,48 +1,184 @@
 #!/usr/bin/env node
-// Launches the Go backend (quick-money-backend) as part of `npm run dev:all`, so a fresh clone
-// doesn't need a fourth manual terminal + `go run ./cmd/api` just to get real API responses instead
-// of 502s. It's a sibling checkout, not a subfolder of this repo (two separate git projects), so
-// its location is resolved relative to this repo's parent directory by default.
+// BACKEND process of `npm run dev:all`: supervises the Go API from the sibling quick-money-backend
+// checkout (location/ports/DB settings come from scripts/lib/devEnv.mjs, i.e. the backend's own .env).
 //
-// Intentionally non-fatal when the backend can't be found: someone doing frontend-only work may
-// not have that repo cloned at all, and dev:all should still boot the two frontends in that case
-// rather than refuse to start. See package.json's dev:all, which runs this alongside APP/ADMIN
-// under `--kill-others-on-fail` (not `-k`) for exactly that reason -- this script exiting 0 (found
-// nothing to run) must never take the frontends down with it.
+//   1. waits for PostgreSQL (DB_HOST/DB_PORT) -- it's never started from here (Windows service or Docker)
+//   2. applies pending migrations (golang-migrate `up`, same pinned version as the backend Makefile)
+//   3. builds and runs cmd/api
+//   4. watches the backend: .go/go.mod/go.sum/.env changes rebuild + restart the API, and
+//      db/migrations/*.sql changes also re-run migrations first
+//
+// Never fatal: dev:all runs this under `--kill-others-on-fail`, so exiting non-zero would take
+// both frontends down with it. A missing checkout or missing `go` exits 0 with a warning;
+// a DB/migration/build problem is logged and retried on the next backend change instead.
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
+import { BACKEND_DIR, BACKEND_ENV_FILE, REPO_ROOT, hasBackend, loadBackendConfig, waitForPort } from './lib/devEnv.mjs'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const REPO_ROOT = path.resolve(__dirname, '..')
+const MIGRATE_MODULE = 'github.com/golang-migrate/migrate/v4/cmd/migrate@v4.18.1'
+const isWindows = process.platform === 'win32'
 
-const backendDir = process.env.BACKEND_DIR ? path.resolve(process.env.BACKEND_DIR) : path.resolve(REPO_ROOT, '..', 'quick-money-backend')
+const log = (message) => console.log(`[run-backend] ${message}`)
+const warn = (message) => console.warn(`[run-backend] ${message}`)
 
-if (!fs.existsSync(path.join(backendDir, 'go.mod'))) {
-  console.warn(`\n[run-backend] No Go backend found at ${backendDir} (no go.mod there).`)
-  console.warn('[run-backend] Skipping it -- the frontends will still start, but /api requests will 502 until a backend is running.')
-  console.warn('[run-backend] Point BACKEND_DIR at your checkout to fix this, e.g.:')
-  console.warn('[run-backend]   BACKEND_DIR=C:\\path\\to\\quick-money-backend npm run dev:all\n')
+if (!hasBackend()) {
+  warn(`No Go backend found at ${BACKEND_DIR} (no go.mod there).`)
+  warn('Skipping it -- the frontends will still start, but /api requests will 502 until a backend is running.')
+  warn('Clone quick-money-backend next to this repo, or point BACKEND_DIR at your checkout.')
   process.exit(0)
 }
+if (spawnSync('go', ['version']).error) {
+  warn('`go` is not on PATH -- skipping the backend. Install Go (https://go.dev/dl/) and restart dev:all.')
+  process.exit(0)
+}
+if (!fs.existsSync(BACKEND_ENV_FILE)) {
+  warn(`Missing ${BACKEND_ENV_FILE} -- copy the backend's .env.example to .env and fill it in. Using defaults for now.`)
+}
 
-console.log(`[run-backend] Starting Go backend from ${backendDir} (go run ./cmd/api)...`)
+let config = loadBackendConfig()
 
-// No shell:true -- unlike npm/npx (.cmd shims on Windows), `go` is a real executable Node can
-// spawn directly via PATH, and shell:true + an args array trips Node's DEP0190 warning (args
-// aren't escaped when concatenated into a shell command).
-const child = spawn('go', ['run', './cmd/api'], {
-  cwd: backendDir,
-  stdio: 'inherit',
+// --- API process -------------------------------------------------------------
+
+// Built to a binary instead of `go run` so stopping dev:all kills the real API, not just the
+// `go` wrapper (which leaves an orphan holding the port on Windows). Built to a separate file and
+// then copied because Windows won't let you overwrite a running .exe.
+const cacheDir = path.join(REPO_ROOT, 'node_modules', '.cache', 'run-backend')
+const exe = isWindows ? '.exe' : ''
+const apiBinary = path.join(cacheDir, `api${exe}`)
+const apiBuildOutput = path.join(cacheDir, `api-build${exe}`)
+let apiChild = null
+let shuttingDown = false
+
+function killTree(child) {
+  if (child.exitCode !== null || child.signalCode !== null || child.pid === undefined) return
+  if (isWindows) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' })
+  else child.kill('SIGTERM')
+}
+
+function goSync(args) {
+  const result = spawnSync('go', args, { cwd: BACKEND_DIR, encoding: 'utf8' })
+  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim()
+  if (output) console.log(output)
+  return result.status === 0
+}
+
+function runMigrations() {
+  log('Applying migrations...')
+  if (goSync(['run', '-tags', 'postgres', MIGRATE_MODULE, '-path', 'db/migrations', '-database', config.databaseUrl, 'up'])) {
+    return true
+  }
+  warn('Migrations failed (check DB_* in the backend .env). Fix it and save any backend file to retry.')
+  return false
+}
+
+function buildApi() {
+  log('Building cmd/api...')
+  fs.mkdirSync(cacheDir, { recursive: true })
+  if (goSync(['build', '-o', apiBuildOutput, './cmd/api'])) return true
+  warn('Build failed -- the previous API (if any) keeps running; retrying on the next backend change.')
+  return false
+}
+
+function stopApi() {
+  if (!apiChild) return
+  const child = apiChild
+  apiChild = null
+  killTree(child)
+}
+
+async function startApi() {
+  fs.copyFileSync(apiBuildOutput, apiBinary)
+  const child = spawn(apiBinary, [], { cwd: BACKEND_DIR, stdio: 'inherit' })
+  apiChild = child
+  child.on('exit', (code, signal) => {
+    if (shuttingDown || apiChild !== child) return
+    apiChild = null
+    warn(`API exited (${signal ?? `code ${code}`}); it restarts on the next backend change.`)
+  })
+  if (await waitForPort('localhost', config.apiPort, { timeoutMs: 30_000, isAlive: () => apiChild === child })) {
+    log(`API ready on http://localhost:${config.apiPort}`)
+  } else if (apiChild === child) {
+    warn(`API did not open port ${config.apiPort} within 30s.`)
+  }
+}
+
+// Full cycle used both at startup and on every reload. Builds before stopping the old API, so
+// a compile error never leaves you without a running backend.
+let migrationsOk = false
+async function cycle({ migrate }) {
+  const previousPort = config.apiPort
+  config = loadBackendConfig()
+  if (config.apiPort !== previousPort) {
+    warn(`HTTP_PORT changed (${previousPort} -> ${config.apiPort}); restart dev:all so the frontends proxy to the new port.`)
+  }
+  if (!buildApi()) return
+  stopApi()
+  if (migrate || !migrationsOk) migrationsOk = runMigrations()
+  if (migrationsOk) await startApi()
+}
+
+function shutdown() {
+  shuttingDown = true
+  stopApi()
+  process.exit(0)
+}
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)
+process.on('exit', () => apiChild && killTree(apiChild))
+
+// --- Startup -------------------------------------------------------------------
+
+log(`Backend: ${BACKEND_DIR}`)
+const { host, port } = config.db
+if (!(await waitForPort(host, port, { timeoutMs: 3_000 }))) {
+  warn(`PostgreSQL is not answering on ${host}:${port} -- waiting for it. Start it with` +
+    (isWindows
+      ? ' `net start postgresql-x64-16` (as administrator), or Docker.'
+      : ' `docker compose -f deploy/docker-compose.yml up postgres` in the backend.'))
+  await waitForPort(host, port)
+}
+log('PostgreSQL is up.')
+await cycle({ migrate: true })
+
+// --- Reload on backend changes ---------------------------------------------------
+
+const IGNORED_DIRS = new Set(['.git', 'bin', 'vendor', 'node_modules', '.github'])
+let pending = null // { migrate, files } accumulated during the debounce window or a running cycle
+let debounceTimer = null
+let reloading = false
+
+async function reload() {
+  if (reloading || !pending || shuttingDown) return
+  const { migrate } = pending
+  pending = null
+  reloading = true
+  try {
+    await cycle({ migrate })
+  } finally {
+    reloading = false
+    if (pending) reload()
+  }
+}
+
+fs.watch(BACKEND_DIR, { recursive: true }, (_event, filename) => {
+  if (!filename) return
+  const rel = filename.split(path.sep).join('/')
+  if (IGNORED_DIRS.has(rel.split('/')[0])) return
+
+  const isMigration = rel.startsWith('db/migrations/') && rel.endsWith('.sql')
+  const isGoSource = rel.endsWith('.go') || rel === 'go.mod' || rel === 'go.sum' || rel === '.env'
+  if (!isMigration && !isGoSource) return
+
+  // One save fires several events on Windows; log each file once per burst.
+  if (!pending?.files.has(rel)) log(`Changed: ${rel}`)
+  pending = {
+    migrate: (pending?.migrate ?? false) || isMigration,
+    files: (pending?.files ?? new Set()).add(rel),
+  }
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(reload, 400)
 })
 
-child.on('error', (err) => {
-  console.error(`[run-backend] Failed to launch: ${err.message}`)
-  process.exit(1)
-})
-
-child.on('exit', (code) => {
-  process.exit(code ?? 1)
-})
+log('Watching the backend for changes.')
