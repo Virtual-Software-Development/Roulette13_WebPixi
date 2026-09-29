@@ -1,0 +1,31 @@
+.admin-rtp-metric-values {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-rtp-metric-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-rtp-metric-col-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-rtp-metric-col-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-rtp-metric-divider {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(120, 145, 170, 0.16);
+}

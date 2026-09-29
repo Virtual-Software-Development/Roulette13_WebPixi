@@ -24,6 +24,47 @@ const LOGO_URL: Record<QuickMoneyGameType, string> = {
   pick4: buildMediaUrl('Website_svg_icons/51_pick-4-logo-option-2.svg'),
 }
 
+// Resumen del sorteo (Draw Date / Draw Time / Game #) -- en los dos paneles (pedido explícito, ver
+// comentario del componente). Mismos íconos que ya usa el admin para fecha/hora
+// (GameEventDetailPanel.tsx); para Game # no hay ícono de "dial" en el set, 05_target es el más
+// parecido a la referencia visual.
+const CALENDAR_ICON_URL = buildMediaUrl('Website_svg_icons/33_calendar_white.svg')
+const CLOCK_ICON_URL = buildMediaUrl('Website_svg_icons/30_clock_white.svg')
+const GAME_NUMBER_ICON_URL = buildMediaUrl('Website_svg_icons/05_target_white.svg')
+
+// Hora del sorteo en horario del Este (la etiqueta dice "(EST)", ver i18n drawSummary.drawTime) --
+// independiente de la zona horaria del navegador.
+const DRAW_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'America/New_York',
+})
+const DRAW_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZone: 'America/New_York',
+})
+
+// Centros de las bolas de cada PNG de máquina en píxeles del PNG (1254x1254, medidos sobre el
+// asset), en el orden en que se leen los dígitos de Previous Result -- igual que las referencias
+// visuales: Pick 3 7-3-1 -> 7 arriba, 3 abajo-izq., 1 abajo-der.; Pick 4 2-4-9-7 -> 2 arriba,
+// 4 izq., 9 der., 7 abajo. Si se reemplaza un PNG, volver a medir.
+const RAFFLE_IMAGE_SIZE = 1254
+const BALL_CENTERS: Record<QuickMoneyGameType, ReadonlyArray<readonly [number, number]>> = {
+  pick3: [
+    [624, 605],
+    [505, 787],
+    [747, 787],
+  ],
+  pick4: [
+    [625, 561],
+    [486, 708],
+    [764, 708],
+    [625, 837],
+  ],
+}
+
 interface QuickMoneyGameCardProps {
   gameType: QuickMoneyGameType
   latestDraw: QuickMoneyLobbyDraw
@@ -40,8 +81,12 @@ interface QuickMoneyGameCardProps {
 // Draw Date/Draw Time/Game # SE SACARON de acá (pedido explícito): Pick 3 y Pick 4 comparten el
 // mismo draw (mismo store, ver useQuickMoneyRoundStore), así que mostrar esos 3 datos en los DOS
 // paneles era pura repetición -- Game # ahora vive una sola vez en QuickMoneyDrawCountdown.tsx
-// (panel central). Draw Date/Draw Time no se movieron a ningún lado (pedido explícito: "lo único
-// que sería bueno poner es el Game #").
+// (panel central). Después se volvió a pedir el resumen (.qml-game-panel-summary) debajo de
+// Previous Result, primero en Pick 4 y luego también en Pick 3 (pedidos explícitos).
+//
+// Los dos paneles tienen el mismo layout (Pick 4 ya no es el espejo de Pick 3, pedido explícito):
+// logo + Previous Result + resumen a la izquierda y la máquina, con los dígitos sobre las bolas, a
+// la derecha -- ver la grilla en el CSS. Solo el marco (.qml-frame) sigue espejado por data-side.
 //
 // Sigue INERTE (pedido explícito anterior, no cambiado acá): sin onClick, sin role="button", sin
 // cursor:pointer.
@@ -87,9 +132,57 @@ export function QuickMoneyGameCard({ gameType, latestDraw }: QuickMoneyGameCardP
               ))}
             </div>
           </div>
-        </div>
 
-        <img src={RAFFLE_IMAGE_URL[gameType]} className="qml-game-panel-machine" alt="" />
+          <dl className="qml-game-panel-summary">
+            <div className="qml-game-panel-summary-row">
+              <img src={CALENDAR_ICON_URL} className="qml-game-panel-summary-icon" alt="" />
+              <dt>{t('quickMoneyLobby.drawSummary.drawDate')}</dt>
+              <dd>{DRAW_DATE_FORMATTER.format(new Date(latestDraw.drawnAt))}</dd>
+            </div>
+            <div className="qml-game-panel-summary-row">
+              <img src={CLOCK_ICON_URL} className="qml-game-panel-summary-icon" alt="" />
+              <dt>{t('quickMoneyLobby.drawSummary.drawTime')}</dt>
+              <dd>{DRAW_TIME_FORMATTER.format(new Date(latestDraw.drawnAt))}</dd>
+            </div>
+            <div className="qml-game-panel-summary-row">
+              <img src={GAME_NUMBER_ICON_URL} className="qml-game-panel-summary-icon" alt="" />
+              <dt>{t('quickMoneyLobby.drawSummary.gameNumber')}</dt>
+              <dd>{latestDraw.gameNumber}</dd>
+            </div>
+          </dl>
+
+          {/* Celda propia de la grilla (ver CSS): la máquina ocupa el espacio que el texto deja
+              libre, en cualquier ancho, en vez de posicionarse con offsets fijos. SVG (no <img>)
+              para que los dígitos sobre las bolas escalen junto con la imagen -- viewBox = píxeles
+              del PNG, preserveAspectRatio = contain + apoyada abajo. Los dígitos son el mismo dato
+              dinámico de Previous Result, aria-hidden porque ya se leen ahí. */}
+          <div className="qml-game-panel-machine-cell">
+            <svg
+              className="qml-game-panel-machine"
+              viewBox={`0 0 ${RAFFLE_IMAGE_SIZE} ${RAFFLE_IMAGE_SIZE}`}
+              preserveAspectRatio="xMidYMax meet"
+              aria-hidden="true"
+            >
+              <image href={RAFFLE_IMAGE_URL[gameType]} width={RAFFLE_IMAGE_SIZE} height={RAFFLE_IMAGE_SIZE} />
+              {digits.map((digit, index) => {
+                const center = BALL_CENTERS[gameType][index]
+                if (!center) return null
+                return (
+                  <text
+                    key={index}
+                    x={center[0]}
+                    y={center[1]}
+                    className="qml-game-panel-machine-digit"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                  >
+                    {digit}
+                  </text>
+                )
+              })}
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   )

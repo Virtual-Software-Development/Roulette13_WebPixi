@@ -29,50 +29,69 @@
   width: 100%;
   box-sizing: border-box;
   display: flex;
-  align-items: flex-start;
+  /* stretch: la grilla de contenido ocupa todo el alto del panel (ver .qml-game-panel-content). */
+  align-items: stretch;
+  /* Ancho del logo PICK 3/4 -- también lo usa Previous Result (mismo ancho, pedido explícito). */
+  --qml-logo-w: clamp(150px, 12vw, 190px);
 }
 
+/* El padding sigue espejado por lado porque depende del marco: 62px del lado del chevron (hacia el
+   panel central), 34px del lado del borde exterior. padding-top MUCHO más chico que con el PNG
+   anterior: la forma nueva (quickMoneyPanelFrame.css) ocupa toda la altura del wrapper desde el
+   borde superior, así que el contenido arranca cerca de ese borde real, no a mitad de panel. */
 .qml-game-panel[data-side='left'] {
-  /* padding-top MUCHO más chico que con el PNG anterior: la forma nueva (quickMoneyPanelFrame.css)
-     ocupa toda la altura del wrapper desde el borde superior (a diferencia del PNG, que tenía un
-     margen vacío grande arriba) -- el contenido arranca cerca de ese borde real, no a mitad de
-     panel. */
   padding: 32px 62px 16px 34px;
 }
 
 .qml-game-panel[data-side='right'] {
   padding: 32px 34px 16px 62px;
-  justify-content: flex-end;
 }
 
+/* Mismo layout en los dos paneles (pedido explícito: Pick 4 ya no es el espejo de Pick 3): grilla
+   con la columna de texto (logo, Previous Result, resumen) a la izquierda y la máquina a la
+   derecha. La máquina es una celda (.qml-game-panel-machine-cell) que ocupa exactamente el
+   espacio que el texto deja libre, midan lo que midan logo/resultado/resumen en cada ancho, y el
+   SVG adentro (preserveAspectRatio meet) queda cuadrado, lo más grande posible y apoyado abajo --
+   así nunca tapa el texto ni se deforma (pedido explícito: responsive). La grilla se estira a todo
+   el alto del panel, pero su alto propio sigue siendo el del texto: la celda no aporta alto (SVG
+   absoluto), así que el hero no crece. */
 .qml-game-panel-content {
   position: relative;
   z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   width: 100%;
-}
-.qml-game-panel[data-side='left'] .qml-game-panel-content {
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    'heading machine'
+    'result machine'
+    'summary machine';
+  row-gap: 12px;
+  /* Logo, Previous Result y resumen centrados entre sí sobre el eje del logo (pedido explícito):
+     la columna de texto mide lo que el más ancho de los tres (el logo, o el resumen si fuera más
+     ancho) y cada uno se centra en ella. */
+  justify-items: center;
+  align-items: start;
   text-align: left;
 }
-.qml-game-panel[data-side='right'] .qml-game-panel-content {
-  align-items: flex-end;
-  text-align: right;
-}
 
-/* Pedido explícito: heading (eyebrow+título) y Previous Result más hacia el centro -- en Pick 3
-   hacia la derecha, en Pick 4 hacia la izquierda (espejado, mismo criterio que el resto del
-   panel). Solo estos dos, no toda .qml-game-panel-content -- para tocar la posición de uno solo,
-   ajustar su margin acá. */
-.qml-game-panel[data-side='left'] .qml-game-panel-heading,
-.qml-game-panel[data-side='left'] .qml-game-panel-result {
+/* Pedido explícito: texto 24px hacia adentro del panel (se saca en el panel angosto, ver media
+   query de más abajo). position/z-index: por encima de los rayos de la máquina. */
+.qml-game-panel-heading,
+.qml-game-panel-result,
+.qml-game-panel-summary {
+  position: relative;
+  z-index: 1;
   margin-left: 24px;
 }
-.qml-game-panel[data-side='right'] .qml-game-panel-heading,
-.qml-game-panel[data-side='right'] .qml-game-panel-result {
-  margin-right: 24px;
+.qml-game-panel-heading {
+  grid-area: heading;
+}
+.qml-game-panel-result {
+  grid-area: result;
+}
+.qml-game-panel-summary {
+  grid-area: summary;
 }
 
 .qml-game-panel-eyebrow {
@@ -101,7 +120,7 @@
 /* Logo real "PICK 3"/"PICK 4" (ver QuickMoneyGameCard.tsx) -- proporción propia del SVG
    (1107.56x575.31), ancho fluido con tope en px para que no crezca demasiado en pantallas anchas. */
 .qml-game-panel-logo {
-  width: clamp(150px, 12vw, 190px);
+  width: var(--qml-logo-w);
   height: auto;
 }
 
@@ -110,16 +129,14 @@
 .qml-game-panel-result {
   display: inline-flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
+  /* Mismo ancho que el logo (pedido explícito: más ancho, centrado con el logo). */
+  width: var(--qml-logo-w);
+  box-sizing: border-box;
   background: #eef2f6;
   padding: 7px 20px 7px 14px;
-}
-.qml-game-panel[data-side='left'] .qml-game-panel-result {
   clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
-}
-.qml-game-panel[data-side='right'] .qml-game-panel-result {
-  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
-  padding: 7px 14px 7px 20px;
 }
 
 .qml-game-panel-result-label {
@@ -147,38 +164,112 @@
   color: var(--qml-accent-dark);
 }
 
-/* Máquina real (pick-3-raffle.png/pick-4-raffle.png) -- sin deformar. z-index por debajo del
-   contenido para que Previous Result nunca quede tapado (ver comentario de tokens.css sobre
-   capas). Sin efecto hover (pedido explícito, ya no hace nada al pasar el mouse).
-
-   CÓMO MOVERLA A MANO (pedido explícito):
-   - Horizontal: `left`/`right` en las dos reglas de abajo -- cada máquina usa SOLO una de las dos
-     (la que no se usa queda en su valor `auto` por default, no hace falta tocarla). Para Pick 3
-     hoy es `right: 6%` (6% de distancia desde el borde derecho del panel); para Pick 4 es
-     `left: 6%`. Subir el % la aleja de ese borde (la mueve hacia el otro lado/centro), bajarlo la
-     acerca a ese borde (la mueve hacia afuera).
-   - Vertical: `bottom` acá abajo (18%) -- subir el % la sube, bajarlo la baja.
-   - Tamaño: `width`/`max-width` (ancho) y `max-height` (alto tope) acá abajo. */
-.qml-game-panel-machine {
-  position: absolute;
-  bottom: 8%;
-  z-index: 1;
-  width: 51%;
-  max-width: 263px;
-  height: auto;
-  max-height: 53%;
+/* Resumen del sorteo (Draw Date / Draw Time / Game #) debajo de Previous Result, en los dos paneles
+   (ver QuickMoneyGameCard.tsx). Superficie oscura translúcida para leerse sobre el verde/dorado del
+   marco; ícono a la izquierda y etiqueta arriba del valor en cada fila. */
+.qml-game-panel-summary {
+  /* Solo arriba/abajo (margen default del <dl>): el margin-left de 24px lo comparte con logo y
+     Previous Result, así los tres quedan centrados sobre el mismo eje. */
+  margin-block: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 12px;
+  background: rgba(6, 10, 18, 0.62);
+  border: 1px solid color-mix(in srgb, var(--qml-accent) 35%, transparent);
+  border-radius: 6px;
+}
+.qml-game-panel-summary-row {
+  display: grid;
+  grid-template-columns: 18px auto;
+  column-gap: 9px;
+  align-items: center;
+}
+.qml-game-panel-summary-icon {
+  grid-row: span 2;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
+}
+.qml-game-panel-summary dt {
+  font-size: 9px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+.qml-game-panel-summary dd {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+/* Máquina real (pick-3-raffle.png/pick-4-raffle.png, dentro de un SVG con los dígitos, ver
+   QuickMoneyGameCard.tsx) -- sin deformar, sin efecto hover (pedido explícito). Márgenes negativos
+   de la celda: arriba/derecha para acercarla a los bordes del marco (se come parte del padding),
+   izquierda para que los rayos transparentes del PNG (~21% de cada lado) pasen por detrás del
+   texto sin que el cuerpo de la máquina lo toque. Para moverla/agrandarla a mano, tocar estos
+   márgenes. */
+.qml-game-panel-machine-cell {
+  grid-area: machine;
+  position: relative;
+  z-index: 0;
+  align-self: stretch;
+  justify-self: stretch;
+  margin: -8px -12px 0 -40px;
   pointer-events: none;
 }
-/* Pick 3 (panel izquierdo) -- hoy apunta hacia la DERECHA de su panel (hacia el centro/chevron).
-   Cambiar el valor o pasar a `left` para moverla hacia el otro lado. */
-.qml-game-panel[data-side='left'] .qml-game-panel-machine {
-  right: 10%;
+.qml-game-panel-machine {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
-/* Pick 4 (panel derecho) -- hoy apunta hacia la IZQUIERDA de su panel (hacia el centro/chevron).
-   Cambiar el valor o pasar a `right` para moverla hacia el otro lado. */
-.qml-game-panel[data-side='right'] .qml-game-panel-machine {
-  left: 10%;
+
+/* Panel angosto (el hero de 3 columnas sigue hasta 901px, ver media query de abajo): misma grilla
+   que en ancho (logo/resultado/resumen centrados entre sí, pedido explícito), pero la máquina se
+   come más del padding del marco y los rayos pasan menos por detrás (la máquina es más chica: 21%
+   de su ancho). */
+@media (min-width: 901px) and (max-width: 1299px) {
+  .qml-game-panel-machine-cell {
+    margin: -12px -24px 0 -22px;
+  }
+  /* Sin el corrimiento de 24px hacia el centro: en este ancho cada px de la columna de texto se
+     le resta a la máquina (y el chevron del marco sigue cubierto por el padding de 62px). */
+  .qml-game-panel-heading,
+  .qml-game-panel-result,
+  .qml-game-panel-summary {
+    margin-left: 0;
+  }
+}
+
+/* El panel más angosto del hero de 3 columnas: el ícono de cada fila del resumen se oculta (etiqueta
+   y valor quedan) para que la máquina de al lado no quede demasiado chica para leer los dígitos. */
+@media (min-width: 901px) and (max-width: 1149px) {
+  .qml-game-panel-summary-row {
+    grid-template-columns: auto;
+  }
+  .qml-game-panel-summary-icon {
+    display: none;
+  }
+}
+
+/* Dígitos de Previous Result sobre las bolas (ver BALL_CENTERS en QuickMoneyGameCard.tsx).
+   Unidades del viewBox del SVG (px del PNG): las bolas miden ~185 (Pick 4) y ~200 (Pick 3), así
+   que ~112/~120 deja el número a poco más de la mitad del diámetro, como en las referencias. */
+.qml-game-panel-machine-digit {
+  font-family: inherit;
+  font-size: 112px;
+  font-weight: 800;
+  fill: #16181d;
+}
+.qml-game-panel[data-accent='pick3'] .qml-game-panel-machine-digit {
+  font-size: 120px;
 }
 
 /* Debajo de este ancho, .qml-hero cancela la imagen de marco (ver quickMoneyLobbyHero.css) -- acá
@@ -208,21 +299,24 @@
       inset 0 -1px 0 color-mix(in srgb, var(--qml-accent) 65%, transparent),
       inset 0 0 30px color-mix(in srgb, var(--qml-accent) 12%, transparent);
   }
-  .qml-game-panel[data-side='left'] .qml-game-panel-content,
-  .qml-game-panel[data-side='right'] .qml-game-panel-content {
-    align-items: flex-start;
-    text-align: left;
+  /* Sigue siendo grilla (logo/resultado/resumen centrados entre sí también acá), pero con la
+     máquina en su propia fila abajo a la derecha (aspect-ratio porque su SVG es absoluto y no
+     aporta alto; margin-top -2px + el gap de 12px = 10px). */
+  .qml-game-panel-content {
+    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      'heading .'
+      'result .'
+      'summary .'
+      'machine machine';
   }
-  .qml-game-panel[data-side='left'] .qml-game-panel-result,
-  .qml-game-panel[data-side='right'] .qml-game-panel-result {
-    clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
-    padding: 7px 20px 7px 14px;
-  }
-  .qml-game-panel-machine {
-    position: static;
-    display: block;
+  .qml-game-panel-machine-cell {
+    align-self: start;
+    justify-self: end;
     width: 55%;
     max-width: 200px;
-    margin: 10px 0 0 auto;
+    aspect-ratio: 1;
+    margin: -2px 0 0;
   }
 }

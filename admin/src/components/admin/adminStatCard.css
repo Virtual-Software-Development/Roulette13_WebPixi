@@ -1,0 +1,109 @@
+/* Card de KPI reutilizable (ver AdminStatCard.tsx: title/value/icon/accent/trend/trendLabel por
+   props) -- el color de accent tiñe apenas el borde y el halo del ícono, el resto del card se
+   queda oscuro (pedido explícito: "no crear una tarjeta llena completamente del color"). */
+.admin-stat-card {
+  --accent: var(--admin-red);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 146px;
+  box-sizing: border-box;
+  padding: 20px 22px;
+  border-radius: var(--admin-radius);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--admin-border));
+  background: var(--admin-panel-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: border-color 150ms ease;
+}
+
+.admin-stat-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--admin-border));
+}
+
+.admin-stat-card[data-accent='red'] {
+  --accent: var(--admin-red);
+}
+
+.admin-stat-card[data-accent='blue'] {
+  --accent: var(--admin-blue);
+}
+
+.admin-stat-card[data-accent='purple'] {
+  --accent: var(--admin-purple);
+}
+
+.admin-stat-card[data-accent='green'] {
+  --accent: var(--admin-green);
+}
+
+/* Halo circular detrás del ícono -- radial-gradient centrado, brillante en el medio y apagándose
+   hacia afuera, NO un blur exagerado (el ícono se mantiene nítido). */
+.admin-stat-card-icon-halo {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 12%, transparent) 55%,
+    transparent 80%
+  );
+}
+
+.admin-stat-card-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.admin-stat-card-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-stat-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-stat-card-value {
+  margin-top: 6px;
+  font-size: 33px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--admin-text-primary);
+}
+
+.admin-stat-card-trend {
+  margin-top: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-stat-card-trend-value {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.admin-stat-card-trend-value--up {
+  color: var(--admin-green);
+}
+
+.admin-stat-card-trend-value--down {
+  color: var(--admin-red);
+}
+
+.admin-stat-card-trend-label {
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}

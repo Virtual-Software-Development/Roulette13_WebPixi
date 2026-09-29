@@ -1,0 +1,171 @@
+.admin-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-form-field-label-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.admin-form-field-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.admin-form-field-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(9, 17, 26, 0.9) 0%, rgba(4, 9, 14, 0.92) 100%);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-form-field-control:focus-within {
+  border-color: color-mix(in srgb, var(--admin-red) 55%, var(--admin-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-red) 15%, transparent);
+}
+
+/* Emphasized -- Proposed Target RTP del Simulator debe destacar más que Current (pedido
+   explícito), acento azul en vez del rojo de foco por defecto. */
+.admin-form-field[data-emphasized='true'] .admin-form-field-control {
+  border-color: color-mix(in srgb, var(--admin-blue) 45%, var(--admin-border));
+}
+
+.admin-form-field[data-emphasized='true'] .admin-form-field-control:focus-within {
+  border-color: color-mix(in srgb, var(--admin-blue) 62%, var(--admin-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-blue) 18%, transparent);
+}
+
+/* Locked/read-only -- pedido explícito: el valor debe seguir siendo perfectamente legible y
+   seleccionable, no "verse roto". En vez de bajarle opacity a TODO el control (fondo+borde+texto
+   por igual, que es lo que lo hacía ver como deshabilitado/irrelevante), se atenúa solo el texto
+   (~70-75% de contraste vía color-mix sobre los tokens existentes) y el borde queda apenas más
+   desaturado. La señal principal de "está bloqueado" es el badge Locked junto al label (ver
+   AdminFormField labelAddon / LockedBadge.tsx), no este estilo por sí solo. */
+.admin-form-field[data-readonly='true'] .admin-form-field-control {
+  border-color: color-mix(in srgb, var(--admin-border) 70%, transparent);
+  background: rgba(7, 13, 20, 0.85);
+}
+
+.admin-form-field[data-readonly='true'] .admin-form-field-input {
+  color: color-mix(in srgb, var(--admin-text-primary) 72%, transparent);
+}
+
+.admin-form-field[data-readonly='true'] .admin-form-field-affix {
+  color: color-mix(in srgb, var(--admin-text-secondary) 80%, transparent);
+}
+
+/* Disabled -- distinto de readonly (que sigue siendo foco/selección normal): comunica "este
+   control no aplica ahora mismo", sin relación con locked settings (ver AdminSelect.tsx, que ya
+   usaba este mismo criterio para su trigger disabled). */
+.admin-form-field[data-disabled='true'] .admin-form-field-control {
+  opacity: 0.55;
+  background: rgba(6, 11, 17, 0.7);
+}
+
+.admin-form-field-input:disabled {
+  cursor: not-allowed;
+}
+
+.admin-form-field-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: color 150ms ease;
+}
+
+.admin-form-field-input[type='date'],
+.admin-form-field-input[type='datetime-local'] {
+  color-scheme: dark;
+}
+
+.admin-form-field-input[type='number']::-webkit-outer-spin-button,
+.admin-form-field-input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.admin-form-field-input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.admin-form-field-affix {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.admin-form-field-affix--prefix {
+  margin-right: 8px;
+}
+
+.admin-form-field-affix--suffix {
+  margin-left: 8px;
+}
+
+.admin-form-field-stepper {
+  display: flex;
+  flex-direction: column;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.admin-form-field-stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+}
+
+.admin-form-field-stepper-btn:hover {
+  color: var(--admin-text-primary);
+}
+
+.admin-form-field-stepper-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-form-field-stepper-btn:disabled:hover {
+  color: var(--admin-text-secondary);
+}
+
+.admin-form-field-stepper-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.admin-form-field-description {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--admin-text-secondary);
+}

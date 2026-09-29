@@ -17,7 +17,7 @@ import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
 import { useResultsStore } from './store/useResultsStore'
 import { useBetsSummaryStore } from './store/useBetsSummaryStore'
-import { pickRandomDrawResultVideoUrl } from './utils/media'
+import { pickRandomDrawResultVideoUrl, GUARANTEED_FALLBACK_VIDEO_URL } from './utils/media'
 import { parseApiDateTime } from './utils/time'
 import { toLiveTableBetsData, toResultStatsData } from './utils/betsSummaryMapping'
 import { WHEEL_VIDEO_FROZEN } from './config/wheelCalibration'
@@ -74,23 +74,49 @@ function App() {
             .catch((err) => console.error('No se pudo obtener /api/bets', err))
         }, msUntilBets)
 
+        // Always resolves with a real, already-loaded videoUrl -- never leaves it unset. An unset
+        // videoUrl would make RouletteVideoView's load effect no-op forever (it early-returns on
+        // an empty/unset value), silently hanging the round with no video and no way to recover
+        // until reload. Whatever step fails (the real result never arriving, no clip existing for
+        // it, or the browser failing to load either), falling back to the one guaranteed local
+        // clip keeps the round visually completing instead of breaking.
         resultTimer = setTimeout(() => {
           if (isCancelled()) return
-          videoReadyPromise = fetchDrawResult(drawNo)
-            .then(({ result }) => {
-              if (isCancelled()) return
 
-              return pickRandomDrawResultVideoUrl(result).then((videoUrl) => {
-                if (isCancelled()) return
-                useDrawCycleStore.getState().setPendingResult({ drawNo, result })
-                useGameConfigStore.getState().setGameConfig({ videoUrl })
-                return loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), videoUrl)
-              })
-            })
-            .then(
-              () => {},
-              (err) => console.error('No se pudo precargar el video del sorteo', err)
+          function loadFallbackVideo(reason: string, err: unknown): Promise<string> {
+            console.error(reason, err)
+            return loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), GUARANTEED_FALLBACK_VIDEO_URL).then(
+              () => GUARANTEED_FALLBACK_VIDEO_URL
             )
+          }
+
+          videoReadyPromise = fetchDrawResult(drawNo)
+            .then(
+              ({ result }) => {
+                if (isCancelled()) return Promise.resolve<string | undefined>(undefined)
+
+                return pickRandomDrawResultVideoUrl(result)
+                  .then((videoUrl) => loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), videoUrl).then(() => videoUrl))
+                  .catch((err) => loadFallbackVideo('No se pudo preparar el video del resultado real -- usando el clip de reserva', err))
+                  .then((videoUrl) => {
+                    if (isCancelled()) return undefined
+                    // Still the real result even when the CLIP fell back to the reserve -- only
+                    // the video shown is generic, the recorded winning number stays accurate.
+                    useDrawCycleStore.getState().setPendingResult({ drawNo, result })
+                    return videoUrl
+                  })
+              },
+              // The real result itself never arrived (backend/network failure) -- there is no
+              // number to honestly record, so pendingResult is deliberately left unset.
+              // RouletteVideoView's 'ended' handler already tolerates that (logs, doesn't hang) --
+              // but it still needs a videoUrl to reach 'ended' at all.
+              (err) => loadFallbackVideo('No se pudo obtener el resultado real del sorteo -- usando el clip de reserva', err)
+            )
+            .then((videoUrl) => {
+              if (isCancelled() || !videoUrl) return
+              useGameConfigStore.getState().setGameConfig({ videoUrl })
+            })
+            .catch((err) => console.error('No se pudo preparar el video del sorteo', err))
         }, msUntilResult)
 
         startTimer = setTimeout(() => {

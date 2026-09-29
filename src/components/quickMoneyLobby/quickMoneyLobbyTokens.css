@@ -16,10 +16,19 @@
   --qml-pick4-dark: #473400;
   --qml-pick4-bg: #171303;
 
-  --qml-panel-bg-1: #031321;
-  --qml-panel-bg-2: #041a29;
-  --qml-border: rgba(0, 126, 175, 0.35);
-  --qml-divider: rgba(60, 150, 190, 0.2);
+  /* Paneles de abajo (Recent Results / Hot & Cold) -- colores muestreados de la referencia visual
+     (pedido explícito): navy casi negro, un poco más claro arriba y abajo que en el medio, borde
+     cyan oscuro, "cards" internas un tono más claras que el panel con su fila de header aparte, y
+     divisores navy (el que separa Hot de Cold, más fuerte/cyan). */
+  --qml-panel-bg-top: #001221;
+  --qml-panel-bg-mid: #000a15;
+  --qml-panel-bg-bottom: #000f1e;
+  --qml-border: #00304e;
+  --qml-card-bg: #000c18;
+  --qml-card-border: #01172a;
+  --qml-card-header-bg: #001427;
+  --qml-divider: #001a2d;
+  --qml-divider-strong: #014565;
   --qml-text-primary: #f4f7fa;
   --qml-text-secondary: #aab4bf;
   --qml-radius: 12px;
@@ -34,13 +43,20 @@
   height: 100vh;
   height: 100dvh;
   box-sizing: border-box;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* Sin scroll en desktop (pedido explícito): el contenido se escala para entrar en la ventana
+     (ver .qml-fit y QuickMoneyLobby.tsx). En mobile sí scrollea (ver media query al final), sin
+     barra visible -- Firefox con scrollbar-width, Chrome/Edge/Safari con el pseudo-elemento. */
+  overflow: hidden;
+  scrollbar-width: none;
   color: var(--qml-text-primary);
   font-family: 'Poppins', Arial, sans-serif;
 
   /* Negro liso pedido explícito -- reemplaza el gradient navy/cyan que tenía antes. */
   background: #000000;
+}
+
+.qml-shell::-webkit-scrollbar {
+  display: none;
 }
 
 .qml-shell [data-accent='pick3'] {
@@ -58,12 +74,29 @@
 
 .qml-body {
   box-sizing: border-box;
+  /* Alto de la ventana: useFitToHeight mide acá el espacio disponible (menos el padding). */
+  height: 100%;
   /* Mismo valor que roulette-betting-body/quick-money-betting-body -- espacio para el Header real,
      fixed por encima. */
   padding: 79px clamp(16px, 2.5vw, 40px) 32px;
+}
+
+/* Todo el contenido debajo del Header -- la unidad que se escala para entrar sin scroll (desde
+   arriba y centrado; con la escala quedan bandas negras a los costados, mismo negro del fondo). */
+.qml-fit {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  transform-origin: top center;
+}
+
+@media (max-width: 900px) {
+  .qml-shell {
+    overflow-y: auto;
+  }
+  .qml-body {
+    height: auto;
+  }
 }
 
 /* Chip de número compartido (hero/tabla de resultados/hot-cold) -- neutro por defecto (bolas
@@ -104,7 +137,12 @@
   box-sizing: border-box;
   border-radius: var(--qml-radius);
   border: 1px solid var(--qml-border);
-  background: linear-gradient(180deg, var(--qml-panel-bg-2) 0%, var(--qml-panel-bg-1) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--qml-panel-bg-top) 0%,
+    var(--qml-panel-bg-mid) 45%,
+    var(--qml-panel-bg-bottom) 100%
+  );
   padding: 20px 22px;
 }
 

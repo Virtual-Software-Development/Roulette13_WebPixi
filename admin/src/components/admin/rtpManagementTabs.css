@@ -1,0 +1,53 @@
+.admin-rtp-mgmt-tabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: rgba(6, 13, 20, 0.55);
+}
+
+.admin-rtp-mgmt-tab {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  box-sizing: border-box;
+  padding: 0 18px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.admin-rtp-mgmt-tab:hover {
+  color: var(--admin-text-primary);
+  background: rgba(150, 180, 210, 0.06);
+}
+
+.admin-rtp-mgmt-tab[data-active='true'] {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
+  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
+  box-shadow:
+    0 6px 18px -4px color-mix(in srgb, var(--admin-red) 55%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.admin-rtp-mgmt-tab-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}

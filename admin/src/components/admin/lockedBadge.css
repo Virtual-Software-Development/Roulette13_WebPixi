@@ -1,0 +1,36 @@
+/* Halo circular sutil (mismo lenguaje que .admin-rtp-kpi-card-icon-halo, escalado hacia abajo para
+   vivir junto a un label en vez de una KPI card) -- le da peso visual al ícono para que siga
+   notándose "bloqueado" sin el fondo/borde de una pill. */
+.admin-locked-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--admin-blue);
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--admin-blue) 30%, transparent) 0%,
+    color-mix(in srgb, var(--admin-blue) 12%, transparent) 55%,
+    transparent 80%
+  );
+  transition: background 150ms ease;
+}
+
+.admin-tooltip:hover .admin-locked-icon,
+.admin-tooltip:focus .admin-locked-icon,
+.admin-tooltip:focus-within .admin-locked-icon {
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--admin-blue) 42%, transparent) 0%,
+    color-mix(in srgb, var(--admin-blue) 18%, transparent) 55%,
+    transparent 80%
+  );
+}
+
+.admin-locked-icon-svg {
+  width: 16px;
+  height: 16px;
+}
