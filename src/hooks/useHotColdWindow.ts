@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useResultsStore } from '../store/useResultsStore'
-import { useDrawCycleStore } from '../store/useDrawCycleStore'
+import { useRoulettePanelsVisible } from '../store/useLobbyModeStore'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useCountdown } from './useCountdown'
 import { computeHotColdNumbers, type HotColdNumbers } from '../utils/hotColdNumbers'
@@ -34,7 +34,9 @@ export function useHotColdWindow(): HotColdWindow {
   // A diferencia de `active` (que ya pasa a false apenas termina el hold, antes de que la rueda
   // termine de bajar de vuelta y de que el panel Winner se escale a 0), esto sigue en false hasta
   // que la info del lobby ya volvió a aparecer -- ver useDrawCycleStore.
-  const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
+  // (useRoulettePanelsVisible: además en false durante el bloque de Quick Money del lobby, así al
+  // volver a Roulette también espera los 5s de SHOW_DELAY_AFTER_LOBBY_INFO_MS.)
+  const lobbyInfoVisible = useRoulettePanelsVisible()
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
   const { remainingSeconds } = useCountdown(nextDrawStartTime)
 

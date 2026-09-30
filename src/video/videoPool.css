@@ -44,3 +44,20 @@
      que <Application> en App.tsx), y en ese caso el orden de documento lo dejaría DEBAJO. */
   z-index: 5;
 }
+
+/* Video de sorteo de Quick Money (QuickMoneyVideoView) -- pantalla completa, sin el corrimiento
+   left/top ni el slide vertical del de Roulette: entra y sale con un fade de opacidad (transition
+   acá, QuickMoneyVideoView solo cambia `opacity`). Mismo z-index que el de Roulette (por encima del
+   canvas y del split de Quick Money). Tampoco display:none (ver .video-pool-slot); resetVideoSlot
+   sí lo pone al liberarlo, y QuickMoneyVideoView lo vuelve a block al cargar. */
+.video-pool-slot--quick-money {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+  z-index: 5;
+}
