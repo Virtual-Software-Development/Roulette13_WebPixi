@@ -3,7 +3,7 @@ import { extend } from '@pixi/react'
 import { Container } from 'pixi.js'
 import { Background } from './Background'
 import { BODY_OFFSET_X, LAYOUT, SIDE_EXIT_DISTANCE, TRANSITION_DURATION_MS } from './layout.constants'
-import { useDrawCycleStore } from '../store/useDrawCycleStore'
+import { useRoulettePanelsVisible } from '../store/useLobbyModeStore'
 import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
 import { useViewport } from '../hooks/useViewport'
 import { easeInOutCubic } from '../utils/easing'
@@ -19,7 +19,9 @@ interface SharedLayoutProps {
 }
 
 export function SharedLayout({ children, hideBackground }: SharedLayoutProps) {
-  const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
+  // Además sale de escena durante el bloque de Quick Money del lobby compartido (ver
+  // useRoulettePanelsVisible).
+  const lobbyInfoVisible = useRoulettePanelsVisible()
   const { visibleTop } = useViewport()
   // Mientras el video está en pantalla, el cuerpo de resultados (tarjeta de ganador + tabla) sube
   // y se oculta arriba; vuelve a bajar recién cuando el panel Winner terminó de escalarse a 0

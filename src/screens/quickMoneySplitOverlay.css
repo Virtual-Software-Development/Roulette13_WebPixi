@@ -1,0 +1,474 @@
+/* Mitad Quick Money del lobby compartido (QuickMoneySplitOverlay.tsx): tres paneles de igual altura
+   -- Roulette | Quick Money actual | Winning Numbers. .qms-overlay va por encima del <canvas> de Pixi
+   (z-index:0) y por debajo de los <video> de sorteo (z-index:5, ver videoPool.css); .qms-backdrop
+   (fondo del panel de Roulette) vive dentro de LobbyBackgroundLayer, debajo de la rueda.
+
+   Reglas de color: rojo = acento de marca (barras de título, fila más reciente) y urgencia
+   (countdowns en sus últimos 10s); blanco/gris para datos; azul oscuro solo como estructura. */
+.qms-overlay {
+  --qms-panel-top: #0c1622;
+  --qms-panel-bottom: #08101a;
+  --qms-border: rgba(120, 160, 200, 0.14);
+  --qms-divider: rgba(120, 160, 200, 0.09);
+  --qms-text: #f4f7fa;
+  --qms-text-muted: #9aa7b5;
+  --qms-text-soft: #7d8a98;
+  --qms-red: #f20d2a;
+  --qms-accent: #e11d2e;
+
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--qms-text);
+  font-family: 'Poppins', Arial, sans-serif;
+  /* Countdowns, horas y Game IDs: dígitos de ancho fijo, no "saltan" al cambiar. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dentro de .lobby-background-layer: sin z-index propio, así queda entre la foto de fondo y la
+   rueda (orden del DOM). */
+.qms-backdrop {
+  z-index: auto;
+}
+
+.qms-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+/* --- Entrada/salida: fade + deslizamiento corto; solo transform/opacity (compositor, el kiosco
+   rinde como un CPU 4x más lento). Espera a que los paneles de Roulette terminen de salir
+   (TRANSITION_DURATION_MS = 550ms) y escalona izquierda -> centro -> derecha. Al salir, sin demora. */
+.qms-roulette-panel,
+.qms-roulette-content,
+.qms-center-panel,
+.qms-winning-numbers {
+  position: absolute;
+  opacity: 0;
+  transition:
+    opacity var(--qms-transition-ms) ease,
+    transform var(--qms-transition-ms) cubic-bezier(0.65, 0, 0.35, 1);
+}
+.qms-roulette-panel,
+.qms-roulette-content {
+  transform: translateX(-80px);
+}
+.qms-center-panel {
+  transform: translateX(160px);
+}
+.qms-winning-numbers {
+  transform: translateX(260px);
+}
+
+.qms-overlay[data-visible='true'] .qms-roulette-panel,
+.qms-overlay[data-visible='true'] .qms-roulette-content,
+.qms-overlay[data-visible='true'] .qms-center-panel,
+.qms-overlay[data-visible='true'] .qms-winning-numbers {
+  opacity: 1;
+  transform: none;
+}
+.qms-overlay[data-visible='true'] .qms-roulette-panel,
+.qms-overlay[data-visible='true'] .qms-roulette-content {
+  transition-delay: 450ms;
+}
+.qms-overlay[data-visible='true'] .qms-center-panel {
+  transition-delay: 600ms;
+}
+.qms-overlay[data-visible='true'] .qms-winning-numbers {
+  transition-delay: 750ms;
+}
+
+/* --- Paneles --- */
+.qms-card {
+  box-sizing: border-box;
+  border: 1.5px solid var(--qms-border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--qms-panel-top) 0%, var(--qms-panel-bottom) 100%);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* Los tres paneles: misma altura y mismo techo. El stage se dibuja desde y=32.5px de pantalla
+   (useViewport todavía reserva el alto del Header, que el lobby ya no muestra), así que top:-2px
+   deja ~30px de margen arriba y abajo en 1920x1080. */
+.qms-roulette-panel,
+.qms-center-panel,
+.qms-winning-numbers {
+  top: -2px;
+  height: 1020px;
+}
+
+.qms-label {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--qms-text-muted);
+}
+
+.qms-title {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  /* Explícito: un h2 no hereda el color del overlay (estilos globales de heading). */
+  color: var(--qms-text);
+}
+.qms-title-bar {
+  width: 6px;
+  height: 36px;
+  border-radius: 3px;
+  background: var(--qms-accent);
+}
+
+/* Countdown: solo el dígito que cambia hace un crossfade corto (el viejo sale hacia arriba, el
+   nuevo entra desde abajo) -- ver CountdownDigit. Desplazamiento mínimo, sin zoom; los dígitos que
+   no cambian y los ':' quedan quietos. Duración = DIGIT_TRANSITION_MS (QuickMoneySplitOverlay.tsx). */
+.qms-countdown-digits {
+  display: inline-flex;
+}
+/* Caja de ancho fijo con el glifo centrado: Poppins no trae dígitos tabulares (tabular-nums no hace
+   nada con esta fuente: "1" mide 0.38em y "4" 0.68em), así que sin esto el countdown entero se
+   corría a los lados cada vez que cambiaba un dígito. 0.68em = el dígito más ancho ("4"). */
+.qms-digit {
+  position: relative;
+  display: inline-block;
+  width: 0.68em;
+  text-align: center;
+}
+.qms-digit-current {
+  display: inline-block;
+}
+.qms-digit-current[data-animate='true'] {
+  animation: qms-digit-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.qms-digit-leaving {
+  position: absolute;
+  inset: 0;
+  animation: qms-digit-out 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes qms-digit-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.14em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes qms-digit-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.14em);
+  }
+}
+
+/* --- Panel Roulette: fondo (.qms-roulette-panel, en el backdrop) + contenido debajo de la rueda
+   (la rueda la ubica .lobby-wheel-split en lobbyBackgroundLayer.css, centrada arriba del panel). */
+.qms-roulette-panel {
+  left: 30px;
+  width: 610px;
+}
+
+.qms-roulette-content {
+  left: 30px;
+  top: 660px;
+  width: 610px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qms-roulette-countdown {
+  margin-top: 2px;
+  font-size: 92px;
+  font-weight: 700;
+  line-height: 1;
+}
+.qms-roulette-countdown[data-urgent='true'] {
+  color: var(--qms-red);
+}
+
+.qms-roulette-recent {
+  display: flex;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+/* Resultados de Roulette: fichas cuadradas redondeadas, rojo/negro/verde. */
+.qms-roulette-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 76px;
+  height: 68px;
+  border-radius: 14px;
+  border: 1.5px solid transparent;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.qms-roulette-chip[data-color='red'] {
+  background: linear-gradient(180deg, #e8202f 0%, #b30f1c 100%);
+  border-color: rgba(255, 120, 130, 0.35);
+}
+.qms-roulette-chip[data-color='black'] {
+  background: linear-gradient(180deg, #1c232b 0%, #0e1318 100%);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.qms-roulette-chip[data-color='green'] {
+  background: linear-gradient(180deg, #1c9a50 0%, #0f6f38 100%);
+  border-color: rgba(120, 230, 160, 0.35);
+}
+
+/* --- Panel central: próximo sorteo (foco principal) + Last Winning --- */
+.qms-center-panel {
+  left: 665px;
+  width: 480px;
+  display: flex;
+  flex-direction: column;
+  padding: 34px 28px 28px;
+  transition-property: opacity, transform, border-color, box-shadow;
+}
+
+.qms-next-draw {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qms-logo {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  margin-bottom: 18px;
+}
+
+.qms-next-draw-countdown {
+  font-size: 124px;
+  font-weight: 700;
+  line-height: 1;
+  transition: text-shadow 300ms ease;
+}
+/* <=10s: rojo + un mínimo de brillo extra. */
+.qms-next-draw-countdown[data-urgent='true'] {
+  color: var(--qms-red);
+  text-shadow: 0 0 18px rgba(242, 13, 42, 0.28);
+}
+/* <=5s: pulso suave del borde del panel, solo el panel (no toda la pantalla). */
+.qms-center-panel[data-critical='true'] {
+  animation: qms-critical-pulse 1s ease-in-out infinite;
+}
+@keyframes qms-critical-pulse {
+  0%,
+  100% {
+    border-color: var(--qms-border);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    border-color: rgba(242, 13, 42, 0.55);
+    box-shadow:
+      0 18px 48px rgba(0, 0, 0, 0.5),
+      0 0 22px rgba(242, 13, 42, 0.22);
+  }
+}
+
+.qms-game-number {
+  margin-top: 8px;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--qms-text-muted);
+}
+
+.qms-center-divider {
+  height: 1px;
+  margin: 30px 8px 28px;
+  background: var(--qms-divider);
+}
+
+.qms-last-winning {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.qms-pick-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 22px 20px;
+  border: 1px solid var(--qms-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.qms-pick-card-label {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--qms-text-muted);
+}
+.qms-pick-card .qms-tiles {
+  justify-content: center;
+}
+
+/* --- Winning Numbers --- */
+.qms-winning-numbers {
+  left: 1170px;
+  width: 720px;
+  padding: 34px 26px 24px;
+}
+
+.qms-table {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+}
+
+.qms-table-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 21% 18% 26% 35%;
+  align-items: center;
+  padding: 0 18px;
+  height: 78px;
+  border-bottom: 1px solid var(--qms-divider);
+}
+
+/* Alineación de columnas (encabezado = filas): Time y Game a la izquierda; Pick 3 y Pick 4 con
+   título y fichas centrados en su columna, así cada título queda sobre el centro de sus fichas. */
+.qms-table-row > :nth-child(n + 3) {
+  display: flex;
+  justify-content: center;
+}
+
+.qms-table-head {
+  height: 54px;
+  border-bottom: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--qms-text-muted);
+}
+
+/* Hora: dato de apoyo. Game ID: el ancla de cada fila. */
+.qms-table-time {
+  display: flex;
+  align-items: center;
+  font-size: 21px;
+  font-weight: 500;
+  color: var(--qms-text-soft);
+}
+.qms-table-game {
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--qms-text);
+}
+
+/* Fila más reciente: marco y fondo rojo tenue; fichas blancas (variant 'current'). */
+.qms-table-row[data-latest='true'] {
+  margin: 4px 0;
+  border-bottom-color: transparent;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(225, 29, 46, 0.2) 0%, rgba(225, 29, 46, 0.08) 100%);
+  box-shadow: inset 0 0 0 1.5px rgba(225, 29, 46, 0.5);
+}
+.qms-table-row[data-latest='true'] .qms-table-time {
+  color: var(--qms-text);
+}
+
+
+/* --- Fichas de dígitos --- */
+.qms-tiles {
+  display: flex;
+  gap: 10px;
+}
+
+.qms-tile {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+/* Resultado actual: ficha blanca, número oscuro. */
+.qms-tile[data-variant='current'] {
+  background: linear-gradient(180deg, #ffffff 0%, #dde2e8 100%);
+  color: #0b1118;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+}
+/* Histórico: ficha oscura, más discreta. */
+.qms-tile[data-variant='history'] {
+  background: linear-gradient(180deg, #1d2631 0%, #151c25 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #e3e8ee;
+}
+
+.qms-tile--lg {
+  width: 78px;
+  height: 78px;
+  border-radius: 12px;
+  font-size: 46px;
+}
+.qms-tile--sm {
+  width: 42px;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 22px;
+}
+
+/* Resultado recién llegado: scale 0.94 -> 1.04 -> 1 y un brillo que se apaga en ~500ms; después
+   vuelve al estado normal (sin glow constante). Solo las fichas del resultado nuevo. */
+.qms-tiles[data-pop='true'] .qms-tile {
+  animation: qms-pop 520ms ease-out both;
+}
+.qms-tiles[data-pop='true'] .qms-tile:nth-child(2) {
+  animation-delay: 60ms;
+}
+.qms-tiles[data-pop='true'] .qms-tile:nth-child(3) {
+  animation-delay: 120ms;
+}
+.qms-tiles[data-pop='true'] .qms-tile:nth-child(4) {
+  animation-delay: 180ms;
+}
+@keyframes qms-pop {
+  0% {
+    transform: scale(0.94);
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  45% {
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.45));
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 transparent);
+  }
+}

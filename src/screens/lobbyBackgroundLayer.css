@@ -38,6 +38,25 @@
    central-superior de la pantalla (el borde superior de este contenedor, que ocupa el 100% de
    .lobby-background-layer) en vez de al centro -- la rueda se encoge "hacia arriba", no hacia el
    medio. La foto de fondo (lobby-background-image) queda afuera de este contenedor a propósito. */
+/* Posición de la rueda durante el bloque de Quick Money (LobbyBackgroundLayer.tsx, data-split) --
+   mismo transform-origin que .lobby-wheel-scale, así el achique extra también se ancla arriba y el
+   translateX la lleva a la columna izquierda. transition-duration viene inline
+   (QUICK_MONEY_SPLIT_TRANSITION_MS). Solo transform: corre en el compositor. */
+.lobby-wheel-split {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 0%;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Rueda centrada arriba dentro del panel de Roulette del split (QuickMoneySplitOverlay,
+   .qms-roulette-panel: x 30-640, centro ~335px en 1920x1080), con su countdown/fichas justo debajo
+   (.qms-roulette-content). Calibrado contra captura: sin split el centro de la rueda cae en x=50vw. */
+.lobby-wheel-split[data-split='true'] {
+  transform: translate(-32.55vw, 8vh) scale(0.79);
+}
+
 .lobby-wheel-scale {
   position: absolute;
   inset: 0;

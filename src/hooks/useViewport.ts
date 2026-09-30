@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { DESIGN_HEIGHT, DESIGN_WIDTH, HEADER_BAR_HEIGHT_PX } from '../layout/layout.constants'
 import { useScreenSize } from './useScreenSize'
 
@@ -17,7 +18,13 @@ export interface Viewport {
 
 export function useViewport(): Viewport {
   const { width, height } = useScreenSize()
+  return computeViewport(width, height)
+}
 
+// Mismo cálculo sin depender del contexto de Pixi (useScreenSize usa useApplication) -- para capas
+// DOM fuera de <Application> que deben caer en el mismo encuadre que el canvas (ver
+// useWindowViewport).
+export function computeViewport(width: number, height: number): Viewport {
   if (!width || !height) {
     return {
       scale: 1,
@@ -52,4 +59,16 @@ export function useViewport(): Viewport {
     visibleRight: (width - offsetX) / scale,
     visibleBottom: (usableHeight - offsetYWithinUsable) / scale,
   }
+}
+
+// Versión DOM de useViewport: el canvas usa resizeTo={window} (App.tsx), así que el tamaño de la
+// ventana es el mismo que app.screen.
+export function useWindowViewport(): Viewport {
+  const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }))
+  useEffect(() => {
+    const handleResize = () => setSize({ width: window.innerWidth, height: window.innerHeight })
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+  return computeViewport(size.width, size.height)
 }

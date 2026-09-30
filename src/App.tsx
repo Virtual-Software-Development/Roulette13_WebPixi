@@ -4,7 +4,6 @@ import { RouletteVideoView } from './screens/RouletteVideoView'
 import { RouletteLobby } from './screens/RouletteLobby'
 import { LobbyBackgroundLayer } from './screens/LobbyBackgroundLayer'
 import { WinnerPanel } from './screens/WinnerPanel'
-import { Header } from './layout/Header'
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { VideoPoolLayer } from './video/VideoPoolLayer'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc } from './video/videoElements'
@@ -26,6 +25,10 @@ import { LIVE_TABLE_BETS_MOCK_DATA } from './data/liveTableBetsMockData'
 import { ResultStatsOverlay } from './components/resultStats/ResultStatsOverlay'
 import { RESULT_STATS_MOCK_DATA } from './data/resultStatsMockData'
 import { LeftStatsSidebarOverlay } from './components/leftStatsSidebar/LeftStatsSidebarOverlay'
+import { QuickMoneySplitOverlay } from './screens/QuickMoneySplitOverlay'
+import { QuickMoneyVideoView } from './screens/QuickMoneyVideoView'
+import { QuickMoneyLobbyCycle } from './hooks/useQuickMoneyLobbyCycle'
+import { useLobbyModeStore } from './store/useLobbyModeStore'
 
 const RESULT_LEAD_MS = 500
 // Momento en que se pide /api/bets -- pedido explícito: "10 segundos para cargar el video". Mismo
@@ -169,6 +172,8 @@ function App() {
   // (que igual espera otros 5s más, ver SHOW_DELAY_AFTER_LOBBY_INFO_MS en useHotColdWindow) nunca
   // alcance a mostrarse todavía con el resultado de la ronda anterior.
   const active = useDrawCycleStore((state) => state.active)
+  // Solo cambia unas pocas veces por ciclo de Quick Money (ver config/quickMoneyLobbyCycle.ts).
+  const lobbyPhase = useLobbyModeStore((state) => state.phase)
   // Caen a los mocks solo hasta que llegue el primer /api/bets exitoso (ver BETS_LEAD_MS más
   // arriba) -- una vez que el store tiene datos reales, se quedan para siempre (nunca vuelve a
   // null).
@@ -244,7 +249,9 @@ function App() {
       <LobbyBackgroundLayer />
       <VideoPoolLayer />
       <WinnerPanel />
-      <Header />
+      <QuickMoneyLobbyCycle />
+      <QuickMoneySplitOverlay />
+      {lobbyPhase === 'quickMoneyVideo' && <QuickMoneyVideoView />}
       <Application
         autoDensity={true}
         resizeTo={window}

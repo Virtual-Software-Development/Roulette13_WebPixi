@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
+import { useLobbyModeStore } from '../store/useLobbyModeStore'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { ensureClockTicking, useClockStore } from '../store/useClockStore'
 import { parseApiDateTime } from '../utils/time'
@@ -99,7 +100,9 @@ export function useSpinStatsCycle(): SpinStatsCycle {
     return Math.max(0, parseApiDateTime(nextDrawStartTime).getTime() - state.now) / 1000
   })
 
-  const shouldShow = !active && remainingSeconds <= VISIBLE_MAX_REMAINING_SECONDS && remainingSeconds > HIDE_AT_REMAINING_SECONDS
+  // Fuera durante el bloque de Quick Money del lobby compartido (ver useLobbyModeStore).
+  const inRouletteLobby = useLobbyModeStore((state) => state.phase === 'roulette')
+  const shouldShow = !active && inRouletteLobby && remainingSeconds <= VISIBLE_MAX_REMAINING_SECONDS && remainingSeconds > HIDE_AT_REMAINING_SECONDS
 
   return useMemo<SpinStatsCycle>(() => {
     if (!shouldShow) {

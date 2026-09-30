@@ -23,7 +23,7 @@ export const WHEEL_CANVAS_HEIGHT = 1440
 // (que ocupa toda la pantalla), no al centro de la rueda -- pedido explícito: la rueda debe
 // encogerse "hacia" ese punto de arriba, no hacia el medio de la pantalla. 1 = tamaño actual (sin
 // cambios); <1 la achica. Único lugar para ajustar el tamaño de la rueda.
-export const WHEEL_DISPLAY_SCALE = 0.61
+export const WHEEL_DISPLAY_SCALE = 0.71
 
 // Corrimiento vertical (px reales de pantalla, no unidades del canvas 2560x1440) del mismo
 // contenedor que escala WHEEL_DISPLAY_SCALE (.lobby-wheel-scale) -- con transform-origin: 50% 0%,
@@ -33,7 +33,7 @@ export const WHEEL_DISPLAY_SCALE = 0.61
 // para que el corrimiento sea un valor fijo en píxeles de pantalla, sin importar qué tan chica esté
 // la rueda -- si el orden se invirtiera, este mismo número se vería escalado por
 // WHEEL_DISPLAY_SCALE. 0 = sin corrimiento. Único lugar para ajustar la posición vertical.
-export const WHEEL_VERTICAL_OFFSET_PX = 55
+export const WHEEL_VERTICAL_OFFSET_PX = -10
 
 // Duración de una vuelta completa del rotor -- fuente única compartida por la animación CSS de
 // .lobby-wheel-rotor y la del grupo de puntos de LobbyWheelDebugOverlay, para que no se

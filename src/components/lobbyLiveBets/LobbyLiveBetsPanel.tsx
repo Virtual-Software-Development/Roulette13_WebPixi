@@ -8,7 +8,7 @@ import { useViewport } from '../../hooks/useViewport'
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress'
 import { useAnimatedNumber } from '../../hooks/useAnimatedNumber'
 import { usePulseScale } from '../../hooks/usePulseScale'
-import { useDrawCycleStore } from '../../store/useDrawCycleStore'
+import { useRoulettePanelsVisible } from '../../store/useLobbyModeStore'
 import { useBetsSummaryStore } from '../../store/useBetsSummaryStore'
 import { LAYOUT } from '../../layout/layout.constants'
 import { easeInOutCubic } from '../../utils/easing'
@@ -411,7 +411,8 @@ interface LaidOutGroupCell {
 export function LobbyLiveBetsPanel() {
   const { t } = useTranslation()
   const { visibleLeft, visibleRight, visibleBottom } = useViewport()
-  const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
+  // Además sale de escena durante el bloque de Quick Money del lobby compartido.
+  const lobbyInfoVisible = useRoulettePanelsVisible()
 
   const liveTableBetsData = useBetsSummaryStore((state) => state.liveTableBetsData)
   const { numbers, groups } = useMemo(() => toLobbyBets(liveTableBetsData), [liveTableBetsData])
