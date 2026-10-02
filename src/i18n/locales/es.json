@@ -267,6 +267,14 @@
       }
     }
   },
+  "quickMoneySplit": {
+    "nextRouletteIn": "Ruleta · Próxima ronda",
+    "nextDrawIn": "Quick Money · Próximo sorteo",
+    "lastWinning": "Último resultado",
+    "winningNumbers": "Números ganadores",
+    "columnTime": "Hora",
+    "columnGame": "Juego"
+  },
   "quickMoneyLobby": {
     "previousResult": "Resultado Anterior",
     "gameNumber": "Sorteo",

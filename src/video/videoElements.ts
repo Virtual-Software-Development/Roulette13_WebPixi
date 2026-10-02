@@ -1,4 +1,7 @@
 export const DRAW_VIDEO_SLOT_ID = 'roulette-video-slot-a'
+// <video> propio para el sorteo de Quick Money (ver QuickMoneyVideoView) -- separado del de Roulette
+// para que ninguno de los dos pise el src/estado del otro si llegaran a solaparse.
+export const QUICK_MONEY_VIDEO_SLOT_ID = 'quick-money-video-slot'
 
 export function getVideoSlot(id: string): HTMLVideoElement {
   const el = document.getElementById(id)
@@ -39,6 +42,34 @@ export function loadVideoSrc(video: HTMLVideoElement, url: string): Promise<void
     video.src = url
     video.load()
   })
+}
+
+// Precarga del video de Quick Money en su slot -- se llama al abrir el lobby y al entrar cada split
+// (ver useQuickMoneyLobbyCycle), así cuando el countdown llega a 0 el video ya está listo y arranca
+// sin espera. Deduplica la carga en curso: loadVideoSrc solo evita recargar si YA terminó
+// (readyState), y una segunda llamada a mitad de carga reasignaría el src y la reiniciaría.
+let quickMoneyPreload: { url: string; promise: Promise<void> } | null = null
+
+export function preloadQuickMoneyVideo(url: string): Promise<void> {
+  if (quickMoneyPreload?.url === url) return quickMoneyPreload.promise
+  const promise = loadVideoSrc(getVideoSlot(QUICK_MONEY_VIDEO_SLOT_ID), url).catch((err: unknown) => {
+    // Falló: se olvida para que el próximo intento vuelva a cargar desde cero.
+    if (quickMoneyPreload?.promise === promise) quickMoneyPreload = null
+    throw err
+  })
+  quickMoneyPreload = { url, promise }
+  return promise
+}
+
+// Oculta un slot SIN soltar su src (a diferencia de resetVideoSlot): queda cargado y rebobinado para
+// reproducirse de nuevo sin volver a descargar/decodificar -- lo usa el video de Quick Money, que se
+// precarga antes de cada sorteo (ver preloadQuickMoneyVideo).
+export function hideVideoSlot(video: HTMLVideoElement): void {
+  video.pause()
+  video.currentTime = 0
+  video.style.display = 'none'
+  video.style.transform = ''
+  video.style.opacity = ''
 }
 
 // Libera un slot del pool: pausa, saca el src (corta la descarga/decode en curso) y lo oculta.

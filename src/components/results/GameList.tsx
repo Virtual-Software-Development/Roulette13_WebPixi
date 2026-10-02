@@ -21,6 +21,7 @@ const HEADER_TO_ROWS_GAP = 14
 const ROWS_START_Y = HEADER_PADDING_TOP + 20 + HEADER_TO_ROWS_GAP
 
 const ROWS_TO_BUTTON_GAP = 18
+const MAX_VISIBLE_ROWS = 10
 const BUTTON_HEIGHT = 48
 const BUTTON_MARGIN_X = 20
 const BOTTOM_PADDING = 20
@@ -90,7 +91,9 @@ export function GameList({ onViewHistory }: GameListProps) {
   // maxResults ya limita `history` por su cuenta (ver useResultsStore.addResult), pero eso no
   // cuenta a currentWinner -- sin este slice, la lista real mostraba maxResults+1 filas (la fila
   // actual de más). El tope total de GameRow (contando la actual) debe ser maxResults.
-  const rows = (currentWinner ? [currentWinner, ...history] : history).slice(0, maxResults)
+  // historyMax de /gameInfo llega hoy en 100 (confirmado contra el backend real) -- eso desborda el
+  // panel, así que además se acota a MAX_VISIBLE_ROWS, el tope visual de esta lista.
+  const rows = (currentWinner ? [currentWinner, ...history] : history).slice(0, Math.min(maxResults, MAX_VISIBLE_ROWS))
   const rowsHeight = rows.length * ROW_HEIGHT
 
   const buttonY = ROWS_START_Y + rowsHeight + ROWS_TO_BUTTON_GAP

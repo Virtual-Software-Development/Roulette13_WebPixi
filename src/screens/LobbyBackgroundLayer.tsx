@@ -2,6 +2,9 @@ import { useLayoutEffect, useRef } from 'react'
 import { buildMediaUrl } from '../utils/media'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
+import { isQuickMoneySplitPhase, useLobbyModeStore } from '../store/useLobbyModeStore'
+import { QUICK_MONEY_SPLIT_TRANSITION_MS } from '../config/quickMoneyLobbyCycle'
+import { QuickMoneySplitBackdrop } from './QuickMoneySplitOverlay'
 import { WHEEL_DISPLAY_SCALE, WHEEL_GEOMETRY, WHEEL_SPIN_DURATION_SEC, WHEEL_VERTICAL_OFFSET_PX } from '../layout/wheelGeometry.constants'
 import { WHEEL_VIDEO_GEOMETRY } from '../layout/wheelVideoGeometry.constants'
 import { ACTIVE_WHEEL_TYPE } from '../data/wheelOrder'
@@ -61,6 +64,7 @@ const WHEEL_VIDEO_URL = ACTIVE_WHEEL_VIDEO_GEOMETRY ? buildMediaUrl(ACTIVE_WHEEL
 // corre en el compositor) y da control total sobre velocidad/dirección del giro.
 export function LobbyBackgroundLayer() {
   const backgroundUrl = useGameConfigStore((state) => state.backgroundUrl)
+  const split = useLobbyModeStore((state) => isQuickMoneySplitPhase(state.phase))
   const wheelRotorRef = useRef<HTMLImageElement>(null)
   const wheelImageGroupRef = useRef<HTMLDivElement>(null)
   // Espeja el último estado de congelamiento aplicado, para no tocar el DOM (classList/seek) en
@@ -138,12 +142,24 @@ export function LobbyBackgroundLayer() {
           del círculo (verificado por canal alfa) -- esta imagen de fondo se ve genuinamente
           detrás/alrededor de la rueda, no solo como fallback mientras algo carga. */}
       {backgroundUrl && <img src={backgroundUrl} className="lobby-background-image" alt="" />}
+      {/* Fondo del panel de Roulette del split de Quick Money -- entre la foto y la rueda, así la
+          rueda queda encima del panel (ver QuickMoneySplitBackdrop). */}
+      <QuickMoneySplitBackdrop />
       {/* Envuelve la rueda (imagen o video) y TODOS sus overlays -- un solo scale acá los achica
           juntos, anclado al punto central-superior de la pantalla (ver WHEEL_DISPLAY_SCALE). La
           foto de fondo (lobby-background-image, arriba) queda afuera a propósito: solo la rueda
           debe achicarse, no el fondo. translateY antes de scale (ver WHEEL_VERTICAL_OFFSET_PX) para
           reposicionarla verticalmente en píxeles fijos de pantalla, sin que ese corrimiento
           también quede achicado por el scale. */}
+      {/* Bloque de Quick Money del lobby compartido: la rueda (con todos sus overlays) se achica y
+          se corre a la izquierda para dejarle el centro/derecha a QuickMoneySplitOverlay -- wrapper
+          aparte para no pisar el transform de .lobby-wheel-scale, animado por CSS (ver
+          .lobby-wheel-split). */}
+      <div
+        className="lobby-wheel-split"
+        data-split={split}
+        style={{ transitionDuration: `${QUICK_MONEY_SPLIT_TRANSITION_MS}ms` }}
+      >
       <div className="lobby-wheel-scale" style={{ transform: `translateY(${WHEEL_VERTICAL_OFFSET_PX}px) scale(${WHEEL_DISPLAY_SCALE})` }}>
         {WHEEL_RENDER_MODE === 'video' && WHEEL_VIDEO_URL ? (
           <>
@@ -185,6 +201,7 @@ export function LobbyBackgroundLayer() {
         <ColumnDiamondIndicatorLayer entries={columnEntries} />
         <LastWinnerBallLayer />
         <LobbyWheelDebugOverlay />
+      </div>
       </div>
       <WheelFrameStepper />
     </div>

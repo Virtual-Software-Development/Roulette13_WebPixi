@@ -7,9 +7,12 @@ export function buildMediaUrl(relativePath: string): string {
 // Background.tsx) would treat that as "there IS a url" and briefly render a real <img>/background
 // pointing at it, which 404s a beat later. Use this instead for any field that comes from the
 // backend as an optional path (gameInfo's logo/background) so an unset one stays the empty string
-// callers already know how to treat as "nothing configured."
+// callers already know how to treat as "nothing configured." Whitespace-only counts as unset too:
+// the backend has been seen returning background: ' ', which became '/media/%20' -- not an image,
+// so the lobby showed a broken-image icon in the corner.
 export function buildMediaUrlOrEmpty(relativePath: string): string {
-  return relativePath ? buildMediaUrl(relativePath) : ''
+  const trimmed = relativePath?.trim() ?? ''
+  return trimmed ? buildMediaUrl(trimmed) : ''
 }
 
 async function fetchMediaListing(dirRelativePath: string): Promise<string[]> {
