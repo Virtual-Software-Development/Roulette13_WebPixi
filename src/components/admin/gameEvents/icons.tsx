@@ -25,14 +25,6 @@ export function HourglassIcon() {
   )
 }
 
-export function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 // Prev/Next de la paginación de la lista -- mismo trazo/grosor que ChevronDownIcon (AdminSidebar/
 // AdminSelect), solo rotado 90°.
 export function ChevronLeftIcon() {

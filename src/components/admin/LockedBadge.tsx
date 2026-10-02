@@ -14,6 +14,8 @@ function LockIcon() {
 interface LockedBadgeProps {
   reason: string
   tooltipId: string
+  // Muestra el tooltip sin hover (ej. al intentar editar el campo bloqueado, ver RtpSettingsPanel).
+  open?: boolean
 }
 
 // Ícono de candado junto al label de un field bloqueado -- reemplaza el StatusBadge/pill anterior
@@ -22,10 +24,10 @@ interface LockedBadgeProps {
 // "desbloquear" en el backend/mock (pedido explícito: no inventar esa interacción). Más grande que
 // el ícono que vivía adentro del badge (16px + halo vs 11px sin fondo) para que se siga notando
 // claramente que el campo está bloqueado aunque ya no tenga el fondo/borde de la pill.
-export function LockedBadge({ reason, tooltipId }: LockedBadgeProps) {
+export function LockedBadge({ reason, tooltipId, open }: LockedBadgeProps) {
   const { t } = useTranslation()
   return (
-    <Tooltip id={tooltipId} content={reason} label={t('admin.rtp.management.settings.lock.badge')}>
+    <Tooltip id={tooltipId} content={reason} label={t('admin.rtp.management.settings.lock.badge')} open={open}>
       <span className="admin-locked-icon">
         <LockIcon />
       </span>

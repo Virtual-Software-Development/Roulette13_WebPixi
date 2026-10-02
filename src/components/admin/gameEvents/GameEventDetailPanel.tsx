@@ -4,7 +4,7 @@ import { StatusBadge } from '../StatusBadge'
 import { GameEventTabs, type GameEventTab } from './GameEventTabs'
 import { GameEventOverviewTab } from './GameEventOverviewTab'
 import { GameEventPayoutsTab } from './GameEventPayoutsTab'
-import { DrawLogModal } from './DrawLogModal'
+import { GameEventResultSummary } from './GameEventResultSummary'
 import { HourglassIcon } from './icons'
 import { buildMediaUrl } from '../../../utils/media'
 import { parseApiDateTime } from '../../../utils/time'
@@ -24,12 +24,11 @@ interface GameEventDetailPanelProps {
 }
 
 // Panel derecho (detail) -- se remonta por completo al cambiar `event` (ver key={event.id} en
-// GameEventsPage.tsx): así el tab activo y el modal de log siempre vuelven a su estado inicial al
+// GameEventsPage.tsx): así el tab activo siempre vuelve a su estado inicial al
 // seleccionar otro evento, sin arrastrar estado del anterior.
 export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<GameEventTab>('overview')
-  const [isLogOpen, setIsLogOpen] = useState(false)
 
   if (!event) {
     return (
@@ -59,24 +58,33 @@ export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
       </div>
 
       <div className="admin-game-events-summary">
+        <GameEventResultSummary game={event.game} result={event.result} drawnAt={event.resultDrawnAt} />
         <div className="admin-game-events-summary-item">
-          <img src={CALENDAR_ICON_URL} alt="" />
-          <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.date')}</span>
+          <span className="admin-game-events-summary-heading">
+            <img src={CALENDAR_ICON_URL} alt="" />
+            <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.date')}</span>
+          </span>
           <span className="admin-game-events-summary-value">{DATE_FORMATTER.format(startDate)}</span>
         </div>
         <div className="admin-game-events-summary-item">
-          <img src={CLOCK_ICON_URL} alt="" />
-          <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.startTime')}</span>
+          <span className="admin-game-events-summary-heading">
+            <img src={CLOCK_ICON_URL} alt="" />
+            <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.startTime')}</span>
+          </span>
           <span className="admin-game-events-summary-value">{TIME_FORMATTER.format(startDate)}</span>
         </div>
         <div className="admin-game-events-summary-item">
-          <img src={CLOCK_ICON_URL} alt="" />
-          <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.endTime')}</span>
+          <span className="admin-game-events-summary-heading">
+            <img src={CLOCK_ICON_URL} alt="" />
+            <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.endTime')}</span>
+          </span>
           <span className="admin-game-events-summary-value">{endDate ? TIME_FORMATTER.format(endDate) : t('admin.gameEvents.metadata.notApplicable')}</span>
         </div>
         <div className="admin-game-events-summary-item">
-          <HourglassIcon />
-          <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.duration')}</span>
+          <span className="admin-game-events-summary-heading">
+            <HourglassIcon />
+            <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.duration')}</span>
+          </span>
           <span className="admin-game-events-summary-value">
             {event.durationMinutes !== null
               ? t('admin.gameEvents.metadata.durationMinutes', { count: event.durationMinutes })
@@ -89,14 +97,6 @@ export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
 
       {tab === 'overview' && <GameEventOverviewTab event={event} />}
       {tab === 'payouts' && <GameEventPayoutsTab payouts={event.payouts} />}
-
-      <div className="admin-game-events-actions">
-        <button type="button" className="admin-game-events-view-log-btn" onClick={() => setIsLogOpen(true)}>
-          {t('admin.gameEvents.actions.viewDrawLog')}
-        </button>
-      </div>
-
-      {isLogOpen && <DrawLogModal event={event} onClose={() => setIsLogOpen(false)} />}
     </section>
   )
 }

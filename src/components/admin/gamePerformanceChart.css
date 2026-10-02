@@ -1,0 +1,128 @@
+.admin-game-performance {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-game-performance .admin-panel-header {
+  align-items: flex-start;
+}
+
+.admin-game-performance-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+/* Mismo botón que el selector de rango de Games Activity (namespace propio, mismo criterio que el
+   resto de secciones del Admin: se restata la receta en vez de importar la hoja de otro chart). */
+.admin-game-performance-mode {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.7);
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+
+.admin-game-performance-mode:hover,
+.admin-game-performance-mode[aria-expanded='true'] {
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-game-performance-mode-chevron-wrap {
+  display: flex;
+  transition: transform 150ms ease;
+}
+
+.admin-game-performance-mode-chevron-wrap--open {
+  transform: rotate(180deg);
+}
+
+.admin-game-performance-mode-chevron {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-game-performance-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1000 / 340;
+  margin-top: 6px;
+}
+
+.admin-game-performance-gridline {
+  stroke: rgba(120, 145, 170, 0.14);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-game-performance-baseline {
+  stroke: rgba(120, 145, 170, 0.3);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-game-performance-axis-label,
+.admin-game-performance-axis-title {
+  fill: var(--admin-text-secondary);
+  font-size: 18px;
+  font-family: inherit;
+}
+
+.admin-game-performance-group-label {
+  fill: var(--admin-text-primary);
+  font-size: 19px;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.admin-game-performance-value-label {
+  fill: var(--admin-text-primary);
+  font-size: 17px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.admin-game-performance-bar {
+  transition: opacity 120ms ease;
+}
+
+.admin-game-performance-bar:hover {
+  opacity: 0.8;
+}
+
+.admin-game-performance-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-game-performance-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+}
+
+.admin-game-performance-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

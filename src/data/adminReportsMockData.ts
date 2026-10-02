@@ -26,7 +26,7 @@ export const REPORT_GAME_ICON_URLS: Record<ReportGame, string> = {
 }
 
 export const REPORT_GAME_FILTER_OPTIONS: ReportGameFilter[] = ['all', 'roulette', 'pick3', 'pick4']
-export const REPORT_TYPE_OPTIONS: ReportType[] = ['summary', 'gameReport', 'playerReport', 'financialReport', 'rtpAnalysis']
+export const REPORT_TYPE_OPTIONS: ReportType[] = ['summary', 'weeklyReport', 'monthlyReport', 'gameReport', 'playerReport', 'financialReport', 'rtpAnalysis']
 export const REPORT_GROUP_BY_OPTIONS: ReportGroupBy[] = ['day', 'week', 'month']
 export const REPORT_DATE_RANGE_OPTIONS: ReportDateRangePreset[] = ['last7Days', 'last30Days', 'thisMonth', 'lastMonth']
 
@@ -80,9 +80,6 @@ export const BETS_AND_PAYOUTS_SERIES: BetsPayoutsPoint[] = [
   { label: 'Sep 4', bets: 172000, payout: 112000 },
 ]
 
-export const BETS_AND_PAYOUTS_Y_MAX = 200000
-export const BETS_AND_PAYOUTS_Y_TICKS = [0, 50000, 100000, 150000, 200000]
-
 export const REPORT_RTP_TREND_TARGET = 93
 export const REPORT_RTP_TREND_SERIES: ReportRtpTrendPoint[] = [
   { label: 'Sep 1', rtp: 94.5, target: REPORT_RTP_TREND_TARGET },
@@ -129,6 +126,23 @@ export const REPORT_SHORTCUTS: ReportShortcutData[] = [
     titleKey: 'admin.reports.shortcuts.rtpAnalysis.title',
     descriptionKey: 'admin.reports.shortcuts.rtpAnalysis.description',
   },
+  // Weekly = últimos 7 días agrupado por día; Monthly = mes calendario anterior agrupado por semana.
+  {
+    id: 'weeklyReport',
+    icon: buildMediaUrl('Website_svg_icons/30_clock_white.svg'),
+    titleKey: 'admin.reports.shortcuts.weeklyReport.title',
+    descriptionKey: 'admin.reports.shortcuts.weeklyReport.description',
+    dateRange: 'last7Days',
+    groupBy: 'day',
+  },
+  {
+    id: 'monthlyReport',
+    icon: buildMediaUrl('Website_svg_icons/33_calendar_white.svg'),
+    titleKey: 'admin.reports.shortcuts.monthlyReport.title',
+    descriptionKey: 'admin.reports.shortcuts.monthlyReport.description',
+    dateRange: 'lastMonth',
+    groupBy: 'week',
+  },
 ]
 
 export const RECENT_REPORTS: RecentReportRow[] = [
@@ -157,3 +171,34 @@ export const RECENT_REPORTS: RecentReportRow[] = [
     createdAt: 'Sep 4, 2026 08:30',
   },
 ]
+
+// Peak Hours (ver PeakHoursHeatmap.tsx) -- total apostado por día de semana (0 = Lunes) × hora, para
+// todos los juegos. Curva diaria realista (madrugada baja, almuerzo, pico 20-23h), fines de semana y
+// viernes más altos, más una variación pseudoaleatoria con semilla fija (estable entre renders).
+function peakHoursRandom(seed: number): () => number {
+  let state = seed >>> 0
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+    return state / 4294967296
+  }
+}
+
+const HOURLY_SHAPE = [
+  0.22, 0.16, 0.11, 0.08, 0.07, 0.08, 0.12, 0.2, 0.3, 0.38, 0.44, 0.5,
+  0.62, 0.6, 0.52, 0.5, 0.56, 0.66, 0.78, 0.9, 1.0, 0.98, 0.84, 0.5,
+]
+const DAY_FACTOR = [0.82, 0.8, 0.85, 0.9, 1.12, 1.3, 1.18]
+const PEAK_HOURS_BASE_BET = 4200
+
+export const PEAK_HOURS_BETS: number[][] = (() => {
+  const random = peakHoursRandom(2026)
+  return DAY_FACTOR.map((dayFactor) =>
+    HOURLY_SHAPE.map((shape) => Math.round(PEAK_HOURS_BASE_BET * shape * dayFactor * (0.88 + random() * 0.24))),
+  )
+})()
+
+// Apuesta promedio por ronda -- solo para estimar "rondas" en el detalle de cada franja.
+export const PEAK_HOURS_AVERAGE_BET = 12
+
+// Participación de cada juego en el total -- el heatmap escala por esto al filtrar por juego.
+export const PEAK_HOURS_GAME_SHARE: Record<ReportGameFilter, number> = { all: 1, roulette: 0.56, pick3: 0.26, pick4: 0.18 }

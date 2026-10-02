@@ -110,3 +110,18 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* Sin selección de texto en toda la app (Ctrl+A o arrastrar el mouse resaltaba toda la página).
+   Los campos editables siguen siendo seleccionables -- ahí sí hace falta para editar/copiar. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+select,
+[contenteditable]:not([contenteditable='false']) {
+  -webkit-user-select: text;
+  user-select: text;
+}

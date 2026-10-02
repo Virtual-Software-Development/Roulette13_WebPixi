@@ -1,15 +1,10 @@
 import type {
-  DatabaseType,
+  AdminSettingsData,
   EmailNotificationSettings,
   GeneralSettingsData,
   NotificationChannelsSettings,
   NotificationEventId,
   NotificationEventsSettings,
-  RecentNotification,
-  SettingsEnvironment,
-  SystemDatabaseSettings,
-  SystemInformationData,
-  SystemStorageSettings,
 } from '../types/adminSettings'
 
 // Mock TEMPORAL para Admin Settings -- no existe todavía un endpoint/store de configuración
@@ -19,20 +14,12 @@ import type {
 // adminDashboardMockData.ts/rtpManagementMockData.ts).
 
 export const DEFAULT_GENERAL_SETTINGS: GeneralSettingsData = {
-  siteName: 'VR Gaming',
-  environment: 'production',
   timezone: '(UTC-04:00) Eastern Time (US & Canada)',
   defaultLanguage: 'en-US',
-  rouletteVideos: { defaultStoragePath: 'D:\\Videos\\Roulette', acceptedFormats: 'MP4, WebM', maxFileSizeMb: 500 },
-  quickMoneyVideos: { defaultStoragePath: 'D:\\Videos\\QuickMoney', acceptedFormats: 'MP4, WebM', maxFileSizeMb: 500 },
   itemsPerPage: 50,
   dateFormat: 'MMM d, yyyy',
-  enableAuditLog: true,
-  enableVideoProcessing: true,
   maintenanceMode: false,
 }
-
-export const ENVIRONMENT_OPTIONS: SettingsEnvironment[] = ['production', 'staging', 'development']
 
 export const TIMEZONE_OPTIONS: string[] = [
   '(UTC-04:00) Eastern Time (US & Canada)',
@@ -52,56 +39,14 @@ export const LANGUAGE_OPTIONS: { value: string; label: string }[] = [
   { value: 'es', label: 'Español' },
 ]
 
-export const DATABASE_TYPE_OPTIONS: DatabaseType[] = ['mysql', 'postgresql', 'sqlite']
-
-export const DEFAULT_SYSTEM_DATABASE_SETTINGS: SystemDatabaseSettings = {
-  connectionStatus: 'connected',
-  databaseType: 'mysql',
-  host: 'localhost',
-  port: '3306',
-  databaseName: 'vr_gaming',
-  username: 'admin',
-  password: 'change-me-123',
-}
-
-export const DEFAULT_SYSTEM_STORAGE_SETTINGS: SystemStorageSettings = {
-  baseDataPath: 'D:\\VRGaming',
-  videosPath: 'D:\\Videos',
-  logsPath: 'D:\\Logs',
-  maxLogFileSizeMb: 100,
-  keepLogsForDays: 30,
-}
-
-// Read-only, no editable/resettable (ver types/adminSettings.ts) -- no existe todavía un endpoint
-// que reporte versión/entorno/uptime/disco reales (confirmado: las únicas APIs del proyecto son
-// gameInfo/lastResults/drawResult/betsSummary), así que estos valores quedan fijos como mock hasta
-// que exista esa fuente real.
-export const SYSTEM_INFORMATION: SystemInformationData = {
-  applicationVersion: '1.0.0',
-  environment: 'production',
-  serverTime: '2026-09-04 14:25:18',
-  uptime: '3 days, 4 hours, 12 minutes',
-  diskSpaceUsedGb: 245.8,
-  diskSpaceTotalGb: 500,
-}
-
-// Igual que la referencia: Email habilitado, Discord/Slack/Webhook deshabilitados -- no existe
-// todavía un backend/store real de notificaciones (confirmado: las únicas APIs del proyecto son
-// gameInfo/lastResults/drawResult/betsSummary), así que este estado vive solo en memoria del tab,
-// sin Save Changes (mismo criterio que System: nada que "guardar" en un servidor que no existe).
+// Email habilitado por defecto -- no existe todavía un backend/store real de notificaciones
+// (confirmado: las únicas APIs del proyecto son gameInfo/lastResults/drawResult/betsSummary), así
+// que este estado vive solo en memoria de la página; el Save de la página solo actualiza ese baseline.
 export const DEFAULT_NOTIFICATION_CHANNELS: NotificationChannelsSettings = {
   email: true,
-  discord: false,
-  slack: false,
-  webhook: false,
 }
 
 export const DEFAULT_EMAIL_NOTIFICATION_SETTINGS: EmailNotificationSettings = {
-  smtpServer: 'smtp.gmail.com',
-  port: '587',
-  username: 'admin@vrgaming.com',
-  password: 'change-me-123',
-  fromEmail: 'admin@vrgaming.com',
   recipients: 'alerts@vrgaming.com',
 }
 
@@ -125,13 +70,9 @@ export const DEFAULT_NOTIFICATION_EVENTS: NotificationEventsSettings = {
   newUserRegistered: false,
 }
 
-// Historial visual de ejemplo (ver comentario de cabecera de este archivo) -- no existe todavía un
-// endpoint/store real de notificaciones, así que Refresh en la UI solo vuelve a mostrar este mismo
-// set fijo (ver RecentNotificationsCard.tsx).
-export const RECENT_NOTIFICATIONS: RecentNotification[] = [
-  { id: 'ntf-1', timestamp: '2026-09-04 14:20:11', message: 'Video processing completed', channel: 'email', status: 'sent' },
-  { id: 'ntf-2', timestamp: '2026-09-04 13:45:02', message: 'Game round completed', channel: 'email', status: 'sent' },
-  { id: 'ntf-3', timestamp: '2026-09-04 12:11:33', message: 'System error', channel: 'email', status: 'failed' },
-  { id: 'ntf-4', timestamp: '2026-09-04 10:03:18', message: 'New user registered', channel: 'slack', status: 'sent' },
-  { id: 'ntf-5', timestamp: '2026-09-04 09:15:47', message: 'High RTP alert', channel: 'email', status: 'sent' },
-]
+export const DEFAULT_ADMIN_SETTINGS: AdminSettingsData = {
+  general: DEFAULT_GENERAL_SETTINGS,
+  notificationChannels: DEFAULT_NOTIFICATION_CHANNELS,
+  emailNotifications: DEFAULT_EMAIL_NOTIFICATION_SETTINGS,
+  notificationEvents: DEFAULT_NOTIFICATION_EVENTS,
+}

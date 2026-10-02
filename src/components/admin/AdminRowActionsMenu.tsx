@@ -42,7 +42,7 @@ export function AdminRowActionsMenu({ actions }: { actions: AdminRowAction[] }) 
         type="button"
         className="admin-row-actions-trigger"
         aria-expanded={isOpen}
-        aria-label={t('admin.videos.shared.rowActions')}
+        aria-label={t('admin.shared.rowActions')}
         onClick={() => setIsOpen((v) => !v)}
       >
         <MoreIcon />

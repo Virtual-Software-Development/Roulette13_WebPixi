@@ -37,13 +37,17 @@ export interface GamePerformanceRow {
   rtp: number
 }
 
-export type ReportType = 'summary' | 'gameReport' | 'playerReport' | 'financialReport' | 'rtpAnalysis'
+export type ReportType = 'summary' | 'gameReport' | 'playerReport' | 'financialReport' | 'rtpAnalysis' | 'weeklyReport' | 'monthlyReport'
 
 export interface ReportShortcutData {
   id: ReportType
   icon: string
   titleKey: string
   descriptionKey: string
+  // Weekly/Monthly Report fijan además el período y la agrupación del filtro (ver
+  // AdminReportsPage.handleShortcutSelect); el resto de shortcuts respeta los filtros actuales.
+  dateRange?: ReportDateRangePreset
+  groupBy?: ReportGroupBy
 }
 
 export type ReportGameFilter = 'all' | ReportGame

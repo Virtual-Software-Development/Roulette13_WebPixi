@@ -6,6 +6,7 @@ import { RtpTrendChart } from '../components/admin/RtpTrendChart'
 import { CurrentBandsPanel } from '../components/admin/CurrentBandsPanel'
 import { RecentRtpChanges } from '../components/admin/RecentRtpChanges'
 import { RtpImportantNote } from '../components/admin/RtpImportantNote'
+import { RtpStabilityChart } from '../components/admin/RtpStabilityChart'
 import { useNow } from '../hooks/useNow'
 import {
   HOUSE_MARGIN,
@@ -15,6 +16,7 @@ import {
   RTP_CHANGES_TOTAL_COUNT,
   RTP_HISTORY_BY_RANGE,
   RTP_METRIC_CARDS,
+  RTP_STABILITY_BY_GAME,
 } from '../data/rtpDashboardMockData'
 import './rtpDashboardPage.css'
 
@@ -60,14 +62,19 @@ export function RtpDashboardPage() {
         <ManualOverridesCard data={MANUAL_OVERRIDES} />
       </div>
 
-      <div className="admin-rtp-trend-row">
-        <RtpTrendChart historyByRange={RTP_HISTORY_BY_RANGE} />
-        <CurrentBandsPanel bands={RTP_BANDS} />
-      </div>
-
-      <div className="admin-rtp-bottom-row">
-        <RecentRtpChanges changes={RTP_CHANGES} totalCount={RTP_CHANGES_TOTAL_COUNT} />
-        <RtpImportantNote />
+      {/* Dos columnas: izquierda chart + Recent RTP Changes, derecha Current Bands + RTP Stability +
+          Important Note. RTP Stability toma el alto que sobra, así ninguna columna queda con espacio
+          vacío (antes eran dos filas separadas y los paneles de la derecha se estiraban vacíos). */}
+      <div className="admin-rtp-main-grid">
+        <div className="admin-rtp-main-column">
+          <RtpTrendChart historyByRange={RTP_HISTORY_BY_RANGE} bands={RTP_BANDS} />
+          <RecentRtpChanges changes={RTP_CHANGES} totalCount={RTP_CHANGES_TOTAL_COUNT} />
+        </div>
+        <div className="admin-rtp-main-column admin-rtp-main-column--side">
+          <CurrentBandsPanel bands={RTP_BANDS} />
+          <RtpStabilityChart dataByGame={RTP_STABILITY_BY_GAME} />
+          <RtpImportantNote />
+        </div>
       </div>
 
       <div className="admin-rtp-footer">

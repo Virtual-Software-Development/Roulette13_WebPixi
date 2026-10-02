@@ -246,6 +246,9 @@ function App() {
       <WinnerPanel />
       <Header />
       <Application
+        // antialias: sin él los bordes de Graphics (anillos de Last 100 Spins, etc.) salían dentados
+        // ("granulados") -- pedido explícito.
+        antialias={true}
         autoDensity={true}
         resizeTo={window}
         resolution={Math.min(window.devicePixelRatio || 1, 1)}

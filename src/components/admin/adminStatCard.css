@@ -36,6 +36,16 @@
   --accent: var(--admin-green);
 }
 
+.admin-stat-card[data-accent='yellow'] {
+  --accent: var(--admin-yellow);
+}
+
+/* No hay versión amarilla de 36_users_green.svg (PNG embebido, local-media no está versionado) --
+   se tiñe el verde hacia amarillo con filtro en vez de sumar un asset nuevo. */
+.admin-stat-card[data-accent='yellow'] .admin-stat-card-icon {
+  filter: hue-rotate(-80deg) saturate(1.2) brightness(1.1);
+}
+
 /* Halo circular detrás del ícono -- radial-gradient centrado, brillante en el medio y apagándose
    hacia afuera, NO un blur exagerado (el ícono se mantiene nítido). */
 .admin-stat-card-icon-halo {

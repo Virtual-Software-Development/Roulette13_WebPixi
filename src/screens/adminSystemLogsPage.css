@@ -87,14 +87,39 @@
   border-color: rgba(120, 155, 185, 0.4);
 }
 
+/* Tabla + panel de Log Details lado a lado. Se achica (nunca crece) hasta el alto que queda en
+   .admin-main debajo de los filtros: la página no scrollea, solo las filas dentro de
+   .admin-system-logs-table-scroll (mismo criterio que la lista de Users) y el contenido del panel.
+   El min-height evita aplastarla en ventanas muy bajas. */
+.admin-system-logs-body {
+  display: flex;
+  gap: 18px;
+  flex: 0 1 auto;
+  min-height: 280px;
+}
+
 .admin-system-logs-table-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Pantallas angostas: el panel de detalle pasa debajo de la tabla. */
+@media (max-width: 1100px) {
+  .admin-system-logs-body {
+    flex-direction: column;
+    flex-shrink: 0;
+  }
 }
 
 .admin-system-logs-table-scroll {
-  overflow-x: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 155, 185, 0.35) transparent;
 }
 
 .admin-system-logs-table {
@@ -104,6 +129,10 @@
 }
 
 .admin-system-logs-table thead th {
+  /* Header fijo al scrollear las filas (fondo ya opaco). */
+  position: sticky;
+  top: 0;
+  z-index: 1;
   padding: 10px;
   text-align: left;
   background: rgba(7, 14, 21, 0.98);

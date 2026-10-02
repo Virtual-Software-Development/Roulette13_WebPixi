@@ -1,10 +1,23 @@
+/* Tamaño relativo al ancho de la propia card (cqi, container-type en .admin-rtp-kpi-card) -- llena
+   el espacio entre el header y el trend en pantallas anchas sin desbordar cuando las 5 cards de la
+   fila se angostan. */
 .admin-house-margin-value {
-  font-size: 26px;
+  font-size: clamp(26px, 18cqi, 48px);
+  line-height: 1.1;
+  /* Ocupa todo el alto libre entre el header y el trend y se centra ahí -- antes quedaba pegado
+     arriba con un hueco vacío debajo. El trend (margin-top:auto) no se mueve. */
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
   font-weight: 700;
   color: var(--admin-text-primary);
 }
 
+/* margin-top:auto -- baja el trend al pie de la card (la card es flex column y comparte alto con
+   las demás KPI de la fila), en vez de quedar pegado al valor con espacio vacío debajo. */
 .admin-house-margin-trend {
+  margin-top: auto;
   font-size: 13px;
   font-weight: 600;
   color: var(--admin-green);

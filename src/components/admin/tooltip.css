@@ -9,15 +9,16 @@
   outline-offset: 2px;
 }
 
-/* Anclado desde el borde DERECHO del trigger (no centrado) -- los dos usos actuales (badge
-   "Locked", que siempre queda a la derecha de su fila vía justify-content:space-between; y Save
-   Settings, dentro de una fila alineada a la derecha) están cerca del borde derecho del panel. Un
-   bubble centrado se saldría del viewport ahí (.admin-shell recorta con overflow:hidden, así que
-   se vería truncado en vez de solo desbordar). */
+/* Anclado a un borde del trigger (no centrado): data-align='end' (default) desde el borde DERECHO,
+   abriendo hacia la izquierda; data-align='start' desde el borde IZQUIERDO, abriendo hacia la
+   derecha. Tooltip.tsx elige el lado al mostrarse según el espacio real dentro del contenedor que
+   recorta (.admin-main) -- un bubble que abre hacia el lado sin lugar queda cortado contra el
+   sidebar en vez de solo desbordar. */
 .admin-tooltip-bubble {
   position: absolute;
   bottom: calc(100% + 8px);
   right: 0;
+  left: auto;
   z-index: 20;
   width: max-content;
   max-width: 240px;
@@ -49,7 +50,18 @@
   border-top-color: rgba(6, 13, 20, 0.99);
 }
 
+.admin-tooltip-bubble[data-align='start'] {
+  right: auto;
+  left: 0;
+}
+
+.admin-tooltip-bubble[data-align='start']::after {
+  right: auto;
+  left: 14px;
+}
+
 .admin-tooltip:hover .admin-tooltip-bubble,
+.admin-tooltip-bubble[data-open='true'],
 .admin-tooltip:focus .admin-tooltip-bubble,
 .admin-tooltip:focus-within .admin-tooltip-bubble {
   opacity: 1;

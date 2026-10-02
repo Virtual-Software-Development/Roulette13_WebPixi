@@ -1,18 +1,18 @@
 import { useTranslation } from 'react-i18next'
 import { AdminStatCard } from '../components/admin/AdminStatCard'
-import { DateRangeControl } from '../components/admin/DateRangeControl'
-import { GamesActivityChart } from '../components/admin/GamesActivityChart'
-import { GamesDistributionChart } from '../components/admin/GamesDistributionChart'
+import { GameEventsOverTimeChart } from '../components/admin/GameEventsOverTimeChart'
+import { GamePerformanceChart } from '../components/admin/GamePerformanceChart'
 import { RecentRoundsPanel } from '../components/admin/RecentRoundsPanel'
-import { SystemStatusPanel } from '../components/admin/SystemStatusPanel'
+import { ResultFrequencyChart } from '../components/admin/ResultFrequencyChart'
+import { ReportMetricCard } from '../components/admin/reports/ReportMetricCard'
 import {
   ADMIN_STAT_CARDS,
-  GAMES_ACTIVITY_SERIES,
-  GAMES_DISTRIBUTION,
-  GAMES_DISTRIBUTION_TOTAL,
+  GAME_EVENTS_OVER_TIME,
+  GAME_PERFORMANCE,
   RECENT_ROUNDS,
-  SYSTEM_STATUS_SERVICES,
+  RESULT_FREQUENCY,
 } from '../data/adminDashboardMockData'
+import { REPORT_KPI_CARDS } from '../data/adminReportsMockData'
 import './adminDashboardPage.css'
 
 // Contenido puro (sin Header/Sidebar propios) -- el shell lo monta AdminPanel.tsx una única vez,
@@ -28,23 +28,26 @@ export function AdminDashboardPage() {
           <h1 className="admin-main-title">{t('admin.dashboard.title')}</h1>
           <p className="admin-main-subtitle">{t('admin.dashboard.subtitle')}</p>
         </div>
-        <DateRangeControl />
       </div>
 
       <div className="admin-kpi-grid">
         {ADMIN_STAT_CARDS.map((card) => (
           <AdminStatCard key={card.id} data={card} />
         ))}
+        {REPORT_KPI_CARDS.map((card) => (
+          <ReportMetricCard key={card.id} data={card} />
+        ))}
       </div>
 
       <div className="admin-charts-row">
-        <GamesActivityChart series={GAMES_ACTIVITY_SERIES} />
-        <GamesDistributionChart segments={GAMES_DISTRIBUTION} total={GAMES_DISTRIBUTION_TOTAL} />
-      </div>
-
-      <div className="admin-bottom-row">
-        <RecentRoundsPanel rounds={RECENT_ROUNDS} />
-        <SystemStatusPanel services={SYSTEM_STATUS_SERVICES} />
+        <GamePerformanceChart rows={GAME_PERFORMANCE} />
+        {/* Columna derecha: Result Frequency arriba de Recent Rounds (pedido explícito) -- ambos
+            hablan de resultados ya sorteados, uno agregado y otro ronda por ronda. */}
+        <div className="admin-dashboard-side-column">
+          <ResultFrequencyChart dataByGame={RESULT_FREQUENCY} />
+          <RecentRoundsPanel rounds={RECENT_ROUNDS} />
+        </div>
+        <GameEventsOverTimeChart series={GAME_EVENTS_OVER_TIME} />
       </div>
     </>
   )

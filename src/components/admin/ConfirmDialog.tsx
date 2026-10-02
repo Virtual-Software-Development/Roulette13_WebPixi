@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import './confirmDialog.css'
 
@@ -17,6 +17,26 @@ interface ConfirmDialogProps {
   confirmLoadingLabel?: string
   onConfirm: () => void
   onCancel: () => void
+  // Contenido extra entre la descripción y los botones (ej. el resumen Game/Current/New/Effective
+  // Date del cambio de RTP, ver RtpSettingsPanel.tsx).
+  children?: ReactNode
+  // Aviso importante: ícono de advertencia ámbar junto al título (ej. cambio de RTP, que afecta
+  // rondas reales) -- sin volver rojo el botón como `danger`.
+  warning?: boolean
+  // Color del juego afectado (con `warning`): tiñe la línea de acento superior y el botón de
+  // confirmar -- ej. Next Results: red = Roulette, green = Pick 3, amber = Pick 4. Sin accent, la
+  // variante warning queda ámbar (ej. RTP Settings).
+  accent?: 'red' | 'green' | 'amber' | 'blue'
+}
+
+function WarningIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="admin-confirm-dialog-warning-icon" aria-hidden="true" focusable="false">
+      <path d="M12 3.5 21.5 20h-19L12 3.5Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M12 10v4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="12" cy="17.2" r="1.1" fill="currentColor" />
+    </svg>
+  )
 }
 
 // Generaliza el overlay de DrawLogModal.tsx (Game Events) -- ese quedó deliberadamente
@@ -34,6 +54,9 @@ export function ConfirmDialog({
   confirmLoadingLabel,
   onConfirm,
   onCancel,
+  children,
+  warning,
+  accent,
 }: ConfirmDialogProps) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -60,18 +83,26 @@ export function ConfirmDialog({
       <div
         ref={dialogRef}
         className="admin-confirm-dialog"
+        data-warning={warning || undefined}
+        data-accent={accent}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="admin-confirm-dialog-title"
         aria-describedby="admin-confirm-dialog-description"
         onClick={(e) => e.stopPropagation()}
       >
+        {warning && (
+          <span className="admin-confirm-dialog-warning-halo">
+            <WarningIcon />
+          </span>
+        )}
         <h2 id="admin-confirm-dialog-title" className="admin-confirm-dialog-title" data-danger={danger}>
           {title}
         </h2>
         <p id="admin-confirm-dialog-description" className="admin-confirm-dialog-description">
           {description}
         </p>
+        {children}
         <div className="admin-confirm-dialog-actions">
           <button
             ref={cancelButtonRef}
@@ -85,6 +116,7 @@ export function ConfirmDialog({
           <button
             type="button"
             className={`admin-confirm-dialog-btn ${danger ? 'admin-confirm-dialog-btn--danger' : 'admin-confirm-dialog-btn--primary'}`}
+            data-accent={accent}
             disabled={loading}
             onClick={onConfirm}
           >

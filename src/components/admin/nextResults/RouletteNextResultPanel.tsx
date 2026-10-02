@@ -8,6 +8,7 @@ import { parseApiDateTime } from '../../../utils/time'
 import { buildMediaUrl } from '../../../utils/media'
 import type { WheelPocket } from '../../../types/wheel'
 import { ArrowRightIcon, CloseIcon, SpinnerIcon } from './icons'
+import { ConfirmDialog } from '../ConfirmDialog'
 import './nextResults.css'
 
 // Logo real de marca (mismo que Login/Header/Betting Picker) -- pareja directa del ícono que usa
@@ -116,62 +117,77 @@ export function RouletteNextResultPanel() {
             <p className="admin-next-results-subtitle">{t('admin.nextResults.roulette.subtitle')}</p>
           </div>
         </div>
+        {/* Feedback de Update en la esquina superior derecha del panel (antes debajo de los botones,
+            empujando el panel hacia abajo). */}
+        {status === 'success' && (
+          <div className="admin-next-results-feedback admin-next-results-feedback--header" data-variant="success">
+            {t('admin.nextResults.updateSuccess', { game: t('admin.nextResults.roulette.title') })}
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="admin-next-results-feedback admin-next-results-feedback--header" data-variant="error">
+            {t('admin.nextResults.updateError', { game: t('admin.nextResults.roulette.title') })}
+          </div>
+        )}
       </div>
 
-      <div className="admin-next-results-round-card">
-        <div className="admin-next-results-round-left">
-          <div className="admin-next-results-round-label">
-            <img src={CLOCK_ICON_URL} alt="" />
-            {t('admin.nextResults.nextRound')}
-          </div>
-          <span className="admin-next-results-timer" data-state={timerState}>
-            {isDue ? t('admin.nextResults.dueNow') : countdown.display}
-          </span>
-          <div className="admin-next-results-timer-units">
-            <span>{t('admin.nextResults.minutes')}</span>
-            <span>{t('admin.nextResults.seconds')}</span>
-          </div>
-        </div>
-        <div className="admin-next-results-round-divider" />
-        <div className="admin-next-results-round-right">
-          <div className="admin-next-results-info-block">
-            <span className="admin-next-results-info-label">{t('admin.nextResults.roundNumber')}</span>
-            <span className="admin-next-results-info-value admin-next-results-info-value--emphasis">
-              {drawNumber ? `#${drawNumber}` : t('winnerPanel.notApplicable')}
+      {/* Current Next Result a la izquierda + Next Round card a la derecha en una sola fila (antes
+          apilados) -- ahorra altura para que el panel entre sin scroll. */}
+      <div className="admin-next-results-top-row">
+        <div className="admin-next-results-section">
+          <h3 className="admin-next-results-section-heading">{t('admin.nextResults.currentNextResult')}</h3>
+          <div className="admin-next-results-current-result">
+            <span className="admin-next-results-number-box" data-color={currentColor}>
+              {currentResult}
             </span>
-          </div>
-          <div className="admin-next-results-info-block">
-            <span className="admin-next-results-info-label">{t('admin.nextResults.scheduledTime')}</span>
-            <span className="admin-next-results-info-value">{scheduledTimeLabel}</span>
+            <div className="admin-next-results-detail-row">
+              <div className="admin-next-results-detail">
+                <span className="admin-next-results-detail-label">{t('winnerPanel.color')}</span>
+                <span className="admin-next-results-detail-value">
+                  <span className="admin-next-results-color-dot" data-color={currentColor} />
+                  {t(`admin.nextResults.colorValues.${currentColor}`)}
+                </span>
+              </div>
+              <div className="admin-next-results-detail">
+                <span className="admin-next-results-detail-label">{t('winnerPanel.parity')}</span>
+                <span className="admin-next-results-detail-value">
+                  {currentParity ? t(`admin.nextResults.parityValues.${currentParity}`) : t('winnerPanel.notApplicable')}
+                </span>
+              </div>
+              <div className="admin-next-results-detail">
+                <span className="admin-next-results-detail-label">{t('winnerPanel.range')}</span>
+                <span className="admin-next-results-detail-value">
+                  {currentRange ? t(`admin.nextResults.rangeValues.${currentRange}`) : t('winnerPanel.notApplicable')}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="admin-next-results-section">
-        <h3 className="admin-next-results-section-heading">{t('admin.nextResults.currentNextResult')}</h3>
-        <div className="admin-next-results-current-result">
-          <span className="admin-next-results-number-box" data-color={currentColor}>
-            {currentResult}
-          </span>
-          <div className="admin-next-results-detail-row">
-            <div className="admin-next-results-detail">
-              <span className="admin-next-results-detail-label">{t('winnerPanel.color')}</span>
-              <span className="admin-next-results-detail-value">
-                <span className="admin-next-results-color-dot" data-color={currentColor} />
-                {t(`admin.nextResults.colorValues.${currentColor}`)}
+        <div className="admin-next-results-round-card">
+          <div className="admin-next-results-round-left">
+            <div className="admin-next-results-round-label">
+              <img src={CLOCK_ICON_URL} alt="" />
+              {t('admin.nextResults.nextRound')}
+            </div>
+            <span className="admin-next-results-timer" data-state={timerState}>
+              {isDue ? t('admin.nextResults.dueNow') : countdown.display}
+            </span>
+            <div className="admin-next-results-timer-units">
+              <span>{t('admin.nextResults.minutes')}</span>
+              <span>{t('admin.nextResults.seconds')}</span>
+            </div>
+          </div>
+          <div className="admin-next-results-round-divider" />
+          <div className="admin-next-results-round-right">
+            <div className="admin-next-results-info-block">
+              <span className="admin-next-results-info-label">{t('admin.nextResults.roundNumber')}</span>
+              <span className="admin-next-results-info-value admin-next-results-info-value--emphasis">
+                {drawNumber ? `#${drawNumber}` : t('winnerPanel.notApplicable')}
               </span>
             </div>
-            <div className="admin-next-results-detail">
-              <span className="admin-next-results-detail-label">{t('winnerPanel.parity')}</span>
-              <span className="admin-next-results-detail-value">
-                {currentParity ? t(`admin.nextResults.parityValues.${currentParity}`) : t('winnerPanel.notApplicable')}
-              </span>
-            </div>
-            <div className="admin-next-results-detail">
-              <span className="admin-next-results-detail-label">{t('winnerPanel.range')}</span>
-              <span className="admin-next-results-detail-value">
-                {currentRange ? t(`admin.nextResults.rangeValues.${currentRange}`) : t('winnerPanel.notApplicable')}
-              </span>
+            <div className="admin-next-results-info-block">
+              <span className="admin-next-results-info-label">{t('admin.nextResults.scheduledTime')}</span>
+              <span className="admin-next-results-info-value">{scheduledTimeLabel}</span>
             </div>
           </div>
         </div>
@@ -247,10 +263,50 @@ export function RouletteNextResultPanel() {
           </div>
         </div>
 
-        {status === 'confirming' ? (
-          <div className="admin-next-results-confirm" data-accent="red">
-            <p className="admin-next-results-confirm-title">{t('admin.nextResults.confirmTitle')}</p>
-            <div className="admin-next-results-confirm-row">
+        <div className="admin-next-results-actions">
+          <button
+            type="button"
+            className="admin-next-results-btn-update"
+            data-accent="red"
+            disabled={actionsDisabled}
+            onClick={() => setStatus('confirming')}
+          >
+            {status === 'updating' ? (
+              <>
+                <SpinnerIcon className="admin-next-results-spinner" />
+                {t('admin.nextResults.updating')}
+              </>
+            ) : (
+              <>
+                <img src={REFRESH_ICON_URL} alt="" />
+                {t('admin.nextResults.updateRoulette')}
+              </>
+            )}
+          </button>
+          <button type="button" className="admin-next-results-btn-clear" disabled={actionsDisabled} onClick={handleReset}>
+            <CloseIcon />
+            {t('admin.nextResults.reset')}
+          </button>
+        </div>
+
+        {/* Confirmación como pop-up modal de aviso (antes una barra inline en lugar de los botones) --
+            cambiar el próximo resultado afecta una ronda real. Cancel descarta la selección y vuelve
+            al resultado actual (mismo criterio que Cancel en RTP Settings). */}
+        {status === 'confirming' && (
+          <ConfirmDialog
+            warning
+            accent="red"
+            title={t('admin.nextResults.confirmTitle')}
+            description={t('admin.nextResults.confirmDescription', { game: t('admin.nextResults.roulette.title') })}
+            cancelLabel={t('admin.nextResults.cancel')}
+            confirmLabel={t('admin.nextResults.confirmUpdate')}
+            onCancel={() => {
+              setSelectedNumber(currentResult)
+              setStatus('idle')
+            }}
+            onConfirm={handleConfirmUpdate}
+          >
+            <div className="admin-next-results-confirm-row admin-next-results-confirm-row--dialog">
               <div className="admin-next-results-confirm-col">
                 <span className="admin-next-results-result-label">{t('admin.nextResults.currentResult')}</span>
                 <span className="admin-next-results-confirm-value">{currentResult}</span>
@@ -263,53 +319,9 @@ export function RouletteNextResultPanel() {
                 </span>
               </div>
             </div>
-            <div className="admin-next-results-actions">
-              <button type="button" className="admin-next-results-btn-clear" onClick={() => setStatus('idle')}>
-                {t('admin.nextResults.cancel')}
-              </button>
-              <button type="button" className="admin-next-results-btn-update" data-accent="red" onClick={handleConfirmUpdate}>
-                {t('admin.nextResults.confirmUpdate')}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="admin-next-results-actions">
-            <button
-              type="button"
-              className="admin-next-results-btn-update"
-              data-accent="red"
-              disabled={actionsDisabled}
-              onClick={() => setStatus('confirming')}
-            >
-              {status === 'updating' ? (
-                <>
-                  <SpinnerIcon className="admin-next-results-spinner" />
-                  {t('admin.nextResults.updating')}
-                </>
-              ) : (
-                <>
-                  <img src={REFRESH_ICON_URL} alt="" />
-                  {t('admin.nextResults.updateRoulette')}
-                </>
-              )}
-            </button>
-            <button type="button" className="admin-next-results-btn-clear" disabled={actionsDisabled} onClick={handleReset}>
-              <CloseIcon />
-              {t('admin.nextResults.reset')}
-            </button>
-          </div>
+          </ConfirmDialog>
         )}
 
-        {status === 'success' && (
-          <div className="admin-next-results-feedback" data-variant="success">
-            {t('admin.nextResults.updateSuccess', { game: t('admin.nextResults.roulette.title') })}
-          </div>
-        )}
-        {status === 'error' && (
-          <div className="admin-next-results-feedback" data-variant="error">
-            {t('admin.nextResults.updateError', { game: t('admin.nextResults.roulette.title') })}
-          </div>
-        )}
       </div>
     </div>
   )

@@ -67,3 +67,18 @@ export interface RtpChange {
   dateTime: string
   status: RtpChangeStatus
 }
+
+// RTP Stability (ver RtpStabilityChart.tsx) -- RTP acumulado a medida que se juegan rondas, contra el
+// rango esperado por azar. sigma = desvío estándar del retorno por unidad apostada en una ronda
+// (mezcla de tipos de apuesta del juego): cuanto más alto, más ancho el embudo.
+export interface RtpStabilityPoint {
+  rounds: number
+  rtp: number
+}
+
+export interface RtpStabilityData {
+  target: number
+  sigma: number
+  correctionWindow: number
+  points: RtpStabilityPoint[]
+}

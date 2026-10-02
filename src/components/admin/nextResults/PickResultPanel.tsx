@@ -4,6 +4,7 @@ import { AdminSelect, type AdminSelectOption } from '../AdminSelect'
 import { ResultBall } from './ResultBall'
 import { buildMediaUrl } from '../../../utils/media'
 import { ArrowRightIcon, CloseIcon, SpinnerIcon } from './icons'
+import { ConfirmDialog } from '../ConfirmDialog'
 import './nextResults.css'
 
 const REFRESH_ICON_URL = buildMediaUrl('Website_svg_icons/39_refresh_white_clean.svg')
@@ -29,6 +30,9 @@ interface PickResultPanelProps {
   subtitle: string
   updateLabel: string
   seedDigits: number[]
+  // Resultado de un Update confirmado -- el feedback ("Pick 3 result updated") ya no vive en esta
+  // card: lo muestra QuickMoneyNextResultPanel en la esquina superior derecha del panel Quick Money.
+  onResult?: (result: 'success' | 'error') => void
 }
 
 // Pick 3 y Pick 4 comparten exactamente la misma estructura (current result en bolas, new result
@@ -39,7 +43,7 @@ interface PickResultPanelProps {
 // en QuickMoneyNextResultPanel.tsx, igual que "Next Round" en RouletteNextResultPanel. El proyecto
 // hoy no tiene NINGÚN endpoint de escritura para Quick Money -- todo el estado de esta card es
 // local, listo para reemplazar por un fetch/store real más adelante (ver performUpdate).
-export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, seedDigits }: PickResultPanelProps) {
+export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, seedDigits, onResult }: PickResultPanelProps) {
   const { t } = useTranslation()
 
   // currentDigits = lo que hoy está programado como próximo resultado; draftDigits = lo que el
@@ -78,8 +82,10 @@ export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, se
       await performUpdate(draftDigits)
       setCurrentDigits(draftDigits)
       setStatus('success')
+      onResult?.('success')
     } catch {
       setStatus('error')
+      onResult?.('error')
     }
   }
 
@@ -123,11 +129,11 @@ export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, se
           <div className="admin-next-results-selects-row">
             {draftDigits.map((digit, index) => (
               <div key={index} className="admin-next-results-select-slot" data-accent={accent} data-changed={changedFlags[index]}>
-                <span className="admin-next-results-changed-tag">{t('admin.nextResults.changedTag')}</span>
                 <AdminSelect
                   value={String(digit)}
                   options={digitOptions}
                   ariaLabel={`${title} digit ${index + 1}`}
+                  openUpward
                   onChange={(value) => setDraftDigits((prev) => prev.map((d, i) => (i === index ? Number(value) : d)))}
                 />
               </div>
@@ -138,10 +144,49 @@ export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, se
 
       <div className="admin-next-results-divider" />
 
-      {status === 'confirming' ? (
-        <div className="admin-next-results-confirm" data-accent={accent}>
-          <p className="admin-next-results-confirm-title">{t('admin.nextResults.confirmTitle')}</p>
-          <div className="admin-next-results-confirm-row">
+      <div className="admin-next-results-actions">
+        <button
+          type="button"
+          className="admin-next-results-btn-update"
+          data-accent={accent}
+          disabled={actionsDisabled}
+          onClick={() => setStatus('confirming')}
+        >
+          {status === 'updating' ? (
+            <>
+              <SpinnerIcon className="admin-next-results-spinner" />
+              {t('admin.nextResults.updating')}
+            </>
+          ) : (
+            <>
+              <img src={REFRESH_ICON_URL} alt="" />
+              {updateLabel}
+            </>
+          )}
+        </button>
+        <button type="button" className="admin-next-results-btn-clear" disabled={actionsDisabled} onClick={handleReset}>
+          <CloseIcon />
+          {t('admin.nextResults.reset')}
+        </button>
+      </div>
+
+      {/* Confirmación como pop-up modal de aviso (mismo que Roulette) -- línea de acento y botón del
+          color del juego. Cancel descarta los cambios y vuelve al resultado actual. */}
+      {status === 'confirming' && (
+        <ConfirmDialog
+          warning
+          accent={accent}
+          title={t('admin.nextResults.confirmTitle')}
+          description={t('admin.nextResults.confirmDescription', { game: title })}
+          cancelLabel={t('admin.nextResults.cancel')}
+          confirmLabel={t('admin.nextResults.confirmUpdate')}
+          onCancel={() => {
+            setDraftDigits(currentDigits)
+            setStatus('idle')
+          }}
+          onConfirm={handleConfirmUpdate}
+        >
+          <div className="admin-next-results-confirm-row admin-next-results-confirm-row--dialog">
             <div className="admin-next-results-confirm-col">
               <span className="admin-next-results-result-label">{t('admin.nextResults.currentResult')}</span>
               <span className="admin-next-results-confirm-value">{currentDigits.join('')}</span>
@@ -154,52 +199,7 @@ export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, se
               </span>
             </div>
           </div>
-          <div className="admin-next-results-actions">
-            <button type="button" className="admin-next-results-btn-clear" onClick={() => setStatus('idle')}>
-              {t('admin.nextResults.cancel')}
-            </button>
-            <button type="button" className="admin-next-results-btn-update" data-accent={accent} onClick={handleConfirmUpdate}>
-              {t('admin.nextResults.confirmUpdate')}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="admin-next-results-actions">
-          <button
-            type="button"
-            className="admin-next-results-btn-update"
-            data-accent={accent}
-            disabled={actionsDisabled}
-            onClick={() => setStatus('confirming')}
-          >
-            {status === 'updating' ? (
-              <>
-                <SpinnerIcon className="admin-next-results-spinner" />
-                {t('admin.nextResults.updating')}
-              </>
-            ) : (
-              <>
-                <img src={REFRESH_ICON_URL} alt="" />
-                {updateLabel}
-              </>
-            )}
-          </button>
-          <button type="button" className="admin-next-results-btn-clear" disabled={actionsDisabled} onClick={handleReset}>
-            <CloseIcon />
-            {t('admin.nextResults.reset')}
-          </button>
-        </div>
-      )}
-
-      {status === 'success' && (
-        <div className="admin-next-results-feedback" data-variant="success">
-          {t('admin.nextResults.updateSuccess', { game: title })}
-        </div>
-      )}
-      {status === 'error' && (
-        <div className="admin-next-results-feedback" data-variant="error">
-          {t('admin.nextResults.updateError', { game: title })}
-        </div>
+        </ConfirmDialog>
       )}
     </div>
   )

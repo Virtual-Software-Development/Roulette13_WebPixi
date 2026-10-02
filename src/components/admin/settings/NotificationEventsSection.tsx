@@ -3,27 +3,27 @@ import { NOTIFICATION_EVENT_IDS } from '../../../data/adminSettingsMockData'
 import type { NotificationEventsSettings } from '../../../types/adminSettings'
 import './adminSettings.css'
 
-interface NotificationEventsCardProps {
+interface NotificationEventsSectionProps {
   events: NotificationEventsSettings
   onToggleEvent: (event: keyof NotificationEventsSettings) => void
 }
 
-// Solo estado de UI (mismo criterio que NotificationChannelsCard.tsx) -- estos ids son
+// Solo estado de UI (sin backend de notificaciones todavía) -- estos ids son
 // descriptivos para el mock, no un enum real de eventos consumido por otra parte del sistema (ver
 // types/adminSettings.ts: no existe todavía backend/store de notificaciones).
-export function NotificationEventsCard({ events, onToggleEvent }: NotificationEventsCardProps) {
+// Ya no es una card propia: vive como columna derecha dentro de EmailSettingsCard (pedido explícito
+// de fusionar Email Notifications + Notification Events).
+export function NotificationEventsSection({ events, onToggleEvent }: NotificationEventsSectionProps) {
   const { t } = useTranslation()
 
   return (
-    <section className="admin-panel admin-settings-card">
-      <div className="admin-panel-header">
-        <div>
-          <h2 className="admin-panel-title">{t('admin.settings.notifications.events.title')}</h2>
-          <p className="admin-settings-card-subtitle">{t('admin.settings.notifications.events.subtitle')}</p>
-        </div>
+    <div className="admin-settings-events-section">
+      <div>
+        <h3 className="admin-settings-subsection-title">{t('admin.settings.notifications.events.title')}</h3>
+        <p className="admin-settings-card-subtitle">{t('admin.settings.notifications.events.subtitle')}</p>
       </div>
 
-      <div>
+      <div className="admin-settings-events-list">
         {NOTIFICATION_EVENT_IDS.map((eventId) => (
           <label key={eventId} className="admin-settings-event-row">
             <span className="admin-settings-checkbox">
@@ -39,6 +39,6 @@ export function NotificationEventsCard({ events, onToggleEvent }: NotificationEv
           </label>
         ))}
       </div>
-    </section>
+    </div>
   )
 }

@@ -1,0 +1,238 @@
+/* Result Frequency (Dashboard) -- namespace propio, mismo criterio que el resto de charts del Admin:
+   se restata la receta (segmented de GameEventsOverTimeChart, tooltip, gridlines) en vez de
+   importar la hoja de otro chart. */
+.admin-result-frequency {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-result-frequency-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-result-frequency-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.admin-result-frequency-segmented {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.7);
+}
+
+.admin-result-frequency-segment {
+  height: 28px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-result-frequency-segment:hover {
+  color: var(--admin-text-primary);
+}
+
+.admin-result-frequency-segment[data-selected='true'] {
+  background: var(--admin-blue);
+  color: #fff;
+}
+
+.admin-result-frequency-plot {
+  position: relative;
+  margin-top: 10px;
+}
+
+.admin-result-frequency-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1000 / 300;
+}
+
+.admin-result-frequency-gridline {
+  stroke: rgba(120, 145, 170, 0.14);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-result-frequency-baseline {
+  stroke: rgba(120, 145, 170, 0.3);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-result-frequency-expected {
+  stroke: var(--admin-text-primary);
+  stroke-opacity: 0.7;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.admin-result-frequency-axis-label {
+  fill: var(--admin-text-secondary);
+  font-size: 17px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-result-frequency-bar {
+  transition: opacity 120ms ease;
+}
+
+.admin-result-frequency-bar[data-dimmed='true'] {
+  opacity: 0.4;
+}
+
+.admin-result-frequency-tooltip {
+  position: absolute;
+  top: 0;
+  min-width: 170px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(8, 15, 23, 0.96);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  color: var(--admin-text-primary);
+  pointer-events: none;
+  transform: translateX(12px);
+  z-index: 2;
+}
+
+/* Cerca del borde derecho se abre hacia la izquierda de la barra para no desbordar el panel. */
+.admin-result-frequency-tooltip[data-align='right'] {
+  transform: translateX(calc(-100% - 12px));
+}
+
+.admin-result-frequency-tooltip-title {
+  margin-bottom: 8px;
+  color: var(--admin-text-secondary);
+  font-weight: 600;
+}
+
+.admin-result-frequency-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.admin-result-frequency-tooltip-value {
+  margin-left: auto;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hot / Cold / split de colores / leyenda del expected -- una fila que envuelve en anchos chicos. */
+.admin-result-frequency-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px 22px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-result-frequency-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-result-frequency-group-label {
+  margin-right: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.admin-result-frequency-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+
+.admin-result-frequency-pill[data-tone='red'] {
+  background: var(--admin-red);
+  color: #fff;
+}
+
+.admin-result-frequency-pill[data-tone='black'] {
+  background: #1c242e;
+  border: 1px solid rgba(150, 175, 200, 0.35);
+  color: #fff;
+}
+
+.admin-result-frequency-pill[data-tone='green'] {
+  background: var(--admin-green);
+  color: #06210f;
+}
+
+.admin-result-frequency-pill[data-tone='white'] {
+  background: linear-gradient(180deg, #ffffff 0%, #d9e0e8 100%);
+  color: #0b1520;
+}
+
+.admin-result-frequency-split {
+  gap: 14px;
+}
+
+.admin-result-frequency-split-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-result-frequency-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.admin-result-frequency-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+}
+
+.admin-result-frequency-legend-line {
+  width: 18px;
+  border-top: 1.5px dashed var(--admin-text-primary);
+  opacity: 0.7;
+}

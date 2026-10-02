@@ -50,13 +50,13 @@ export function AdminTablePagination({ page, totalPages, onPageChange, rangeLabe
       <p className="admin-table-pagination-count">{rangeLabel}</p>
 
       {totalPages > 1 && (
-        <nav className="admin-table-pagination" aria-label={t('admin.videos.shared.pagination')}>
+        <nav className="admin-table-pagination" aria-label={t('admin.shared.pagination')}>
           <button
             type="button"
             className="admin-table-pagination-btn"
             disabled={page === 1}
             onClick={() => onPageChange(Math.max(1, page - 1))}
-            aria-label={t('admin.videos.shared.previousPage')}
+            aria-label={t('admin.shared.previousPage')}
           >
             <ChevronLeftIcon />
           </button>
@@ -83,7 +83,7 @@ export function AdminTablePagination({ page, totalPages, onPageChange, rangeLabe
             className="admin-table-pagination-btn"
             disabled={page === totalPages}
             onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-            aria-label={t('admin.videos.shared.nextPage')}
+            aria-label={t('admin.shared.nextPage')}
           >
             <ChevronRightIcon />
           </button>

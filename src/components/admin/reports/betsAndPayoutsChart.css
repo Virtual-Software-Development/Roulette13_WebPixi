@@ -4,52 +4,187 @@
   min-width: 0;
 }
 
+.admin-bets-payouts-header {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-bets-payouts-subtitle {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+}
+
 .admin-bets-payouts-legend {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
   flex-shrink: 0;
 }
 
 .admin-bets-payouts-legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 7px;
+  font-size: 12.5px;
   font-weight: 500;
   color: var(--admin-text-secondary);
   white-space: nowrap;
 }
 
-.admin-bets-payouts-legend-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
+.admin-bets-payouts-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
   flex-shrink: 0;
 }
 
-.admin-bets-payouts-legend-dot[data-series='bets'] {
-  background: var(--admin-blue);
+/* Totales del período -- el texto va en tokens de texto, el color de serie solo en el swatch. */
+.admin-bets-payouts-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
 }
 
-.admin-bets-payouts-legend-dot[data-series='payout'] {
-  background: var(--admin-red);
+@media (max-width: 720px) {
+  .admin-bets-payouts-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.admin-bets-payouts-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.5);
+  min-width: 0;
+}
+
+.admin-bets-payouts-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-bets-payouts-stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* El plot ocupa todo el alto libre del panel (que se estira al alto de la fila); el SVG se dibuja
+   a ese tamaño en px (ver BetsAndPayoutsChart). */
+.admin-bets-payouts-plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 240px;
+  margin-top: 8px;
 }
 
 .admin-bets-payouts-svg {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1000 / 320;
-  margin-top: 10px;
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
 }
 
 .admin-bets-payouts-gridline {
-  stroke: rgba(120, 145, 170, 0.14);
+  stroke: rgba(120, 145, 170, 0.12);
   stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-bets-payouts-baseline {
+  stroke: rgba(120, 145, 170, 0.32);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 
 .admin-bets-payouts-axis-label {
   fill: var(--admin-text-secondary);
-  font-size: 20px;
+  font-size: 12.5px;
   font-family: inherit;
+}
+
+.admin-bets-payouts-total-label {
+  fill: var(--admin-text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.admin-bets-payouts-group {
+  transition: opacity 120ms ease;
+}
+
+.admin-bets-payouts-group[data-dimmed='true'] {
+  opacity: 0.4;
+}
+
+.admin-bets-payouts-tooltip {
+  position: absolute;
+  top: 0;
+  min-width: 190px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(8, 15, 23, 0.97);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+  pointer-events: none;
+  transform: translateX(14px);
+  z-index: 2;
+}
+
+.admin-bets-payouts-tooltip[data-align='right'] {
+  transform: translateX(calc(-100% - 14px));
+}
+
+.admin-bets-payouts-tooltip-title {
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-bets-payouts-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 0;
+}
+
+.admin-bets-payouts-tooltip-value {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-bets-payouts-tooltip-footer {
+  margin-top: 5px;
+  padding-top: 7px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-bets-payouts-sr-table {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

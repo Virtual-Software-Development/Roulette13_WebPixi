@@ -13,6 +13,7 @@ export function LeftStatsSidebarOverlay({ data }: { data: LiveTableBetsData }) {
   return (
     <Application
       className="left-stats-sidebar-overlay-canvas"
+      antialias={true}
       autoDensity={true}
       resizeTo={window}
       resolution={Math.min(window.devicePixelRatio || 1, 2)}
