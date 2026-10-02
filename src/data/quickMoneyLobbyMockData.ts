@@ -20,7 +20,7 @@ export interface QuickMoneyLobbyDraw {
 // Orden: más reciente primero. Horas relativas a "ahora" (no hardcodeadas a un pasado fijo) para
 // que el mock no se sienta desactualizado con el paso del tiempo -- mismo criterio ya aplicado en
 // admin-report-date-range-value (ver conversación). Separados por MINUTOS, no por días (pedido
-// explícito): Quick Money sortea cada pocos minutos (ver ROUND_DURATION_SECONDS en
+// explícito): Quick Money sortea cada 5 minutos (ver ROUND_DURATION_SECONDS en
 // useQuickMoneyRoundStore.ts), así que el historial reciente cae siempre el mismo día -- por eso
 // la tabla de Recent Results muestra hora, no fecha (ver QuickMoneyRecentResults.tsx).
 const DRAW_INTERVAL_MINUTES = 6

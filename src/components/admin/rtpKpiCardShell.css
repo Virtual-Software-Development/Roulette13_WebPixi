@@ -1,5 +1,7 @@
 .admin-rtp-kpi-card {
   --accent: var(--admin-red);
+  /* Permite a las cards dimensionar texto según su propio ancho (ver houseMarginCard.css). */
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 12px;

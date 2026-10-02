@@ -39,9 +39,14 @@
   background: rgba(150, 180, 210, 0.06);
 }
 
-.admin-report-shortcut:hover .admin-report-shortcut-chevron {
-  transform: translateX(2px);
+.admin-report-shortcut:hover .admin-report-shortcut-download {
   color: var(--admin-text-primary);
+  border-color: color-mix(in srgb, var(--admin-blue) 55%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-blue) 16%, transparent);
+}
+
+.admin-report-shortcut:hover .admin-report-shortcut-download svg {
+  transform: translateY(1px);
 }
 
 .admin-report-shortcut:focus-visible {
@@ -75,16 +80,87 @@
   color: var(--admin-text-secondary);
 }
 
-.admin-report-shortcut-chevron {
+/* Badge de descarga a la derecha -- reemplaza el chevron ">" que sugería navegación; el ícono de
+   descarga comunica que el click baja un archivo (el formato se elige en el header del panel). */
+.admin-report-shortcut-download {
   flex-shrink: 0;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
   color: var(--admin-text-secondary);
   transition:
-    transform 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.admin-report-shortcut-download svg {
+  width: 15px;
+  height: 15px;
+  transition: transform 150ms ease;
+}
+
+/* Selector de formato (CSV/PDF/Excel) en la esquina superior derecha -- mismo toggle segmentado que
+   Actual vs Target / Deviation del RTP Dashboard. */
+.admin-report-shortcuts-header {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-report-shortcuts-formats {
+  display: flex;
+  flex-shrink: 0;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.7);
+}
+
+.admin-report-shortcuts-format {
+  height: 26px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
     color 150ms ease;
 }
 
-.admin-report-shortcut-chevron svg {
-  width: 16px;
-  height: 16px;
+.admin-report-shortcuts-format:hover {
+  color: var(--admin-text-primary);
+}
+
+.admin-report-shortcuts-format {
+  border: 1px solid transparent;
+}
+
+/* Formato activo bien marcado: contorno + texto amarillo (--admin-yellow) sobre un tinte suave. */
+.admin-report-shortcuts-format[data-selected='true'] {
+  border-color: var(--admin-yellow);
+  background: color-mix(in srgb, var(--admin-yellow) 14%, transparent);
+  color: var(--admin-yellow);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--admin-yellow) 25%, transparent);
+}
+
+.admin-report-shortcuts-format:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.55);
+  outline-offset: 1px;
+}
+
+.admin-report-shortcuts-hint {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
 }

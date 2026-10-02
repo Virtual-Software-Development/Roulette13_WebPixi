@@ -17,17 +17,9 @@
   }
 }
 
-/* Roulette y Quick Money viven en vistas separadas -- una sola columna, con un ancho tope para
-   que el panel no se estire a todo el ancho de la página. Roulette necesita ancho para su "mesa"
-   (0/00 + 12 columnas de números); Quick Money lo necesita para Pick 3 y Pick 4 lado a lado. */
+/* Roulette y Quick Money viven en vistas separadas -- una sola columna a todo el ancho disponible
+   (antes ambas con tope de 1280px: en pantallas anchas dejaban una franja vacía a la derecha y no
+   coincidían con el resto de páginas del Admin, que llenan el ancho). */
 .admin-next-results-grid[data-single='true'] {
   grid-template-columns: minmax(0, 1fr);
-}
-
-.admin-next-results-grid[data-single='true'][data-section='roulette'] {
-  max-width: 1280px;
-}
-
-.admin-next-results-grid[data-single='true'][data-section='quickMoney'] {
-  max-width: 1280px;
 }

@@ -48,7 +48,7 @@ export function PerformanceByGameTable({ rows, total }: PerformanceByGameTablePr
             <td className="admin-performance-by-game-numeric">{total.totalBets.toLocaleString('en-US')}</td>
             <td className="admin-performance-by-game-numeric">{formatMoney(total.totalPayout)}</td>
             <td className="admin-performance-by-game-numeric">{formatMoney(total.grossRevenue)}</td>
-            <td className="admin-performance-by-game-numeric">{total.rtp.toFixed(2)}%</td>
+            <td className="admin-performance-by-game-numeric" aria-hidden="true" />
           </tr>
         </tbody>
       </table>

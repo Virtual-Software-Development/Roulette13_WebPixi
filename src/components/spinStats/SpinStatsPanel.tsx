@@ -792,8 +792,8 @@ export function SpinStatsPanel() {
   const rawResults = useResultsStore((state) => state.rawResults)
 
   // shouldShow/activeCategory/donutSet vienen de useSpinStatsCycle -- fuente única ligada al
-  // countdown real (aparece 0.5s después de que Hot/Cold se oculta, se oculta a los 5s de faltar
-  // para el próximo sorteo) y compartida con LobbyBackgroundLayer (NumberCellHighlightLayer en
+  // countdown real (aparece 0.5s después de que Hot/Cold se oculta, se congela a los 5s de faltar
+  // para el próximo sorteo y se oculta con el resto de los paneles) y compartida con LobbyBackgroundLayer (NumberCellHighlightLayer en
   // fase 1, Dozen/ColumnDiamondIndicatorLayer en fase 2), para que lo resaltado en la rueda
   // siempre coincida con el ciclo de fase 2 de acá.
   const { shouldShow, activeCategory, donutSet } = useSpinStatsCycle()

@@ -14,6 +14,7 @@ export function ResultStatsOverlay({ data }: { data: ResultStatsData }) {
   return (
     <Application
       className="result-stats-overlay-canvas"
+      antialias={true}
       autoDensity={true}
       resizeTo={window}
       resolution={Math.min(window.devicePixelRatio || 1, 2)}

@@ -11,7 +11,6 @@ import './header.css'
 // Íconos del set Website_svg_icons (ver local-media/) -- reemplazan a los SVG inline dibujados a
 // mano que tenía antes el header.
 const ROULETTE_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg')
-const LOTTERY_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/12_dice_white.svg')
 const BETTING_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/27_red_chip.svg')
 const ADMIN_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/17_gear_white.svg')
 const BALANCE_ICON_URL = buildMediaUrl('Website_svg_icons/41_payouts.svg')
@@ -19,10 +18,12 @@ const USER_ICON_URL = buildMediaUrl('Website_svg_icons/16_user_white_circle.svg'
 
 // Todavía no hay router en el proyecto, así que "navegar" entre tabs se resuelve reescribiendo
 // window.location.search (mismo mecanismo ad-hoc que ya usa main.tsx para ?preview=login, ver
-// navigateToPreview en utils/navigatePreview.ts). ROULETTE, ADMIN y LOTTERY (QUICK MONEY) navegan
-// directo a su pantalla y se resaltan como "activos" al llegar a su destino. LOTTERY navega al
-// Quick Money Lobby nuevo (?preview=quick-money-lobby, ver screens/QuickMoneyLobby.tsx) -- ya no
-// abre directo una vista de apuestas, el Lobby es el punto de entrada a Pick 3/Pick 4.
+// navigateToPreview en utils/navigatePreview.ts). ROULETTE y ADMIN navegan directo a su pantalla y
+// se resaltan como "activos" al llegar a su destino. El tab QUICK MONEY se SACÓ del header (pedido
+// explícito) -- el Quick Money Lobby sigue existiendo (?preview=quick-money-lobby, ver
+// screens/QuickMoneyLobby.tsx), solo que no hay forma de llegar desde acá. Para volver a mostrarlo,
+// ver el tab en el git history (className app-header-tab--lottery, onClick
+// navigateToPreview('quick-money-lobby')).
 //
 // BETTING ya NO tiene un destino propio (pedido explícito, ver conversación): siempre abre
 // BettingGamePickerModal.tsx (nunca navega él mismo, nunca se resalta como "activo" -- no tiene
@@ -36,10 +37,6 @@ export type ActiveBettingGame = 'roulette' | 'quickMoney'
 
 function RouletteTabIcon() {
   return <img src={ROULETTE_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
-}
-
-function LotteryTabIcon() {
-  return <img src={LOTTERY_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
 }
 
 function BettingTabIcon() {
@@ -184,16 +181,6 @@ export function Header({ activeTab = 'roulette', activeBettingGame }: HeaderProp
             >
               <RouletteTabIcon />
               <span className="app-header-tab-label">{t('header.roulette')}</span>
-            </div>
-            <div
-              className={`app-header-tab app-header-tab--lottery${activeTab === 'quickMoneyLobby' ? '' : ' app-header-tab--clickable'}`}
-              data-active={activeTab === 'quickMoneyLobby'}
-              role="tab"
-              aria-selected={activeTab === 'quickMoneyLobby'}
-              onClick={activeTab === 'quickMoneyLobby' ? undefined : () => navigateToPreview('quick-money-lobby')}
-            >
-              <LotteryTabIcon />
-              <span className="app-header-tab-label">{t('header.lottery')}</span>
             </div>
             <div
               className="app-header-tab app-header-tab--betting app-header-tab--clickable"

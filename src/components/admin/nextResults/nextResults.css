@@ -28,12 +28,13 @@
   box-shadow: none;
 }
 
-/* Quick Money -- el borde exterior no es azul vivo (pedido explícito: no debe competir
-   visualmente con Pick 3/Pick 4) -- queda oscuro/neutral, la identidad azul sigue viva en el
-   ícono del header. */
+/* Quick Money -- borde exterior neutro (no azul vivo alrededor de todo el panel: no debe competir
+   visualmente con Pick 3/Pick 4), con el mismo acento de 2px arriba que Roulette pero en azul
+   (--admin-blue #2588ff, mismo azul que su ícono/KPI card). */
 .admin-next-results-panel[data-accent='blue'] {
   background: linear-gradient(145deg, rgba(8, 20, 30, 0.98), rgba(5, 14, 22, 0.98));
   border: 1px solid rgba(71, 96, 116, 0.42);
+  border-top: 2px solid rgba(37, 136, 255, 0.65);
   box-shadow: none;
 }
 
@@ -678,18 +679,6 @@
   visibility: hidden;
 }
 
-.admin-next-results-select-slot[data-changed='true'] .admin-next-results-changed-tag {
-  visibility: visible;
-}
-
-.admin-next-results-select-slot[data-changed='true'][data-accent='green'] .admin-next-results-changed-tag {
-  color: #22c55e;
-}
-
-.admin-next-results-select-slot[data-changed='true'][data-accent='amber'] .admin-next-results-changed-tag {
-  color: #f2b84c;
-}
-
 .admin-next-results-select-slot .admin-select-trigger {
   height: 46px;
   padding: 0 12px;
@@ -847,4 +836,118 @@
   font-size: 30px;
   font-weight: 700;
   color: #111820;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Roulette compacto -- título más chico y Next Round card más baja (Round # y Scheduled Time lado
+   a lado en vez de apilados) para que todo el panel entre sin scroll vertical. Scopeado a
+   data-accent='red' (solo Roulette): Quick Money comparte estas clases y queda como estaba. */
+.admin-next-results-panel[data-accent='red'] {
+  gap: 14px;
+  padding-top: 16px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-header-left {
+  gap: 10px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-icon-halo {
+  width: 42px;
+  height: 42px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-icon-halo img {
+  width: 24px;
+  height: 24px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-title {
+  font-size: 18px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-subtitle {
+  margin-top: 1px;
+  font-size: 13.5px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-round-left {
+  padding: 10px 18px;
+  gap: 2px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-round-label {
+  font-size: 11.5px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-timer {
+  font-size: 28px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-timer-units {
+  font-size: 11.5px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-round-right {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 48px;
+  padding: 10px 18px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-info-label {
+  font-size: 11.5px;
+}
+
+.admin-next-results-panel[data-accent='red'] .admin-next-results-info-value {
+  font-size: 16px;
+}
+
+.admin-next-results-top-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+/* La card no tiene heading propio: se alinea con el número (debajo de "Current Next Result"). */
+.admin-next-results-top-row > .admin-next-results-round-card {
+  align-self: end;
+}
+
+@media (max-width: 1100px) {
+  .admin-next-results-top-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Resumen Current -> New dentro del ConfirmDialog de aviso (Roulette) -- centrado y con números
+   más grandes que en la barra inline anterior. */
+.admin-next-results-confirm-row--dialog {
+  justify-content: center;
+  gap: 28px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.6);
+}
+
+.admin-next-results-confirm-row--dialog .admin-next-results-confirm-col {
+  align-items: center;
+}
+
+.admin-next-results-confirm-row--dialog .admin-next-results-confirm-value {
+  font-size: 32px;
+}
+
+/* Feedback de Update dentro del header del panel (Roulette y Quick Money) -- a la derecha del título vía el
+   justify-content:space-between del header, alineado al centro vertical del título. */
+.admin-next-results-feedback--header {
+  align-self: center;
+  margin-left: auto;
+  box-sizing: border-box;
+  min-width: min(420px, 100%);
+  padding: 11px 24px;
+  text-align: center;
 }

@@ -102,14 +102,14 @@
     "disclaimer": "Amounts shown on each number are total bets by all players in the current round."
   },
   "login": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "title": "ADMIN ACCESS",
     "subtitle": "Sign in to manage roulette and lottery operations",
     "usernameLabel": "Username",
     "usernamePlaceholder": "Username",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Password",
-    "showPassword": "Show password",
-    "hidePassword": "Hide password",
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot password?",
     "signIn": "Sign in",
@@ -321,7 +321,6 @@
       "rtpManagement": "Management",
       "systemLogs": "System Logs",
       "reports": "Reports",
-      "videos": "Videos",
       "settings": "Settings"
     },
     "dashboard": {
@@ -359,6 +358,46 @@
       "gamesDistribution": {
         "title": "Games Distribution",
         "totalRounds": "Total Rounds"
+      },
+      "gamePerformance": {
+        "title": "Game Performance Comparison",
+        "subtitle": "Compare total wagers, payouts, and GGR across games",
+        "totalWagers": "Total Wagers",
+        "totalPayouts": "Total Payouts",
+        "ggr": "GGR",
+        "modes": {
+          "amount": "Amount (USD)",
+          "share": "Share (%)"
+        },
+        "yAxis": {
+          "amount": "Amount (USD)",
+          "share": "Share of total (%)"
+        }
+      },
+      "gameEventsOverTime": {
+        "title": "Game Events Over Time",
+        "subtitle": "Completed, failed and cancelled events per hour",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "total": "Total"
+      },
+      "resultFrequency": {
+        "title": "Result Frequency",
+        "subtitle": "How often each result came up in the last {{rounds}} completed rounds.",
+        "gameLabel": "Game",
+        "windowLabel": "Rounds",
+        "number": "Number {{value}}",
+        "digit": "Digit {{value}}",
+        "drawn": "Drawn",
+        "timesCount_one": "{{count}} time",
+        "timesCount_other": "{{count}} times",
+        "expected": "Expected",
+        "deviation": "vs. expected",
+        "hot": "Hot",
+        "cold": "Cold",
+        "expectedLegend": "Expected",
+        "colors": { "red": "Red", "black": "Black", "green": "Green" }
       },
       "recentRounds": {
         "title": "Recent Rounds",
@@ -418,7 +457,9 @@
         "gameReport": "Game Report",
         "playerReport": "Player Report",
         "financialReport": "Financial Report",
-        "rtpAnalysis": "RTP Analysis"
+        "rtpAnalysis": "RTP Analysis",
+        "weeklyReport": "Weekly Report",
+        "monthlyReport": "Monthly Report"
       },
       "kpi": {
         "totalBets": "Total Bets",
@@ -427,10 +468,16 @@
         "rtp": "RTP",
         "vsPreviousPeriod": "vs. previous period"
       },
+      "peakHours": {"title": "Peak Hours", "subtitle": "Total bets by weekday and hour · {{period}}", "less": "Less", "more": "More", "busiest": "Busiest", "quietest": "Quietest", "cell": "{{day}} {{from}}–{{to}} · {{amount}} bet · ~{{rounds}} rounds"},
       "betsAndPayouts": {
-        "title": "Bets and Payouts",
+        "title": "Bets, Payouts & Revenue",
+        "subtitle": "Daily · full bar = total bets, split into payouts and gross gaming revenue (GGR)",
         "bets": "Total Bets",
-        "payout": "Total Payout"
+        "payout": "Payouts",
+        "ggr": "GGR",
+        "hold": "Hold %",
+        "rtp": "RTP",
+        "date": "Date"
       },
       "rtpTrend": {
         "title": "RTP Trend",
@@ -447,6 +494,9 @@
         "total": "Total"
       },
       "shortcuts": {
+        "downloadHint": "Click a shortcut to generate and download the report.",
+        "formatLabel": "Download format",
+        "downloadTooltip": "Generate and download ({{format}})",
         "title": "Report Shortcuts",
         "gamePerformance": {
           "title": "Game Performance",
@@ -463,7 +513,9 @@
         "rtpAnalysis": {
           "title": "RTP Analysis",
           "description": "RTP trends and analysis"
-        }
+        },
+        "weeklyReport": {"title": "Weekly Report", "description": "Last 7 days, by day"},
+        "monthlyReport": {"title": "Monthly Report", "description": "Last month, by week"}
       },
       "recent": {
         "title": "Recent Reports",
@@ -519,7 +571,8 @@
       },
       "detail": {
         "emptyTitle": "Select an event",
-        "emptyDescription": "Choose an event from the list to see its details."
+        "emptyDescription": "Choose an event from the list to see its details.",
+        "close": "Close"
       },
       "metadata": {
         "date": "Date",
@@ -571,172 +624,11 @@
         },
         "empty": "No payouts recorded for this event."
       },
-      "actions": {
-        "viewDrawLog": "View Draw Log"
-      },
       "drawLog": {
-        "title": "Draw Log",
-        "close": "Close",
         "empty": "No log entries available."
       }
     },
-    "videos": {
-      "title": "Video Management",
-      "subtitle": "Manage, validate and monitor video assets for Roulette and Quick Money.",
-      "tabs": { "roulette": "Roulette", "quickMoney": "Quick Money", "uploadHistory": "Upload History" },
-      "shared": {
-        "pagination": "Pagination",
-        "previousPage": "Previous page",
-        "nextPage": "Next page",
-        "rowActions": "Row actions",
-        "close": "Close",
-        "clear": "Clear",
-        "yes": "Yes",
-        "no": "No",
-        "notApplicable": "—",
-        "previewUnavailable": "Preview not available in this environment.",
-        "validation": { "passed": "Passed", "failed": "Failed", "pending": "Pending", "notApplicable": "N/A" },
-        "validationLog": { "title": "Validation Log", "empty": "No log entries available." },
-        "dateRange": { "any": "Any Time", "today": "Today", "last7Days": "Last 7 Days", "last30Days": "Last 30 Days" },
-        "detail": {
-          "emptyTitle": "Select a row",
-          "emptyDescription": "Choose a row from the table to see its details.",
-          "codec": "Codec",
-          "codecFormat": "Codec / Format",
-          "checksum": "Checksum (SHA-256)"
-        },
-        "actions": {
-          "uploadFile": "Upload File",
-          "uploadVideo": "Upload Video",
-          "replaceFile": "Replace File",
-          "viewValidationLog": "View Validation Log",
-          "retryValidation": "Retry Validation"
-        },
-        "uploadModal": {
-          "title": "Upload Video",
-          "subtitle": "Upload or replace a video asset.",
-          "game": "Game",
-          "gameRoulette": "Roulette",
-          "gameQuickMoney": "Quick Money",
-          "targetRoulette": "Result Number / Variant",
-          "targetQuickMoney": "Draw",
-          "targetPlaceholder": "Select a target...",
-          "file": "Video File",
-          "chooseFile": "Choose file...",
-          "fileHint": "Accepted formats: MP4, WebM.",
-          "cancel": "Cancel",
-          "submit": "Upload Video",
-          "currentUser": "Admin User"
-        }
-      },
-      "roulette": {
-        "summary": {
-          "expected": "Expected Assets",
-          "available": "Available",
-          "missing": "Missing",
-          "invalid": "Invalid",
-          "storage": "Storage Used"
-        },
-        "filters": {
-          "searchPlaceholder": "Search by number, variant or filename...",
-          "number": "Number",
-          "allNumbers": "All Numbers",
-          "variant": "Variant",
-          "allVariants": "All Variants",
-          "status": "Status",
-          "allStatuses": "All Statuses",
-          "validation": "Validation",
-          "allValidations": "All Validations",
-          "lastVerified": "Last Verified"
-        },
-        "status": { "available": "Available", "missing": "Missing", "invalid": "Invalid", "pendingScan": "Pending Scan" },
-        "table": {
-          "resultNumber": "Result Number",
-          "variant": "Variant",
-          "filename": "Filename",
-          "status": "Status",
-          "validation": "Validation",
-          "fileSize": "File Size",
-          "duration": "Duration",
-          "resolution": "Resolution",
-          "lastVerified": "Last Verified",
-          "actions": "Actions",
-          "empty": "No assets match your filters.",
-          "showingCount": "Showing {{from}}–{{to}} of {{total}} assets"
-        },
-        "detail": { "selectedAsset": "Selected Asset", "noFile": "No file uploaded" },
-        "actions": { "rescan": "Re-scan Library" }
-      },
-      "quickMoney": {
-        "summary": {
-          "expectedToday": "Expected Today",
-          "received": "Received",
-          "pendingValidation": "Pending Validation",
-          "lateOrMissing": "Late / Missing",
-          "storage": "Storage Used"
-        },
-        "filters": {
-          "searchPlaceholder": "Search by draw #, type or filename...",
-          "drawType": "Draw Type",
-          "allTypes": "All Types",
-          "pick3": "Pick 3",
-          "pick4": "Pick 4",
-          "eventStatus": "Event Status",
-          "allStatuses": "All Statuses",
-          "validationStatus": "Validation Status",
-          "allValidations": "All Validations"
-        },
-        "delivery": { "received": "Received", "pending": "Pending", "late": "Late", "missing": "Missing" },
-        "validation": { "ready": "Ready", "pending": "Pending", "failed": "Failed", "notApplicable": "N/A" },
-        "contingency": { "ready": "Contingency Ready", "notApplicable": "—" },
-        "table": {
-          "drawType": "Draw Type",
-          "drawNumber": "Draw #",
-          "scheduledTime": "Scheduled Time",
-          "videoFile": "Video File",
-          "deliveryStatus": "Delivery Status",
-          "validation": "Validation",
-          "receivedAt": "Received At",
-          "deadline": "Deadline",
-          "contingency": "Contingency",
-          "actions": "Actions",
-          "empty": "No draws match your filters.",
-          "showingCount": "Showing {{from}}–{{to}} of {{total}} draws"
-        },
-        "detail": { "selectedDraw": "Selected Draw", "noFile": "No file received" },
-        "actions": { "refresh": "Refresh Status" }
-      },
-      "uploadHistory": {
-        "filters": {
-          "searchPlaceholder": "Search by filename or asset/draw...",
-          "game": "Game",
-          "allGames": "All Games",
-          "status": "Status",
-          "allStatuses": "All Statuses",
-          "validation": "Validation",
-          "uploadedBy": "Uploaded By",
-          "allUploaders": "All Uploaders",
-          "date": "Date"
-        },
-        "status": { "success": "Success", "failed": "Failed", "pending": "Pending" },
-        "table": {
-          "dateTime": "Date / Time",
-          "game": "Game",
-          "related": "Video / Draw / Asset",
-          "filename": "Filename",
-          "uploadedBy": "Uploaded By",
-          "status": "Upload Status",
-          "validation": "Validation Result",
-          "fileSize": "File Size",
-          "actions": "Actions",
-          "empty": "No uploads match your filters.",
-          "showingCount": "Showing {{from}}–{{to}} of {{total}} uploads",
-          "replacement": "Replacement"
-        },
-        "detail": { "title": "Upload Details" },
-        "actions": { "openRelated": "Open Related Video", "refresh": "Refresh" }
-      }
-    },
+    "shared": {"pagination": "Pagination", "previousPage": "Previous page", "nextPage": "Next page", "rowActions": "Row actions"},
     "systemLogs": {
       "title": "System Logs",
       "subtitle": "Monitor system activity, events, warnings and errors.",
@@ -791,143 +683,44 @@
     },
     "settings": {
       "title": "General Settings",
-      "subtitle": "Manage system configuration, video libraries, and other settings.",
-      "tabs": {
-        "general": "General",
-        "system": "System",
-        "notifications": "Notifications"
+      "subtitle": "Manage system configuration and other settings.",
+      "saveChanges": "Save Changes",
+      "saveSuccess": "Settings updated",
+      "resetToDefaults": "Reset to Defaults",
+      "resetConfirm": {
+        "title": "Reset all settings to defaults?",
+        "description": "General and notification settings on this page will go back to their default values. Nothing is applied until you click Save Changes.",
+        "confirm": "Reset to Defaults",
+        "cancel": "Cancel"
       },
       "general": {
         "siteInformation": {
-          "title": "Site Information",
-          "subtitle": "Basic information about the platform.",
-          "siteName": "Site Name",
-          "environment": "Environment",
           "timezone": "Timezone",
-          "defaultLanguage": "Default Language",
-          "environmentOptions": {
-            "production": "Production",
-            "staging": "Staging",
-            "development": "Development"
-          }
-        },
-        "videoLibrary": {
-          "title": "Video Library Settings",
-          "subtitle": "Configure default options for roulette and quick money video libraries.",
-          "rouletteVideos": "Roulette Videos",
-          "quickMoneyVideos": "Quick Money Videos",
-          "defaultStoragePath": "Default Storage Path",
-          "acceptedFormats": "Accepted Formats",
-          "maxFileSize": "Max File Size",
-          "browseFolder": "Browse folder"
+          "defaultLanguage": "Default Language"
         },
         "other": {
-          "title": "Other Settings",
-          "subtitle": "General system options.",
           "itemsPerPage": "Items per Page",
           "dateFormat": "Date Format",
-          "enableAuditLog": { "label": "Enable Audit Log", "description": "Record administrative actions." },
-          "enableVideoProcessing": { "label": "Enable Video Processing", "description": "Automatically process uploaded videos." },
-          "maintenanceMode": { "label": "Maintenance Mode", "description": "Restrict access to administrators only." }
-        },
-        "resetToDefaults": "Reset to Defaults",
-        "saveChanges": "Save Changes",
-        "saveSuccess": "Settings saved."
-      },
-      "system": {
-        "database": {
-          "title": "Database",
-          "subtitle": "Database connection and maintenance.",
-          "connectionStatus": "Connection Status",
-          "connectionStatusValues": { "connected": "Connected", "disconnected": "Disconnected" },
-          "databaseType": "Database Type",
-          "typeOptions": { "mysql": "MySQL", "postgresql": "PostgreSQL", "sqlite": "SQLite" },
-          "host": "Host",
-          "port": "Port",
-          "databaseName": "Database Name",
-          "username": "Username",
-          "password": "Password",
-          "showPassword": "Show password",
-          "hidePassword": "Hide password",
-          "testConnection": "Test Connection",
-          "testing": "Testing...",
-          "connectedSuccess": "Connected successfully",
-          "backupDatabase": "Backup Database",
-          "backingUp": "Backing up...",
-          "backupSuccess": "Backup created"
-        },
-        "storage": {
-          "title": "Storage",
-          "subtitle": "Manage file storage and system paths.",
-          "baseDataPath": "Base Data Path",
-          "videosPath": "Videos Path",
-          "logsPath": "Logs Path",
-          "maxLogFileSize": "Max Log File Size",
-          "keepLogsFor": "Keep Logs For",
-          "days": "Days",
-          "browseFolder": "Browse folder",
-          "openInFileExplorer": "Open in File Explorer"
-        },
-        "operations": {
-          "title": "System Operations",
-          "subtitle": "Maintenance and administrative actions.",
-          "clearCache": "Clear Cache",
-          "clearingCache": "Clearing...",
-          "cacheCleared": "Cache cleared",
-          "clearCacheDescription": "Remove temporary files.",
-          "rebuildIndex": "Rebuild Index",
-          "rebuildingIndex": "Rebuilding...",
-          "indexRebuilt": "Index rebuilt",
-          "rebuildIndexDescription": "Rebuild data indexes.",
-          "restartServices": "Restart Services",
-          "restartingServices": "Restarting...",
-          "servicesRestarted": "Services restarted",
-          "restartServicesDescription": "Restart system services.",
-          "restartConfirmTitle": "Restart all system services now? This may briefly interrupt active connections.",
-          "restartConfirmCancel": "Cancel",
-          "restartConfirmConfirm": "Restart Services"
-        },
-        "information": {
-          "title": "System Information",
-          "subtitle": "Current system status and version information.",
-          "applicationVersion": "Application Version",
-          "environment": "Environment",
-          "serverTime": "Server Time",
-          "uptime": "Uptime",
-          "availableDiskSpace": "Available Disk Space",
-          "diskSpaceValue": "{{used}} GB / {{total}} GB"
-        },
-        "dangerZone": {
-          "title": "Danger Zone",
-          "description": "Irreversible actions. Use with caution.",
-          "resetToFactoryDefaults": "Reset to Factory Defaults",
-          "confirm": {
-            "title": "Reset to Factory Defaults?",
-            "description": "This action will restore the database and storage configuration to their factory defaults and cannot be undone.",
-            "cancel": "Cancel",
-            "confirm": "Reset to Factory Defaults"
+          "maintenanceMode": {
+            "label": "Maintenance Mode",
+            "description": "Restrict access to administrators only."
           }
+        },
+        "card": {
+          "title": "General Settings",
+          "subtitle": "Regional, display and access options."
         }
       },
       "notifications": {
         "channels": {
-          "title": "Notification Channels",
-          "subtitle": "Choose how notifications are delivered.",
-          "email": { "label": "Email", "description": "Send notifications via email." },
-          "discord": { "label": "Discord", "description": "Send notifications to a Discord channel." },
-          "slack": { "label": "Slack", "description": "Send notifications to a Slack channel." },
-          "webhook": { "label": "Webhook", "description": "Send notifications to a custom URL." }
+          "email": {
+            "label": "Email",
+            "description": "Send notifications via email."
+          }
         },
         "email": {
-          "title": "Email Settings",
-          "subtitle": "Configure email notifications.",
-          "smtpServer": "SMTP Server",
-          "port": "Port",
-          "username": "Username",
-          "password": "Password",
-          "showPassword": "Show password",
-          "hidePassword": "Hide password",
-          "fromEmail": "From Email",
+          "title": "Email Notifications",
+          "subtitle": "Turn email notifications on or off and choose who receives them.",
           "recipients": "Recipient(s)",
           "recipientsHelper": "Use comma to separate multiple recipients.",
           "sendTestEmail": "Send Test Email",
@@ -946,15 +739,6 @@
             "videoProcessingFailed": "Video processing failed",
             "newUserRegistered": "New user registered"
           }
-        },
-        "recent": {
-          "title": "Recent Notifications",
-          "subtitle": "View the latest system notifications.",
-          "refresh": "Refresh",
-          "empty": "No recent notifications.",
-          "table": { "dateTime": "Date / Time", "event": "Event", "channel": "Channel", "status": "Status" },
-          "status": { "sent": "Sent", "failed": "Failed" },
-          "viewAll": "View All Notifications"
         }
       }
     },
@@ -1050,6 +834,7 @@
       "cancel": "Cancel",
       "confirmUpdate": "Confirm Update",
       "confirmTitle": "Confirm result change?",
+      "confirmDescription": "You are about to change the next {{game}} result. The upcoming round will use the new result.",
       "updating": "Updating…",
       "updateSuccess": "{{game}} result updated",
       "updateError": "Unable to update {{game}} result. Try again.",
@@ -1086,13 +871,15 @@
       },
       "manualOverrides": {
         "title": "Manual Overrides",
-        "activeOverrides": "active overrides",
-        "details": "Details"
+        "activeOverrides": "active overrides"
       },
+      "stability": {"title": "RTP Stability", "subtitle": "Cumulative RTP vs. rounds played, against the luck-expected range", "correctionWindow": "Correction window", "status": {"within": "Within expected range", "withinDetail": "Gap from target is normal variance.", "outside": "Outside expected range", "outsideDetail": "Gap is larger than luck explains."}, "tooltip": {"after": "After {{rounds}} rounds", "rtp": "RTP", "expected": "Expected range"}, "legend": {"cumulative": "Cumulative RTP", "expected": "Expected range (95%)", "target": "Target {{value}}%"}},
       "trendChart": {
         "title": "Actual vs Target RTP",
         "actualSuffix": "(Actual)",
         "targetSuffix": "(Target)",
+        "views": {"actual": "Actual vs Target", "deviation": "Deviation"},
+        "deviation": {"title": "Deviation from Target RTP", "ppUnit": "pp", "withinBand": "Within band", "outOfBand": "Out of band", "band": "Band {{low}} / {{high}} pp", "daysOut_one": "{{count}} day out of band", "daysOut_other": "{{count}} days out of band"},
         "rangeOptions": {
           "twoWeeks": "2 Weeks",
           "threeWeeks": "3 Weeks",
@@ -1129,7 +916,6 @@
       "management": {
       "title": "RTP Management",
       "subtitle": "Configure RTP settings, simulate changes, and schedule RTP profiles.",
-      "viewDashboard": "View RTP Dashboard",
       "gameSelectLabel": "Game",
       "tabs": {
         "settings": "Settings",
@@ -1137,8 +923,6 @@
         "scheduling": "RTP Scheduling"
       },
       "settings": {
-        "title": "RTP Settings",
-        "subtitle": "Configure target RTP values and system parameters for each game.",
         "spinsUnit": "rounds",
         "targetRtp": { "label": "Target RTP", "description": "Desired long-term return to player." },
         "minBand": { "label": "Minimum RTP Band", "description": "Minimum allowed RTP value." },
@@ -1165,13 +949,12 @@
           "newTarget": "New Target",
           "effectiveDate": "Effective Date",
           "cancel": "Cancel",
-          "confirm": "Confirm & Save"
+          "confirm": "Confirm & Save",
+          "description": "You are about to change the RTP settings for this game. This affects real rounds from the effective date onward."
         },
         "lock": {
           "badge": "Locked",
-          "reason": "Temporarily locked while the current RTP configuration is active.",
-          "bannerTitle": "Some RTP settings are temporarily locked.",
-          "bannerDescription": "You can review their current values, but they cannot currently be edited."
+          "reason": "Temporarily locked. You can review its current value, but cannot currently edit it."
         },
         "save": {
           "noChangesReason": "No changes to save yet.",
@@ -1195,6 +978,7 @@
         "runSimulation": "Run Simulation",
         "results": {
           "title": "Simulation Results",
+          "close": "Close results",
           "subtitle": "Estimated outcome based on the proposed settings.",
           "currentRtp": "Current RTP",
           "proposedRtp": "Proposed RTP",
@@ -1260,6 +1044,7 @@
           "edited": "Edited"
         },
         "form": {
+          "close": "Close",
           "createTitle": "Create RTP Profile",
           "profileName": "Profile Name",
           "targetRtp": "Target RTP",

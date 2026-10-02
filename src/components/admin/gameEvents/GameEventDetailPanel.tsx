@@ -4,8 +4,8 @@ import { StatusBadge } from '../StatusBadge'
 import { GameEventTabs, type GameEventTab } from './GameEventTabs'
 import { GameEventOverviewTab } from './GameEventOverviewTab'
 import { GameEventPayoutsTab } from './GameEventPayoutsTab'
-import { DrawLogModal } from './DrawLogModal'
-import { HourglassIcon } from './icons'
+import { GameEventResultSummary } from './GameEventResultSummary'
+import { CloseIcon, HourglassIcon } from './icons'
 import { buildMediaUrl } from '../../../utils/media'
 import { parseApiDateTime } from '../../../utils/time'
 import { GAME_EVENT_GAME_VARIANT, GAME_EVENT_STATUS_VARIANT } from '../../../data/adminGameEventsMockData'
@@ -21,15 +21,20 @@ const TIME_FORMATTER = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minut
 
 interface GameEventDetailPanelProps {
   event: GameEvent | null
+  // Solo cuando el panel se abre como pop-up (pantallas angostas, ver GameEventsPage.tsx): muestra
+  // el botón X en la esquina superior derecha. Inline en desktop el panel siempre está visible.
+  onClose?: () => void
 }
 
+// aria-labelledby del pop-up (GameEventsPage.tsx usa el mismo id).
+const GAME_EVENT_DETAIL_TITLE_ID = 'admin-game-events-detail-title'
+
 // Panel derecho (detail) -- se remonta por completo al cambiar `event` (ver key={event.id} en
-// GameEventsPage.tsx): así el tab activo y el modal de log siempre vuelven a su estado inicial al
+// GameEventsPage.tsx): así el tab activo siempre vuelve a su estado inicial al
 // seleccionar otro evento, sin arrastrar estado del anterior.
-export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
+export function GameEventDetailPanel({ event, onClose }: GameEventDetailPanelProps) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<GameEventTab>('overview')
-  const [isLogOpen, setIsLogOpen] = useState(false)
 
   if (!event) {
     return (
@@ -47,10 +52,19 @@ export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
     <section className="admin-panel admin-game-events-detail">
       <div className="admin-game-events-detail-header">
         <div>
-          <h2 className="admin-game-events-detail-title">{event.name}</h2>
+          <h2 id={GAME_EVENT_DETAIL_TITLE_ID} className="admin-game-events-detail-title">
+            {event.name}
+          </h2>
           {event.description && <p className="admin-game-events-detail-description">{event.description}</p>}
         </div>
-        <span className="admin-game-events-detail-id">#{event.id}</span>
+        <div className="admin-game-events-detail-header-aside">
+          <span className="admin-game-events-detail-id">#{event.id}</span>
+          {onClose && (
+            <button type="button" className="admin-game-events-detail-close" aria-label={t('admin.gameEvents.detail.close')} onClick={onClose}>
+              <CloseIcon />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="admin-game-events-detail-badges">
@@ -59,24 +73,33 @@ export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
       </div>
 
       <div className="admin-game-events-summary">
+        <GameEventResultSummary game={event.game} result={event.result} drawnAt={event.resultDrawnAt} />
         <div className="admin-game-events-summary-item">
-          <img src={CALENDAR_ICON_URL} alt="" />
-          <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.date')}</span>
+          <span className="admin-game-events-summary-heading">
+            <img src={CALENDAR_ICON_URL} alt="" />
+            <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.date')}</span>
+          </span>
           <span className="admin-game-events-summary-value">{DATE_FORMATTER.format(startDate)}</span>
         </div>
         <div className="admin-game-events-summary-item">
-          <img src={CLOCK_ICON_URL} alt="" />
-          <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.startTime')}</span>
+          <span className="admin-game-events-summary-heading">
+            <img src={CLOCK_ICON_URL} alt="" />
+            <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.startTime')}</span>
+          </span>
           <span className="admin-game-events-summary-value">{TIME_FORMATTER.format(startDate)}</span>
         </div>
         <div className="admin-game-events-summary-item">
-          <img src={CLOCK_ICON_URL} alt="" />
-          <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.endTime')}</span>
+          <span className="admin-game-events-summary-heading">
+            <img src={CLOCK_ICON_URL} alt="" />
+            <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.endTime')}</span>
+          </span>
           <span className="admin-game-events-summary-value">{endDate ? TIME_FORMATTER.format(endDate) : t('admin.gameEvents.metadata.notApplicable')}</span>
         </div>
         <div className="admin-game-events-summary-item">
-          <HourglassIcon />
-          <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.duration')}</span>
+          <span className="admin-game-events-summary-heading">
+            <HourglassIcon />
+            <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.duration')}</span>
+          </span>
           <span className="admin-game-events-summary-value">
             {event.durationMinutes !== null
               ? t('admin.gameEvents.metadata.durationMinutes', { count: event.durationMinutes })
@@ -89,14 +112,6 @@ export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
 
       {tab === 'overview' && <GameEventOverviewTab event={event} />}
       {tab === 'payouts' && <GameEventPayoutsTab payouts={event.payouts} />}
-
-      <div className="admin-game-events-actions">
-        <button type="button" className="admin-game-events-view-log-btn" onClick={() => setIsLogOpen(true)}>
-          {t('admin.gameEvents.actions.viewDrawLog')}
-        </button>
-      </div>
-
-      {isLogOpen && <DrawLogModal event={event} onClose={() => setIsLogOpen(false)} />}
     </section>
   )
 }

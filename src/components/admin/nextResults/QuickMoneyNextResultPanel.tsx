@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { buildMediaUrl } from '../../../utils/media'
 import { useQuickMoneyRoundStore } from '../../../store/useQuickMoneyRoundStore'
@@ -26,8 +27,31 @@ const SCHEDULED_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
 
 // "LOTTERY" en la referencia visual == "Quick Money" en este proyecto (ver i18n admin.nav.lottery
 // / header.lottery) -- este panel nunca muestra el texto "Lottery", solo "Quick Money".
+// Mismo tiempo visible que el feedback de Roulette/PickResultPanel (SUCCESS_FEEDBACK_MS).
+const FEEDBACK_MS = 3000
+
+type PickGame = 'pick3' | 'pick4'
+
+interface UpdateFeedback {
+  game: PickGame
+  variant: 'success' | 'error'
+  // Cambia en cada Update para reiniciar el timer aunque se repita el mismo juego/variante.
+  key: number
+}
+
 export function QuickMoneyNextResultPanel() {
   const { t } = useTranslation()
+
+  // Feedback del último Update de Pick 3 o Pick 4, mostrado en la esquina superior derecha del panel
+  // (mismo lugar/ancho que en Roulette) con el nombre del juego actualizado.
+  const [feedback, setFeedback] = useState<UpdateFeedback | null>(null)
+  useEffect(() => {
+    if (!feedback) return
+    const timer = setTimeout(() => setFeedback(null), FEEDBACK_MS)
+    return () => clearTimeout(timer)
+  }, [feedback])
+  const handleResult = (game: PickGame) => (variant: 'success' | 'error') => setFeedback({ game, variant, key: Date.now() })
+  const feedbackGame = feedback ? t(`admin.nextResults.quickMoney.${feedback.game}`) : ''
 
   // Pick 3 y Pick 4 comparten un único draw cycle -- mismo drawNumber/nextDrawTime para los dos
   // (decisión de negocio confirmada, ver useQuickMoneyRoundStore.ts: el mismo store que ya
@@ -53,6 +77,13 @@ export function QuickMoneyNextResultPanel() {
             <p className="admin-next-results-subtitle">{t('admin.nextResults.quickMoney.subtitle')}</p>
           </div>
         </div>
+        {feedback && (
+          <div key={feedback.key} className="admin-next-results-feedback admin-next-results-feedback--header" data-variant={feedback.variant}>
+            {feedback.variant === 'success'
+              ? t('admin.nextResults.updateSuccess', { game: feedbackGame })
+              : t('admin.nextResults.updateError', { game: feedbackGame })}
+          </div>
+        )}
       </div>
 
       <div className="admin-next-results-round-card">
@@ -92,6 +123,7 @@ export function QuickMoneyNextResultPanel() {
           subtitle={t('admin.nextResults.quickMoney.pick3Subtitle')}
           updateLabel={t('admin.nextResults.updatePick3')}
           seedDigits={[8, 4, 1]}
+          onResult={handleResult('pick3')}
         />
 
         <PickResultPanel
@@ -101,6 +133,7 @@ export function QuickMoneyNextResultPanel() {
           subtitle={t('admin.nextResults.quickMoney.pick4Subtitle')}
           updateLabel={t('admin.nextResults.updatePick4')}
           seedDigits={[2, 7, 3, 9]}
+          onResult={handleResult('pick4')}
         />
       </div>
     </div>

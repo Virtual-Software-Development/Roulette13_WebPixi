@@ -36,6 +36,9 @@ interface AdminFormFieldProps {
   // el <input> -- así un lector de pantalla que llega directo al campo (sin pasar por el badge)
   // también escucha la razón del bloqueo, no solo "dimmed"/"read-only".
   describedById?: string
+  // Intento de edición (click o tecla que no sea Tab) sobre el input -- ej. un campo readOnly
+  // bloqueado muestra por qué no se puede editar (ver RtpSettingsPanel.tsx).
+  onEditAttempt?: () => void
 }
 
 function ChevronUpIcon() {
@@ -78,6 +81,7 @@ export function AdminFormField({
   stepper,
   labelAddon,
   describedById,
+  onEditAttempt,
 }: AdminFormFieldProps) {
   return (
     <div className="admin-form-field" data-emphasized={emphasized} data-readonly={readOnly} data-disabled={disabled}>
@@ -103,6 +107,8 @@ export function AdminFormField({
           disabled={disabled}
           aria-describedby={describedById}
           onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+          onClick={onEditAttempt}
+          onKeyDown={onEditAttempt ? (e) => e.key !== 'Tab' && e.key !== 'Shift' && onEditAttempt() : undefined}
         />
         {suffix && <span className="admin-form-field-affix admin-form-field-affix--suffix">{suffix}</span>}
         {stepper && (

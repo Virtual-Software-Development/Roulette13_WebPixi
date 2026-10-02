@@ -1,0 +1,99 @@
+.admin-peak-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-peak-hours-header {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-peak-hours-subtitle {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-peak-hours-scale {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-peak-hours-scale-bar {
+  width: 72px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* 1 columna de etiquetas de día + 24 horas. Filas como "subgrid" para que cada fila se alinee a las
+   columnas del header de horas. */
+.admin-peak-hours-grid {
+  display: grid;
+  grid-template-columns: 34px repeat(24, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.admin-peak-hours-row {
+  display: contents;
+}
+
+.admin-peak-hours-hour {
+  font-size: 10.5px;
+  color: var(--admin-text-secondary);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 2px;
+}
+
+.admin-peak-hours-day {
+  display: flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.admin-peak-hours-cell {
+  height: 20px;
+  border-radius: 2px;
+  cursor: default;
+  transition: opacity 120ms ease;
+}
+
+.admin-peak-hours-cell[data-dimmed='true'] {
+  opacity: 0.45;
+}
+
+/* Pico del período: contorno claro para encontrarlo sin buscar el tono más claro. */
+.admin-peak-hours-cell[data-peak='true'] {
+  outline: 2px solid var(--admin-text-primary);
+  outline-offset: -2px;
+}
+
+.admin-peak-hours-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  min-height: 18px;
+  font-size: 12.5px;
+  color: var(--admin-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-peak-hours-summary-label {
+  margin-right: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-peak-hours-detail {
+  font-weight: 600;
+}

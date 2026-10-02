@@ -102,14 +102,14 @@
     "disclaimer": "Los montos mostrados en cada número son el total apostado por todos los jugadores en la ronda actual."
   },
   "login": {
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "title": "ACCESO ADMIN",
     "subtitle": "Inicia sesión para gestionar la ruleta y la lotería",
     "usernameLabel": "Usuario",
     "usernamePlaceholder": "Usuario",
     "passwordLabel": "Contraseña",
     "passwordPlaceholder": "Contraseña",
-    "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña",
     "rememberMe": "Recordarme",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "signIn": "Iniciar sesión",
@@ -321,7 +321,6 @@
       "rtpManagement": "Administración",
       "systemLogs": "Registros del Sistema",
       "reports": "Reportes",
-      "videos": "Videos",
       "settings": "Configuración"
     },
     "dashboard": {
@@ -359,6 +358,46 @@
       "gamesDistribution": {
         "title": "Distribución de Juegos",
         "totalRounds": "Rondas Totales"
+      },
+      "gamePerformance": {
+        "title": "Comparación de Rendimiento por Juego",
+        "subtitle": "Compara apuestas totales, pagos y GGR entre juegos",
+        "totalWagers": "Apuestas Totales",
+        "totalPayouts": "Pagos Totales",
+        "ggr": "GGR",
+        "modes": {
+          "amount": "Monto (USD)",
+          "share": "Participación (%)"
+        },
+        "yAxis": {
+          "amount": "Monto (USD)",
+          "share": "Participación del total (%)"
+        }
+      },
+      "gameEventsOverTime": {
+        "title": "Eventos de Juego en el Tiempo",
+        "subtitle": "Eventos completados, fallidos y cancelados por hora",
+        "completed": "Completados",
+        "failed": "Fallidos",
+        "cancelled": "Cancelados",
+        "total": "Total"
+      },
+      "resultFrequency": {
+        "title": "Frecuencia de Resultados",
+        "subtitle": "Cuántas veces salió cada resultado en las últimas {{rounds}} rondas completadas.",
+        "gameLabel": "Juego",
+        "windowLabel": "Rondas",
+        "number": "Número {{value}}",
+        "digit": "Dígito {{value}}",
+        "drawn": "Salió",
+        "timesCount_one": "{{count}} vez",
+        "timesCount_other": "{{count}} veces",
+        "expected": "Esperado",
+        "deviation": "vs. esperado",
+        "hot": "Calientes",
+        "cold": "Fríos",
+        "expectedLegend": "Esperado",
+        "colors": { "red": "Rojo", "black": "Negro", "green": "Verde" }
       },
       "recentRounds": {
         "title": "Rondas Recientes",
@@ -418,7 +457,9 @@
         "gameReport": "Reporte de Juego",
         "playerReport": "Reporte de Jugadores",
         "financialReport": "Reporte Financiero",
-        "rtpAnalysis": "Análisis de RTP"
+        "rtpAnalysis": "Análisis de RTP",
+        "weeklyReport": "Reporte Semanal",
+        "monthlyReport": "Reporte Mensual"
       },
       "kpi": {
         "totalBets": "Apuestas Totales",
@@ -427,10 +468,16 @@
         "rtp": "RTP",
         "vsPreviousPeriod": "vs. período anterior"
       },
+      "peakHours": {"title": "Horas Pico", "subtitle": "Apuestas totales por día y hora · {{period}}", "less": "Menos", "more": "Más", "busiest": "Más activo", "quietest": "Más tranquilo", "cell": "{{day}} {{from}}–{{to}} · {{amount}} apostado · ~{{rounds}} rondas"},
       "betsAndPayouts": {
-        "title": "Apuestas y Pagos",
+        "title": "Apuestas, Pagos e Ingresos",
+        "subtitle": "Diario · barra completa = apuestas totales, dividida en pagos e ingreso bruto de juego (GGR)",
         "bets": "Apuestas Totales",
-        "payout": "Pago Total"
+        "payout": "Pagos",
+        "ggr": "GGR",
+        "hold": "Retención %",
+        "rtp": "RTP",
+        "date": "Fecha"
       },
       "rtpTrend": {
         "title": "Tendencia de RTP",
@@ -447,6 +494,9 @@
         "total": "Total"
       },
       "shortcuts": {
+        "downloadHint": "Haz clic en un atajo para generar y descargar el reporte.",
+        "formatLabel": "Formato de descarga",
+        "downloadTooltip": "Generar y descargar ({{format}})",
         "title": "Accesos Rápidos de Reportes",
         "gamePerformance": {
           "title": "Rendimiento del Juego",
@@ -463,7 +513,9 @@
         "rtpAnalysis": {
           "title": "Análisis de RTP",
           "description": "Tendencias y análisis de RTP"
-        }
+        },
+        "weeklyReport": {"title": "Reporte Semanal", "description": "Últimos 7 días, por día"},
+        "monthlyReport": {"title": "Reporte Mensual", "description": "Mes anterior, por semana"}
       },
       "recent": {
         "title": "Reportes Recientes",
@@ -519,7 +571,8 @@
       },
       "detail": {
         "emptyTitle": "Selecciona un evento",
-        "emptyDescription": "Elige un evento de la lista para ver sus detalles."
+        "emptyDescription": "Elige un evento de la lista para ver sus detalles.",
+        "close": "Cerrar"
       },
       "metadata": {
         "date": "Fecha",
@@ -571,172 +624,11 @@
         },
         "empty": "No hay pagos registrados para este evento."
       },
-      "actions": {
-        "viewDrawLog": "Ver Registro de Sorteo"
-      },
       "drawLog": {
-        "title": "Registro de Sorteo",
-        "close": "Cerrar",
         "empty": "No hay entradas de registro disponibles."
       }
     },
-    "videos": {
-      "title": "Gestión de Videos",
-      "subtitle": "Administra, valida y monitorea los assets de video de Ruleta y Quick Money.",
-      "tabs": { "roulette": "Ruleta", "quickMoney": "Quick Money", "uploadHistory": "Historial de Subidas" },
-      "shared": {
-        "pagination": "Paginación",
-        "previousPage": "Página anterior",
-        "nextPage": "Página siguiente",
-        "rowActions": "Acciones de fila",
-        "close": "Cerrar",
-        "clear": "Limpiar",
-        "yes": "Sí",
-        "no": "No",
-        "notApplicable": "—",
-        "previewUnavailable": "Vista previa no disponible en este entorno.",
-        "validation": { "passed": "Aprobado", "failed": "Falló", "pending": "Pendiente", "notApplicable": "N/A" },
-        "validationLog": { "title": "Registro de Validación", "empty": "No hay entradas de registro disponibles." },
-        "dateRange": { "any": "Cualquier Momento", "today": "Hoy", "last7Days": "Últimos 7 Días", "last30Days": "Últimos 30 Días" },
-        "detail": {
-          "emptyTitle": "Selecciona una fila",
-          "emptyDescription": "Elige una fila de la tabla para ver sus detalles.",
-          "codec": "Códec",
-          "codecFormat": "Códec / Formato",
-          "checksum": "Checksum (SHA-256)"
-        },
-        "actions": {
-          "uploadFile": "Subir Archivo",
-          "uploadVideo": "Subir Video",
-          "replaceFile": "Reemplazar Archivo",
-          "viewValidationLog": "Ver Registro de Validación",
-          "retryValidation": "Reintentar Validación"
-        },
-        "uploadModal": {
-          "title": "Subir Video",
-          "subtitle": "Sube o reemplaza un asset de video.",
-          "game": "Juego",
-          "gameRoulette": "Ruleta",
-          "gameQuickMoney": "Quick Money",
-          "targetRoulette": "Número / Variante",
-          "targetQuickMoney": "Sorteo",
-          "targetPlaceholder": "Selecciona un destino...",
-          "file": "Archivo de Video",
-          "chooseFile": "Elegir archivo...",
-          "fileHint": "Formatos aceptados: MP4, WebM.",
-          "cancel": "Cancelar",
-          "submit": "Subir Video",
-          "currentUser": "Usuario Admin"
-        }
-      },
-      "roulette": {
-        "summary": {
-          "expected": "Assets Esperados",
-          "available": "Disponibles",
-          "missing": "Faltantes",
-          "invalid": "Inválidos",
-          "storage": "Almacenamiento Usado"
-        },
-        "filters": {
-          "searchPlaceholder": "Buscar por número, variante o archivo...",
-          "number": "Número",
-          "allNumbers": "Todos los Números",
-          "variant": "Variante",
-          "allVariants": "Todas las Variantes",
-          "status": "Estado",
-          "allStatuses": "Todos los Estados",
-          "validation": "Validación",
-          "allValidations": "Todas las Validaciones",
-          "lastVerified": "Última Verificación"
-        },
-        "status": { "available": "Disponible", "missing": "Faltante", "invalid": "Inválido", "pendingScan": "Escaneo Pendiente" },
-        "table": {
-          "resultNumber": "Número",
-          "variant": "Variante",
-          "filename": "Archivo",
-          "status": "Estado",
-          "validation": "Validación",
-          "fileSize": "Tamaño",
-          "duration": "Duración",
-          "resolution": "Resolución",
-          "lastVerified": "Última Verificación",
-          "actions": "Acciones",
-          "empty": "Ningún asset coincide con tus filtros.",
-          "showingCount": "Mostrando {{from}}–{{to}} de {{total}} assets"
-        },
-        "detail": { "selectedAsset": "Asset Seleccionado", "noFile": "Sin archivo subido" },
-        "actions": { "rescan": "Re-escanear Biblioteca" }
-      },
-      "quickMoney": {
-        "summary": {
-          "expectedToday": "Esperados Hoy",
-          "received": "Recibidos",
-          "pendingValidation": "Validación Pendiente",
-          "lateOrMissing": "Atrasados / Faltantes",
-          "storage": "Almacenamiento Usado"
-        },
-        "filters": {
-          "searchPlaceholder": "Buscar por sorteo #, tipo o archivo...",
-          "drawType": "Tipo de Sorteo",
-          "allTypes": "Todos los Tipos",
-          "pick3": "Pick 3",
-          "pick4": "Pick 4",
-          "eventStatus": "Estado del Evento",
-          "allStatuses": "Todos los Estados",
-          "validationStatus": "Estado de Validación",
-          "allValidations": "Todas las Validaciones"
-        },
-        "delivery": { "received": "Recibido", "pending": "Pendiente", "late": "Atrasado", "missing": "Faltante" },
-        "validation": { "ready": "Listo", "pending": "Pendiente", "failed": "Falló", "notApplicable": "N/A" },
-        "contingency": { "ready": "Contingencia Lista", "notApplicable": "—" },
-        "table": {
-          "drawType": "Tipo de Sorteo",
-          "drawNumber": "Sorteo #",
-          "scheduledTime": "Hora Programada",
-          "videoFile": "Archivo de Video",
-          "deliveryStatus": "Estado de Entrega",
-          "validation": "Validación",
-          "receivedAt": "Recibido El",
-          "deadline": "Fecha Límite",
-          "contingency": "Contingencia",
-          "actions": "Acciones",
-          "empty": "Ningún sorteo coincide con tus filtros.",
-          "showingCount": "Mostrando {{from}}–{{to}} de {{total}} sorteos"
-        },
-        "detail": { "selectedDraw": "Sorteo Seleccionado", "noFile": "Sin archivo recibido" },
-        "actions": { "refresh": "Actualizar Estado" }
-      },
-      "uploadHistory": {
-        "filters": {
-          "searchPlaceholder": "Buscar por archivo o asset/sorteo...",
-          "game": "Juego",
-          "allGames": "Todos los Juegos",
-          "status": "Estado",
-          "allStatuses": "Todos los Estados",
-          "validation": "Validación",
-          "uploadedBy": "Subido Por",
-          "allUploaders": "Todos los Usuarios",
-          "date": "Fecha"
-        },
-        "status": { "success": "Exitoso", "failed": "Falló", "pending": "Pendiente" },
-        "table": {
-          "dateTime": "Fecha / Hora",
-          "game": "Juego",
-          "related": "Video / Sorteo / Asset",
-          "filename": "Archivo",
-          "uploadedBy": "Subido Por",
-          "status": "Estado de Subida",
-          "validation": "Resultado de Validación",
-          "fileSize": "Tamaño",
-          "actions": "Acciones",
-          "empty": "Ninguna subida coincide con tus filtros.",
-          "showingCount": "Mostrando {{from}}–{{to}} de {{total}} subidas",
-          "replacement": "Reemplazo"
-        },
-        "detail": { "title": "Detalles de Subida" },
-        "actions": { "openRelated": "Abrir Video Relacionado", "refresh": "Actualizar" }
-      }
-    },
+    "shared": {"pagination": "Paginación", "previousPage": "Página anterior", "nextPage": "Página siguiente", "rowActions": "Acciones de fila"},
     "systemLogs": {
       "title": "Registros del Sistema",
       "subtitle": "Monitorea la actividad, eventos, advertencias y errores del sistema.",
@@ -791,143 +683,44 @@
     },
     "settings": {
       "title": "Configuración General",
-      "subtitle": "Gestiona la configuración del sistema, las bibliotecas de video y otras opciones.",
-      "tabs": {
-        "general": "General",
-        "system": "Sistema",
-        "notifications": "Notificaciones"
+      "subtitle": "Gestiona la configuración del sistema y otras opciones.",
+      "saveChanges": "Guardar Cambios",
+      "saveSuccess": "Configuración actualizada",
+      "resetToDefaults": "Restablecer Valores Predeterminados",
+      "resetConfirm": {
+        "title": "¿Restablecer toda la configuración?",
+        "description": "La configuración general y de notificaciones de esta página volverá a sus valores predeterminados. No se aplica nada hasta que hagas clic en Guardar Cambios.",
+        "confirm": "Restablecer",
+        "cancel": "Cancelar"
       },
       "general": {
         "siteInformation": {
-          "title": "Información del Sitio",
-          "subtitle": "Información básica sobre la plataforma.",
-          "siteName": "Nombre del Sitio",
-          "environment": "Entorno",
           "timezone": "Zona Horaria",
-          "defaultLanguage": "Idioma Predeterminado",
-          "environmentOptions": {
-            "production": "Producción",
-            "staging": "Staging",
-            "development": "Desarrollo"
-          }
-        },
-        "videoLibrary": {
-          "title": "Configuración de Biblioteca de Video",
-          "subtitle": "Configura las opciones predeterminadas para las bibliotecas de video de ruleta y quick money.",
-          "rouletteVideos": "Videos de Ruleta",
-          "quickMoneyVideos": "Videos de Quick Money",
-          "defaultStoragePath": "Ruta de Almacenamiento Predeterminada",
-          "acceptedFormats": "Formatos Aceptados",
-          "maxFileSize": "Tamaño Máximo de Archivo",
-          "browseFolder": "Buscar carpeta"
+          "defaultLanguage": "Idioma Predeterminado"
         },
         "other": {
-          "title": "Otras Configuraciones",
-          "subtitle": "Opciones generales del sistema.",
           "itemsPerPage": "Elementos por Página",
           "dateFormat": "Formato de Fecha",
-          "enableAuditLog": { "label": "Habilitar Registro de Auditoría", "description": "Registra las acciones administrativas." },
-          "enableVideoProcessing": { "label": "Habilitar Procesamiento de Video", "description": "Procesa automáticamente los videos subidos." },
-          "maintenanceMode": { "label": "Modo de Mantenimiento", "description": "Restringe el acceso solo a administradores." }
-        },
-        "resetToDefaults": "Restablecer Valores Predeterminados",
-        "saveChanges": "Guardar Cambios",
-        "saveSuccess": "Configuración guardada."
-      },
-      "system": {
-        "database": {
-          "title": "Base de Datos",
-          "subtitle": "Conexión y mantenimiento de la base de datos.",
-          "connectionStatus": "Estado de Conexión",
-          "connectionStatusValues": { "connected": "Conectado", "disconnected": "Desconectado" },
-          "databaseType": "Tipo de Base de Datos",
-          "typeOptions": { "mysql": "MySQL", "postgresql": "PostgreSQL", "sqlite": "SQLite" },
-          "host": "Host",
-          "port": "Puerto",
-          "databaseName": "Nombre de la Base de Datos",
-          "username": "Usuario",
-          "password": "Contraseña",
-          "showPassword": "Mostrar contraseña",
-          "hidePassword": "Ocultar contraseña",
-          "testConnection": "Probar Conexión",
-          "testing": "Probando...",
-          "connectedSuccess": "Conexión exitosa",
-          "backupDatabase": "Respaldar Base de Datos",
-          "backingUp": "Respaldando...",
-          "backupSuccess": "Respaldo creado"
-        },
-        "storage": {
-          "title": "Almacenamiento",
-          "subtitle": "Gestiona el almacenamiento de archivos y las rutas del sistema.",
-          "baseDataPath": "Ruta Base de Datos",
-          "videosPath": "Ruta de Videos",
-          "logsPath": "Ruta de Registros",
-          "maxLogFileSize": "Tamaño Máximo de Archivo de Registro",
-          "keepLogsFor": "Conservar Registros Por",
-          "days": "Días",
-          "browseFolder": "Buscar carpeta",
-          "openInFileExplorer": "Abrir en el Explorador de Archivos"
-        },
-        "operations": {
-          "title": "Operaciones del Sistema",
-          "subtitle": "Mantenimiento y acciones administrativas.",
-          "clearCache": "Limpiar Caché",
-          "clearingCache": "Limpiando...",
-          "cacheCleared": "Caché limpiada",
-          "clearCacheDescription": "Elimina los archivos temporales.",
-          "rebuildIndex": "Reconstruir Índice",
-          "rebuildingIndex": "Reconstruyendo...",
-          "indexRebuilt": "Índice reconstruido",
-          "rebuildIndexDescription": "Reconstruye los índices de datos.",
-          "restartServices": "Reiniciar Servicios",
-          "restartingServices": "Reiniciando...",
-          "servicesRestarted": "Servicios reiniciados",
-          "restartServicesDescription": "Reinicia los servicios del sistema.",
-          "restartConfirmTitle": "¿Reiniciar todos los servicios del sistema ahora? Esto puede interrumpir brevemente las conexiones activas.",
-          "restartConfirmCancel": "Cancelar",
-          "restartConfirmConfirm": "Reiniciar Servicios"
-        },
-        "information": {
-          "title": "Información del Sistema",
-          "subtitle": "Estado actual del sistema e información de versión.",
-          "applicationVersion": "Versión de la Aplicación",
-          "environment": "Entorno",
-          "serverTime": "Hora del Servidor",
-          "uptime": "Tiempo Activo",
-          "availableDiskSpace": "Espacio en Disco Disponible",
-          "diskSpaceValue": "{{used}} GB / {{total}} GB"
-        },
-        "dangerZone": {
-          "title": "Zona de Peligro",
-          "description": "Acciones irreversibles. Usar con precaución.",
-          "resetToFactoryDefaults": "Restablecer a Valores de Fábrica",
-          "confirm": {
-            "title": "¿Restablecer a valores de fábrica?",
-            "description": "Esta acción restaurará la configuración de base de datos y almacenamiento a sus valores de fábrica y no se puede deshacer.",
-            "cancel": "Cancelar",
-            "confirm": "Restablecer a Valores de Fábrica"
+          "maintenanceMode": {
+            "label": "Modo de Mantenimiento",
+            "description": "Restringe el acceso solo a administradores."
           }
+        },
+        "card": {
+          "title": "Configuración General",
+          "subtitle": "Opciones regionales, de visualización y de acceso."
         }
       },
       "notifications": {
         "channels": {
-          "title": "Canales de Notificación",
-          "subtitle": "Elige cómo se entregan las notificaciones.",
-          "email": { "label": "Email", "description": "Enviar notificaciones por email." },
-          "discord": { "label": "Discord", "description": "Enviar notificaciones a un canal de Discord." },
-          "slack": { "label": "Slack", "description": "Enviar notificaciones a un canal de Slack." },
-          "webhook": { "label": "Webhook", "description": "Enviar notificaciones a una URL personalizada." }
+          "email": {
+            "label": "Email",
+            "description": "Enviar notificaciones por email."
+          }
         },
         "email": {
-          "title": "Configuración de Email",
-          "subtitle": "Configura las notificaciones por email.",
-          "smtpServer": "Servidor SMTP",
-          "port": "Puerto",
-          "username": "Usuario",
-          "password": "Contraseña",
-          "showPassword": "Mostrar contraseña",
-          "hidePassword": "Ocultar contraseña",
-          "fromEmail": "Email de Origen",
+          "title": "Notificaciones por Email",
+          "subtitle": "Activa o desactiva las notificaciones por email y elige quién las recibe.",
           "recipients": "Destinatario(s)",
           "recipientsHelper": "Usa comas para separar varios destinatarios.",
           "sendTestEmail": "Enviar Email de Prueba",
@@ -946,15 +739,6 @@
             "videoProcessingFailed": "Procesamiento de video fallido",
             "newUserRegistered": "Nuevo usuario registrado"
           }
-        },
-        "recent": {
-          "title": "Notificaciones Recientes",
-          "subtitle": "Ver las últimas notificaciones del sistema.",
-          "refresh": "Actualizar",
-          "empty": "No hay notificaciones recientes.",
-          "table": { "dateTime": "Fecha / Hora", "event": "Evento", "channel": "Canal", "status": "Estado" },
-          "status": { "sent": "Enviado", "failed": "Fallido" },
-          "viewAll": "Ver Todas las Notificaciones"
         }
       }
     },
@@ -1050,6 +834,7 @@
       "cancel": "Cancelar",
       "confirmUpdate": "Confirmar Actualización",
       "confirmTitle": "¿Confirmar cambio de resultado?",
+      "confirmDescription": "Estás a punto de cambiar el próximo resultado de {{game}}. La siguiente ronda usará el nuevo resultado.",
       "updating": "Actualizando…",
       "updateSuccess": "Resultado de {{game}} actualizado",
       "updateError": "No se pudo actualizar el resultado de {{game}}. Intenta de nuevo.",
@@ -1086,13 +871,15 @@
       },
       "manualOverrides": {
         "title": "Anulaciones Manuales",
-        "activeOverrides": "anulaciones activas",
-        "details": "Detalles"
+        "activeOverrides": "anulaciones activas"
       },
+      "stability": {"title": "Estabilidad del RTP", "subtitle": "RTP acumulado vs. rondas jugadas, contra el rango esperado por suerte", "correctionWindow": "Ventana de corrección", "status": {"within": "Dentro del rango esperado", "withinDetail": "La diferencia es varianza normal.", "outside": "Fuera del rango esperado", "outsideDetail": "La diferencia supera lo que explica la suerte."}, "tooltip": {"after": "Tras {{rounds}} rondas", "rtp": "RTP", "expected": "Rango esperado"}, "legend": {"cumulative": "RTP acumulado", "expected": "Rango esperado (95%)", "target": "Objetivo {{value}}%"}},
       "trendChart": {
         "title": "RTP Actual vs Objetivo",
         "actualSuffix": "(Actual)",
         "targetSuffix": "(Objetivo)",
+        "views": {"actual": "Actual vs Objetivo", "deviation": "Desviación"},
+        "deviation": {"title": "Desviación del RTP Objetivo", "ppUnit": "pp", "withinBand": "Dentro de banda", "outOfBand": "Fuera de banda", "band": "Banda {{low}} / {{high}} pp", "daysOut_one": "{{count}} día fuera de banda", "daysOut_other": "{{count}} días fuera de banda"},
         "rangeOptions": {
           "twoWeeks": "2 Semanas",
           "threeWeeks": "3 Semanas",
@@ -1129,7 +916,6 @@
       "management": {
       "title": "Administración de RTP",
       "subtitle": "Configura el RTP, simula cambios y programa perfiles de RTP.",
-      "viewDashboard": "Ver RTP Dashboard",
       "gameSelectLabel": "Juego",
       "tabs": {
         "settings": "Configuración",
@@ -1137,8 +923,6 @@
         "scheduling": "Programación de RTP"
       },
       "settings": {
-        "title": "Configuración de RTP",
-        "subtitle": "Configura los valores de RTP objetivo y los parámetros del sistema para cada juego.",
         "spinsUnit": "rondas",
         "targetRtp": { "label": "RTP Objetivo", "description": "Retorno al jugador deseado a largo plazo." },
         "minBand": { "label": "Banda Mínima de RTP", "description": "Valor mínimo de RTP permitido." },
@@ -1165,13 +949,12 @@
           "newTarget": "Nuevo Objetivo",
           "effectiveDate": "Fecha de Vigencia",
           "cancel": "Cancelar",
-          "confirm": "Confirmar y Guardar"
+          "confirm": "Confirmar y Guardar",
+          "description": "Estás a punto de cambiar la configuración de RTP de este juego. Esto afecta rondas reales a partir de la fecha de vigencia."
         },
         "lock": {
           "badge": "Bloqueado",
-          "reason": "Temporalmente bloqueado mientras la configuración de RTP actual está activa.",
-          "bannerTitle": "Algunos parámetros de RTP están temporalmente bloqueados.",
-          "bannerDescription": "Puedes revisar sus valores actuales, pero no se pueden editar por el momento."
+          "reason": "Temporalmente bloqueado. Puedes revisar su valor actual, pero por ahora no puedes editarlo."
         },
         "save": {
           "noChangesReason": "Todavía no hay cambios para guardar.",
@@ -1195,6 +978,7 @@
         "runSimulation": "Ejecutar Simulación",
         "results": {
           "title": "Resultados de la Simulación",
+          "close": "Cerrar resultados",
           "subtitle": "Resultado estimado según la configuración propuesta.",
           "currentRtp": "RTP Actual",
           "proposedRtp": "RTP Propuesto",
@@ -1260,6 +1044,7 @@
           "edited": "Editado"
         },
         "form": {
+          "close": "Cerrar",
           "createTitle": "Crear Perfil de RTP",
           "profileName": "Nombre del Perfil",
           "targetRtp": "RTP Objetivo",

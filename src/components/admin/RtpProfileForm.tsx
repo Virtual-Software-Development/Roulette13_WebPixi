@@ -114,9 +114,23 @@ export function RtpProfileForm({ existingProfiles, onCancel, onSave }: RtpProfil
     onSave(profile)
   }
 
+  // Panel propio a la derecha de Scheduled Profiles (ver RtpSchedulingPanel), con X para cerrarlo.
   return (
-    <div className="admin-rtp-profile-form">
-      <p className="admin-rtp-profile-form-title">{t('admin.rtp.management.scheduling.form.createTitle')}</p>
+    <section className="admin-panel admin-rtp-profile-form" aria-labelledby="rtp-profile-form-title">
+      <div className="admin-panel-header admin-rtp-profile-form-header">
+        <h2 id="rtp-profile-form-title" className="admin-panel-title">{t('admin.rtp.management.scheduling.form.createTitle')}</h2>
+        <button
+          type="button"
+          className="admin-rtp-profile-form-close"
+          aria-label={t('admin.rtp.management.scheduling.form.close')}
+          title={t('admin.rtp.management.scheduling.form.close')}
+          onClick={onCancel}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
 
       <div className="admin-rtp-scheduling-row">
         <AdminFormField id="profile-name" label={t('admin.rtp.management.scheduling.form.profileName')} value={name} onChange={setName} />
@@ -216,6 +230,6 @@ export function RtpProfileForm({ existingProfiles, onCancel, onSave }: RtpProfil
           {t('admin.rtp.management.scheduling.form.save')}
         </button>
       </div>
-    </div>
+    </section>
   )
 }

@@ -6,7 +6,7 @@ import type { ReportDateRangePreset, ReportGameFilter, ReportGroupBy, ReportType
 import { ReportDateRangeField } from './ReportDateRangeField'
 import './reportFiltersPanel.css'
 
-// Mismo ícono ya usado para "Reset"/"Refresh" en otras partes del Admin (GeneralSettingsTab,
+// Mismo ícono ya usado para "Reset"/"Refresh" en otras partes del Admin (AdminSettingsPage,
 // DatabaseCard, Next Results, ver investigación previa).
 const RESET_ICON_URL = buildMediaUrl('Website_svg_icons/39_refresh_white_clean.svg')
 

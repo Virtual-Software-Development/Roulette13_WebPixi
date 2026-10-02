@@ -1,0 +1,52 @@
+/* Pop-up de los paneles de detalle en pantallas angostas (ver AdminDetailPopup.tsx) -- mismo
+   backdrop que confirmDialog.css. El panel envuelto conserva su propio estilo; acá solo se limita
+   su tamaño, se le da fondo opaco y scroll interno. */
+.admin-detail-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 7, 11, 0.72);
+  backdrop-filter: blur(2px);
+  animation: admin-detail-popup-fade-in 150ms ease;
+}
+
+.admin-detail-popup {
+  display: flex;
+  flex-direction: column;
+  width: min(680px, 100%);
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  outline: none;
+}
+
+.admin-detail-popup > .admin-panel {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(12, 22, 32, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 560px) {
+  .admin-detail-popup-backdrop {
+    padding: 12px;
+  }
+
+  .admin-detail-popup {
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+}
+
+@keyframes admin-detail-popup-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -9,8 +9,9 @@
   gap: 18px;
 }
 
-/* Fila de gráficos -- Games Activity ~58%, Games Distribution ~42%; pasa a una columna si no
-   entra legible. */
+/* Grilla principal -- columna izquierda ~58% (Game Performance arriba, Game Events abajo),
+   columna derecha ~42% (Result Frequency + Recent Rounds apilados) ocupando ambas filas. Pasa a una
+   columna si no entra legible. */
 .admin-charts-row {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
@@ -18,23 +19,27 @@
   align-items: stretch;
 }
 
+.admin-dashboard-side-column {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+/* Recent Rounds estira hasta el final de la columna (termina a la altura de Game Events). */
+.admin-dashboard-side-column > .admin-recent-rounds {
+  flex: 1 1 auto;
+}
+
 @media (max-width: 1080px) {
   .admin-charts-row {
     grid-template-columns: 1fr;
   }
-}
 
-/* Fila inferior -- Recent Rounds ~60%, System Status ~40% (reemplaza el espacio que ocuparía
-   Quick Actions, que este panel NO implementa -- requisito explícito). */
-.admin-bottom-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
-  gap: 18px;
-  align-items: stretch;
-}
-
-@media (max-width: 900px) {
-  .admin-bottom-row {
-    grid-template-columns: 1fr;
+  .admin-dashboard-side-column {
+    grid-column: auto;
+    grid-row: auto;
   }
 }

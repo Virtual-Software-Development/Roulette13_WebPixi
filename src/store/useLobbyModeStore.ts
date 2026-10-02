@@ -14,6 +14,10 @@ interface LobbyModeState {
   // recién cuando termina su video (igual que Roulette, que no muestra el resultado antes).
   pendingDraw: QuickMoneyLobbyDraw | null
   setPendingDraw: (pendingDraw: QuickMoneyLobbyDraw | null) => void
+  // Blob del video (ya precargado en el slot) del sorteo pendiente -- lo reproduce
+  // QuickMoneyVideoView. null = el sorteo no tiene video.
+  pendingVideoUrl: string | null
+  setPendingVideoUrl: (pendingVideoUrl: string | null) => void
 }
 
 export const useLobbyModeStore = create<LobbyModeState>((set) => ({
@@ -21,6 +25,8 @@ export const useLobbyModeStore = create<LobbyModeState>((set) => ({
   setPhase: (phase) => set({ phase }),
   pendingDraw: null,
   setPendingDraw: (pendingDraw) => set({ pendingDraw }),
+  pendingVideoUrl: null,
+  setPendingVideoUrl: (pendingVideoUrl) => set({ pendingVideoUrl }),
 }))
 
 export function isQuickMoneySplitPhase(phase: LobbyPhase): boolean {

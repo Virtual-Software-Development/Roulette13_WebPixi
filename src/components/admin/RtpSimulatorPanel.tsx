@@ -37,6 +37,14 @@ function PlayIcon() {
   )
 }
 
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 interface RtpSimulatorPanelProps {
   settingsByGame: Record<RtpGame, RtpSettingsData>
 }
@@ -91,84 +99,98 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
     )
   }
 
+  // Resultados como panel propio a la derecha del formulario (antes debajo, había que scrollear para
+  // verlos). Sin resultado todavía el formulario ocupa todo el ancho.
   return (
-    <section className="admin-panel admin-rtp-simulator">
-      <div className="admin-panel-header">
-        <div>
-          <h2 className="admin-panel-title">{t('admin.rtp.management.simulator.title')}</h2>
-          <p className="admin-rtp-simulator-subtitle">{t('admin.rtp.management.simulator.subtitle')}</p>
+    <div className="admin-rtp-simulator-layout" data-has-result={result !== null}>
+      <section className="admin-panel admin-rtp-simulator">
+        <div className="admin-panel-header">
+          <div>
+            <h2 className="admin-panel-title">{t('admin.rtp.management.simulator.title')}</h2>
+            <p className="admin-rtp-simulator-subtitle">{t('admin.rtp.management.simulator.subtitle')}</p>
+          </div>
         </div>
-      </div>
 
-      <div className="admin-rtp-simulator-row">
-        <AdminSelect value={game} options={gameOptions} onChange={setGame} label={t('admin.rtp.management.gameSelectLabel')} />
-        <AdminSelect
-          value={simulationType}
-          options={simulationTypeOptions}
-          onChange={setSimulationType}
-          label={t('admin.rtp.management.simulator.simulationType')}
-        />
-      </div>
+        <div className="admin-rtp-simulator-row">
+          <AdminSelect value={game} options={gameOptions} onChange={setGame} label={t('admin.rtp.management.gameSelectLabel')} />
+          <AdminSelect
+            value={simulationType}
+            options={simulationTypeOptions}
+            onChange={setSimulationType}
+            label={t('admin.rtp.management.simulator.simulationType')}
+          />
+        </div>
 
-      <div className="admin-rtp-simulator-row admin-rtp-simulator-row--three">
-        <AdminFormField id="sim-current-target" label={t('admin.rtp.management.simulator.currentTargetRtp')} suffix="%" readOnly value={currentTargetRtp.toFixed(2)} />
-        <AdminFormField
-          id="sim-proposed-target"
-          label={t('admin.rtp.management.simulator.proposedTargetRtp')}
-          suffix="%"
-          emphasized
-          type="number"
-          step="0.01"
-          value={proposedTargetRtp}
-          onChange={(v) => setProposedTargetRtp(Number(v))}
-          stepper={{
-            onIncrement: () => setProposedTargetRtp((v) => Math.round((v + 0.1) * 100) / 100),
-            onDecrement: () => setProposedTargetRtp((v) => Math.round((v - 0.1) * 100) / 100),
-          }}
-        />
-        <AdminFormField
-          id="sim-sample-size"
-          label={t('admin.rtp.management.simulator.sampleSize.label')}
-          description={t('admin.rtp.management.simulator.sampleSize.description')}
-          suffix={t('admin.rtp.management.simulator.sampleSize.unit')}
-          type="number"
-          step="10000"
-          value={sampleSize}
-          onChange={(v) => setSampleSize(Number(v))}
-        />
-      </div>
+        <div className="admin-rtp-simulator-row admin-rtp-simulator-row--three">
+          <AdminFormField id="sim-current-target" label={t('admin.rtp.management.simulator.currentTargetRtp')} suffix="%" readOnly value={currentTargetRtp.toFixed(2)} />
+          <AdminFormField
+            id="sim-proposed-target"
+            label={t('admin.rtp.management.simulator.proposedTargetRtp')}
+            suffix="%"
+            emphasized
+            type="number"
+            step="0.01"
+            value={proposedTargetRtp}
+            onChange={(v) => setProposedTargetRtp(Number(v))}
+            stepper={{
+              onIncrement: () => setProposedTargetRtp((v) => Math.round((v + 0.1) * 100) / 100),
+              onDecrement: () => setProposedTargetRtp((v) => Math.round((v - 0.1) * 100) / 100),
+            }}
+          />
+          <AdminFormField
+            id="sim-sample-size"
+            label={t('admin.rtp.management.simulator.sampleSize.label')}
+            description={t('admin.rtp.management.simulator.sampleSize.description')}
+            suffix={t('admin.rtp.management.simulator.sampleSize.unit')}
+            type="number"
+            step="10000"
+            value={sampleSize}
+            onChange={(v) => setSampleSize(Number(v))}
+          />
+        </div>
 
-      <div className="admin-rtp-simulator-row">
-        <AdminFormField
-          id="sim-avg-bet"
-          label={t('admin.rtp.management.simulator.estimatedAverageBet.label')}
-          description={t('admin.rtp.management.simulator.estimatedAverageBet.description')}
-          prefix="$"
-          type="number"
-          step="0.5"
-          value={estimatedAverageBet}
-          onChange={(v) => setEstimatedAverageBet(Number(v))}
-        />
-        <AdminSelect
-          value={volatilityModel}
-          options={volatilityOptions}
-          onChange={setVolatilityModel}
-          label={t('admin.rtp.management.simulator.volatilityModel.label')}
-        />
-      </div>
+        <div className="admin-rtp-simulator-row">
+          <AdminFormField
+            id="sim-avg-bet"
+            label={t('admin.rtp.management.simulator.estimatedAverageBet.label')}
+            description={t('admin.rtp.management.simulator.estimatedAverageBet.description')}
+            prefix="$"
+            type="number"
+            step="0.5"
+            value={estimatedAverageBet}
+            onChange={(v) => setEstimatedAverageBet(Number(v))}
+          />
+          <AdminSelect
+            value={volatilityModel}
+            options={volatilityOptions}
+            onChange={setVolatilityModel}
+            label={t('admin.rtp.management.simulator.volatilityModel.label')}
+          />
+        </div>
 
-      <button type="button" className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--primary admin-rtp-simulator-run" onClick={handleRun}>
-        <PlayIcon />
-        {t('admin.rtp.management.simulator.runSimulation')}
-      </button>
+        <button type="button" className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--primary admin-rtp-simulator-run" onClick={handleRun}>
+          <PlayIcon />
+          {t('admin.rtp.management.simulator.runSimulation')}
+        </button>
+      </section>
 
       {result && (
-        <div className="admin-rtp-simulator-results">
+        <section className="admin-panel admin-rtp-simulator-results" aria-live="polite">
           <div className="admin-panel-header">
             <div>
               <h3 className="admin-rtp-simulator-results-title">{t('admin.rtp.management.simulator.results.title')}</h3>
               <p className="admin-rtp-simulator-subtitle">{t('admin.rtp.management.simulator.results.subtitle')}</p>
             </div>
+            {/* Cierra el panel de resultados -- el formulario vuelve a ocupar todo el ancho. */}
+            <button
+              type="button"
+              className="admin-rtp-simulator-results-close"
+              aria-label={t('admin.rtp.management.simulator.results.close')}
+              title={t('admin.rtp.management.simulator.results.close')}
+              onClick={() => setResult(null)}
+            >
+              <CloseIcon />
+            </button>
           </div>
 
           <div className="admin-rtp-simulator-results-primary">
@@ -217,8 +239,8 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
           </div>
 
           <InfoBanner title={t('admin.rtp.management.simulator.disclaimer')} />
-        </div>
+        </section>
       )}
-    </section>
+    </div>
   )
 }

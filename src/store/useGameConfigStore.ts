@@ -7,6 +7,8 @@ export interface GameConfig {
   videoUrl: string
   drawNumber: string
   nextDrawStartTime: string
+  // Duración de un round de Roulette (/gameInfo roundInterval, en ms) -- 0 hasta el primer /gameInfo.
+  roundIntervalMs: number
   showLogo: boolean
   balance: number
 }
@@ -22,6 +24,7 @@ export const useGameConfigStore = create<GameConfigStore>((set) => ({
   videoUrl: '',
   drawNumber:'',
   nextDrawStartTime:'',
+  roundIntervalMs: 0,
   showLogo: true,
   balance: 0,
   setGameConfig: (config) => set(config),

@@ -1,0 +1,229 @@
+.admin-rtp-stability {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-rtp-stability-header {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-rtp-stability-subtitle {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+}
+
+/* Toggle de juego -- mismo segmentado que Actual vs Target / Deviation (rtpTrendChart.css). */
+.admin-rtp-stability-games {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.7);
+}
+
+.admin-rtp-stability-game {
+  height: 26px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-rtp-stability-game:hover {
+  color: var(--admin-text-primary);
+}
+
+.admin-rtp-stability-game[data-selected='true'] {
+  background: rgba(140, 165, 190, 0.16);
+  color: var(--admin-text-primary);
+}
+
+.admin-rtp-stability-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-rtp-stability-status-badge {
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.admin-rtp-stability-status[data-within='true'] .admin-rtp-stability-status-badge {
+  color: var(--admin-green);
+  background: rgba(67, 232, 106, 0.1);
+  border-color: rgba(67, 232, 106, 0.3);
+}
+
+.admin-rtp-stability-status[data-within='false'] .admin-rtp-stability-status-badge {
+  color: #ff5a6c;
+  background: rgba(220, 20, 40, 0.12);
+  border-color: rgba(255, 90, 108, 0.35);
+}
+
+/* Llena el alto libre de la columna (ver rtpDashboardPage.css); el SVG se dibuja a ese tamaño. */
+.admin-rtp-stability-plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 150px;
+}
+
+.admin-rtp-stability-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
+}
+
+.admin-rtp-stability-gridline {
+  stroke: rgba(120, 145, 170, 0.12);
+  stroke-width: 1;
+}
+
+.admin-rtp-stability-axis-label {
+  fill: var(--admin-text-secondary);
+  font-size: 11.5px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-rtp-stability-funnel {
+  fill: rgba(140, 165, 190, 0.14);
+  stroke: rgba(160, 185, 210, 0.35);
+  stroke-width: 1;
+}
+
+.admin-rtp-stability-target {
+  stroke: rgba(225, 235, 245, 0.7);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+}
+
+.admin-rtp-stability-window {
+  stroke: rgba(240, 168, 60, 0.6);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.admin-rtp-stability-window-label {
+  fill: var(--admin-amber);
+  font-size: 10.5px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.admin-rtp-stability-dot {
+  stroke: #0b1620;
+  stroke-width: 2;
+}
+
+.admin-rtp-stability-crosshair {
+  stroke: rgba(200, 215, 230, 0.35);
+  stroke-width: 1;
+}
+
+.admin-rtp-stability-tooltip {
+  position: absolute;
+  top: 6px;
+  min-width: 170px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(8, 15, 23, 0.97);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+  pointer-events: none;
+  transform: translateX(12px);
+  z-index: 2;
+}
+
+.admin-rtp-stability-tooltip[data-align='right'] {
+  transform: translateX(calc(-100% - 12px));
+}
+
+.admin-rtp-stability-tooltip-title {
+  margin-bottom: 5px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-rtp-stability-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 1px 0;
+}
+
+.admin-rtp-stability-tooltip-row strong {
+  color: var(--admin-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-rtp-stability-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.admin-rtp-stability-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-rtp-stability-legend-line {
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.admin-rtp-stability-legend-funnel {
+  width: 16px;
+  height: 10px;
+  border-radius: 2px;
+  background: rgba(140, 165, 190, 0.22);
+  border: 1px solid rgba(160, 185, 210, 0.35);
+}
+
+.admin-rtp-stability-legend-target {
+  width: 18px;
+  border-top: 2px dashed rgba(225, 235, 245, 0.7);
+}
+
+/* Status en una línea: badge + texto corto. */
+.admin-rtp-stability-status {
+  flex-wrap: nowrap;
+}
+
+.admin-rtp-stability-status-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-rtp-stability-status-badge {
+  flex-shrink: 0;
+}

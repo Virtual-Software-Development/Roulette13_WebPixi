@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useClickOutside } from '../../hooks/useClickOutside'
-import type { RtpHistoryPoint, RtpTrendRange } from '../../types/rtpDashboard'
+import type { RtpBand, RtpHistoryPoint, RtpTrendRange } from '../../types/rtpDashboard'
+import { RtpDeviationRows } from './RtpDeviationRows'
 import './rtpTrendChart.css'
 
 // Mismo criterio que GamesActivityChart: el proyecto no tiene ninguna librería de charts
@@ -68,13 +69,21 @@ const SERIES: LineSeries[] = [
   { key: 'pick4Target', color: 'var(--admin-amber)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.pick4' },
 ]
 
+// actual = Actual vs Target (líneas en escala absoluta); deviation = actual - target por juego con
+// su banda sombreada (ver RtpDeviationRows) -- en la escala absoluta una desviación de 1-2 pp entre
+// juegos tan separados (95% vs 60%) era prácticamente invisible.
+type TrendView = 'actual' | 'deviation'
+const VIEW_OPTIONS: TrendView[] = ['actual', 'deviation']
+
 interface RtpTrendChartProps {
   historyByRange: Record<RtpTrendRange, RtpHistoryPoint[]>
+  bands: RtpBand[]
 }
 
-export function RtpTrendChart({ historyByRange }: RtpTrendChartProps) {
+export function RtpTrendChart({ historyByRange, bands }: RtpTrendChartProps) {
   const { t } = useTranslation()
   const [range, setRange] = useState<RtpTrendRange>('last7Days')
+  const [view, setView] = useState<TrendView>('actual')
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   useClickOutside(containerRef, () => setIsOpen(false))
@@ -86,108 +95,132 @@ export function RtpTrendChart({ historyByRange }: RtpTrendChartProps) {
   return (
     <section className="admin-panel admin-rtp-trend">
       <div className="admin-panel-header">
-        <h2 className="admin-panel-title">{t('admin.rtp.trendChart.title')}</h2>
-        <div className="admin-dropdown" ref={containerRef}>
-          <button type="button" className="admin-rtp-trend-range" aria-expanded={isOpen} onClick={() => setIsOpen((value) => !value)}>
-            {t(rangeLabelKey(range))}
-            <span className={`admin-rtp-trend-range-chevron-wrap${isOpen ? ' admin-rtp-trend-range-chevron-wrap--open' : ''}`}>
-              <ChevronDownIcon />
-            </span>
-          </button>
+        <h2 className="admin-panel-title">
+          {view === 'actual' ? t('admin.rtp.trendChart.title') : t('admin.rtp.trendChart.deviation.title')}
+        </h2>
+        <div className="admin-rtp-trend-controls">
+          <div className="admin-rtp-trend-views" role="group">
+            {VIEW_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                className="admin-rtp-trend-view"
+                data-selected={option === view}
+                aria-pressed={option === view}
+                onClick={() => setView(option)}
+              >
+                {t(`admin.rtp.trendChart.views.${option}`)}
+              </button>
+            ))}
+          </div>
+          <div className="admin-dropdown" ref={containerRef}>
+            <button type="button" className="admin-rtp-trend-range" aria-expanded={isOpen} onClick={() => setIsOpen((value) => !value)}>
+              {t(rangeLabelKey(range))}
+              <span className={`admin-rtp-trend-range-chevron-wrap${isOpen ? ' admin-rtp-trend-range-chevron-wrap--open' : ''}`}>
+                <ChevronDownIcon />
+              </span>
+            </button>
 
-          {isOpen && (
-            <div className="admin-dropdown-menu" role="listbox">
-              {RANGE_OPTIONS.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  className="admin-dropdown-option"
-                  data-selected={option === range}
-                  role="option"
-                  aria-selected={option === range}
-                  onClick={() => {
-                    setRange(option)
-                    setIsOpen(false)
-                  }}
-                >
-                  {t(rangeLabelKey(option))}
-                </button>
-              ))}
-            </div>
-          )}
+            {isOpen && (
+              <div className="admin-dropdown-menu" role="listbox">
+                {RANGE_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className="admin-dropdown-option"
+                    data-selected={option === range}
+                    role="option"
+                    aria-selected={option === range}
+                    onClick={() => {
+                      setRange(option)
+                      setIsOpen(false)
+                    }}
+                  >
+                    {t(rangeLabelKey(option))}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <svg
-        className="admin-rtp-trend-svg"
-        viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-        preserveAspectRatio="none"
-        role="img"
-        aria-label={t('admin.rtp.trendChart.title')}
-      >
-        {Y_TICKS.map((tick) => (
-          <g key={tick}>
-            <line
-              x1={MARGIN.left}
-              x2={CHART_WIDTH - MARGIN.right}
-              y1={yFor(tick)}
-              y2={yFor(tick)}
-              className="admin-rtp-trend-gridline"
-            />
-            <text x={MARGIN.left - 14} y={yFor(tick)} className="admin-rtp-trend-axis-label" textAnchor="end" dominantBaseline="middle">
-              {tick}%
-            </text>
-          </g>
-        ))}
+      {view === 'deviation' ? (
+        <RtpDeviationRows history={history} bands={bands} labelIndices={labelIndices} />
+      ) : (
+        <>
+          <svg
+            className="admin-rtp-trend-svg"
+            viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+            preserveAspectRatio="none"
+            role="img"
+            aria-label={t('admin.rtp.trendChart.title')}
+          >
+            {Y_TICKS.map((tick) => (
+              <g key={tick}>
+                <line
+                  x1={MARGIN.left}
+                  x2={CHART_WIDTH - MARGIN.right}
+                  y1={yFor(tick)}
+                  y2={yFor(tick)}
+                  className="admin-rtp-trend-gridline"
+                />
+                <text x={MARGIN.left - 14} y={yFor(tick)} className="admin-rtp-trend-axis-label" textAnchor="end" dominantBaseline="middle">
+                  {tick}%
+                </text>
+              </g>
+            ))}
 
-        {labelIndices.map((i) => {
-          const x = xFor(i, count)
-          const textAnchor = i === 0 ? 'start' : i === count - 1 ? 'end' : 'middle'
-          return (
-            <text key={history[i].date + i} x={x} y={CHART_HEIGHT - 8} className="admin-rtp-trend-axis-label" textAnchor={textAnchor}>
-              {history[i].date}
-            </text>
-          )
-        })}
+            {labelIndices.map((i) => {
+              const x = xFor(i, count)
+              const textAnchor = i === 0 ? 'start' : i === count - 1 ? 'end' : 'middle'
+              return (
+                <text key={history[i].date + i} x={x} y={CHART_HEIGHT - 8} className="admin-rtp-trend-axis-label" textAnchor={textAnchor}>
+                  {history[i].date}
+                </text>
+              )
+            })}
 
-        {SERIES.map((s) => {
-          const points = history.map((point, i) => `${xFor(i, count)},${yFor(point[s.key])}`).join(' ')
-          return (
-            <polyline
-              key={s.key}
-              points={points}
-              fill="none"
-              stroke={s.color}
-              strokeWidth={s.dashed ? 1.5 : 2}
-              strokeDasharray={s.dashed ? '6 5' : undefined}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              className="admin-rtp-trend-line"
-              style={{ filter: `drop-shadow(0 0 3px color-mix(in srgb, ${s.color} 35%, transparent))` }}
-            />
-          )
-        })}
-      </svg>
+            {SERIES.map((s) => {
+              const points = history.map((point, i) => `${xFor(i, count)},${yFor(point[s.key])}`).join(' ')
+              return (
+                <polyline
+                  key={s.key}
+                  points={points}
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth={s.dashed ? 1.5 : 2}
+                  strokeDasharray={s.dashed ? '6 5' : undefined}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  className="admin-rtp-trend-line"
+                  style={{ filter: `drop-shadow(0 0 3px color-mix(in srgb, ${s.color} 35%, transparent))` }}
+                />
+              )
+            })}
+          </svg>
 
-      <div className="admin-rtp-trend-legend">
-        {SERIES.map((s) => (
-          <span key={s.key} className="admin-rtp-trend-legend-item">
-            <svg viewBox="0 0 20 6" className="admin-rtp-trend-legend-swatch" aria-hidden="true" focusable="false">
-              <line
-                x1="0"
-                y1="3"
-                x2="20"
-                y2="3"
-                stroke={s.color}
-                strokeWidth="2.4"
-                strokeDasharray={s.dashed ? '5 3.5' : undefined}
-                strokeLinecap="round"
-              />
-            </svg>
-            {t(s.gameLabelKey)} {t(s.dashed ? 'admin.rtp.trendChart.targetSuffix' : 'admin.rtp.trendChart.actualSuffix')}
-          </span>
-        ))}
-      </div>
+          <div className="admin-rtp-trend-legend">
+            {SERIES.map((s) => (
+              <span key={s.key} className="admin-rtp-trend-legend-item">
+                <svg viewBox="0 0 20 6" className="admin-rtp-trend-legend-swatch" aria-hidden="true" focusable="false">
+                  <line
+                    x1="0"
+                    y1="3"
+                    x2="20"
+                    y2="3"
+                    stroke={s.color}
+                    strokeWidth="2.4"
+                    strokeDasharray={s.dashed ? '5 3.5' : undefined}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                {t(s.gameLabelKey)} {t(s.dashed ? 'admin.rtp.trendChart.targetSuffix' : 'admin.rtp.trendChart.actualSuffix')}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
     </section>
   )
 }

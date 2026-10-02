@@ -40,9 +40,6 @@ const ADMIN_PREVIEW_VALUES = [
   'admin-settings',
   'admin-users',
   'admin-reports',
-  'admin-videos-roulette',
-  'admin-videos-quick-money',
-  'admin-videos-upload-history',
   'admin-system-logs',
 ]
 

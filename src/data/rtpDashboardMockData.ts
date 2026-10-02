@@ -8,6 +8,7 @@ import type {
   RtpHistoryPoint,
   RtpMetricCardData,
   RtpTrendRange,
+  RtpStabilityData,
 } from '../types/rtpDashboard'
 
 // Mock TEMPORAL para el RTP Dashboard -- no existe todavía un servicio de RTP/payout
@@ -193,3 +194,47 @@ export const RTP_CHANGES: RtpChange[] = [
 ]
 
 export const RTP_CHANGES_TOTAL_COUNT = RTP_CHANGES.length
+
+// RTP Stability -- trayectoria simulada del RTP acumulado (puente browniano con semilla fija: arranca
+// ruidoso y converge, terminando exactamente en el "current" de RTP_METRIC_CARDS para que coincida
+// con las KPI). sigma por juego aproxima la volatilidad de su mezcla de apuestas (Roulette baja-media;
+// Pick 3/Pick 4 altas por sus premios grandes). correctionWindow = el de RTP Settings.
+function stabilityRandom(seed: number): () => number {
+  let state = seed >>> 0
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+    return state / 4294967296
+  }
+}
+
+function gaussian(random: () => number): number {
+  return Math.sqrt(-2 * Math.log(random() || 1e-9)) * Math.cos(2 * Math.PI * random())
+}
+
+const STABILITY_POINTS = 120
+
+function buildStability(target: number, current: number, sigma: number, totalRounds: number, correctionWindow: number, seed: number): RtpStabilityData {
+  const random = stabilityRandom(seed)
+  const step = totalRounds / STABILITY_POINTS
+  const walk: number[] = []
+  let w = 0
+  for (let i = 1; i <= STABILITY_POINTS; i++) {
+    w += gaussian(random) * Math.sqrt(step)
+    walk.push(w)
+  }
+  const wEnd = walk[walk.length - 1]
+  const finalDev = (current - target) / 100
+  const points = walk.map((wi, idx) => {
+    const n = step * (idx + 1)
+    const bridge = wi - (n / totalRounds) * wEnd
+    const dev = (sigma * bridge) / n + finalDev
+    return { rounds: Math.round(n), rtp: Math.round((target + dev * 100) * 100) / 100 }
+  })
+  return { target, sigma, correctionWindow, points }
+}
+
+export const RTP_STABILITY_BY_GAME: Record<RtpGame, RtpStabilityData> = {
+  roulette: buildStability(96, 95.2, 2.4, 60000, 20000, 96),
+  pick3: buildStability(60, 61.4, 7.5, 36000, 15000, 333),
+  pick4: buildStability(62, 62.1, 11, 32000, 15000, 4444),
+}

@@ -71,7 +71,8 @@
 
 .admin-performance-by-game-total-row td {
   border-bottom: none;
-  border-top: 1px solid var(--admin-border);
+  /* Línea de total: blanca y gruesa, separa claramente los juegos del total. */
+  border-top: 2px solid var(--admin-text-primary);
   font-weight: 700;
   color: var(--admin-text-primary);
 }

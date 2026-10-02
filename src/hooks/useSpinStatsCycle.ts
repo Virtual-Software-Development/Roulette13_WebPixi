@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
-import { useDrawCycleStore } from '../store/useDrawCycleStore'
-import { useLobbyModeStore } from '../store/useLobbyModeStore'
+import { useRoulettePanelsVisible } from '../store/useLobbyModeStore'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { ensureClockTicking, useClockStore } from '../store/useClockStore'
 import { parseApiDateTime } from '../utils/time'
@@ -16,9 +15,10 @@ import type { DozenGroup, ColumnGroup } from '../types/numberIndicator'
 // useClockStore, con la misma precisión (~200ms) que el resto del reloj compartido.
 const SHOW_DELAY_AFTER_HOT_COLD_SECONDS = 0.25
 const VISIBLE_MAX_REMAINING_SECONDS = VISIBLE_MIN_REMAINING_SECONDS - SHOW_DELAY_AFTER_HOT_COLD_SECONDS
-// Se oculta cuando faltan estos segundos o menos para el próximo sorteo -- deja aire antes de que
-// arranque el video del sorteo.
-const HIDE_AT_REMAINING_SECONDS = 5
+// Cuando faltan estos segundos o menos para el próximo sorteo el panel sigue en pantalla, pero con
+// el ciclo congelado (sin highlights ni cambio de donas) -- deja aire antes de que arranque el
+// video del sorteo. Se oculta recién con el resto de los paneles (ver shouldShow).
+const FREEZE_AT_REMAINING_SECONDS = 5
 
 // Timeline del ciclo, en segundos desde que el panel queda visible (no desde que carga la página
 // -- ver comentario de `elapsed` más abajo, así si se entra a mitad de ronda el ciclo arranca ya
@@ -90,7 +90,6 @@ function seededPick<T extends readonly unknown[]>(seed: string, options: T): T[n
 // local, para que cargar la página a mitad de una animación la retome en la fase correcta en vez
 // de reiniciar desde cero.
 export function useSpinStatsCycle(): SpinStatsCycle {
-  const active = useDrawCycleStore((state) => state.active)
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
   ensureClockTicking()
   // Segundos reales CON decimales (a diferencia de useCountdown.remainingSeconds, que redondea
@@ -100,16 +99,21 @@ export function useSpinStatsCycle(): SpinStatsCycle {
     return Math.max(0, parseApiDateTime(nextDrawStartTime).getTime() - state.now) / 1000
   })
 
-  // Fuera durante el bloque de Quick Money del lobby compartido (ver useLobbyModeStore).
-  const inRouletteLobby = useLobbyModeStore((state) => state.phase === 'roulette')
-  const shouldShow = !active && inRouletteLobby && remainingSeconds <= VISIBLE_MAX_REMAINING_SECONDS && remainingSeconds > HIDE_AT_REMAINING_SECONDS
+  // Sale de escena junto con el resto de los paneles del lobby (al arrancar el sorteo y durante el
+  // bloque de Quick Money, ver useRoulettePanelsVisible) -- ya no se oculta por su cuenta antes.
+  const panelsVisible = useRoulettePanelsVisible()
+  const shouldShow = panelsVisible && remainingSeconds <= VISIBLE_MAX_REMAINING_SECONDS
+  // Los últimos FREEZE_AT_REMAINING_SECONDS el ciclo queda congelado donde estaba: sin categoría
+  // activa (se apagan los highlights de donas y rueda) y con el mismo set de donas (sin cross-fade).
+  const frozen = remainingSeconds <= FREEZE_AT_REMAINING_SECONDS
+  const cycleRemainingSeconds = frozen ? FREEZE_AT_REMAINING_SECONDS : remainingSeconds
 
   return useMemo<SpinStatsCycle>(() => {
     if (!shouldShow) {
       return { shouldShow: false, activeCategory: null, donutSet: 'phase1' }
     }
 
-    const elapsed = VISIBLE_MAX_REMAINING_SECONDS - remainingSeconds
+    const elapsed = VISIBLE_MAX_REMAINING_SECONDS - cycleRemainingSeconds
     if (elapsed < INITIAL_OFF_SECONDS) {
       return { shouldShow: true, activeCategory: null, donutSet: 'phase1' }
     }
@@ -138,7 +142,9 @@ export function useSpinStatsCycle(): SpinStatsCycle {
     }
 
     let activeCategory: SpinStatsCategory | null = null
-    if (activeSlot === 'red' || activeSlot === 'black') {
+    if (frozen) {
+      activeCategory = null
+    } else if (activeSlot === 'red' || activeSlot === 'black') {
       activeCategory = activeSlot
     } else if (activeSlot === 'evenOdd') {
       activeCategory = seededPick(`${nextDrawStartTime}:evenOdd:${cycleIndex}`, ['even', 'odd'] as const)
@@ -151,5 +157,5 @@ export function useSpinStatsCycle(): SpinStatsCycle {
     }
 
     return { shouldShow: true, activeCategory, donutSet }
-  }, [shouldShow, remainingSeconds, nextDrawStartTime])
+  }, [shouldShow, frozen, cycleRemainingSeconds, nextDrawStartTime])
 }

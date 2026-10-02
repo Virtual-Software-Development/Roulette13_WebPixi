@@ -38,12 +38,44 @@
   min-width: 240px;
 }
 
+/* Formulario | Resultados lado a lado una vez corrida la simulación (antes los resultados quedaban
+   debajo del formulario y había que scrollear). Sin resultado, el formulario usa todo el ancho. */
+.admin-rtp-simulator-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.admin-rtp-simulator-layout[data-has-result='true'] {
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 1fr);
+}
+
+@media (max-width: 1180px) {
+  .admin-rtp-simulator-layout[data-has-result='true'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .admin-rtp-simulator-results {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding-top: 18px;
-  border-top: 1px solid var(--admin-border);
+  gap: 16px;
+}
+
+/* Panel angosto: métricas principales en 2x2 y secundarias en grilla 2x2 sin divisores verticales. */
+.admin-rtp-simulator-results .admin-rtp-simulator-results-primary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-rtp-simulator-results .admin-rtp-simulator-results-secondary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.admin-rtp-simulator-results .admin-rtp-simulator-secondary-divider {
+  display: none;
 }
 
 .admin-rtp-simulator-results-title {
@@ -146,4 +178,42 @@
   .admin-rtp-simulator-secondary-divider {
     display: none;
   }
+}
+
+/* Botón X del panel de resultados -- mismo estilo que el close de los modales del Admin
+   (adminLogModal.css). */
+.admin-rtp-simulator-results .admin-panel-header {
+  align-items: flex-start;
+}
+
+.admin-rtp-simulator-results-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-rtp-simulator-results-close:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-rtp-simulator-results-close:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+}
+
+.admin-rtp-simulator-results-close svg {
+  width: 15px;
+  height: 15px;
 }

@@ -15,6 +15,9 @@ interface AdminSelectProps<T extends string> {
   label?: string
   ariaLabel?: string
   disabled?: boolean
+  // Abre el menú hacia arriba (ej. selects de dígitos de Pick 3/Pick 4, al pie de su card: hacia
+  // abajo el menú de 10 opciones quedaba tapado por el borde del panel).
+  openUpward?: boolean
 }
 
 function ChevronDownIcon() {
@@ -28,7 +31,7 @@ function ChevronDownIcon() {
 // Select genérico extraído del patrón botón+menú repetido en DateRangeControl/GamesActivityChart/
 // RtpTrendChart (ver investigación previa: el proyecto no tenía ningún <Select> reutilizable) --
 // usado por Game/Simulation Type/Volatility Model/Schedule Type en RTP Management.
-export function AdminSelect<T extends string>({ value, options, onChange, label, ariaLabel, disabled }: AdminSelectProps<T>) {
+export function AdminSelect<T extends string>({ value, options, onChange, label, ariaLabel, disabled, openUpward }: AdminSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   useClickOutside(containerRef, () => setIsOpen(false))
@@ -55,7 +58,7 @@ export function AdminSelect<T extends string>({ value, options, onChange, label,
         </button>
 
         {isOpen && (
-          <div className="admin-dropdown-menu" role="listbox">
+          <div className={`admin-dropdown-menu${openUpward ? ' admin-dropdown-menu--up' : ''}`} role="listbox">
             {options.map((option) => (
               <button
                 key={option.value}

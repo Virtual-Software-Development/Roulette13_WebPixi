@@ -18,8 +18,9 @@ export const VISIBLE_MIN_REMAINING_SECONDS = 70 // 1:20
 
 // Cuánto esperar, después de que vuelve a aparecer la info del lobby (Header/Footer/
 // SharedLayout, ver useDrawCycleStore.lobbyInfoVisible), antes de mostrar este panel -- para que
-// no se sientan pisados/simultáneos.
-const SHOW_DELAY_AFTER_LOBBY_INFO_MS = 5000
+// no se sientan pisados/simultáneos. 1s (pedido explícito, antes 5s): al volver del bloque de Quick
+// Money la transición de salida del split (1.2s) ya los separa.
+const SHOW_DELAY_AFTER_LOBBY_INFO_MS = 1000
 
 export interface HotColdWindow extends HotColdNumbers {
   shouldShow: boolean
@@ -35,7 +36,7 @@ export function useHotColdWindow(): HotColdWindow {
   // termine de bajar de vuelta y de que el panel Winner se escale a 0), esto sigue en false hasta
   // que la info del lobby ya volvió a aparecer -- ver useDrawCycleStore.
   // (useRoulettePanelsVisible: además en false durante el bloque de Quick Money del lobby, así al
-  // volver a Roulette también espera los 5s de SHOW_DELAY_AFTER_LOBBY_INFO_MS.)
+  // volver a Roulette también espera SHOW_DELAY_AFTER_LOBBY_INFO_MS.)
   const lobbyInfoVisible = useRoulettePanelsVisible()
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
   const { remainingSeconds } = useCountdown(nextDrawStartTime)

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AdminSelect, type AdminSelectOption } from '../components/admin/AdminSelect'
+import { AdminDetailPopup } from '../components/admin/AdminDetailPopup'
 import { AdminTablePagination } from '../components/admin/AdminTablePagination'
 import { StatusBadge } from '../components/admin/StatusBadge'
-import { SystemLogDetailsModal } from '../components/admin/systemLogs/SystemLogDetailsModal'
+import { SystemLogDetailsPanel } from '../components/admin/systemLogs/SystemLogDetailsPanel'
 import { SearchIcon, ChevronRightIcon } from '../components/admin/systemLogs/icons'
 import { SYSTEM_LOG_ENTRIES, SYSTEM_LOG_MODULE_ICON_URLS, SYSTEM_LOG_HUMAN_ACTOR_ICON_URL, SYSTEM_LOG_SYSTEM_ACTOR_ICON_URL } from '../data/adminSystemLogsMockData'
+import { useDetailAsPopup } from '../hooks/useDetailAsPopup'
 import { parseApiDateTime } from '../utils/time'
 import {
   SYSTEM_LOG_ACTIONS,
@@ -35,7 +37,9 @@ type DateFilter = 'any' | 'today' | 'last7Days' | 'last30Days'
 
 // Admin > Logs -- activa el ítem de sidebar "systemLogs" que hasta ahora estaba disabled/sin view
 // (ver AdminPanel.tsx / adminDashboardMockData.ts). Solo lectura: sin Export, sin acciones de
-// editar/eliminar, sin panel lateral permanente -- cada fila abre un modal con el detalle completo.
+// editar/eliminar. Cada fila abre el detalle completo en un panel a la derecha de la lista (antes un
+// modal, pedido explícito), que se cierra con su X o Escape. En pantallas angostas (tablet/teléfono,
+// ver useDetailAsPopup) ese mismo panel se abre como pop-up en vez de ir al lado.
 // Filtros instantáneos (mismo patrón que Video Management, el más reciente del Admin), sin botón
 // Apply -- ver AdminReportsPage para el patrón alternativo con Apply, descartado a pedido explícito.
 export function SystemLogsPage() {
@@ -49,6 +53,7 @@ export function SystemLogsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [page, setPage] = useState(1)
   const [selectedEntry, setSelectedEntry] = useState<SystemLogEntry | null>(null)
+  const detailAsPopup = useDetailAsPopup()
 
   const dateOptions: AdminSelectOption<DateFilter>[] = [
     { value: 'any', label: t('admin.systemLogs.filters.dateRangeOptions.any') },
@@ -141,91 +146,99 @@ export function SystemLogsPage() {
         </div>
       </section>
 
-      <section className="admin-panel admin-system-logs-table-panel">
-        <div className="admin-system-logs-table-scroll">
-          <table className="admin-system-logs-table">
-            <thead>
-              <tr>
-                <th>{t('admin.systemLogs.table.dateTime')}</th>
-                <th>{t('admin.systemLogs.table.user')}</th>
-                <th>{t('admin.systemLogs.table.module')}</th>
-                <th>{t('admin.systemLogs.table.action')}</th>
-                <th>{t('admin.systemLogs.table.details')}</th>
-                <th>{t('admin.systemLogs.table.status')}</th>
-                <th aria-hidden="true"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageEntries.map((entry) => (
-                <tr
-                  key={entry.id}
-                  data-selected={entry.id === selectedEntry?.id}
-                  tabIndex={0}
-                  aria-selected={entry.id === selectedEntry?.id}
-                  onClick={() => setSelectedEntry(entry)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      setSelectedEntry(entry)
-                    }
-                  }}
-                >
-                  <td className="admin-system-logs-cell-datetime">
-                    <span className="admin-system-logs-cell-date">{DATE_FORMATTER.format(parseApiDateTime(entry.timestamp))}</span>
-                    <span className="admin-system-logs-cell-time">{TIME_FORMATTER.format(parseApiDateTime(entry.timestamp))}</span>
-                  </td>
-                  <td>
-                    <span className="admin-system-logs-cell-with-icon">
-                      <img src={actorIconUrl(entry.actorRole)} alt="" />
-                      {entry.actor}
-                    </span>
-                  </td>
-                  <td className="admin-system-logs-cell-secondary">
-                    <span className="admin-system-logs-cell-with-icon">
-                      <img src={SYSTEM_LOG_MODULE_ICON_URLS[entry.module]} alt="" />
-                      {t(`admin.systemLogs.module.${entry.module}`)}
-                    </span>
-                  </td>
-                  <td>
-                    <StatusBadge variant={SYSTEM_LOG_ACTION_VARIANT[entry.action]}>{entry.action}</StatusBadge>
-                  </td>
-                  <td className="admin-system-logs-cell-details">{entry.summary}</td>
-                  <td>
-                    <StatusBadge variant={SYSTEM_LOG_STATUS_VARIANT[entry.status]}>{t(`admin.systemLogs.status.${entry.status}`)}</StatusBadge>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="admin-system-logs-row-chevron"
-                      aria-label={t('admin.systemLogs.table.viewDetails')}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSelectedEntry(entry)
-                      }}
-                    >
-                      <ChevronRightIcon />
-                    </button>
-                  </td>
+      <div className="admin-system-logs-body">
+        <section className="admin-panel admin-system-logs-table-panel">
+          <div className="admin-system-logs-table-scroll">
+            <table className="admin-system-logs-table">
+              <thead>
+                <tr>
+                  <th>{t('admin.systemLogs.table.dateTime')}</th>
+                  <th>{t('admin.systemLogs.table.user')}</th>
+                  <th>{t('admin.systemLogs.table.module')}</th>
+                  <th>{t('admin.systemLogs.table.action')}</th>
+                  <th>{t('admin.systemLogs.table.details')}</th>
+                  <th>{t('admin.systemLogs.table.status')}</th>
+                  <th aria-hidden="true"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredEntries.length === 0 && <p className="admin-system-logs-empty">{t('admin.systemLogs.table.empty')}</p>}
-        </div>
+              </thead>
+              <tbody>
+                {pageEntries.map((entry) => (
+                  <tr
+                    key={entry.id}
+                    data-selected={entry.id === selectedEntry?.id}
+                    tabIndex={0}
+                    aria-selected={entry.id === selectedEntry?.id}
+                    onClick={() => setSelectedEntry(entry)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setSelectedEntry(entry)
+                      }
+                    }}
+                  >
+                    <td className="admin-system-logs-cell-datetime">
+                      <span className="admin-system-logs-cell-date">{DATE_FORMATTER.format(parseApiDateTime(entry.timestamp))}</span>
+                      <span className="admin-system-logs-cell-time">{TIME_FORMATTER.format(parseApiDateTime(entry.timestamp))}</span>
+                    </td>
+                    <td>
+                      <span className="admin-system-logs-cell-with-icon">
+                        <img src={actorIconUrl(entry.actorRole)} alt="" />
+                        {entry.actor}
+                      </span>
+                    </td>
+                    <td className="admin-system-logs-cell-secondary">
+                      <span className="admin-system-logs-cell-with-icon">
+                        <img src={SYSTEM_LOG_MODULE_ICON_URLS[entry.module]} alt="" />
+                        {t(`admin.systemLogs.module.${entry.module}`)}
+                      </span>
+                    </td>
+                    <td>
+                      <StatusBadge variant={SYSTEM_LOG_ACTION_VARIANT[entry.action]}>{entry.action}</StatusBadge>
+                    </td>
+                    <td className="admin-system-logs-cell-details">{entry.summary}</td>
+                    <td>
+                      <StatusBadge variant={SYSTEM_LOG_STATUS_VARIANT[entry.status]}>{t(`admin.systemLogs.status.${entry.status}`)}</StatusBadge>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="admin-system-logs-row-chevron"
+                        aria-label={t('admin.systemLogs.table.viewDetails')}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedEntry(entry)
+                        }}
+                      >
+                        <ChevronRightIcon />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredEntries.length === 0 && <p className="admin-system-logs-empty">{t('admin.systemLogs.table.empty')}</p>}
+          </div>
 
-        <AdminTablePagination
-          page={currentPage}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          rangeLabel={
-            filteredEntries.length === 0
-              ? t('admin.systemLogs.table.showingCount', { from: 0, to: 0, total: 0 })
-              : t('admin.systemLogs.table.showingCount', { from: pageStart + 1, to: Math.min(pageStart + PAGE_SIZE, filteredEntries.length), total: filteredEntries.length })
-          }
-        />
-      </section>
+          <AdminTablePagination
+            page={currentPage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            rangeLabel={
+              filteredEntries.length === 0
+                ? t('admin.systemLogs.table.showingCount', { from: 0, to: 0, total: 0 })
+                : t('admin.systemLogs.table.showingCount', { from: pageStart + 1, to: Math.min(pageStart + PAGE_SIZE, filteredEntries.length), total: filteredEntries.length })
+            }
+          />
+        </section>
 
-      {selectedEntry && <SystemLogDetailsModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />}
+        {selectedEntry && !detailAsPopup && <SystemLogDetailsPanel entry={selectedEntry} onClose={() => setSelectedEntry(null)} />}
+      </div>
+
+      {selectedEntry && detailAsPopup && (
+        <AdminDetailPopup labelledBy="admin-system-log-panel-title" onClose={() => setSelectedEntry(null)}>
+          <SystemLogDetailsPanel entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+        </AdminDetailPopup>
+      )}
     </>
   )
 }

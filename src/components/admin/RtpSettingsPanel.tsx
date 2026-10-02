@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AdminSelect, type AdminSelectOption } from './AdminSelect'
 import { AdminFormField } from './AdminFormField'
+import { ConfirmDialog } from './ConfirmDialog'
 import { InfoBanner } from './InfoBanner'
 import { LockedBadge } from './LockedBadge'
 import { Tooltip } from './Tooltip'
@@ -103,9 +104,8 @@ interface RtpSettingsPanelProps {
 
 // Único tab que escribe estado real (Settings configura la base -- distinto de Simulator, que solo
 // proyecta, y Scheduling, que programa perfiles temporales, pedido explícito: "no mezclar"). El
-// guardado pasa por una barra de confirmación inline (game/current/new/effective date) antes de
-// aplicar -- el proyecto no tiene ningún sistema de modal/dialog (ver investigación previa), así
-// que se resuelve con el mismo lenguaje visual de panel/InfoBanner en vez de inventar un overlay.
+// guardado pasa por un ConfirmDialog de aviso (game/current/new/effective date) antes de aplicar;
+// Cancel descarta los cambios y devuelve el formulario a los últimos valores guardados.
 //
 // Locked settings: Target RTP / Min Band / Max Band / Effective Date están bloqueados hoy según
 // RTP_SETTINGS_LOCK_STATE (rtpManagementMockData.ts) -- la UI lee ese objeto, nunca un `disabled`
@@ -152,11 +152,6 @@ export function RtpSettingsPanel({ settingsByGame, onSave }: RtpSettingsPanelPro
     setDraft((prev) => ({ ...prev, correctionWindowUnlimited: !prev.correctionWindowUnlimited }))
   }
 
-  const lockedFieldKeys = (Object.keys(RTP_SETTINGS_LOCK_STATE) as RtpSettingsLockableField[]).filter(
-    (key) => RTP_SETTINGS_LOCK_STATE[key].locked,
-  )
-  const anyFieldLocked = lockedFieldKeys.length > 0
-
   // Save Settings NO se deshabilita solo porque existan fields locked (pedido explícito) -- se
   // deshabilita únicamente cuando no hay ningún cambio real en un field editable, o cuando
   // (hipotéticamente) TODOS los fields quedaran bloqueados y no quede nada editable.
@@ -175,6 +170,15 @@ export function RtpSettingsPanel({ settingsByGame, onSave }: RtpSettingsPanelPro
   const maxBandLock = RTP_SETTINGS_LOCK_STATE.maxBand
   const effectiveDateLock = RTP_SETTINGS_LOCK_STATE.effectiveDate
 
+  // Campo bloqueado sobre el que el usuario intentó editar (click/tecla) -- muestra el tooltip de su
+  // candado unos segundos, igual que al pasar el mouse por el candado.
+  const [lockHintField, setLockHintField] = useState<RtpSettingsLockableField | null>(null)
+  useEffect(() => {
+    if (!lockHintField) return
+    const timeout = window.setTimeout(() => setLockHintField(null), 3000)
+    return () => window.clearTimeout(timeout)
+  }, [lockHintField])
+
   const saveButton = (
     <button
       type="button"
@@ -189,24 +193,16 @@ export function RtpSettingsPanel({ settingsByGame, onSave }: RtpSettingsPanelPro
 
   return (
     <section className="admin-panel admin-rtp-settings">
-      <div className="admin-panel-header">
-        <div>
-          <h2 className="admin-panel-title">{t('admin.rtp.management.settings.title')}</h2>
-          <p className="admin-rtp-settings-subtitle">{t('admin.rtp.management.settings.subtitle')}</p>
+      {/* Selector de juego a la izquierda + aviso "Changes will be applied to future rounds only" en la
+          esquina superior derecha (antes al pie del formulario, arriba de los botones). */}
+      <div className="admin-rtp-settings-top-row">
+        <div className="admin-rtp-settings-game">
+          <AdminSelect value={selectedGame} options={gameOptions} onChange={setSelectedGame} label={t('admin.rtp.management.gameSelectLabel')} />
+        </div>
+        <div className="admin-rtp-settings-top-banner">
+          <InfoBanner title={t('admin.rtp.management.settings.infoBanner.title')} description={t('admin.rtp.management.settings.infoBanner.description')} />
         </div>
       </div>
-
-      <div className="admin-rtp-settings-game">
-        <AdminSelect value={selectedGame} options={gameOptions} onChange={setSelectedGame} label={t('admin.rtp.management.gameSelectLabel')} />
-      </div>
-
-      {anyFieldLocked && (
-        <InfoBanner
-          icon={<LockIcon className="admin-info-banner-icon" />}
-          title={t('admin.rtp.management.settings.lock.bannerTitle')}
-          description={t('admin.rtp.management.settings.lock.bannerDescription')}
-        />
-      )}
 
       <div className="admin-rtp-settings-row admin-rtp-settings-row--single">
         <AdminFormField
@@ -220,7 +216,8 @@ export function RtpSettingsPanel({ settingsByGame, onSave }: RtpSettingsPanelPro
           onChange={targetRtpLock.locked ? undefined : updateField('targetRtp')}
           readOnly={targetRtpLock.locked}
           describedById={targetRtpLock.locked ? 'rtp-target-lock' : undefined}
-          labelAddon={targetRtpLock.locked ? <LockedBadge reason={t(targetRtpLock.reasonKey)} tooltipId="rtp-target-lock" /> : undefined}
+          onEditAttempt={targetRtpLock.locked ? () => setLockHintField('targetRtp') : undefined}
+          labelAddon={targetRtpLock.locked ? <LockedBadge reason={t(targetRtpLock.reasonKey)} tooltipId="rtp-target-lock" open={lockHintField === 'targetRtp'} /> : undefined}
         />
       </div>
 
@@ -236,7 +233,8 @@ export function RtpSettingsPanel({ settingsByGame, onSave }: RtpSettingsPanelPro
           onChange={minBandLock.locked ? undefined : updateField('minBand')}
           readOnly={minBandLock.locked}
           describedById={minBandLock.locked ? 'rtp-min-band-lock' : undefined}
-          labelAddon={minBandLock.locked ? <LockedBadge reason={t(minBandLock.reasonKey)} tooltipId="rtp-min-band-lock" /> : undefined}
+          onEditAttempt={minBandLock.locked ? () => setLockHintField('minBand') : undefined}
+          labelAddon={minBandLock.locked ? <LockedBadge reason={t(minBandLock.reasonKey)} tooltipId="rtp-min-band-lock" open={lockHintField === 'minBand'} /> : undefined}
         />
         <AdminFormField
           id="rtp-max-band"
@@ -249,7 +247,8 @@ export function RtpSettingsPanel({ settingsByGame, onSave }: RtpSettingsPanelPro
           onChange={maxBandLock.locked ? undefined : updateField('maxBand')}
           readOnly={maxBandLock.locked}
           describedById={maxBandLock.locked ? 'rtp-max-band-lock' : undefined}
-          labelAddon={maxBandLock.locked ? <LockedBadge reason={t(maxBandLock.reasonKey)} tooltipId="rtp-max-band-lock" /> : undefined}
+          onEditAttempt={maxBandLock.locked ? () => setLockHintField('maxBand') : undefined}
+          labelAddon={maxBandLock.locked ? <LockedBadge reason={t(maxBandLock.reasonKey)} tooltipId="rtp-max-band-lock" open={lockHintField === 'maxBand'} /> : undefined}
         />
       </div>
 
@@ -317,21 +316,41 @@ export function RtpSettingsPanel({ settingsByGame, onSave }: RtpSettingsPanelPro
           onChange={effectiveDateLock.locked ? undefined : updateField('effectiveDate')}
           readOnly={effectiveDateLock.locked}
           describedById={effectiveDateLock.locked ? 'rtp-effective-date-lock' : undefined}
+          onEditAttempt={effectiveDateLock.locked ? () => setLockHintField('effectiveDate') : undefined}
           labelAddon={
-            effectiveDateLock.locked ? <LockedBadge reason={t(effectiveDateLock.reasonKey)} tooltipId="rtp-effective-date-lock" /> : undefined
+            effectiveDateLock.locked ? <LockedBadge reason={t(effectiveDateLock.reasonKey)} tooltipId="rtp-effective-date-lock" open={lockHintField === 'effectiveDate'} /> : undefined
           }
         />
       </div>
 
-      <InfoBanner title={t('admin.rtp.management.settings.infoBanner.title')} description={t('admin.rtp.management.settings.infoBanner.description')} />
-
+      {/* Confirmación como pop-up modal centrado (antes una barra inline arriba de los botones) --
+          cambiar el RTP afecta rondas reales, así que se presenta como aviso importante. */}
       {pendingConfirm && (
-        <div className="admin-rtp-mgmt-confirm">
-          <p className="admin-rtp-mgmt-confirm-title">{t('admin.rtp.management.settings.confirm.title')}</p>
-          <dl className="admin-rtp-mgmt-confirm-grid">
+        <ConfirmDialog
+          warning
+          title={t('admin.rtp.management.settings.confirm.title')}
+          description={t('admin.rtp.management.settings.confirm.description')}
+          cancelLabel={t('admin.rtp.management.settings.confirm.cancel')}
+          confirmLabel={t('admin.rtp.management.settings.confirm.confirm')}
+          onCancel={() => {
+            // Cancelar descarta los cambios sin guardar: el formulario vuelve a los últimos
+            // valores guardados de este juego (no a los defaults de fábrica -- eso es Reset).
+            setDraft(settingsByGame[selectedGame])
+            setPendingConfirm(false)
+          }}
+          onConfirm={() => {
+            onSave(selectedGame, draft)
+            setPendingConfirm(false)
+          }}
+        >
+          <dl className="admin-confirm-dialog-details">
             <div>
               <dt>{t('admin.rtp.management.settings.confirm.game')}</dt>
               <dd>{t(GAME_LABEL_KEY[selectedGame])}</dd>
+            </div>
+            <div>
+              <dt>{t('admin.rtp.management.settings.confirm.effectiveDate')}</dt>
+              <dd>{formatDateDisplay(draft.effectiveDate)}</dd>
             </div>
             <div>
               <dt>{t('admin.rtp.management.settings.confirm.currentTarget')}</dt>
@@ -341,27 +360,8 @@ export function RtpSettingsPanel({ settingsByGame, onSave }: RtpSettingsPanelPro
               <dt>{t('admin.rtp.management.settings.confirm.newTarget')}</dt>
               <dd>{draft.targetRtp.toFixed(2)}%</dd>
             </div>
-            <div>
-              <dt>{t('admin.rtp.management.settings.confirm.effectiveDate')}</dt>
-              <dd>{formatDateDisplay(draft.effectiveDate)}</dd>
-            </div>
           </dl>
-          <div className="admin-rtp-mgmt-confirm-actions">
-            <button type="button" className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--ghost" onClick={() => setPendingConfirm(false)}>
-              {t('admin.rtp.management.settings.confirm.cancel')}
-            </button>
-            <button
-              type="button"
-              className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--primary"
-              onClick={() => {
-                onSave(selectedGame, draft)
-                setPendingConfirm(false)
-              }}
-            >
-              {t('admin.rtp.management.settings.confirm.confirm')}
-            </button>
-          </div>
-        </div>
+        </ConfirmDialog>
       )}
 
       <div className="admin-rtp-settings-actions">

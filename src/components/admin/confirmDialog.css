@@ -123,3 +123,98 @@
   outline: 2px solid rgba(243, 38, 53, 0.6);
   outline-offset: 2px;
 }
+
+/* Variante warning (ver ConfirmDialog `warning`) -- más ancho para el resumen de detalles, borde y
+   acento superior ámbar, ícono de advertencia centrado arriba del título. */
+.admin-confirm-dialog[data-warning='true'] {
+  width: min(560px, 100%);
+  border-color: color-mix(in srgb, var(--admin-amber) 45%, var(--admin-border));
+  border-top: 3px solid var(--admin-amber);
+  text-align: center;
+}
+
+.admin-confirm-dialog-warning-halo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--admin-amber) 14%, transparent);
+  color: var(--admin-amber);
+}
+
+.admin-confirm-dialog-warning-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.admin-confirm-dialog[data-warning='true'] .admin-confirm-dialog-actions {
+  justify-content: center;
+}
+
+.admin-confirm-dialog-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.6);
+  text-align: left;
+}
+
+.admin-confirm-dialog-details dt {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+}
+
+.admin-confirm-dialog-details dd {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+/* Accent por juego (ver ConfirmDialog `accent`) -- línea superior + borde tenue + botón de confirmar
+   del color del juego que se está actualizando. El ícono de advertencia sigue ámbar. */
+.admin-confirm-dialog[data-warning='true'][data-accent='red'] {
+  border-color: color-mix(in srgb, var(--admin-red) 40%, var(--admin-border));
+  border-top-color: var(--admin-red);
+}
+
+.admin-confirm-dialog[data-warning='true'][data-accent='green'] {
+  border-color: color-mix(in srgb, #22c55e 40%, var(--admin-border));
+  border-top-color: #22c55e;
+}
+
+.admin-confirm-dialog[data-warning='true'][data-accent='amber'] {
+  border-color: color-mix(in srgb, var(--admin-amber) 45%, var(--admin-border));
+  border-top-color: var(--admin-amber);
+}
+
+.admin-confirm-dialog[data-warning='true'][data-accent='blue'] {
+  border-color: color-mix(in srgb, var(--admin-blue) 40%, var(--admin-border));
+  border-top-color: var(--admin-blue);
+}
+
+/* Mismos gradientes que .admin-next-results-btn-update[data-accent] (nextResults.css). */
+.admin-confirm-dialog-btn--primary[data-accent='green'] {
+  border-color: rgba(34, 197, 94, 0.55);
+  background: linear-gradient(135deg, #22c55e, #16a34a 55%, #0f8a3d);
+}
+
+.admin-confirm-dialog-btn--primary[data-accent='amber'] {
+  border-color: rgba(240, 168, 60, 0.55);
+  background: linear-gradient(135deg, #f2b84c, #d99a1f 55%, #b87c0f);
+}
+
+.admin-confirm-dialog-btn--primary[data-accent='blue'] {
+  border-color: color-mix(in srgb, var(--admin-blue) 55%, transparent);
+  background: linear-gradient(135deg, #3b9bff, #2588ff 55%, #1666cc);
+}

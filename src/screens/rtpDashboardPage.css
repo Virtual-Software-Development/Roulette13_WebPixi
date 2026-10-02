@@ -10,31 +10,36 @@
   align-items: stretch;
 }
 
-/* Actual vs Target RTP ~65-70%, Current Bands ~30-35% -- sin "RTP Distribution by Game" (
-   eliminado, requisito explícito), el chart absorbe todo ese ancho. */
-.admin-rtp-trend-row {
+/* Grilla principal en dos columnas (mismo 2fr / 1fr que tenían las dos filas anteriores, así los
+   bordes siguen alineados): izquierda Actual vs Target RTP + Recent RTP Changes, derecha Current
+   Bands + RTP Stability + Important Note. RTP Stability crece para que ambas columnas terminen a la
+   misma altura. Apila en una columna en pantallas angostas. */
+.admin-rtp-main-grid {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
   gap: 18px;
   align-items: stretch;
 }
 
-@media (max-width: 1080px) {
-  .admin-rtp-trend-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Recent RTP Changes ~70%, Important Note ~30%. */
-.admin-rtp-bottom-row {
-  display: grid;
-  grid-template-columns: minmax(0, 2.3fr) minmax(280px, 1fr);
+.admin-rtp-main-column {
+  display: flex;
+  flex-direction: column;
   gap: 18px;
-  align-items: stretch;
+  min-width: 0;
 }
 
-@media (max-width: 900px) {
-  .admin-rtp-bottom-row {
+.admin-rtp-main-column--side > .admin-rtp-stability {
+  flex: 1 1 auto;
+}
+
+/* Si la columna derecha queda más alta, Recent RTP Changes se estira para que la izquierda termine
+   a la misma altura (su pie "Showing x of y" queda abajo). */
+.admin-rtp-main-column:not(.admin-rtp-main-column--side) > .admin-recent-rtp-changes {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 1080px) {
+  .admin-rtp-main-grid {
     grid-template-columns: 1fr;
   }
 }

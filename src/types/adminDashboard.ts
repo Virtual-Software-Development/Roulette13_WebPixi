@@ -1,4 +1,4 @@
-export type AdminStatAccent = 'red' | 'blue' | 'purple' | 'green'
+export type AdminStatAccent = 'red' | 'blue' | 'purple' | 'green' | 'yellow'
 
 export interface AdminStatCardData {
   id: string
@@ -6,9 +6,8 @@ export interface AdminStatCardData {
   value: string
   icon: string
   accent: AdminStatAccent
-  // Opcional -- Video Management (ver adminVideosMockData.ts) usa estas cards sin variación día a
-  // día real (Expected/Available/Storage no tienen un "vs ayer" con sentido), así que la fila de
-  // trend se omite por completo cuando no vienen los 3 juntos, en vez de inventar un número.
+  // Opcional -- la fila de trend se omite por completo cuando no vienen los 3 juntos, en vez de
+  // inventar un número.
   trend?: string
   trendDirection?: 'up' | 'down'
   trendLabelKey?: string
@@ -23,6 +22,21 @@ export interface GamesActivitySeriesPoint {
   time: string
   roulette: number
   quickMoney: number
+}
+
+export interface GamePerformanceRow {
+  id: RecentRoundGame
+  labelKey: string
+  wagers: number
+  payouts: number
+  ggr: number
+}
+
+export interface GameEventsOverTimePoint {
+  time: string
+  completed: number
+  failed: number
+  cancelled: number
 }
 
 export type GamesDistributionGame = 'roulette' | 'quickMoney'
@@ -73,3 +87,25 @@ export interface AdminSidebarItem {
   // submenú al hacer click -- no navega él mismo.
   view?: string
 }
+
+// Result Frequency (Dashboard) -- solo resultados ya sorteados, nunca apuestas de la ronda en curso
+// (el admin puede fijar el próximo resultado, ver Next Results & Manual Control).
+export type ResultFrequencyGame = 'roulette' | 'pick3' | 'pick4'
+
+export type ResultFrequencyWindow = 100 | 500 | 1000
+
+export interface ResultFrequencyBucket {
+  // Casilla de ruleta ('0', '00', '1'..'36') o dígito de Pick ('0'..'9').
+  key: string
+  count: number
+}
+
+export interface ResultFrequencyData {
+  rounds: number
+  // Resultados contados: = rounds en Roulette, rounds × posiciones en Pick 3/Pick 4 (cada dígito de
+  // cada posición cuenta). Base para el "expected" uniforme: draws / buckets.length.
+  draws: number
+  buckets: ResultFrequencyBucket[]
+}
+
+export type ResultFrequencyByGame = Record<ResultFrequencyGame, Record<ResultFrequencyWindow, ResultFrequencyData>>

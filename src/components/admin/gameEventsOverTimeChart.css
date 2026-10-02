@@ -1,0 +1,207 @@
+.admin-game-events-chart {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-game-events-chart .admin-panel-header {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-game-events-chart-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+/* Toggle segmentado de rango (24H/7D/30D/90D). */
+.admin-game-events-chart-ranges {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.7);
+}
+
+.admin-game-events-chart-range {
+  height: 28px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.admin-game-events-chart-range:hover {
+  color: var(--admin-text-primary);
+}
+
+.admin-game-events-chart-range[data-selected='true'] {
+  background: var(--admin-blue);
+  color: #fff;
+}
+
+/* Chips de totales por estado. */
+.admin-game-events-chart-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.admin-game-events-chart-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.5);
+}
+
+.admin-game-events-chart-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-game-events-chart-stat-values {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.admin-game-events-chart-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-game-events-chart-stat-percent {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-game-events-chart-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Plot + tooltip HTML posicionado en % sobre el SVG (preserveAspectRatio="none" mantiene la
+   relación x lineal con el ancho del contenedor). */
+.admin-game-events-chart-plot {
+  position: relative;
+  margin-top: 12px;
+}
+
+.admin-game-events-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1000 / 340;
+}
+
+.admin-game-events-chart-gridline {
+  stroke: rgba(120, 145, 170, 0.14);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-game-events-chart-baseline {
+  stroke: rgba(120, 145, 170, 0.3);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-game-events-chart-axis-label {
+  fill: var(--admin-text-secondary);
+  font-size: 18px;
+  font-family: inherit;
+}
+
+.admin-game-events-chart-bar {
+  transition: opacity 120ms ease;
+}
+
+.admin-game-events-chart-bar[data-dimmed='true'] {
+  opacity: 0.45;
+}
+
+.admin-game-events-chart-tooltip {
+  position: absolute;
+  top: 0;
+  min-width: 170px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: rgba(8, 15, 23, 0.96);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  color: var(--admin-text-primary);
+  pointer-events: none;
+  transform: translateX(12px);
+  z-index: 2;
+}
+
+/* Cerca del borde derecho se abre hacia la izquierda de la barra para no desbordar el panel. */
+.admin-game-events-chart-tooltip[data-align='right'] {
+  transform: translateX(calc(-100% - 12px));
+}
+
+.admin-game-events-chart-tooltip-title {
+  margin-bottom: 8px;
+  color: var(--admin-text-secondary);
+  font-weight: 600;
+}
+
+.admin-game-events-chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.admin-game-events-chart-tooltip-value {
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.admin-game-events-chart-tooltip-total {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--admin-border);
+  color: var(--admin-text-secondary);
+}
+
+.admin-game-events-chart-tooltip-total .admin-game-events-chart-tooltip-value {
+  color: var(--admin-text-primary);
+}
+
+.admin-game-events-chart-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-game-events-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+}

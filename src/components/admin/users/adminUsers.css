@@ -308,11 +308,20 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  /* Se achica (nunca crece) hasta el alto que queda en .admin-main debajo de las stat cards: la
+     página en sí no scrollea, solo las filas dentro de .admin-users-table-scroll. El min-height
+     evita aplastarla en ventanas muy bajas -- ahí sí vuelve a scrollear la página. */
+  flex: 0 1 auto;
+  min-height: 280px;
 }
 
 .admin-users-table-scroll {
-  overflow-x: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 155, 185, 0.35) transparent;
 }
 
 .admin-users-table {
@@ -322,9 +331,14 @@
 }
 
 .admin-users-table thead th {
+  /* Header fijo al scrollear las filas -- fondo sólido debajo del tinte para que las filas no se
+     vean a través. */
+  position: sticky;
+  top: 0;
+  z-index: 1;
   padding: 11px 14px;
   text-align: left;
-  background: rgba(140, 165, 190, 0.05);
+  background: linear-gradient(rgba(140, 165, 190, 0.05), rgba(140, 165, 190, 0.05)), #0b1620;
   color: var(--admin-text-secondary);
   font-size: 11px;
   font-weight: 600;
