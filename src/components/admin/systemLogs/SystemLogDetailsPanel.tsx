@@ -63,7 +63,8 @@ export function SystemLogDetailsPanel({ entry, onClose }: SystemLogDetailsPanelP
             <dt>{t('admin.systemLogs.detail.dateTime')}</dt>
             <dd>{DETAIL_TIMESTAMP_FORMATTER.format(parseApiDateTime(entry.timestamp))}</dd>
           </div>
-          <div>
+          {/* User ocupa 2 columnas: así la segunda fila queda Module | Action | Status. */}
+          <div className="admin-system-log-panel-grid-wide">
             <dt>{t('admin.systemLogs.detail.user')}</dt>
             <dd>
               {entry.actor} ({entry.actorRole})

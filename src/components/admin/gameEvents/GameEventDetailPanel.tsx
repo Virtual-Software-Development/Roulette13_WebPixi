@@ -5,7 +5,7 @@ import { GameEventTabs, type GameEventTab } from './GameEventTabs'
 import { GameEventOverviewTab } from './GameEventOverviewTab'
 import { GameEventPayoutsTab } from './GameEventPayoutsTab'
 import { GameEventResultSummary } from './GameEventResultSummary'
-import { HourglassIcon } from './icons'
+import { CloseIcon, HourglassIcon } from './icons'
 import { buildMediaUrl } from '../../../utils/media'
 import { parseApiDateTime } from '../../../utils/time'
 import { GAME_EVENT_GAME_VARIANT, GAME_EVENT_STATUS_VARIANT } from '../../../data/adminGameEventsMockData'
@@ -21,12 +21,18 @@ const TIME_FORMATTER = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minut
 
 interface GameEventDetailPanelProps {
   event: GameEvent | null
+  // Solo cuando el panel se abre como pop-up (pantallas angostas, ver GameEventsPage.tsx): muestra
+  // el botón X en la esquina superior derecha. Inline en desktop el panel siempre está visible.
+  onClose?: () => void
 }
+
+// aria-labelledby del pop-up (GameEventsPage.tsx usa el mismo id).
+const GAME_EVENT_DETAIL_TITLE_ID = 'admin-game-events-detail-title'
 
 // Panel derecho (detail) -- se remonta por completo al cambiar `event` (ver key={event.id} en
 // GameEventsPage.tsx): así el tab activo siempre vuelve a su estado inicial al
 // seleccionar otro evento, sin arrastrar estado del anterior.
-export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
+export function GameEventDetailPanel({ event, onClose }: GameEventDetailPanelProps) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<GameEventTab>('overview')
 
@@ -46,10 +52,19 @@ export function GameEventDetailPanel({ event }: GameEventDetailPanelProps) {
     <section className="admin-panel admin-game-events-detail">
       <div className="admin-game-events-detail-header">
         <div>
-          <h2 className="admin-game-events-detail-title">{event.name}</h2>
+          <h2 id={GAME_EVENT_DETAIL_TITLE_ID} className="admin-game-events-detail-title">
+            {event.name}
+          </h2>
           {event.description && <p className="admin-game-events-detail-description">{event.description}</p>}
         </div>
-        <span className="admin-game-events-detail-id">#{event.id}</span>
+        <div className="admin-game-events-detail-header-aside">
+          <span className="admin-game-events-detail-id">#{event.id}</span>
+          {onClose && (
+            <button type="button" className="admin-game-events-detail-close" aria-label={t('admin.gameEvents.detail.close')} onClick={onClose}>
+              <CloseIcon />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="admin-game-events-detail-badges">

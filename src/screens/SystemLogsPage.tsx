@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AdminSelect, type AdminSelectOption } from '../components/admin/AdminSelect'
+import { AdminDetailPopup } from '../components/admin/AdminDetailPopup'
 import { AdminTablePagination } from '../components/admin/AdminTablePagination'
 import { StatusBadge } from '../components/admin/StatusBadge'
 import { SystemLogDetailsPanel } from '../components/admin/systemLogs/SystemLogDetailsPanel'
 import { SearchIcon, ChevronRightIcon } from '../components/admin/systemLogs/icons'
 import { SYSTEM_LOG_ENTRIES, SYSTEM_LOG_MODULE_ICON_URLS, SYSTEM_LOG_HUMAN_ACTOR_ICON_URL, SYSTEM_LOG_SYSTEM_ACTOR_ICON_URL } from '../data/adminSystemLogsMockData'
+import { useDetailAsPopup } from '../hooks/useDetailAsPopup'
 import { parseApiDateTime } from '../utils/time'
 import {
   SYSTEM_LOG_ACTIONS,
@@ -36,7 +38,8 @@ type DateFilter = 'any' | 'today' | 'last7Days' | 'last30Days'
 // Admin > Logs -- activa el ítem de sidebar "systemLogs" que hasta ahora estaba disabled/sin view
 // (ver AdminPanel.tsx / adminDashboardMockData.ts). Solo lectura: sin Export, sin acciones de
 // editar/eliminar. Cada fila abre el detalle completo en un panel a la derecha de la lista (antes un
-// modal, pedido explícito), que se cierra con su X o Escape.
+// modal, pedido explícito), que se cierra con su X o Escape. En pantallas angostas (tablet/teléfono,
+// ver useDetailAsPopup) ese mismo panel se abre como pop-up en vez de ir al lado.
 // Filtros instantáneos (mismo patrón que Video Management, el más reciente del Admin), sin botón
 // Apply -- ver AdminReportsPage para el patrón alternativo con Apply, descartado a pedido explícito.
 export function SystemLogsPage() {
@@ -50,6 +53,7 @@ export function SystemLogsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [page, setPage] = useState(1)
   const [selectedEntry, setSelectedEntry] = useState<SystemLogEntry | null>(null)
+  const detailAsPopup = useDetailAsPopup()
 
   const dateOptions: AdminSelectOption<DateFilter>[] = [
     { value: 'any', label: t('admin.systemLogs.filters.dateRangeOptions.any') },
@@ -227,8 +231,14 @@ export function SystemLogsPage() {
           />
         </section>
 
-        {selectedEntry && <SystemLogDetailsPanel entry={selectedEntry} onClose={() => setSelectedEntry(null)} />}
+        {selectedEntry && !detailAsPopup && <SystemLogDetailsPanel entry={selectedEntry} onClose={() => setSelectedEntry(null)} />}
       </div>
+
+      {selectedEntry && detailAsPopup && (
+        <AdminDetailPopup labelledBy="admin-system-log-panel-title" onClose={() => setSelectedEntry(null)}>
+          <SystemLogDetailsPanel entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+        </AdminDetailPopup>
+      )}
     </>
   )
 }

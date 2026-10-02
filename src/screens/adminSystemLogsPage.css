@@ -106,14 +106,6 @@
   min-width: 0;
 }
 
-/* Pantallas angostas: el panel de detalle pasa debajo de la tabla. */
-@media (max-width: 1100px) {
-  .admin-system-logs-body {
-    flex-direction: column;
-    flex-shrink: 0;
-  }
-}
-
 .admin-system-logs-table-scroll {
   flex: 1 1 auto;
   min-height: 0;

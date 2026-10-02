@@ -563,7 +563,8 @@
       },
       "detail": {
         "emptyTitle": "Selecciona un evento",
-        "emptyDescription": "Elige un evento de la lista para ver sus detalles."
+        "emptyDescription": "Elige un evento de la lista para ver sus detalles.",
+        "close": "Cerrar"
       },
       "metadata": {
         "date": "Fecha",

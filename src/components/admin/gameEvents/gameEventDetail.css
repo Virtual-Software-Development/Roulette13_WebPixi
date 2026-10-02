@@ -43,7 +43,10 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
+}
+
+.admin-game-events-detail-header > :first-child {
+  min-width: 0;
 }
 
 .admin-game-events-detail-title {
@@ -58,6 +61,43 @@
   margin: 6px 0 0;
   font-size: 14px;
   color: var(--admin-text-secondary);
+}
+
+/* #id + X (solo en pop-up) siempre juntos arriba a la derecha, aunque el título envuelva. */
+.admin-game-events-detail-header-aside {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Mismo botón que el X de Log Details (systemLogDetailsPanel.css), namespace propio. */
+.admin-game-events-detail-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-game-events-detail-close:hover {
+  color: var(--admin-text-primary);
+  border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-game-events-detail-close svg {
+  width: 15px;
+  height: 15px;
 }
 
 .admin-game-events-detail-id {

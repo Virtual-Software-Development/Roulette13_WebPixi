@@ -563,7 +563,8 @@
       },
       "detail": {
         "emptyTitle": "Select an event",
-        "emptyDescription": "Choose an event from the list to see its details."
+        "emptyDescription": "Choose an event from the list to see its details.",
+        "close": "Close"
       },
       "metadata": {
         "date": "Date",

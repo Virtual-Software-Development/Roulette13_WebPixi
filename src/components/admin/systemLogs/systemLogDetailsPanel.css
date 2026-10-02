@@ -1,4 +1,4 @@
-/* Panel lateral de Log Details (antes modal) -- a la derecha de la tabla, mismo alto que ella
+/* Panel lateral de Log Details -- a la derecha de la tabla, mismo alto que ella
    (ver .admin-system-logs-body en adminSystemLogsPage.css). El contenido scrollea adentro: el
    panel no aporta alto propio (scroll absoluto), así nunca estira la fila por encima de la tabla. */
 .admin-system-log-panel {
@@ -21,15 +21,15 @@
   scrollbar-color: rgba(120, 155, 185, 0.35) transparent;
 }
 
-/* Pantallas angostas: el panel va debajo de la tabla con su alto natural. */
-@media (max-width: 1100px) {
-  .admin-system-log-panel {
-    flex-basis: auto;
-  }
+/* Dentro del pop-up de pantallas angostas (AdminDetailPopup): alto natural, el scroll lo maneja el
+   pop-up en vez del contenedor absoluto. */
+.admin-detail-popup > .admin-system-log-panel {
+  flex-basis: auto;
+}
 
-  .admin-system-log-panel-scroll {
-    position: static;
-  }
+.admin-detail-popup .admin-system-log-panel-scroll {
+  position: static;
+  overflow: visible;
 }
 
 .admin-system-log-panel-header {
@@ -150,9 +150,14 @@
 .admin-system-log-panel-grid {
   margin: 0 0 18px;
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
+  /* 3 columnas: Date & Time | User (span 2), y debajo Module | Action | Status. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   row-gap: 14px;
-  column-gap: 12px;
+  column-gap: 16px;
+}
+
+.admin-system-log-panel-grid-wide {
+  grid-column: span 2;
 }
 
 .admin-system-log-panel-grid dt {
