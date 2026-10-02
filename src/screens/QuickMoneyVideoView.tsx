@@ -3,7 +3,6 @@ import { useLobbyModeStore } from '../store/useLobbyModeStore'
 import { publishPendingDraw } from '../hooks/useQuickMoneyLobbyCycle'
 import { QUICK_MONEY_VIDEO_SLOT_ID, getVideoSlot, hideVideoSlot, preloadQuickMoneyVideo } from '../video/videoElements'
 import {
-  QUICK_MONEY_PLACEHOLDER_VIDEO_URL,
   QUICK_MONEY_VIDEO_FADE_MS,
   QUICK_MONEY_VIDEO_HOLD_MS,
   QUICK_MONEY_VIDEO_MAX_MS,
@@ -44,9 +43,11 @@ export function QuickMoneyVideoView() {
     video.addEventListener('ended', handleEnded)
     later(complete, QUICK_MONEY_VIDEO_MAX_MS)
 
-    // Normalmente ya viene precargado (al abrir el lobby y al entrar el split, ver
-    // useQuickMoneyLobbyCycle), así que esto resuelve al instante; si no, espera la carga.
-    preloadQuickMoneyVideo(QUICK_MONEY_PLACEHOLDER_VIDEO_URL)
+    // Ya viene precargado entero (blob descargado ~2:30 antes del sorteo, ver
+    // video/quickMoneyTestVideo.ts), así que esto resuelve al instante.
+    const videoUrl = useLobbyModeStore.getState().pendingVideoUrl
+    const ready = videoUrl ? preloadQuickMoneyVideo(videoUrl) : Promise.reject(new Error('el sorteo no tiene video'))
+    ready
       .then(() => {
         if (cancelled) return
         video.currentTime = 0

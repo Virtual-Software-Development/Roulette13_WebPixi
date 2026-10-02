@@ -14,7 +14,7 @@ import { QUICK_MONEY_LOBBY_DRAWS } from '../data/quickMoneyLobbyMockData'
 // En el lobby principal (App.tsx) este reloj NO manda: useQuickMoneyLobbyCycle agenda el sorteo de
 // Quick Money dentro del bloque de cada round de Roulette y pisa nextDrawTime (ver
 // config/quickMoneyLobbyCycle.ts). Este intervalo solo rige en las vistas de Quick Money sueltas.
-const ROUND_DURATION_SECONDS = 45
+const ROUND_DURATION_SECONDS = 300
 
 // Consecutivo a partir del último sorteo del mock (quickMoneyLobbyMockData.ts), así la tabla de
 // Winning Numbers del lobby compartido sigue una numeración coherente (antes era aleatorio).

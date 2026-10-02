@@ -169,7 +169,7 @@ function App() {
   // estar en 1, lo que pasa ni bien active pasa a false). Se dispara ahí (no en lobbyInfoVisible,
   // que recién llega ~1.3s después: bajada de la rueda + salida del panel Winner) para darle todo
   // ese margen extra al fetch y a la recomputación de hot/cold, y que el panel de números
-  // (que igual espera otros 5s más, ver SHOW_DELAY_AFTER_LOBBY_INFO_MS en useHotColdWindow) nunca
+  // (que igual espera otro 1s más, ver SHOW_DELAY_AFTER_LOBBY_INFO_MS en useHotColdWindow) nunca
   // alcance a mostrarse todavía con el resultado de la ronda anterior.
   const active = useDrawCycleStore((state) => state.active)
   // Solo cambia unas pocas veces por ciclo de Quick Money (ver config/quickMoneyLobbyCycle.ts).
