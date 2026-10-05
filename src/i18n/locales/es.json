@@ -848,7 +848,23 @@
         "pick4Subtitle": "Próximo Resultado de Pick 4"
       },
       "updatePick3": "Actualizar Resultado de Pick 3",
-      "updatePick4": "Actualizar Resultado de Pick 4"
+      "updatePick4": "Actualizar Resultado de Pick 4",
+      "rtpCurrent": "RTP actual",
+      "rtpResulting": "RTP resultante",
+      "decidedAtFreeze": "Se decide a las {{time}} (apuestas cierran {{close}})",
+      "sourceLive": "En vivo — apuestas hasta ahora",
+      "sourceFrozen": "Apuestas finales",
+      "manualTag": "Manual",
+      "changeUntil": "Se puede cambiar hasta las {{time}}",
+      "changeClosed": "Ya no se puede cambiar en esta ronda",
+      "noPendingEvent": "No hay una ronda de ruleta pendiente ahora.",
+      "loadError": "No se pudo cargar el próximo resultado: {{error}}",
+      "loginTitle": "Requiere iniciar sesión de admin",
+      "loginDescription": "Inicia sesión para ver el próximo resultado y su RTP.",
+      "username": "Usuario",
+      "password": "Contraseña",
+      "signIn": "Iniciar sesión",
+      "signingIn": "Iniciando sesión…"
     },
     "rtp": {
       "title": "RTP Dashboard",

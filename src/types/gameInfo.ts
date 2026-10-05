@@ -15,6 +15,8 @@ export interface GameInfoResponse {
   nextDraw: {
     drawNo: string
     startTime: string
+    // hora_cierre_apuestas -- ausente en backends anteriores.
+    betsCloseTime?: string
   }
   history: GameInfoDraw[]
 }

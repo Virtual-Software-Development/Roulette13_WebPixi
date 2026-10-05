@@ -910,9 +910,18 @@
   align-items: stretch;
 }
 
-/* La card no tiene heading propio: se alinea con el número (debajo de "Current Next Result"). */
-.admin-next-results-top-row > .admin-next-results-round-card {
-  align-self: end;
+/* Columna derecha: la card no tiene heading propio, así que queda abajo, alineada con el número
+   (debajo de "Current Next Result"); la fuente de los RTP va justo encima, a la derecha. */
+.admin-next-results-round-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-next-results-round-column > .admin-next-results-source {
+  align-self: flex-end;
 }
 
 @media (max-width: 1100px) {
@@ -950,4 +959,140 @@
   min-width: min(420px, 100%);
   padding: 11px 24px;
   text-align: center;
+}
+
+/* --- Roulette: próximo resultado real (RouletteRTPSnapshot) --- */
+
+/* Número + monto apostado a pleno en ese número, apilados dentro de cada celda del tablero. */
+.admin-next-results-number-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.admin-next-results-cell-bet {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+}
+
+/* RTP resultante del número (data-rtp), como globo encima de la celda al pasar el mouse. :hover
+   aplica también a las celdas deshabilitadas (pasado T-30s el dato sigue sirviendo). */
+.admin-next-results-number-cell {
+  position: relative;
+}
+
+/* La celda con el mouse encima va por delante de las vecinas: su :hover (filter) crea un
+   contexto de apilamiento propio, y sin esto las celdas siguientes taparían el globo. */
+.admin-next-results-number-cell:hover {
+  z-index: 6;
+}
+
+.admin-next-results-number-cell[data-rtp]:hover::after {
+  content: attr(data-rtp);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(130, 150, 165, 0.45);
+  background: #0b1620;
+  color: #e8edf3;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* Resultado decidido hoy por el backend (con o sin selección encima). */
+.admin-next-results-number-cell[data-current='true'] {
+  outline: 2px dashed rgba(255, 255, 255, 0.7);
+  outline-offset: -5px;
+}
+
+/* Pasado el límite de cambio (T-30s): el tablero queda de solo lectura. */
+.admin-next-results-number-cell:disabled {
+  cursor: default;
+  filter: saturate(0.6) brightness(0.85);
+}
+
+.admin-next-results-number-box[data-color='none'],
+.admin-next-results-selected-box[data-color='none'] {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(152, 170, 191, 0.45);
+  color: #98aabf;
+}
+
+.admin-next-results-section-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-next-results-change-window {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: #4ade80;
+}
+
+.admin-next-results-change-window[data-open='false'] {
+  color: #f87171;
+}
+
+.admin-next-results-source {
+  font-size: 12px;
+  color: #98aabf;
+}
+
+.admin-next-results-notice {
+  margin: 0;
+  font-size: 13.5px;
+  color: #98aabf;
+}
+
+.admin-next-results-notice[data-variant='error'] {
+  color: #f87171;
+}
+
+.admin-next-results-confirm-rtp {
+  font-size: 12px;
+  color: #98aabf;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Campos del login de admin (usuario / contraseña). */
+.admin-next-results-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.admin-next-results-field input {
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(130, 150, 165, 0.4);
+  background: rgba(10, 18, 24, 0.85);
+  color: #e8edf3;
+  font: inherit;
+  font-size: 14px;
+}
+
+.admin-next-results-field input:focus {
+  outline: none;
+  border-color: rgba(255, 60, 75, 0.8);
+}
+
+.admin-next-results-login {
+  max-width: 420px;
 }
