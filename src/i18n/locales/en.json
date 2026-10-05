@@ -848,7 +848,23 @@
         "pick4Subtitle": "Next Pick 4 Result"
       },
       "updatePick3": "Update Pick 3 Result",
-      "updatePick4": "Update Pick 4 Result"
+      "updatePick4": "Update Pick 4 Result",
+      "rtpCurrent": "Current RTP",
+      "rtpResulting": "Resulting RTP",
+      "decidedAtFreeze": "Decided at {{time}} (bets close {{close}})",
+      "sourceLive": "Live — bets so far",
+      "sourceFrozen": "Final bets",
+      "manualTag": "Manual",
+      "changeUntil": "Changes allowed until {{time}}",
+      "changeClosed": "Changes closed for this round",
+      "noPendingEvent": "No pending roulette round right now.",
+      "loadError": "Could not load the next result: {{error}}",
+      "loginTitle": "Admin sign-in required",
+      "loginDescription": "Sign in to see the next result and its RTP.",
+      "username": "Username",
+      "password": "Password",
+      "signIn": "Sign in",
+      "signingIn": "Signing in…"
     },
     "rtp": {
       "title": "RTP Dashboard",

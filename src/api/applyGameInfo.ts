@@ -14,6 +14,7 @@ export function applyGameInfo(data: GameInfoResponse, options: { seedHistory: bo
     backgroundUrl: buildMediaUrlOrEmpty(data.background),
     drawNumber: data.nextDraw.drawNo,
     nextDrawStartTime: data.nextDraw.startTime,
+    betsCloseTime: data.nextDraw.betsCloseTime ?? '',
     roundIntervalMs: data.roundInterval * 1000,
   })
 
