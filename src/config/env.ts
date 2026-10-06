@@ -1,3 +1,4 @@
+// VITE_MQTT_URL es opcional, no va en required (ver mqtt/mqttConnection.ts).
 const required = ['VITE_API_KEY'] as const
 
 for (const key of required) {
@@ -8,4 +9,6 @@ for (const key of required) {
 
 export const env = {
   apiKey: import.meta.env.VITE_API_KEY,
+  // Opcional: vacío = mismo origen (/mqtt), ver mqtt/mqttConnection.ts.
+  mqttUrl: import.meta.env.VITE_MQTT_URL,
 } as const

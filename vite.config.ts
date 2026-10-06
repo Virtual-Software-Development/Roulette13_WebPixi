@@ -2,6 +2,8 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { createMediaHandler, createMediaListHandler } from './server/mediaHandler.js'
+import { createTerminalInfoHandler } from './server/terminalInfo.js'
+import { createInternetCheckHandler } from './server/internetCheck.js'
 
 function localMediaPlugin(mediaRoot: string): Plugin {
   return {
@@ -9,6 +11,10 @@ function localMediaPlugin(mediaRoot: string): Plugin {
     configureServer(server) {
       server.middlewares.use(createMediaHandler({ mediaRoot }))
       server.middlewares.use(createMediaListHandler({ mediaRoot }))
+      // MAC de esta computadora para pedir las credenciales MQTT (ver server/terminalInfo.js).
+      server.middlewares.use(createTerminalInfoHandler())
+      // ¿Hay salida a internet? (ver server/internetCheck.js).
+      server.middlewares.use(createInternetCheckHandler())
     },
   }
 }
@@ -33,6 +39,13 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           // Backend routes live under /api/v1 (quick_money-backend's router.go).
           rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
+        },
+        // MQTT sobre WebSocket hacia EMQX (listener ws en 8083, path /mqtt) -- ver
+        // src/mqtt/mqttConnection.ts.
+        '/mqtt': {
+          target: env.MQTT_WS_URL || 'ws://localhost:8083',
+          ws: true,
+          changeOrigin: true,
         },
       },
     },

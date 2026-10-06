@@ -4,6 +4,9 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { createMediaHandler, createMediaListHandler } from './server/mediaHandler.js'
 import { createApiProxyHandler } from './server/apiProxy.js'
+import { createMqttUpgradeHandler } from './server/mqttProxy.js'
+import { createTerminalInfoHandler } from './server/terminalInfo.js'
+import { createInternetCheckHandler } from './server/internetCheck.js'
 
 try {
   process.loadEnvFile('.env')
@@ -26,6 +29,13 @@ const apiProxyHandler = createApiProxyHandler({
   target: process.env.API_URL ?? 'http://localhost:3000',
   prefix: '/api/',
 })
+
+const mqttUpgradeHandler = createMqttUpgradeHandler({
+  target: process.env.MQTT_WS_URL ?? 'ws://localhost:8083',
+})
+
+const terminalInfoHandler = createTerminalInfoHandler()
+const internetCheckHandler = createInternetCheckHandler()
 
 const STATIC_MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -62,9 +72,15 @@ function serveStatic(req, res) {
 
 const server = http.createServer((req, res) => {
   mediaHandler(req, res, () =>
-    mediaListHandler(req, res, () => apiProxyHandler(req, res, () => serveStatic(req, res)))
+    mediaListHandler(req, res, () =>
+      terminalInfoHandler(req, res, () =>
+        internetCheckHandler(req, res, () => apiProxyHandler(req, res, () => serveStatic(req, res)))
+      )
+    )
   )
 })
+
+server.on('upgrade', mqttUpgradeHandler)
 
 server.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`)

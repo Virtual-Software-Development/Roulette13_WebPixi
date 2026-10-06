@@ -1087,6 +1087,15 @@
     "notFound": {
       "title": "Página no encontrada",
       "description": "La página que buscas no existe o pudo haber sido movida."
+    },
+    "retry": "Reintentar",
+    "mqttOffline": {
+      "title": "Sin conexión con el servidor",
+      "description": "Se perdió la conexión en tiempo real. Reintentando automáticamente…"
+    },
+    "noInternet": {
+      "title": "Sin conexión a internet",
+      "description": "Esta terminal perdió la conexión a internet. Revisa el cable de red o el Wi-Fi; la pantalla vuelve sola cuando regrese la conexión."
     }
   }
 }
