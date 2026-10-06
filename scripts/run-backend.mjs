@@ -19,6 +19,7 @@ import path from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
 import { BACKEND_DIR, BACKEND_ENV_FILE, REPO_ROOT, hasBackend, loadBackendConfig, waitForPort } from './lib/devEnv.mjs'
 import { startLocalPostgres } from './lib/postgres.mjs'
+import { startLocalEmqx } from './lib/emqx.mjs'
 
 const MIGRATE_MODULE = 'github.com/golang-migrate/migrate/v4/cmd/migrate@v4.18.1'
 const isWindows = process.platform === 'win32'
@@ -134,6 +135,9 @@ process.on('exit', () => apiChild && killTree(apiChild))
 // --- Startup -------------------------------------------------------------------
 
 log(`Backend: ${BACKEND_DIR}`)
+// Not awaited: the broker boots in parallel with the DB wait/build. The API doesn't need it to
+// start -- it connects to MQTT after opening its port and reconnects on its own.
+startLocalEmqx({ log, warn }).catch((error) => warn(`Could not start EMQX: ${error.message}`))
 const { host, port } = config.db
 if (!(await waitForPort(host, port, { timeoutMs: 3_000 }))) {
   const started = startLocalPostgres(host, { log, warn })

@@ -1,7 +1,8 @@
-import { lazy, StrictMode, Suspense } from 'react'
+import { lazy, StrictMode, Suspense, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './i18n'
+import { startInternetMonitor } from './network/internetMonitor.ts'
 
 // Lazy en vez de import estático -- App.tsx carga @pixi/react + todo el motor de renderizado/video/
 // física de la ruleta, que Login/Admin no necesitan para nada. Con import estático, main.tsx los
@@ -21,6 +22,7 @@ const QuickMoneyBettingView = lazy(() =>
 const QuickMoneyLobby = lazy(() =>
   import('./screens/QuickMoneyLobby.tsx').then((m) => ({ default: m.QuickMoneyLobby })),
 )
+const MqttGate = lazy(() => import('./screens/MqttGate.tsx').then((m) => ({ default: m.MqttGate })))
 const NotFoundView = lazy(() =>
   import('./screens/NotFoundView.tsx').then((m) => ({ default: m.NotFoundView })),
 )
@@ -43,6 +45,19 @@ const ADMIN_PREVIEW_VALUES = [
   'admin-system-logs',
 ]
 
+// Conexión MQTT de la MÁQUINA: se abre una sola vez al arrancar, sea cual sea la pantalla, y su
+// estado queda en useMqttStore para cualquier vista. Import dinámico para no meter mqtt.js en el
+// bundle de entrada (mismo criterio que las pantallas lazy de arriba).
+void import('./mqtt/mqttConnection.ts').then((m) => m.startMqttConnection())
+// Salida a internet de la máquina, también global (ver network/internetMonitor.ts).
+startInternetMonitor()
+
+// Solo los lobbies redirigen a la pantalla de error cuando la máquina pierde MQTT o internet (ver
+// MqttGate.tsx). El resto de pantallas sigue igual; pueden leer useMqttStore si lo necesitan.
+function lobbyWithMqttGate(screen: ReactNode) {
+  return <MqttGate>{screen}</MqttGate>
+}
+
 function resolveScreen() {
   const preview = new URLSearchParams(window.location.search).get('preview')
   if (preview === 'login') return <LoginPage />
@@ -57,7 +72,7 @@ function resolveScreen() {
   // donde el usuario ve Pick 3/Pick 4 antes de entrar a apostar. Las vistas de apuesta de abajo
   // (quick-money-betting[-cashier]) siguen existiendo tal cual, solo que ya no son el destino
   // directo del tab del Header.
-  if (preview === 'quick-money-lobby') return <QuickMoneyLobby />
+  if (preview === 'quick-money-lobby') return lobbyWithMqttGate(<QuickMoneyLobby />)
   // Cashier Mode queda por ahora solo accesible por URL directa -- mismo criterio ad-hoc que
   // Roulette Betting.
   if (preview === 'quick-money-betting') return <QuickMoneyBettingView mode="player" />
@@ -66,7 +81,7 @@ function resolveScreen() {
   // Un ?preview= presente pero que no matchea ninguna pantalla conocida de arriba (typo, link
   // viejo, etc.) antes caía acá también y mostraba la ruleta como si nada -- ahora muestra el 404
   // genérico en su lugar (ver NotFoundView.tsx), sin tocar ninguna de las rutas válidas de arriba.
-  if (!preview) return <App />
+  if (!preview) return lobbyWithMqttGate(<App />)
   return <NotFoundView />
 }
 
