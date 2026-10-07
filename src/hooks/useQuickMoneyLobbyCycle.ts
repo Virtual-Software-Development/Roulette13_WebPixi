@@ -140,7 +140,11 @@ export function useQuickMoneyLobbyCycle() {
         pick4Result: prepared?.pick4 ?? randomDigits(4),
       })
       advanceRound()
-      if (prepared?.videoUrl && blockRemainingMs >= QUICK_MONEY_VIDEO_BUDGET_MS) {
+      // Con números del backend entra a la fase de video aunque el video no haya llegado a tiempo:
+      // QuickMoneyVideoView muestra entonces VideoErrorPanel con el resultado durante lo que habría
+      // durado el video. Sin números del backend (locales) o sin tiempo en el bloque, resultado directo.
+      if (prepared && blockRemainingMs >= QUICK_MONEY_VIDEO_BUDGET_MS) {
+        if (!prepared.videoUrl) console.warn('[quickMoneyLobbyCycle] el video no llegó a tiempo -- se muestra el panel de video no disponible')
         lobby.setPendingVideoUrl(prepared.videoUrl)
         lobby.setPhase('quickMoneyVideo')
       } else {

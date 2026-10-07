@@ -46,7 +46,7 @@ const VIDEO_LOAD_GRACE_MS = 3000
 // pudo leer su encabezado) -- duración típica de la librería (14.7s-20.9s, medido con ffprobe).
 const UNKNOWN_VIDEO_DURATION_MS = 18_000
 
-type DrawPreparation = { kind: 'video' } | { kind: 'error'; videoDurationMs: number }
+type DrawPreparation = { kind: 'video' } | { kind: 'error'; videoDurationMs: number; result: number | null }
 
 // Rechaza si `promise` no resolvió para `deadlineMs` (timestamp absoluto) -- ningún paso de la
 // preparación del video tiene timeout propio (ver el watchdog más abajo).
@@ -146,7 +146,7 @@ function App() {
             },
             async (err): Promise<DrawPreparation> => {
               console.error('El video del sorteo no cargó -- se muestra el panel de próxima ronda en su lugar', err)
-              if (isCancelled()) return { kind: 'error', videoDurationMs: UNKNOWN_VIDEO_DURATION_MS }
+              if (isCancelled()) return { kind: 'error', videoDurationMs: UNKNOWN_VIDEO_DURATION_MS, result: null }
               // Corta la descarga si quedó colgada a mitad de camino.
               resetVideoSlot(getVideoSlot(DRAW_VIDEO_SLOT_ID))
               // El resultado es real aunque el video no haya cargado -- se registra igual, en el
@@ -160,7 +160,7 @@ function App() {
                   console.error('No se pudo consultar la duración del video -- se usa la típica', durationErr)
                   return UNKNOWN_VIDEO_DURATION_MS
                 })
-              return { kind: 'error', videoDurationMs }
+              return { kind: 'error', videoDurationMs, result: draw.result }
             }
           )
         }, msUntilResult)
@@ -178,25 +178,11 @@ function App() {
             useDrawCycleStore.getState().setWinnerPanelNumber(null)
             useDrawCycleStore.getState().setWinnerPanelExiting(false)
             if (preparation.kind === 'error') {
-              // Estimación inicial del countdown: roundInterval no siempre coincide con la
-              // separación real entre sorteos (en dev se midió 56s contra un roundInterval de 60s),
-              // así que se reemplaza por el nextDraw real de /gameInfo apenas llega -- el sorteo en
-              // curso ya arrancó, así que el backend ya informa el siguiente. Solo se lee la hora,
-              // sin applyGameInfo: el resto del lobby se actualiza como siempre en onEnded.
-              const { roundIntervalMs } = useGameConfigStore.getState()
               setVideoErrorRound({
                 drawStartMs,
                 videoDurationMs: preparation.videoDurationMs,
-                nextRoundStartIso: roundIntervalMs ? new Date(drawStartMs + roundIntervalMs).toISOString() : '',
+                result: preparation.result,
               })
-              fetchGameInfo()
-                .then(({ nextDraw }) => {
-                  if (isCancelled() || parseApiDateTime(nextDraw.startTime).getTime() <= drawStartMs) return
-                  setVideoErrorRound((current) =>
-                    current?.drawStartMs === drawStartMs ? { ...current, nextRoundStartIso: nextDraw.startTime } : current
-                  )
-                })
-                .catch((err) => console.error('No se pudo obtener la hora de la próxima ronda', err))
             } else {
               setVideoMounted(true)
             }

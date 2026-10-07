@@ -55,7 +55,11 @@
     "notApplicable": "—"
   },
   "videoErrorPanel": {
-    "title": "NEXT ROUND"
+    "title": "VIDEO UNAVAILABLE",
+    "message": "The result video could not be loaded in time.",
+    "resultIn": "RESULT IN",
+    "result": "RESULT",
+    "continuingIn": "CONTINUING IN"
   },
   "lastGame": {
     "currentGame": "CURRENT GAME",

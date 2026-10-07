@@ -55,7 +55,11 @@
     "notApplicable": "—"
   },
   "videoErrorPanel": {
-    "title": "PRÓXIMA RONDA"
+    "title": "VIDEO NO DISPONIBLE",
+    "message": "El video del resultado no pudo cargarse a tiempo.",
+    "resultIn": "RESULTADO EN",
+    "result": "RESULTADO",
+    "continuingIn": "CONTINÚA EN"
   },
   "lastGame": {
     "currentGame": "JUEGO ACTUAL",

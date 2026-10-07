@@ -52,3 +52,11 @@ export const FALLBACK_ROULETTE_ROUND_MS = 300_000
 
 // Red de seguridad por si el video nunca dispara 'ended' (red rota, decode colgado).
 export const QUICK_MONEY_VIDEO_MAX_MS = 90_000
+
+// Duración que se asume para el video de Quick Money cuando no está (no llegó a tiempo o no cargó)
+// y se muestra VideoErrorPanel en su lugar -- el panel cuenta esto antes de seguir. A diferencia de
+// Roulette (videoDuration.ts lee el encabezado del .webm) no hay de dónde sacar la real: el backend
+// no la informa y, si el render/descarga no terminó, no existe ningún archivo que leer. Es la
+// duración típica del clip ya usada en QUICK_MONEY_VIDEO_BUDGET_MS -- tiene que entrar en ese
+// presupuesto (fade + esto + hold) y quedar por debajo de QUICK_MONEY_VIDEO_MAX_MS.
+export const QUICK_MONEY_VIDEO_FALLBACK_DURATION_MS = 72_000
