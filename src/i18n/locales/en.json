@@ -54,6 +54,9 @@
     "recentResults": "RECENT RESULTS",
     "notApplicable": "—"
   },
+  "videoErrorPanel": {
+    "title": "NEXT ROUND"
+  },
   "lastGame": {
     "currentGame": "CURRENT GAME",
     "nextRoundIn": "NEXT ROUND IN"

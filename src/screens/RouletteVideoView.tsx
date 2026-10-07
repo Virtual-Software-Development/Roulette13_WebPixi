@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { useGameConfigStore } from '../store/useGameConfigStore'
-import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
+import { commitPendingResult } from '../store/commitPendingResult'
 import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
 import { RESULT_HOLD_MS, VIDEO_WHEEL_TRANSITION_DURATION_MS, WINNER_PANEL_LEAD_SECONDS } from '../layout/layout.constants'
 import { easeInOutCubic } from '../utils/easing'
@@ -95,21 +95,7 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
     let holdTimer: ReturnType<typeof setTimeout> | undefined
 
     function handleEnded() {
-      const pendingResult = useDrawCycleStore.getState().pendingResult
-      if (pendingResult) {
-        const now = Date.now()
-        useResultsStore.getState().addResult({
-          // drawNo alone isn't a safe id/React key -- see the same comment in applyGameInfo.ts
-          // (the backend resets it every calendar day).
-          id: `${now}-${pendingResult.drawNo}`,
-          timestamp: now,
-          drawNumber: pendingResult.drawNo,
-          winningNumber: pendingResult.result,
-        })
-        useDrawCycleStore.getState().setPendingResult(null)
-      } else {
-        console.error('El video terminó sin un resultado real pendiente (drawResult no llegó a tiempo).')
-      }
+      commitPendingResult()
 
       // Deja el último frame congelado un rato (el resultado visible) antes de
       // disparar la bajada del video y el regreso de RouletteLobby.

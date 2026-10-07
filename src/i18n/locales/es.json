@@ -54,6 +54,9 @@
     "recentResults": "RESULTADOS RECIENTES",
     "notApplicable": "—"
   },
+  "videoErrorPanel": {
+    "title": "PRÓXIMA RONDA"
+  },
   "lastGame": {
     "currentGame": "JUEGO ACTUAL",
     "nextRoundIn": "PRÓXIMA RONDA EN"

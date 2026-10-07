@@ -4,9 +4,11 @@ import { RouletteVideoView } from './screens/RouletteVideoView'
 import { RouletteLobby } from './screens/RouletteLobby'
 import { LobbyBackgroundLayer } from './screens/LobbyBackgroundLayer'
 import { WinnerPanel } from './screens/WinnerPanel'
+import { VideoErrorRound, type VideoErrorRoundInfo } from './screens/VideoErrorRound'
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { VideoPoolLayer } from './video/VideoPoolLayer'
-import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc } from './video/videoElements'
+import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from './video/videoElements'
+import { fetchVideoDurationMs } from './video/videoDuration'
 import { fetchGameInfo } from './api/gameInfo'
 import { applyGameInfo } from './api/applyGameInfo'
 import { fetchDrawResult } from './api/drawResult'
@@ -16,7 +18,7 @@ import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
 import { useResultsStore } from './store/useResultsStore'
 import { useBetsSummaryStore } from './store/useBetsSummaryStore'
-import { pickRandomDrawResultVideoUrl, GUARANTEED_FALLBACK_VIDEO_URL } from './utils/media'
+import { pickRandomDrawResultVideoUrl } from './utils/media'
 import { parseApiDateTime } from './utils/time'
 import { toLiveTableBetsData, toResultStatsData } from './utils/betsSummaryMapping'
 import { WHEEL_VIDEO_FROZEN } from './config/wheelCalibration'
@@ -35,9 +37,42 @@ const RESULT_LEAD_MS = 500
 // timer que ya agenda resultTimer/startTimer (scheduleDraw, basado en nextDraw.startTime), no uno
 // nuevo independiente.
 const BETS_LEAD_MS = 10_000
+// Margen, contado desde la hora programada del sorteo, para que el video termine de cargar. Pasado
+// esto (o antes, si la carga falla del todo) la ronda se muestra con VideoErrorRound en lugar del
+// video. Corto a propósito: mientras se espera, esta máquina sigue en el lobby y las demás ya
+// están mostrando el video.
+const VIDEO_LOAD_GRACE_MS = 3000
+// Solo si no hubo forma de consultar el video que se iba a mostrar (drawResult no llegó, o no se
+// pudo leer su encabezado) -- duración típica de la librería (14.7s-20.9s, medido con ffprobe).
+const UNKNOWN_VIDEO_DURATION_MS = 18_000
+
+type DrawPreparation = { kind: 'video' } | { kind: 'error'; videoDurationMs: number }
+
+// Rechaza si `promise` no resolvió para `deadlineMs` (timestamp absoluto) -- ningún paso de la
+// preparación del video tiene timeout propio (ver el watchdog más abajo).
+function withDeadline<T>(promise: Promise<T>, deadlineMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error('El video no terminó de cargar a tiempo')),
+      Math.max(0, deadlineMs - Date.now())
+    )
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (err) => {
+        clearTimeout(timer)
+        reject(err)
+      }
+    )
+  })
+}
 
 function App() {
   const [videoMounted, setVideoMounted] = useState(false)
+  // No-null = la ronda en curso se muestra con VideoErrorRound porque el video no cargó.
+  const [videoErrorRound, setVideoErrorRound] = useState<VideoErrorRoundInfo | null>(null)
 
   // Agenda el próximo sorteo: pide /gameInfo, y programa dos timers según
   // nextDraw.startTime — uno para pedir /drawResult 500ms antes (y precargar
@@ -49,7 +84,7 @@ function App() {
     let resultTimer: ReturnType<typeof setTimeout> | undefined
     let startTimer: ReturnType<typeof setTimeout> | undefined
     let betsTimer: ReturnType<typeof setTimeout> | undefined
-    let videoReadyPromise: Promise<void> | null = null
+    let videoReadyPromise: Promise<DrawPreparation> | null = null
 
     fetchGameInfo()
       .then((data) => {
@@ -57,7 +92,8 @@ function App() {
         applyGameInfo(data, { seedHistory })
 
         const { drawNo, startTime } = data.nextDraw
-        const msUntilStart = Math.max(0, parseApiDateTime(startTime).getTime() - Date.now())
+        const drawStartMs = parseApiDateTime(startTime).getTime()
+        const msUntilStart = Math.max(0, drawStartMs - Date.now())
         const msUntilResult = Math.max(0, msUntilStart - RESULT_LEAD_MS)
         const msUntilBets = Math.max(0, msUntilStart - BETS_LEAD_MS)
 
@@ -77,54 +113,61 @@ function App() {
             .catch((err) => console.error('No se pudo obtener /api/bets', err))
         }, msUntilBets)
 
-        // Always resolves with a real, already-loaded videoUrl -- never leaves it unset. An unset
-        // videoUrl would make RouletteVideoView's load effect no-op forever (it early-returns on
-        // an empty/unset value), silently hanging the round with no video and no way to recover
-        // until reload. Whatever step fails (the real result never arriving, no clip existing for
-        // it, or the browser failing to load either), falling back to the one guaranteed local
-        // clip keeps the round visually completing instead of breaking.
+        // Siempre resuelve (nunca rechaza) con cómo mostrar la ronda: con el video, si cargó a
+        // tiempo, o con VideoErrorRound si no -- en ese caso con la duración del video que SE IBA a
+        // mostrar, leída de su encabezado, para que el panel ocupe exactamente el mismo tiempo y
+        // esta máquina vuelva al lobby junto con las demás. Reemplaza al viejo clip de reserva
+        // fijo (mostraba un 12 aunque el resultado fuera otro, y el archivo ya no existía).
         resultTimer = setTimeout(() => {
           if (isCancelled()) return
 
-          function loadFallbackVideo(reason: string, err: unknown): Promise<string> {
-            console.error(reason, err)
-            return loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), GUARANTEED_FALLBACK_VIDEO_URL).then(
-              () => GUARANTEED_FALLBACK_VIDEO_URL
-            )
+          const draw: { result: number | null; videoDuration: Promise<number> | null } = {
+            result: null,
+            videoDuration: null,
           }
 
-          videoReadyPromise = fetchDrawResult(drawNo)
-            .then(
-              ({ result }) => {
-                if (isCancelled()) return Promise.resolve<string | undefined>(undefined)
+          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result }) => {
+            draw.result = result
+            const videoUrl = await pickRandomDrawResultVideoUrl(result)
+            // En paralelo con la carga (son pocos KB) -- si el <video> falla, la duración ya está.
+            draw.videoDuration = fetchVideoDurationMs(videoUrl)
+            draw.videoDuration.catch(() => {})
+            await loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), videoUrl)
+            return videoUrl
+          })
 
-                return pickRandomDrawResultVideoUrl(result)
-                  .then((videoUrl) => loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), videoUrl).then(() => videoUrl))
-                  .catch((err) => loadFallbackVideo('No se pudo preparar el video del resultado real -- usando el clip de reserva', err))
-                  .then((videoUrl) => {
-                    if (isCancelled()) return undefined
-                    // Still the real result even when the CLIP fell back to the reserve -- only
-                    // the video shown is generic, the recorded winning number stays accurate.
-                    useDrawCycleStore.getState().setPendingResult({ drawNo, result })
-                    return videoUrl
-                  })
-              },
-              // The real result itself never arrived (backend/network failure) -- there is no
-              // number to honestly record, so pendingResult is deliberately left unset.
-              // RouletteVideoView's 'ended' handler already tolerates that (logs, doesn't hang) --
-              // but it still needs a videoUrl to reach 'ended' at all.
-              (err) => loadFallbackVideo('No se pudo obtener el resultado real del sorteo -- usando el clip de reserva', err)
-            )
-            .then((videoUrl) => {
-              if (isCancelled() || !videoUrl) return
-              useGameConfigStore.getState().setGameConfig({ videoUrl })
-            })
-            .catch((err) => console.error('No se pudo preparar el video del sorteo', err))
+          videoReadyPromise = withDeadline(videoLoaded, drawStartMs + VIDEO_LOAD_GRACE_MS).then(
+            (videoUrl): DrawPreparation => {
+              if (!isCancelled() && draw.result !== null) {
+                useDrawCycleStore.getState().setPendingResult({ drawNo, result: draw.result })
+                useGameConfigStore.getState().setGameConfig({ videoUrl })
+              }
+              return { kind: 'video' }
+            },
+            async (err): Promise<DrawPreparation> => {
+              console.error('El video del sorteo no cargó -- se muestra el panel de próxima ronda en su lugar', err)
+              if (isCancelled()) return { kind: 'error', videoDurationMs: UNKNOWN_VIDEO_DURATION_MS }
+              // Corta la descarga si quedó colgada a mitad de camino.
+              resetVideoSlot(getVideoSlot(DRAW_VIDEO_SLOT_ID))
+              // El resultado es real aunque el video no haya cargado -- se registra igual, en el
+              // instante en que el video habría terminado (ver VideoErrorRound). Si drawResult
+              // nunca llegó, no hay número que registrar.
+              if (draw.result !== null) {
+                useDrawCycleStore.getState().setPendingResult({ drawNo, result: draw.result })
+              }
+              const videoDurationMs = await (draw.videoDuration ?? Promise.reject(new Error('No se llegó a elegir un video')))
+                .catch((durationErr: unknown) => {
+                  console.error('No se pudo consultar la duración del video -- se usa la típica', durationErr)
+                  return UNKNOWN_VIDEO_DURATION_MS
+                })
+              return { kind: 'error', videoDurationMs }
+            }
+          )
         }, msUntilResult)
 
         startTimer = setTimeout(() => {
           if (isCancelled()) return
-          const showVideo = () => {
+          const startRound = (preparation: DrawPreparation) => {
             // WHEEL_VIDEO_FROZEN (ver LobbyBackgroundLayer.tsx): con la rueda calibrándose a mano
             // sobre un frame quieto (o moviéndose cuadro a cuadro con WheelFrameStepper.tsx), no
             // queremos que el reloj del próximo sorteo dispare la escena de juego a mitad de
@@ -134,12 +177,34 @@ function App() {
             useDrawCycleStore.getState().setLobbyInfoVisible(false)
             useDrawCycleStore.getState().setWinnerPanelNumber(null)
             useDrawCycleStore.getState().setWinnerPanelExiting(false)
-            setVideoMounted(true)
+            if (preparation.kind === 'error') {
+              // Estimación inicial del countdown: roundInterval no siempre coincide con la
+              // separación real entre sorteos (en dev se midió 56s contra un roundInterval de 60s),
+              // así que se reemplaza por el nextDraw real de /gameInfo apenas llega -- el sorteo en
+              // curso ya arrancó, así que el backend ya informa el siguiente. Solo se lee la hora,
+              // sin applyGameInfo: el resto del lobby se actualiza como siempre en onEnded.
+              const { roundIntervalMs } = useGameConfigStore.getState()
+              setVideoErrorRound({
+                drawStartMs,
+                videoDurationMs: preparation.videoDurationMs,
+                nextRoundStartIso: roundIntervalMs ? new Date(drawStartMs + roundIntervalMs).toISOString() : '',
+              })
+              fetchGameInfo()
+                .then(({ nextDraw }) => {
+                  if (isCancelled() || parseApiDateTime(nextDraw.startTime).getTime() <= drawStartMs) return
+                  setVideoErrorRound((current) =>
+                    current?.drawStartMs === drawStartMs ? { ...current, nextRoundStartIso: nextDraw.startTime } : current
+                  )
+                })
+                .catch((err) => console.error('No se pudo obtener la hora de la próxima ronda', err))
+            } else {
+              setVideoMounted(true)
+            }
           }
           if (videoReadyPromise) {
-            videoReadyPromise.then(showVideo)
+            videoReadyPromise.then(startRound)
           } else {
-            showVideo()
+            startRound({ kind: 'video' })
           }
         }, msUntilStart)
       })
@@ -215,7 +280,7 @@ function App() {
     const STUCK_GRACE_MS = 20_000
     const CHECK_INTERVAL_MS = 5_000
     const interval = setInterval(() => {
-      if (active || videoMounted) return
+      if (active || videoMounted || videoErrorRound) return
       const nextDrawStartTime = useGameConfigStore.getState().nextDrawStartTime
       if (!nextDrawStartTime) return
       const msPastStart = Date.now() - parseApiDateTime(nextDrawStartTime).getTime()
@@ -225,7 +290,7 @@ function App() {
       }
     }, CHECK_INTERVAL_MS)
     return () => clearInterval(interval)
-  }, [active, videoMounted, scheduleDraw])
+  }, [active, videoMounted, videoErrorRound, scheduleDraw])
 
   // Se llama apenas el video termina de reproducirse (bien antes del
   // freeze-hold/slide-down) — agenda el próximo sorteo ahí, no cuando vuelve
@@ -235,6 +300,11 @@ function App() {
   const handleRoundEnded = useCallback(() => {
     scheduleDraw(() => false, false)
   }, [scheduleDraw])
+
+  // Fin de una ronda mostrada con VideoErrorRound -- el panel ya salió y el lobby volvió.
+  const handleVideoErrorRoundFinished = useCallback(() => {
+    setVideoErrorRound(null)
+  }, [])
 
   // Se llama recién cuando el video ya terminó de bajar de vuelta a su lugar
   // de partida (después del hold sobre el resultado) — recién ahí es seguro
@@ -249,6 +319,13 @@ function App() {
       <LobbyBackgroundLayer />
       <VideoPoolLayer />
       <WinnerPanel />
+      {videoErrorRound && (
+        <VideoErrorRound
+          round={videoErrorRound}
+          onEnded={handleRoundEnded}
+          onFinished={handleVideoErrorRoundFinished}
+        />
+      )}
       <QuickMoneyLobbyCycle />
       <QuickMoneySplitOverlay />
       {lobbyPhase === 'quickMoneyVideo' && <QuickMoneyVideoView />}
