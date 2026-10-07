@@ -23,9 +23,6 @@ const QuickMoneyLobby = lazy(() =>
   import('./screens/QuickMoneyLobby.tsx').then((m) => ({ default: m.QuickMoneyLobby })),
 )
 const MqttGate = lazy(() => import('./screens/MqttGate.tsx').then((m) => ({ default: m.MqttGate })))
-const VideoErrorPanelPreview = lazy(() =>
-  import('./screens/VideoErrorPanelPreview.tsx').then((m) => ({ default: m.VideoErrorPanelPreview })),
-)
 const NotFoundView = lazy(() =>
   import('./screens/NotFoundView.tsx').then((m) => ({ default: m.NotFoundView })),
 )
@@ -80,9 +77,6 @@ function resolveScreen() {
   // Roulette Betting.
   if (preview === 'quick-money-betting') return <QuickMoneyBettingView mode="player" />
   if (preview === 'quick-money-betting-cashier') return <QuickMoneyBettingView mode="cashier" />
-  // Preview temporal del panel que reemplaza al video del sorteo cuando no carga (ver
-  // VideoErrorPanelPreview.tsx) -- para maquetarlo sin forzar la falla real en App.tsx.
-  if (preview === 'video-error-panel') return <VideoErrorPanelPreview />
   // Sin ?preview= es la entrada normal (pantalla principal, Roulette Lobby) -- eso sigue igual.
   // Un ?preview= presente pero que no matchea ninguna pantalla conocida de arriba (typo, link
   // viejo, etc.) antes caía acá también y mostraba la ruleta como si nada -- ahora muestra el 404
