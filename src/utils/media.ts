@@ -46,13 +46,6 @@ export async function fetchVideoFilesForNumber(result: number): Promise<string[]
 // (internal/video/repository.go) -- it just doesn't have anything else to fall back to yet either.
 const FALLBACK_VIDEO_RESULT = 12
 
-// A hardcoded, network-independent last resort -- unlike pickRandomDrawResultVideoUrl below, this
-// never calls /media-list, so it still works even if THAT request is what's failing (e.g. the dev
-// server / media proxy is having trouble). App.tsx falls back to this directly if anything in the
-// normal video-prep chain throws, so a round is never left with no videoUrl at all (which would
-// otherwise hang RouletteVideoView forever -- its effect no-ops on an empty/unset videoUrl).
-export const GUARANTEED_FALLBACK_VIDEO_URL = buildMediaUrl(`Videos/${FALLBACK_VIDEO_RESULT}/12_0.webm`)
-
 export async function pickRandomDrawResultVideoUrl(result: number): Promise<string> {
   let files = await fetchVideoFilesForNumber(result)
   let effectiveResult = result
