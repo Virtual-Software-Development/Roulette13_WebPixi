@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import { VideoErrorPanel } from './VideoErrorPanel'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { commitPendingResult } from '../store/commitPendingResult'
-import { RESULT_HOLD_MS, VIDEO_WHEEL_TRANSITION_DURATION_MS, WINNER_PANEL_EXIT_DURATION_MS } from '../layout/layout.constants'
+import {
+  RESULT_HOLD_MS,
+  VIDEO_WHEEL_TRANSITION_DURATION_MS,
+  WINNER_PANEL_EXIT_DURATION_MS,
+  WINNER_PANEL_LEAD_SECONDS,
+} from '../layout/layout.constants'
 
 export interface VideoErrorRoundInfo {
   // Hora programada del sorteo (/gameInfo nextDraw.startTime, en ms) -- ancla de toda la línea de
@@ -10,7 +15,10 @@ export interface VideoErrorRoundInfo {
   drawStartMs: number
   // Duración del video que se iba a mostrar (ver video/videoDuration.ts).
   videoDurationMs: number
-  nextRoundStartIso: string
+  // Número ganador real de la ronda, o null si /drawResult no llegó a tiempo (el panel oculta la
+  // sección RESULT). Se guarda acá y no se lee de pendingResult porque commitPendingResult lo
+  // limpia al terminar el countdown, con el panel todavía en pantalla durante el hold.
+  result: number | null
 }
 
 interface VideoErrorRoundProps {
@@ -22,7 +30,8 @@ interface VideoErrorRoundProps {
 }
 
 // Reemplaza a RouletteVideoView cuando el video del sorteo no cargó (ver App.tsx). Muestra
-// VideoErrorPanel y repite, con timers, la MISMA secuencia que el camino normal -- subida del video,
+// VideoErrorPanel (RESULT IN hasta el instante en que el video habría revelado el resultado, y
+// CONTINUING IN hasta el instante en que habría terminado) y repite, con timers, la MISMA secuencia que el camino normal -- subida del video,
 // reproducción, hold sobre el resultado, bajada y salida del panel Winner -- pero contada desde la
 // hora programada del sorteo y no desde que el panel apareció: así, aunque la falla se detecte
 // unos segundos tarde, esta máquina vuelve al lobby en el mismo instante que las que sí mostraron
@@ -30,12 +39,19 @@ interface VideoErrorRoundProps {
 export function VideoErrorRound({ round, onEnded, onFinished }: VideoErrorRoundProps) {
   const [exiting, setExiting] = useState(false)
   const { drawStartMs, videoDurationMs } = round
+  // Instante en que el video habría terminado: subida del video + su duración, contado desde la
+  // hora programada del sorteo. Objetivo del countdown "CONTINUING IN" y de onEnded.
+  const playStartAt = drawStartMs + VIDEO_WHEEL_TRANSITION_DURATION_MS
+  const endedAt = playStartAt + videoDurationMs
+  // Instante en que el camino normal revela el resultado: RouletteVideoView muestra el panel Winner
+  // cuando al video le quedan WINNER_PANEL_LEAD_SECONDS (onVideoNearEnd). Los videos no traen un
+  // momento de revelación propio (ni el .webm ni /media-list ni el backend lo informan), así que es
+  // el mismo valor configurado que usa el video real.
+  const revealAt = Math.max(playStartAt, endedAt - WINNER_PANEL_LEAD_SECONDS * 1000)
 
-  // Depende solo de los dos números de la línea de tiempo, no de `round` entero: App actualiza
-  // nextRoundStartIso a mitad de la ronda, y re-agendar acá podría volver a disparar onEnded (que
-  // agenda el próximo sorteo) si ese momento ya pasó.
+  // Depende solo de los números de la línea de tiempo, no de `round` entero: re-agendar acá podría
+  // volver a disparar onEnded (que agenda el próximo sorteo) si ese momento ya pasó.
   useEffect(() => {
-    const endedAt = drawStartMs + VIDEO_WHEEL_TRANSITION_DURATION_MS + videoDurationMs
     const holdEndAt = endedAt + RESULT_HOLD_MS
     const exitAt = holdEndAt + VIDEO_WHEEL_TRANSITION_DURATION_MS
     const finishedAt = exitAt + WINNER_PANEL_EXIT_DURATION_MS
@@ -54,7 +70,14 @@ export function VideoErrorRound({ round, onEnded, onFinished }: VideoErrorRoundP
       }),
     ]
     return () => timers.forEach(clearTimeout)
-  }, [drawStartMs, videoDurationMs, onEnded, onFinished])
+  }, [endedAt, onEnded, onFinished])
 
-  return <VideoErrorPanel nextRoundStartIso={round.nextRoundStartIso} exiting={exiting} />
+  return (
+    <VideoErrorPanel
+      result={round.result === null ? null : { game: 'roulette', number: round.result }}
+      revealAtIso={new Date(revealAt).toISOString()}
+      continueAtIso={new Date(endedAt).toISOString()}
+      exiting={exiting}
+    />
+  )
 }

@@ -1,12 +1,23 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useLobbyModeStore } from '../store/useLobbyModeStore'
 import { publishPendingDraw } from '../hooks/useQuickMoneyLobbyCycle'
 import { QUICK_MONEY_VIDEO_SLOT_ID, getVideoSlot, hideVideoSlot, preloadQuickMoneyVideo } from '../video/videoElements'
 import {
   QUICK_MONEY_VIDEO_FADE_MS,
+  QUICK_MONEY_VIDEO_FALLBACK_DURATION_MS,
   QUICK_MONEY_VIDEO_HOLD_MS,
   QUICK_MONEY_VIDEO_MAX_MS,
 } from '../config/quickMoneyLobbyCycle'
+import { VideoErrorPanel, type VideoErrorResult } from './VideoErrorPanel'
+
+interface VideoFallback {
+  result: VideoErrorResult | null
+  // En Quick Money la revelación ES el final del video: el camino normal publica el resultado
+  // (publishPendingDraw) recién después de 'ended', y no hay un momento de revelación anterior
+  // conocido (el backend no lo informa). Así que revelación y continuación son el mismo instante y
+  // el panel nunca muestra CONTINUING IN -- revela y queda con el resultado durante el hold.
+  endedAtIso: string
+}
 
 // Video del sorteo de Quick Money -- montado solo durante la fase 'quickMoneyVideo' (ver
 // useQuickMoneyLobbyCycle, que además lo corta si el bloque de Quick Money se queda sin tiempo).
@@ -15,11 +26,18 @@ import {
 // es un componente DOM común montado fuera de <Application>.
 //
 // Secuencia: carga -> fade in -> play -> 'ended' -> hold sobre el último frame -> fade out ->
-// publica el resultado en la tabla y pasa a 'quickMoneyResult'. Cualquier falla (carga o un video
-// que nunca termina) salta directo al final, para que el lobby nunca quede clavado acá.
+// publica el resultado en la tabla y pasa a 'quickMoneyResult'. Si el video no está (no llegó a
+// tiempo) o no carga, muestra VideoErrorPanel: RESULT IN durante lo que habría durado el video, el
+// resultado al llegar a 0, y sigue por el mismo 'ended' -> hold -> salida. Un video que nunca termina salta directo al final
+// (QUICK_MONEY_VIDEO_MAX_MS), para que el lobby nunca quede clavado acá.
 export function QuickMoneyVideoView() {
+  const [fallback, setFallback] = useState<VideoFallback | null>(null)
+  const [exiting, setExiting] = useState(false)
+
   useEffect(() => {
     const video = getVideoSlot(QUICK_MONEY_VIDEO_SLOT_ID)
+    // Ancla del countdown del fallback: el video habría arrancado ahora (+ su fade in).
+    const startedAt = Date.now()
     let cancelled = false
     let finished = false
     const timers: ReturnType<typeof setTimeout>[] = []
@@ -29,6 +47,8 @@ export function QuickMoneyVideoView() {
       if (finished || cancelled) return
       finished = true
       video.style.opacity = '0'
+      // Con el fallback en pantalla, el panel sale con su escala a 0 (misma duración que el fade).
+      setExiting(true)
       later(() => {
         publishPendingDraw()
         useLobbyModeStore.getState().setPhase('quickMoneyResult')
@@ -37,6 +57,19 @@ export function QuickMoneyVideoView() {
 
     function handleEnded() {
       later(complete, QUICK_MONEY_VIDEO_HOLD_MS)
+    }
+
+    function showFallback() {
+      const endedAt = startedAt + QUICK_MONEY_VIDEO_FADE_MS + QUICK_MONEY_VIDEO_FALLBACK_DURATION_MS
+      const pendingDraw = useLobbyModeStore.getState().pendingDraw
+      setFallback({
+        // Capturado acá: publishPendingDraw limpia pendingDraw recién al final, pero el panel no
+        // depende de ese momento.
+        result: pendingDraw ? { game: 'quickMoney', pick3: pendingDraw.pick3Result, pick4: pendingDraw.pick4Result } : null,
+        endedAtIso: new Date(endedAt).toISOString(),
+      })
+      // Al llegar el countdown a 0 sigue exactamente como si el video hubiera terminado.
+      later(handleEnded, Math.max(0, endedAt - Date.now()))
     }
 
     video.loop = false
@@ -64,8 +97,9 @@ export function QuickMoneyVideoView() {
         })
       })
       .catch((err) => {
-        console.error('No se pudo cargar el video de Quick Money', err)
-        complete()
+        console.error('No se pudo cargar el video de Quick Money -- se muestra el panel de video no disponible', err)
+        if (cancelled) return
+        showFallback()
       })
 
     return () => {
@@ -77,5 +111,14 @@ export function QuickMoneyVideoView() {
     }
   }, [])
 
-  return null
+  if (!fallback) return null
+  return (
+    <VideoErrorPanel
+      result={fallback.result}
+      revealAtIso={fallback.endedAtIso}
+      continueAtIso={fallback.endedAtIso}
+      exiting={exiting}
+      backdrop="plain"
+    />
+  )
 }

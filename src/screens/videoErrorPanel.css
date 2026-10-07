@@ -1,52 +1,56 @@
 /* VideoErrorPanel -- del WinnerPanel solo se reusa el backdrop (.winner-panel-backdrop/-tint y su
-   modificador --exiting, ver winnerPanel.css); la tarjeta es propia y de color FIJO.
+   modificador --exiting, ver winnerPanel.css) y el dot de color; la tarjeta es propia y de color
+   FIJO.
 
    Tokens propios del componente, mismo criterio que bettingTokens.css/quickMoneyLobbyTokens.css
    (archivo propio, valores calcados de --admin-* en adminLayout.css): no hay tokens globales de
-   juego en el proyecto. Es un componente de sistema: ningún token cambia según el juego, el estado
-   o el resultado -- los estados se distinguen por texto/ícono (props), nunca por color. Todo
-   navy/graphite; blanco solo para título y número. Composición sobre un único eje central
-   (header y countdown centrados).
+   juego en el proyecto. Es un componente de sistema: ningún token cambia según el juego o el
+   resultado. El único acento de color es el ícono de warning (ámbar, del SVG); todo lo demás
+   navy/graphite con texto off-white. Composición sobre un único eje central.
+
+   Jerarquía (pedido explícito): resultado > VIDEO UNAVAILABLE > countdown > mensaje -- se resuelve
+   con tamaño y contraste, no con color.
 
    Escala: tamaños con clamp(min, vw, max), igual que el resto de los overlays DOM (viven fuera de
    ResponsiveStage, se dimensionan contra el viewport real). El valor del medio está calculado
    para dar múltiplos de 4px en 1920px de ancho (1vw = 19.2px). */
 .video-error-panel {
   /* Profundidad por luminosidad, no por color: misma familia navy (hue ~202°), la tarjeta del
-     timer ~7-8 puntos de HSL L más clara que el panel -- suficiente para separarla, sin que se
+     resultado ~7-8 puntos de HSL L más clara que el panel -- suficiente para separarla, sin que se
      despegue del contenedor. La tarjeta se separa por superficie, no por su borde (casi
      invisible). */
   --vep-surface: #0a151d;
   --vep-surface-top: #0c1922;
-  --vep-surface-timer: #163040;
-  --vep-surface-timer-bottom: #142b38;
+  --vep-surface-card: #163040;
+  --vep-surface-card-bottom: #142b38;
   --vep-border: rgba(120, 160, 180, 0.14);
-  --vep-border-timer: rgba(120, 160, 180, 0.05);
+  --vep-border-card: rgba(120, 160, 180, 0.05);
   --vep-divider: rgba(120, 160, 180, 0.06);
   --vep-text-primary: #f5f7fa;
-  /* Blanco apenas cálido para el número -- se lee más suave que #fff puro sobre navy. */
-  --vep-text-timer: #f6f3ee;
+  /* Blanco apenas cálido para los números -- se lee más suave que #fff puro sobre navy. */
+  --vep-text-number: #f6f3ee;
   /* Énfasis "attention" (últimos segundos): el mismo off-white, un poco más brillante. */
-  --vep-text-timer-attention: #fcfbf8;
+  --vep-text-number-attention: #fcfbf8;
+  /* Texto secundario (mensaje, labels): el mismo off-white, atenuado -- nunca gris de otra familia. */
+  --vep-text-secondary: rgba(245, 247, 250, 0.62);
+  --vep-text-label: rgba(245, 247, 250, 0.5);
 
-  /* 8 / 12 / 16 / 20px en 1920px */
+  /* 8 / 12 / 16 / 20 / 28px en 1920px */
   --vep-space-sm: clamp(6px, 0.417vw, 12px);
   --vep-space-md: clamp(8px, 0.625vw, 16px);
   --vep-space-lg: clamp(12px, 0.833vw, 20px);
   --vep-space-xl: clamp(16px, 1.042vw, 26px);
-  /* Padding vertical de la tarjeta del timer (simétrico, 46px en 1920px): el centrado óptico de
-     los dígitos lo resuelve el margin de .video-error-panel-timer-value. Tarjeta de ~172px de alto
-     en 1920x1080. */
-  --vep-space-timer-y: clamp(26px, 2.396vw, 54px);
-  /* Una sola escala de radios: panel 12 > timer 8 (px en 1920px). */
+  --vep-space-2xl: clamp(20px, 1.458vw, 36px);
+  /* Una sola escala de radios: panel 12 > tarjeta 8 (px en 1920px). */
   --vep-radius-panel: clamp(10px, 0.625vw, 16px);
-  --vep-radius-timer: clamp(6px, 0.417vw, 10px);
+  --vep-radius-card: clamp(6px, 0.417vw, 10px);
 
   position: relative;
   width: min(88vw, clamp(340px, 31.25vw, 680px));
   box-sizing: border-box;
-  padding: var(--vep-space-xl) var(--vep-space-lg) var(--vep-space-lg);
+  padding: var(--vep-space-xl) var(--vep-space-lg) var(--vep-space-xl);
   font-family: 'Poppins', Arial, sans-serif;
+  text-align: center;
   background: linear-gradient(180deg, var(--vep-surface-top) 0%, var(--vep-surface) 100%);
   border: 1px solid var(--vep-border);
   border-radius: var(--vep-radius-panel);
@@ -66,18 +70,17 @@
 }
 
 /* ---------------------------------------------------------------------------------------------
-   Header: [reloj TÍTULO] como un solo grupo centrado (mismo eje que el countdown), sobre un
-   divisor tenue que se apaga hacia los dos extremos.
+   Header: [⚠ VIDEO UNAVAILABLE] como un solo grupo centrado, sobre un divisor tenue que se apaga
+   hacia los dos extremos.
    --------------------------------------------------------------------------------------------- */
 .video-error-panel-header {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 4px en 1920px -- el reloj trae su propio margen interno en el SVG. */
-  gap: clamp(3px, 0.208vw, 6px);
+  gap: clamp(6px, 0.417vw, 10px);
   padding-bottom: var(--vep-space-md);
-  margin-bottom: var(--vep-space-lg);
+  margin-bottom: var(--vep-space-md);
 }
 
 /* Divisor: ocupa el ancho de contenido del panel (alineado a su padding horizontal) y se
@@ -92,16 +95,11 @@
   background: linear-gradient(90deg, transparent 0%, var(--vep-divider) 20%, var(--vep-divider) 80%, transparent 100%);
 }
 
-/* El SVG trae margen interno -- se dibuja algo más grande que el alto del título. Opacidad
-   0.65: el reloj acompaña al título, no compite con él (~65% de su contraste).
-   margin-left negativo = el margen transparente izquierdo del SVG: sin esto el grupo centrado se
-   ve ~2px corrido a la derecha (medido sobre la tinta real del ícono + texto). */
+/* Warning ámbar: el único acento de color del panel, chico (apenas más alto que el título). */
 .video-error-panel-icon {
   flex-shrink: 0;
-  width: clamp(18px, 1.146vw, 28px);
-  height: clamp(18px, 1.146vw, 28px);
-  margin-left: clamp(-6px, -0.188vw, -3px);
-  opacity: 0.65;
+  width: clamp(16px, 1.042vw, 26px);
+  height: clamp(16px, 1.042vw, 26px);
 }
 
 /* font-family: inherit -- index.css le fija la fuente a todos los h2.
@@ -118,58 +116,163 @@
   color: var(--vep-text-primary);
 }
 
+/* Mensaje para el jugador -- el elemento de menor jerarquía: chico y atenuado. */
+.video-error-panel-message {
+  margin: 0 auto var(--vep-space-lg);
+  max-width: 34em;
+  font-size: clamp(12px, 0.729vw, 16px);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--vep-text-secondary);
+}
+
+/* Label chico en mayúsculas de RESULT IN, RESULT y CONTINUING IN. */
+.video-error-panel-label {
+  font-size: clamp(10px, 0.625vw, 14px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  /* Mismo truco que el título: compensa el letter-spacing final para que quede centrado. */
+  margin-right: -0.16em;
+  text-transform: uppercase;
+  color: var(--vep-text-label);
+}
+
 /* ---------------------------------------------------------------------------------------------
-   Countdown -- tarjeta un tono más clara que el panel, borde casi imperceptible + highlight
-   superior. Solo contiene el número: el header ya dice qué cuenta, así que es el único foco.
+   Resultado -- tarjeta un tono más clara que el panel, borde casi imperceptible + highlight
+   superior. Es el foco del panel.
    --------------------------------------------------------------------------------------------- */
-.video-error-panel-timer {
+.video-error-panel-result {
   display: flex;
-  justify-content: center;
-  padding: var(--vep-space-timer-y) var(--vep-space-lg);
-  background: linear-gradient(180deg, var(--vep-surface-timer) 0%, var(--vep-surface-timer-bottom) 100%);
-  border: 1px solid var(--vep-border-timer);
-  border-radius: var(--vep-radius-timer);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--vep-space-md);
+  padding: var(--vep-space-lg) var(--vep-space-lg) var(--vep-space-xl);
+  background: linear-gradient(180deg, var(--vep-surface-card) 0%, var(--vep-surface-card-bottom) 100%);
+  border: 1px solid var(--vep-border-card);
+  border-radius: var(--vep-radius-card);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
 
-/* Ancho constante mientras cuenta: tabular-nums por si la fuente lo soporta, y además celdas de
-   ancho fijo por carácter (la Poppins de Google Fonts lo ignora -- ver VideoErrorPanel.tsx).
-   margin en em: recorta la caja de línea de Poppins hasta el alto real de los dígitos (que no
-   tienen descendentes). Recorte asimétrico (más arriba que abajo) con el mismo total: sube el
-   número ~3px sobre el centro geométrico de la tarjeta, que es donde se ve centrado.
-   Peso 600 fijo en todos los estados. */
-.video-error-panel-timer-value {
-  display: flex;
-  margin: -0.18em 0 -0.12em;
-  font-size: clamp(56px, 5.833vw, 128px);
+/* Fase 1 (antes de la revelación): la misma tarjeta lleva "RESULT IN" + countdown, así el resultado
+   aparece después exactamente en el lugar donde se lo estaba esperando. */
+.video-error-panel-result--pending {
+  padding-bottom: var(--vep-space-lg);
+}
+
+/* Revelación: entra con un fade + escala mínima (solo opacity/transform, compositor -- barato en el
+   hardware del kiosco). Nada de flashes ni color: el cambio de contenido ya es la señal. */
+.video-error-panel-result--revealed {
+  animation: vep-result-reveal 450ms ease-out both;
+}
+
+@keyframes vep-result-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Número de ruleta: el elemento más grande del panel. margin en em: recorta la caja de línea de
+   Poppins hasta el alto real de los dígitos (no tienen descendentes). */
+.video-error-panel-result-number {
+  margin: -0.14em 0 -0.18em;
+  font-size: clamp(72px, 7.5vw, 160px);
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--vep-text-timer);
-  /* Solo para despegar el número de la superficie -- sin glow. */
+  color: var(--vep-text-number);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
-  /* Sin animación por segundo: los dígitos cambian en el lugar, sin parpadeo. */
-  transition: color 200ms ease;
+}
+
+/* Indicador de color de ruleta: dot (winnerPanel.css) + texto, chico -- comunica el tipo de
+   resultado sin teñir el panel. */
+.video-error-panel-result-color {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vep-space-sm);
+  font-size: clamp(11px, 0.677vw, 15px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  color: var(--vep-text-secondary);
+}
+
+/* Quick Money: una fila por juego (Pick 3 / Pick 4), label a la izquierda y dígitos a la derecha,
+   alineados en una grilla de dos columnas para que los dígitos de las dos filas arranquen en el
+   mismo x. */
+.video-error-panel-picks {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: var(--vep-space-xl);
+  row-gap: var(--vep-space-sm);
+}
+
+.video-error-panel-pick {
+  display: contents;
+}
+
+.video-error-panel-pick-label {
+  justify-self: end;
+  font-size: clamp(11px, 0.677vw, 15px);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--vep-text-label);
+}
+
+.video-error-panel-pick-digits {
+  display: flex;
+  justify-self: start;
+  gap: clamp(4px, 0.417vw, 10px);
+}
+
+/* Celda de ancho fijo por dígito (mismo motivo que el countdown: Poppins no aplica tabular-nums). */
+.video-error-panel-pick-digit {
+  width: 0.68em;
+  font-size: clamp(40px, 3.75vw, 80px);
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--vep-text-number);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
 }
 
 /* ---------------------------------------------------------------------------------------------
-   Niveles de énfasis (data-emphasis en .video-error-panel, ver VideoErrorPanel.tsx). Misma
-   estructura, mismas dimensiones y mismos colores de superficie en los tres: cambian solo
-   brillo/opacidad del contenido (ningún elemento extra).
-     normal    -- NEXT ROUND y estados informativos
-     attention -- últimos segundos: número un poco más brillante
-     muted     -- waiting/disabled: contenido atenuado
+   Countdown "CONTINUING IN" -- por debajo del resultado y del título en jerarquía. Al llegar a 0
+   (data-done) se desvanece sin colapsar su espacio: el panel no cambia de alto mientras queda
+   mostrando el resultado durante el hold.
    --------------------------------------------------------------------------------------------- */
-.video-error-panel[data-emphasis='attention'] .video-error-panel-timer-value {
-  color: var(--vep-text-timer-attention);
+.video-error-panel-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--vep-space-sm);
+  margin-top: var(--vep-space-xl);
+  transition: opacity 300ms ease;
 }
 
-.video-error-panel[data-emphasis='muted'] .video-error-panel-timer-value {
-  opacity: 0.5;
+.video-error-panel-countdown[data-done='true'] {
+  opacity: 0;
 }
 
-.video-error-panel[data-emphasis='muted'] .video-error-panel-icon {
-  opacity: 0.4;
+/* Ancho constante mientras cuenta: tabular-nums por si la fuente lo soporta, y además celdas de
+   ancho fijo por carácter (ver FixedWidthTime en VideoErrorPanel.tsx). Peso 600 fijo en todos los
+   estados. */
+.video-error-panel-timer-value {
+  display: flex;
+  font-size: clamp(28px, 2.5vw, 56px);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--vep-text-number);
+  /* Sin animación por segundo: los dígitos cambian en el lugar, sin parpadeo. */
+  transition: color 200ms ease;
 }
 
 /* 0.68em = el dígito más ancho de Poppins ("4": 0.677em en 700, algo menos en 600); el ':' mide
@@ -182,6 +285,22 @@
 .video-error-panel-timer-separator {
   width: 0.32em;
   text-align: center;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Niveles de énfasis (data-emphasis en .video-error-panel, ver VideoErrorPanel.tsx). Misma
+   estructura, mismas dimensiones y mismos colores de superficie en los tres: cambian solo
+   brillo/opacidad del countdown (ningún elemento extra).
+     normal    -- estado por defecto
+     attention -- últimos segundos: número un poco más brillante
+     muted     -- countdown atenuado
+   --------------------------------------------------------------------------------------------- */
+.video-error-panel[data-emphasis='attention'] .video-error-panel-timer-value {
+  color: var(--vep-text-number-attention);
+}
+
+.video-error-panel[data-emphasis='muted'] .video-error-panel-timer-value {
+  opacity: 0.5;
 }
 
 /* ---------------------------------------------------------------------------------------------
