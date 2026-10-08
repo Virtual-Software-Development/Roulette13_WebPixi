@@ -1,8 +1,8 @@
-// Sesión de admin para las vistas Admin de ESTA app (?preview=admin-*), que hasta ahora solo usaban
-// endpoints públicos. Mismo flujo que el admin real (admin/src/api/client.ts): POST /auth/login
-// devuelve el access token (solo en memoria, nunca en localStorage) y deja el refresh token en una
-// cookie HttpOnly; con esa cookie POST /auth/refresh renueva el access token en silencio. Como la
-// cookie es por host (no por puerto), una sesión abierta en el admin real también sirve acá.
+// Sesión de admin OPCIONAL para las vistas Admin de ESTA app (?preview=admin-*). Esta app no tiene
+// login propio: Next Results usa endpoints públicos, y si hay una sesión abierta en el admin real
+// (admin/src/api/client.ts) se aprovecha solo para que el backend audite quién leyó o cambió el
+// resultado. Esa sesión deja el refresh token en una cookie HttpOnly por host (no por puerto); con
+// ella POST /auth/refresh devuelve el access token, que se guarda solo en memoria.
 let accessToken: string | null = null
 let refreshInFlight: Promise<boolean> | null = null
 
@@ -29,25 +29,9 @@ export function restoreAdminSession(): Promise<boolean> {
   return refreshInFlight
 }
 
-export async function adminLogin(username: string, password: string): Promise<void> {
-  let res: Response
-  try {
-    res = await fetch('/api/auth/login', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    })
-  } catch {
-    throw new Error('Could not reach the server. Please try again in a moment.')
-  }
-  if (res.status === 401 || res.status === 403) throw new AdminAuthError('Invalid username or password.')
-  if (!res.ok) throw new Error('Could not reach the server. Please try again in a moment.')
-  accessToken = (await res.json()).access_token
-}
-
-// fetch a /api con el access token; ante un 401 renueva una vez con la cookie y reintenta. Si aun
-// así no hay sesión, lanza AdminAuthError para que la vista vuelva a pedir login.
+// fetch a /api con el access token si lo hay; ante un 401 renueva una vez con la cookie y reintenta.
+// Con las rutas públicas de Next Results no debería haber 401 -- si lo hay (p.ej. un backend sin
+// esas rutas públicas todavía), lanza AdminAuthError y la vista lo muestra como error de carga.
 export async function adminFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const send = () => {
     const headers = new Headers(init.headers)

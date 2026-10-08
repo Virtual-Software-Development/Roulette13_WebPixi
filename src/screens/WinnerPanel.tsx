@@ -5,7 +5,7 @@ import { useResultsStore } from '../store/useResultsStore'
 import { getRouletteColor, toWheelPocket } from '../utils/rouletteColors'
 import { getRouletteParity, getRouletteRange } from '../utils/rouletteClassification'
 import { WINNER_PANEL_EXIT_DURATION_MS } from '../layout/layout.constants'
-import { DRAW_VIDEO_SLOT_ID, getVideoSlot } from '../video/videoElements'
+import { DRAW_VIDEO_SLOT_ID, DRAW_VIDEO_WHEEL_RADIUS_RATIO, getVideoSlot } from '../video/videoElements'
 import './winnerPanel.css'
 
 // Cuántos números recientes se muestran en la fila "Recent Results" -- decisión visual (cap fijo
@@ -77,7 +77,14 @@ export function WinnerPanel() {
     if (!canvas || !video.videoWidth) return
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
-    canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    // Mismo recorte circular que el <video> (clip-path de .video-pool-slot): el cuadro trae la rueda
+    // sobre fondo negro, y sin esto las esquinas negras aparecerían en el fondo blureado.
+    ctx.beginPath()
+    ctx.arc(canvas.width / 2, canvas.height / 2, canvas.height * DRAW_VIDEO_WHEEL_RADIUS_RATIO, 0, Math.PI * 2)
+    ctx.clip()
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
   }, [winnerNumber])
 
   useEffect(() => {

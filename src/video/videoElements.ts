@@ -1,4 +1,8 @@
 export const DRAW_VIDEO_SLOT_ID = 'roulette-video-slot-a'
+// Radio del borde de la rueda en los videos de sorteo, como fracción del alto del video (479px de
+// 1080, medido sobre toda la librería -- cámara fija). Mismo número que el clip-path de
+// .video-pool-slot en videoPool.css: si cambia uno, cambiar el otro.
+export const DRAW_VIDEO_WHEEL_RADIUS_RATIO = 0.444
 // <video> propio para el sorteo de Quick Money (ver QuickMoneyVideoView) -- separado del de Roulette
 // para que ninguno de los dos pise el src/estado del otro si llegaran a solaparse.
 export const QUICK_MONEY_VIDEO_SLOT_ID = 'quick-money-video-slot'
