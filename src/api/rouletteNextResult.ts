@@ -1,7 +1,7 @@
 import { adminFetch } from './adminSession'
 
-// Endpoints de admin de quick-money-backend para Next Results > Roulette (requieren sesión de
-// admin, ver adminSession.ts).
+// Endpoints de quick-money-backend para Next Results > Roulette -- públicos (sin login); si hay una
+// sesión de admin se manda su token solo para la auditoría (ver adminSession.ts).
 
 export interface RoulettePendingEvent {
   id: number
@@ -34,7 +34,7 @@ export interface RouletteNextResult {
   fuente: 'congelacion' | 'en_vivo'
   // Resultado definitivo (lectura auditada en el backend) -- null mientras sea provisional.
   numeroPendiente: string | null
-  // Último momento en que el backend acepta cambiar el resultado (T-30s).
+  // Último momento en que el backend acepta cambiar el resultado (T-1:00, ROULETTE_SUBSTITUTION_CUTOFF_SECONDS).
   sustitucionHasta: string
 }
 

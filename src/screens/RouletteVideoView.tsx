@@ -26,9 +26,9 @@ interface RouletteVideoViewProps {
 
 // El video real vive en el pool de <video> del DOM (VideoPoolLayer, montado como hermano de
 // <Application> en App.tsx) y se pinta directamente ahí -- ya no pasa por Pixi/WebGL (ni
-// pixiSprite ni textura). Estos .webm traen canal alfa real (alpha_mode:1) y Chromium lo
-// compone solo en un <video> normal (ver project_video_pipeline en memoria) -- así que además
-// de evitar la subida de textura extra por frame, la transparencia real se sigue viendo.
+// pixiSprite ni textura), lo que evita la subida de textura extra por frame. Los videos no traen
+// alfa: la rueda se recorta del fondo negro con el clip-path circular de .video-pool-slot
+// (videoPool.css).
 // Este componente sigue montado dentro del árbol de Pixi únicamente para poder usar
 // useAnimatedProgress (depende del ticker de Pixi) como reloj de la animación de entrada/salida
 // -- no pinta nada en el canvas, devuelve null.

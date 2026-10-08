@@ -1,11 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../../../store/useGameConfigStore'
 import { useCountdown } from '../../../hooks/useCountdown'
 import { useNextDrawSync } from '../../../hooks/useNextDrawSync'
 import { useRouletteNextResult } from '../../../hooks/useRouletteNextResult'
 import { ensureClockTicking, useClockStore } from '../../../store/useClockStore'
-import { AdminAuthError } from '../../../api/adminSession'
 import { getRouletteColor } from '../../../utils/rouletteColors'
 import { getRouletteParity, getRouletteRange } from '../../../utils/rouletteClassification'
 import { parseApiDateTime } from '../../../utils/time'
@@ -80,7 +79,7 @@ export function RouletteNextResultPanel() {
 
   // Próximo resultado real (admin): RouletteRTPSnapshot del backend + resultado definitivo desde la
   // congelación (T-2:30) -- ver useRouletteNextResult.
-  const { status: loadStatus, data, error: loadError, login, substitute } = useRouletteNextResult()
+  const { status: loadStatus, data, error: loadError, substitute } = useRouletteNextResult()
   const snapshot = data?.snapshot ?? null
   const rtpBySlot = snapshot?.rtpResultantePorNumero ?? null
   // numeroPendiente (lectura auditada, desde la congelación); si no viene, el numeroElegido del
@@ -121,7 +120,7 @@ export function RouletteNextResultPanel() {
       await substitute(data.event.id, String(selectedNumber), SUBSTITUTION_REASON)
       setStatus('success')
     } catch (err) {
-      setUpdateError(err instanceof AdminAuthError ? t('admin.nextResults.loginTitle') : err instanceof Error ? err.message : String(err))
+      setUpdateError(err instanceof Error ? err.message : String(err))
       setStatus('error')
     }
   }
@@ -290,173 +289,123 @@ export function RouletteNextResultPanel() {
 
       <div className="admin-next-results-divider" />
 
-      {loadStatus === 'needsLogin' ? (
-        <AdminLoginForm onLogin={login} />
-      ) : (
-        <div className="admin-next-results-section">
-          <h3 className="admin-next-results-section-heading">
-            {t('admin.nextResults.changeNextResult')}
-            {data && (
-              <span className="admin-next-results-change-window" data-open={changeOpen}>
-                {changeOpen
-                  ? t('admin.nextResults.changeUntil', { time: formatClock(data.sustitucionHasta) })
-                  : t('admin.nextResults.changeClosed')}
-              </span>
-            )}
-          </h3>
-
-          {loadStatus === 'noEvent' && <p className="admin-next-results-notice">{t('admin.nextResults.noPendingEvent')}</p>}
-          {loadStatus === 'error' && (
-            <p className="admin-next-results-notice" data-variant="error">
-              {t('admin.nextResults.loadError', { error: loadError })}
-            </p>
-          )}
-
-          <div className="admin-next-results-table">
-            <div className="admin-next-results-table-zero">{ZERO_POCKETS.map(renderCell)}</div>
-            <div className="admin-next-results-table-grid">{TABLE_NUMBERS.map(renderCell)}</div>
-          </div>
-
-          <div className="admin-next-results-selected-summary">
-            <span className="admin-next-results-selected-label">{t('admin.nextResults.selectedNumber')}</span>
-            <span className="admin-next-results-selected-box" data-color={selectedColor ?? 'none'} data-changed={hasChanges}>
-              {selectedNumber ?? '—'}
+      <div className="admin-next-results-section">
+        <h3 className="admin-next-results-section-heading">
+          {t('admin.nextResults.changeNextResult')}
+          {data && (
+            <span className="admin-next-results-change-window" data-open={changeOpen}>
+              {changeOpen
+                ? t('admin.nextResults.changeUntil', { time: formatClock(data.sustitucionHasta) })
+                : t('admin.nextResults.changeClosed')}
             </span>
-            {hasChanges && <span className="admin-next-results-changed-tag" data-changed="true">{t('admin.nextResults.changedTag')}</span>}
-
-            <div className="admin-next-results-detail">
-              <span className="admin-next-results-detail-label">{t('winnerPanel.color')}</span>
-              <span className="admin-next-results-detail-value">
-                {selectedColor && <span className="admin-next-results-color-dot" data-color={selectedColor} />}
-                {selectedColor ? t(`admin.nextResults.colorValues.${selectedColor}`) : t('winnerPanel.notApplicable')}
-              </span>
-            </div>
-            <div className="admin-next-results-detail">
-              <span className="admin-next-results-detail-label">{t('winnerPanel.parity')}</span>
-              <span className="admin-next-results-detail-value">
-                {selectedParity ? t(`admin.nextResults.parityValues.${selectedParity}`) : t('winnerPanel.notApplicable')}
-              </span>
-            </div>
-            <div className="admin-next-results-detail">
-              <span className="admin-next-results-detail-label">{t('winnerPanel.range')}</span>
-              <span className="admin-next-results-detail-value">
-                {selectedRange ? t(`admin.nextResults.rangeValues.${selectedRange}`) : t('winnerPanel.notApplicable')}
-              </span>
-            </div>
-            <div className="admin-next-results-detail">
-              <span className="admin-next-results-detail-label">{t('admin.nextResults.rtpResulting')}</span>
-              <span className="admin-next-results-detail-value">{formatRtp(rtpFor(selectedNumber))}</span>
-            </div>
-          </div>
-
-          <div className="admin-next-results-actions">
-            <button
-              type="button"
-              className="admin-next-results-btn-update"
-              data-accent="red"
-              disabled={actionsDisabled}
-              onClick={() => setStatus('confirming')}
-            >
-              {status === 'updating' ? (
-                <>
-                  <SpinnerIcon className="admin-next-results-spinner" />
-                  {t('admin.nextResults.updating')}
-                </>
-              ) : (
-                <>
-                  <img src={REFRESH_ICON_URL} alt="" />
-                  {t('admin.nextResults.updateRoulette')}
-                </>
-              )}
-            </button>
-            <button type="button" className="admin-next-results-btn-clear" disabled={actionsDisabled} onClick={handleReset}>
-              <CloseIcon />
-              {t('admin.nextResults.reset')}
-            </button>
-          </div>
-
-          {/* Confirmación como pop-up modal de aviso -- cambiar el próximo resultado afecta una ronda
-              real. Cancel descarta la selección y vuelve al resultado actual (mismo criterio que
-              Cancel en RTP Settings). */}
-          {status === 'confirming' && (
-            <ConfirmDialog
-              warning
-              accent="red"
-              title={t('admin.nextResults.confirmTitle')}
-              description={t('admin.nextResults.confirmDescription', { game: t('admin.nextResults.roulette.title') })}
-              cancelLabel={t('admin.nextResults.cancel')}
-              confirmLabel={t('admin.nextResults.confirmUpdate')}
-              onCancel={() => {
-                setSelectedNumber(pendingPocket)
-                setStatus('idle')
-              }}
-              onConfirm={handleConfirmUpdate}
-            >
-              <div className="admin-next-results-confirm-row admin-next-results-confirm-row--dialog">
-                <div className="admin-next-results-confirm-col">
-                  <span className="admin-next-results-result-label">{t('admin.nextResults.currentResult')}</span>
-                  <span className="admin-next-results-confirm-value">{pendingPocket ?? '—'}</span>
-                  <span className="admin-next-results-confirm-rtp">{formatRtp(rtpFor(pendingPocket))}</span>
-                </div>
-                <ArrowRightIcon />
-                <div className="admin-next-results-confirm-col">
-                  <span className="admin-next-results-result-label">{t('admin.nextResults.newResult')}</span>
-                  <span className="admin-next-results-confirm-value admin-next-results-confirm-value--accent" data-accent="red">
-                    {selectedNumber}
-                  </span>
-                  <span className="admin-next-results-confirm-rtp">{formatRtp(rtpFor(selectedNumber))}</span>
-                </div>
-              </div>
-            </ConfirmDialog>
           )}
+        </h3>
+
+        {loadStatus === 'noEvent' && <p className="admin-next-results-notice">{t('admin.nextResults.noPendingEvent')}</p>}
+        {loadStatus === 'error' && (
+          <p className="admin-next-results-notice" data-variant="error">
+            {t('admin.nextResults.loadError', { error: loadError })}
+          </p>
+        )}
+
+        <div className="admin-next-results-table">
+          <div className="admin-next-results-table-zero">{ZERO_POCKETS.map(renderCell)}</div>
+          <div className="admin-next-results-table-grid">{TABLE_NUMBERS.map(renderCell)}</div>
         </div>
-      )}
-    </div>
-  )
-}
 
-function AdminLoginForm({ onLogin }: { onLogin: (username: string, password: string) => Promise<void> }) {
-  const { t } = useTranslation()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+        <div className="admin-next-results-selected-summary">
+          <span className="admin-next-results-selected-label">{t('admin.nextResults.selectedNumber')}</span>
+          <span className="admin-next-results-selected-box" data-color={selectedColor ?? 'none'} data-changed={hasChanges}>
+            {selectedNumber ?? '—'}
+          </span>
+          {hasChanges && <span className="admin-next-results-changed-tag" data-changed="true">{t('admin.nextResults.changedTag')}</span>}
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setSubmitting(true)
-    setError('')
-    try {
-      await onLogin(username, password)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setSubmitting(false)
-    }
-  }
+          <div className="admin-next-results-detail">
+            <span className="admin-next-results-detail-label">{t('winnerPanel.color')}</span>
+            <span className="admin-next-results-detail-value">
+              {selectedColor && <span className="admin-next-results-color-dot" data-color={selectedColor} />}
+              {selectedColor ? t(`admin.nextResults.colorValues.${selectedColor}`) : t('winnerPanel.notApplicable')}
+            </span>
+          </div>
+          <div className="admin-next-results-detail">
+            <span className="admin-next-results-detail-label">{t('winnerPanel.parity')}</span>
+            <span className="admin-next-results-detail-value">
+              {selectedParity ? t(`admin.nextResults.parityValues.${selectedParity}`) : t('winnerPanel.notApplicable')}
+            </span>
+          </div>
+          <div className="admin-next-results-detail">
+            <span className="admin-next-results-detail-label">{t('winnerPanel.range')}</span>
+            <span className="admin-next-results-detail-value">
+              {selectedRange ? t(`admin.nextResults.rangeValues.${selectedRange}`) : t('winnerPanel.notApplicable')}
+            </span>
+          </div>
+          <div className="admin-next-results-detail">
+            <span className="admin-next-results-detail-label">{t('admin.nextResults.rtpResulting')}</span>
+            <span className="admin-next-results-detail-value">{formatRtp(rtpFor(selectedNumber))}</span>
+          </div>
+        </div>
 
-  return (
-    <form className="admin-next-results-section admin-next-results-login" onSubmit={handleSubmit}>
-      <h3 className="admin-next-results-section-heading">{t('admin.nextResults.loginTitle')}</h3>
-      <p className="admin-next-results-notice">{t('admin.nextResults.loginDescription')}</p>
-      <label className="admin-next-results-field">
-        <span className="admin-next-results-detail-label">{t('admin.nextResults.username')}</span>
-        <input type="text" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-      </label>
-      <label className="admin-next-results-field">
-        <span className="admin-next-results-detail-label">{t('admin.nextResults.password')}</span>
-        <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-      </label>
-      {error && (
-        <p className="admin-next-results-notice" data-variant="error">
-          {error}
-        </p>
-      )}
-      <div className="admin-next-results-actions">
-        <button type="submit" className="admin-next-results-btn-update" data-accent="red" disabled={submitting}>
-          {submitting ? t('admin.nextResults.signingIn') : t('admin.nextResults.signIn')}
-        </button>
+        <div className="admin-next-results-actions">
+          <button
+            type="button"
+            className="admin-next-results-btn-update"
+            data-accent="red"
+            disabled={actionsDisabled}
+            onClick={() => setStatus('confirming')}
+          >
+            {status === 'updating' ? (
+              <>
+                <SpinnerIcon className="admin-next-results-spinner" />
+                {t('admin.nextResults.updating')}
+              </>
+            ) : (
+              <>
+                <img src={REFRESH_ICON_URL} alt="" />
+                {t('admin.nextResults.updateRoulette')}
+              </>
+            )}
+          </button>
+          <button type="button" className="admin-next-results-btn-clear" disabled={actionsDisabled} onClick={handleReset}>
+            <CloseIcon />
+            {t('admin.nextResults.reset')}
+          </button>
+        </div>
+
+        {/* Confirmación como pop-up modal de aviso -- cambiar el próximo resultado afecta una ronda
+            real. Cancel descarta la selección y vuelve al resultado actual (mismo criterio que
+            Cancel en RTP Settings). */}
+        {status === 'confirming' && (
+          <ConfirmDialog
+            warning
+            accent="red"
+            title={t('admin.nextResults.confirmTitle')}
+            description={t('admin.nextResults.confirmDescription', { game: t('admin.nextResults.roulette.title') })}
+            cancelLabel={t('admin.nextResults.cancel')}
+            confirmLabel={t('admin.nextResults.confirmUpdate')}
+            onCancel={() => {
+              setSelectedNumber(pendingPocket)
+              setStatus('idle')
+            }}
+            onConfirm={handleConfirmUpdate}
+          >
+            <div className="admin-next-results-confirm-row admin-next-results-confirm-row--dialog">
+              <div className="admin-next-results-confirm-col">
+                <span className="admin-next-results-result-label">{t('admin.nextResults.currentResult')}</span>
+                <span className="admin-next-results-confirm-value">{pendingPocket ?? '—'}</span>
+                <span className="admin-next-results-confirm-rtp">{formatRtp(rtpFor(pendingPocket))}</span>
+              </div>
+              <ArrowRightIcon />
+              <div className="admin-next-results-confirm-col">
+                <span className="admin-next-results-result-label">{t('admin.nextResults.newResult')}</span>
+                <span className="admin-next-results-confirm-value admin-next-results-confirm-value--accent" data-accent="red">
+                  {selectedNumber}
+                </span>
+                <span className="admin-next-results-confirm-rtp">{formatRtp(rtpFor(selectedNumber))}</span>
+              </div>
+            </div>
+          </ConfirmDialog>
+        )}
       </div>
-    </form>
+    </div>
   )
 }

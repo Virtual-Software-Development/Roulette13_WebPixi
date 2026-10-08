@@ -6,12 +6,11 @@
 }
 
 /* El video de sorteo se pinta directamente como <video> del DOM (ya no como pixiSprite/textura
-   WebGL). Los .webm de este proyecto traen canal alfa real (alpha_mode:1, ver
-   project_video_pipeline en memoria) y Chromium lo compone solo -- sin `background` propio acá:
-   un color de fondo en el elemento se pintaría detrás del video y taparía esa transparencia
-   donde el video la deja. Arranca oculto; RouletteVideoView lo muestra (opacity/transform) y lo
-   sube por encima del canvas mientras reproduce. Nunca display:none (en Chrome puede pausar el
-   decode/rVFC). */
+   WebGL). Los videos de la librería (MP4 de Videos/SORTED, ver media.ts) no traen alfa: la rueda va
+   sobre fondo negro y lo de afuera se recorta con clip-path (más abajo) -- sin `background` propio
+   acá, que se vería por fuera del círculo. Arranca oculto; RouletteVideoView lo muestra
+   (opacity/transform) y lo sube por encima del canvas mientras reproduce. Nunca display:none (en
+   Chrome puede pausar el decode/rVFC). */
 .video-pool-slot {
   position: fixed;
   inset: 0;
@@ -36,6 +35,17 @@
      criterio que .lobby-wheel-video (ver lobbyBackgroundLayer.css); las barras de letterbox que
      puedan verse arriba/abajo o a los costados son preferibles a la distorsión. */
   object-fit: contain;
+  /* Recorte circular de la rueda (el resto del cuadro es fondo negro). Cámara fija en toda la
+     librería: el borde de la rueda está siempre centrado y a 479px de radio = 44.4% del alto del
+     video, en los dos anchos que hay (986 y 978 x 1080) -- medido cuadro por cuadro con ffmpeg.
+     El radio va en vh y no en %: con object-fit:contain el elemento ocupa toda la ventana, así que
+     un % se mediría contra la ventana y no contra el video. Con contain el video ocupa todo el
+     alto (100vh) salvo en ventanas más angostas que ~986:1080, donde manda el ancho: ahí el alto
+     es 100vw*1080/986 y el 44.4% de eso es 48.6vw. El centro (50% 50%) coincide con el del video
+     porque contain lo centra. Se aplica antes del transform, así que acompaña el slide/scale de
+     RouletteVideoView. Si cambia el encuadre de los videos, este es el único número a ajustar
+     (junto con DRAW_VIDEO_WHEEL_RADIUS_RATIO en videoElements.ts, que usa WinnerPanel). */
+  clip-path: circle(min(44.4vh, 48.6vw) at 50% 50%);
   opacity: 0;
   pointer-events: none;
   /* Por encima del <canvas> de Pixi (position:relative; z-index:0, ver index.css) para que,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AdminAuthError, adminLogin, restoreAdminSession } from '../api/adminSession'
+import { restoreAdminSession } from '../api/adminSession'
 import {
   fetchBetsByNumber,
   fetchCurrentRouletteEvent,
@@ -8,7 +8,7 @@ import {
   type RouletteNextResultView,
 } from '../api/rouletteNextResult'
 
-export type RouletteNextResultStatus = 'loading' | 'needsLogin' | 'noEvent' | 'ready' | 'error'
+export type RouletteNextResultStatus = 'loading' | 'noEvent' | 'ready' | 'error'
 
 // Antes de congelar el RTP por número es "en vivo" (cambia con cada apuesta): se refresca seguido.
 // Desde la congelación el resultado y el snapshot ya son definitivos, y cada lectura del resultado
@@ -24,7 +24,9 @@ function msUntil(iso: string): number {
 }
 
 // Próximo resultado de Roulette para Next Results (admin): evento pendiente + RouletteRTPSnapshot
-// + resultado definitivo, vía los endpoints de admin del backend (requieren sesión).
+// + resultado definitivo. Los endpoints son públicos (sin login, ver router.go del backend): si hay
+// una sesión de admin abierta se manda igual su token, solo para que la auditoría registre quién
+// leyó o cambió el resultado.
 export function useRouletteNextResult() {
   const [status, setStatus] = useState<RouletteNextResultStatus>('loading')
   const [data, setData] = useState<RouletteNextResultView | null>(null)
@@ -59,10 +61,6 @@ export function useRouletteNextResult() {
       }
     } catch (err) {
       if (!mounted.current) return
-      if (err instanceof AdminAuthError) {
-        setStatus('needsLogin')
-        return
-      }
       setError(err instanceof Error ? err.message : String(err))
       setStatus('error')
       later(NO_EVENT_RETRY_MS)
@@ -71,25 +69,15 @@ export function useRouletteNextResult() {
 
   useEffect(() => {
     mounted.current = true
-    restoreAdminSession().then((ok) => {
-      if (!mounted.current) return
-      if (ok) void load()
-      else setStatus('needsLogin')
+    // Recupera la sesión de admin si existe (cookie de refresh), pero carga igual sin ella.
+    void restoreAdminSession().finally(() => {
+      if (mounted.current) void load()
     })
     return () => {
       mounted.current = false
       clearTimeout(timer.current)
     }
   }, [load])
-
-  const login = useCallback(
-    async (username: string, password: string) => {
-      await adminLogin(username, password)
-      setStatus('loading')
-      await load()
-    },
-    [load],
-  )
 
   // Cambia el resultado del evento y vuelve a pedir el resultado decidido.
   const substitute = useCallback(
@@ -100,5 +88,5 @@ export function useRouletteNextResult() {
     [load],
   )
 
-  return { status, data, error, reload: load, login, substitute }
+  return { status, data, error, reload: load, substitute }
 }

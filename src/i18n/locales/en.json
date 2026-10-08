@@ -823,7 +823,7 @@
       "nextDraw": "Next Draw",
       "minutes": "Minutes",
       "seconds": "Seconds",
-      "roundNumber": "Round #",
+      "roundNumber": "Round",
       "drawNumber": "Draw #",
       "scheduledTime": "Scheduled Time",
       "currentNextResult": "Current Next Result",
@@ -865,13 +865,7 @@
       "changeUntil": "Changes allowed until {{time}}",
       "changeClosed": "Changes closed for this round",
       "noPendingEvent": "No pending roulette round right now.",
-      "loadError": "Could not load the next result: {{error}}",
-      "loginTitle": "Admin sign-in required",
-      "loginDescription": "Sign in to see the next result and its RTP.",
-      "username": "Username",
-      "password": "Password",
-      "signIn": "Sign in",
-      "signingIn": "Signing in…"
+      "loadError": "Could not load the next result: {{error}}"
     },
     "rtp": {
       "title": "RTP Dashboard",
