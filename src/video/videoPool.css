@@ -6,7 +6,7 @@
 }
 
 /* El video de sorteo se pinta directamente como <video> del DOM (ya no como pixiSprite/textura
-   WebGL). Los videos de la librería (MP4 de Videos/SORTED, ver media.ts) no traen alfa: la rueda va
+   WebGL). Los videos de la librería (MP4 de Videos/<n>/, ver media.ts) no traen alfa: la rueda va
    sobre fondo negro y lo de afuera se recorta con clip-path (más abajo) -- sin `background` propio
    acá, que se vería por fuera del círculo. Arranca oculto; RouletteVideoView lo muestra
    (opacity/transform) y lo sube por encima del canvas mientras reproduce. Nunca display:none (en

@@ -3,7 +3,7 @@
 // vez de bajar el archivo entero:
 //   .webm -- el elemento Duration de Segment > Info, a ~250 bytes del inicio (verificado con
 //            ffprobe sobre local-media/Videos).
-//   .mp4  -- el mvhd dentro del moov. Los MP4 de la librería (Videos/SORTED) NO son faststart: el
+//   .mp4  -- el mvhd dentro del moov. Los MP4 de la librería (Videos/<n>/) NO son faststart: el
 //            moov va al FINAL, después del mdat (ftyp free mdat moov, verificado sobre los 483). Se
 //            recorren las cajas de primer nivel por su tamaño y se pide con Range solo el tramo
 //            donde empieza el moov.

@@ -58,7 +58,7 @@ function mvhd(timescale: number, duration: number): number[] {
   return box('mvhd', [0, 0, 0, 0, ...u32(0), ...u32(0), ...u32(timescale), ...u32(duration), ...new Array(80).fill(0)])
 }
 
-// Mismo orden que los MP4 de Videos/SORTED (no faststart): ftyp, free, mdat, moov al final.
+// Mismo orden que los MP4 de la librería, Videos/<n>/ (no faststart): ftyp, free, mdat, moov al final.
 const MDAT_SIZE = 4_000_000
 const ftyp = box('ftyp', Array.from('isom\0\0\x02\0', (c) => c.charCodeAt(0)))
 const free = box('free', [])

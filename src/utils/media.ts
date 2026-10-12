@@ -31,11 +31,10 @@ async function fetchMediaListing(dirRelativePath: string): Promise<string[]> {
 
 const VIDEO_EXTENSIONS = ['.webm', '.mp4', '.mov']
 
-// Carpeta de la librería de videos de resultado, una subcarpeta por número (37 = '00'). Por ahora
-// se usan los MP4 H.264 de SORTED (sin alfa: el círculo de la rueda lo recorta el CSS, ver
-// .video-pool-slot en videoPool.css) en vez de los .webm de Videos/<n>/, que traen el alfa en 255
-// (fondo negro opaco) y pesan ~6 veces más.
-const DRAW_VIDEO_DIR = 'Videos/SORTED'
+// Carpeta de la librería de videos de resultado, una subcarpeta por número (37 = '00'): MP4 H.264
+// sin alfa (la rueda va sobre fondo negro y el círculo lo recorta el CSS, ver .video-pool-slot en
+// videoPool.css).
+const DRAW_VIDEO_DIR = 'Videos'
 
 // /media-list/ no filtra por extensión: una carpeta de la librería puede tener el video
 // jugable Y su .spins.json sidecar mezclados en el mismo listado. Sin este filtro,
