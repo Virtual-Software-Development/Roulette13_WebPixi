@@ -25,6 +25,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), localMediaPlugin(env.MEDIA_ROOT ?? './local-media')],
+    // Workers como módulos ES: el de exportación de Reportes (jsPDF) tiene import() internos, que
+    // el formato por defecto (iife) no admite.
+    worker: { format: 'es' },
     server: {
       // Pinned (rather than Vite's default auto-increment-on-conflict) so the admin app's dev
       // proxy (admin/.env: API_URL) can reliably point here — a silent port bump to 5174 would

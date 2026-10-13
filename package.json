@@ -25,9 +25,12 @@
   },
   "dependencies": {
     "@pixi/react": "^8.0.5",
+    "exceljs": "^4.4.0",
     "framer-motion": "^12.43.0",
     "howler": "^2.2.4",
     "i18next": "^26.3.6",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "matter-js": "^0.20.0",
     "mqtt": "^5.16.0",
     "pixi-filters": "^6.1.5",

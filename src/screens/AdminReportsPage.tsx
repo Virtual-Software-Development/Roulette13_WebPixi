@@ -1,38 +1,83 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BetsAndPayoutsChart } from '../components/admin/reports/BetsAndPayoutsChart'
+import { periodKindOf } from '../components/admin/reports/document/buildReportDocument'
+import { downloadRecentReport } from '../components/admin/reports/export/downloadReport'
 import { PeakHoursHeatmap } from '../components/admin/reports/PeakHoursHeatmap'
-import { downloadMockReport } from '../components/admin/reports/DownloadMenu'
 import { PerformanceByGameTable } from '../components/admin/reports/PerformanceByGameTable'
 import { RecentReportsPanel } from '../components/admin/reports/RecentReportsPanel'
 import { ReportExportMenu } from '../components/admin/reports/ReportExportMenu'
 import { ReportFiltersPanel } from '../components/admin/reports/ReportFiltersPanel'
+import type { ReportPeriodSelection } from '../components/admin/reports/ReportPeriodField'
 import { ReportRtpTrendChart } from '../components/admin/reports/ReportRtpTrendChart'
 import { ReportShortcuts } from '../components/admin/reports/ReportShortcuts'
+import { RECENT_REPORTS, REPORT_SHORTCUTS } from '../data/adminReportsMockData'
+import { balanceOf, gamesOf, rouletteTargetAt, rtpOf, totalsByDay, totalsByGame, weekdayHourActivity } from '../data/reportsMockData'
+import type {
+  BetsPayoutsPoint,
+  GamePerformanceRow,
+  RecentReportFormat,
+  RecentReportRow,
+  ReportGameFilter,
+  ReportRtpTrendPoint,
+  ReportShortcutData,
+  ReportType,
+} from '../types/adminReports'
+import { formatDateTime, reportNow } from '../utils/reportFormat'
 import {
-  BETS_AND_PAYOUTS_SERIES,
-  GAME_PERFORMANCE_ROWS,
-  GAME_PERFORMANCE_TOTAL,
-  PEAK_HOURS_AVERAGE_BET,
-  PEAK_HOURS_BETS,
-  PEAK_HOURS_GAME_SHARE,
-  RECENT_REPORTS,
-  REPORT_RTP_TREND_SERIES,
-  REPORT_SHORTCUTS,
-} from '../data/adminReportsMockData'
-import { getReportDateRangeLabel } from '../utils/reportDateRange'
-import type { RecentReportFormat, RecentReportRow, ReportDateRangePreset, ReportGameFilter, ReportGroupBy, ReportShortcutData, ReportType } from '../types/adminReports'
+  customPeriod,
+  formatPeriodRange,
+  fromIsoDate,
+  monthPeriods,
+  presetPeriod,
+  toIsoDate,
+  weekPeriods,
+  type ReportPeriod,
+  type ReportPeriodKind,
+} from '../utils/reportPeriod'
 import './adminReportsPage.css'
 
-const DEFAULT_DATE_RANGE: ReportDateRangePreset = 'thisMonth'
 const DEFAULT_GAME: ReportGameFilter = 'all'
 const DEFAULT_REPORT_TYPE: ReportType = 'summary'
-const DEFAULT_GROUP_BY: ReportGroupBy = 'day'
+// Semanal/Mensual: índice 1 = última semana/mes cerrado (0 = en curso, parcial).
+const LAST_CLOSED_INDEX = 1
 
-function formatCreatedAt(date: Date): string {
-  const datePart = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  const timePart = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-  return `${datePart} ${timePart}`
+// Los rangos arrancan en "Last 7 days".
+function defaultPeriodSelection(now: Date): ReportPeriodSelection {
+  const today = toIsoDate(now)
+  return { rangePreset: 'last7Days', customFrom: today, customTo: today, weekIndex: LAST_CLOSED_INDEX, monthIndex: LAST_CLOSED_INDEX }
+}
+
+function resolvePeriod(kind: ReportPeriodKind, selection: ReportPeriodSelection, now: Date): ReportPeriod {
+  if (kind === 'week') return weekPeriods(now)[selection.weekIndex]
+  if (kind === 'month') return monthPeriods(now)[selection.monthIndex]
+  if (selection.rangePreset !== 'custom') return presetPeriod(selection.rangePreset, now)
+  return customPeriod(fromIsoDate(selection.customFrom) ?? now, fromIsoDate(selection.customTo) ?? now, now)
+}
+
+// Datos de la pantalla para el período y juego elegidos (mismo motor que los archivos):
+// - Bets, Payouts & Revenue y RTP Trend: un punto por día. El objetivo de RTP solo existe para
+//   ruleta (RTP Management); Pick 3/4 y "All games" no tienen uno.
+// - Peak Hours: ventas y tickets por día de la semana y hora.
+// - Performance by Game: una fila por juego del filtro.
+function screenData(period: ReportPeriod, game: ReportGameFilter, now: Date, language: string) {
+  const dayLabel = new Intl.DateTimeFormat(language.startsWith('es') ? 'es' : 'en-US', { month: 'short', day: 'numeric' })
+  const days = totalsByDay(period, game, now)
+  const bets: BetsPayoutsPoint[] = days.map(({ date, totals }) => ({ label: dayLabel.format(date), bets: totals.sales, payout: totals.prizes }))
+  const rtp: ReportRtpTrendPoint[] = days.map(({ date, totals }) => ({
+    label: dayLabel.format(date),
+    rtp: rtpOf(totals),
+    target: game === 'roulette' ? rouletteTargetAt(date) : null,
+  }))
+  const games = gamesOf(game)
+  const performance: GamePerformanceRow[] = totalsByGame(period, now)
+    .filter((row) => games.includes(row.game))
+    .map(({ game: id, totals }) => ({ id, totalBets: totals.bets, totalPayout: totals.prizes, grossRevenue: balanceOf(totals), rtp: rtpOf(totals) }))
+  const performanceTotal = performance.reduce(
+    (sum, row) => ({ totalBets: sum.totalBets + row.totalBets, totalPayout: sum.totalPayout + row.totalPayout, grossRevenue: sum.grossRevenue + row.grossRevenue }),
+    { totalBets: 0, totalPayout: 0, grossRevenue: 0 },
+  )
+  return { bets, rtp, peakHours: weekdayHourActivity(period, game, now), performance, performanceTotal }
 }
 
 // "Game Performance" + "Report" -> "Game Performance Report", pero sin duplicar cuando el título ya
@@ -58,53 +103,80 @@ function formatReportTimestamp(date: Date): string {
   return `${REPORT_STAMP_MONTH_FORMATTER.format(date)}-${pad(date.getDate())}-${date.getFullYear()}_${pad(hours12)}h${pad(date.getMinutes())}${period}_${offset}`
 }
 
+// Id único de un reporte generado. crypto.randomUUID() solo existe en contexto seguro (https o
+// localhost): entrando por la IP de la red (http://10.0.0.x) no está, y la exportación fallaba
+// dejando el botón en "Generando…".
+function newReportId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 // Contenido puro (sin Header/Sidebar propios) -- el shell lo monta AdminPanel.tsx una única vez,
 // vía AdminLayout, mismo criterio que AdminDashboardPage.tsx. No existe todavía un
-// endpoint/store de reportes (ver adminReportsMockData.ts): todo el estado de acá abajo es local,
-// nada de esto refetch datos reales.
+// endpoint/store de reportes (ver reportsMockData.ts): todo el estado de acá abajo es local.
+// La pantalla es la misma para todos los tipos de reporte (gráficas y tabla por juego del período
+// y juego elegidos); el detalle de cada tipo de reporte va en el archivo descargado.
 export function AdminReportsPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
-  const [dateRange, setDateRange] = useState<ReportDateRangePreset>(DEFAULT_DATE_RANGE)
+  // "Ahora" en hora de Santo Domingo, fijado al abrir la página: los datos no se mueven mientras
+  // se navega entre reportes.
+  const [now] = useState(() => reportNow())
+  const [periodSelection, setPeriodSelection] = useState<ReportPeriodSelection>(() => defaultPeriodSelection(now))
   const [game, setGame] = useState<ReportGameFilter>(DEFAULT_GAME)
   const [reportType, setReportType] = useState<ReportType>(DEFAULT_REPORT_TYPE)
-  const [groupBy, setGroupBy] = useState<ReportGroupBy>(DEFAULT_GROUP_BY)
   const [recentReports, setRecentReports] = useState<RecentReportRow[]>(RECENT_REPORTS)
   const [shortcutFormat, setShortcutFormat] = useState<RecentReportFormat>('csv')
 
+  const isSubstitutions = reportType === 'manualSubstitutions'
+  const effectiveGame: ReportGameFilter = isSubstitutions ? 'roulette' : game
+  const periodKind = periodKindOf(reportType)
+  const period = useMemo(() => resolvePeriod(periodKind, periodSelection, now), [periodKind, periodSelection, now])
+  const data = useMemo(() => screenData(period, effectiveGame, now, i18n.language), [period, effectiveGame, now, i18n.language])
+
   const handleReset = () => {
-    setDateRange(DEFAULT_DATE_RANGE)
+    setPeriodSelection(defaultPeriodSelection(now))
     setGame(DEFAULT_GAME)
     setReportType(DEFAULT_REPORT_TYPE)
-    setGroupBy(DEFAULT_GROUP_BY)
   }
 
-  // Sin backend que recalcule KPIs/gráficas todavía (ver mock de arriba) -- Apply queda listo para
-  // ese día, hoy los selects ya reflejan su valor apenas se eligen.
-  const handleApply = () => {}
-
-  const handleShortcutSelect = (shortcut: ReportShortcutData) => {
-    setReportType(shortcut.id)
-    const reportDateRange = shortcut.dateRange ?? dateRange
-    if (shortcut.dateRange) setDateRange(shortcut.dateRange)
-    if (shortcut.groupBy) setGroupBy(shortcut.groupBy)
+  // Genera el reporte (lo agrega a Reportes Recientes) y descarga el archivo en el formato elegido.
+  // async: cualquier error llega como rechazo de la promesa (y el botón sale de "Generando…").
+  const generateReport = async (type: ReportType, title: string, reportPeriod: ReportPeriod, reportGame: ReportGameFilter, format: RecentReportFormat) => {
     const generatedAt = new Date()
     const newReport: RecentReportRow = {
-      // crypto.randomUUID() en vez de Date.now() -- dos shortcuts clickeados en el mismo
-      // milisegundo generaban el mismo id, y React colapsaba esas filas por key duplicada (ver
-      // conversación: se reprodujo generando 80 filas rápido).
-      id: crypto.randomUUID(),
-      name: `${buildReportName(t(shortcut.titleKey), t('admin.reports.recent.generatedSuffix'))}_${formatReportTimestamp(generatedAt)}`,
-      type: shortcut.id,
-      dateRangeLabel: getReportDateRangeLabel(reportDateRange),
+      // Id aleatorio en vez de Date.now() -- dos shortcuts clickeados en el mismo milisegundo
+      // generaban el mismo id, y React colapsaba esas filas por key duplicada (ver conversación:
+      // se reprodujo generando 80 filas rápido).
+      id: newReportId(),
+      name: `${buildReportName(title, t('admin.reports.recent.generatedSuffix'))}_${formatReportTimestamp(generatedAt)}`,
+      type,
+      dateRangeLabel: formatPeriodRange(reportPeriod),
       generatedBy: 'Admin',
-      createdAt: formatCreatedAt(generatedAt),
+      createdAt: formatDateTime(reportNow(generatedAt)),
+      period: { start: toIsoDate(reportPeriod.start), end: toIsoDate(reportPeriod.end) },
+      game: type === 'manualSubstitutions' ? 'roulette' : reportGame,
     }
     setRecentReports((current) => [newReport, ...current])
+    return downloadRecentReport(newReport, format, t, i18n.language)
+  }
+
+  const handleShortcutSelect = (shortcut: ReportShortcutData) => {
+    // Semanal/Mensual abren en la última semana/mes cerrado; el resto respeta el período actual.
+    const selection =
+      shortcut.id === 'weeklyReport'
+        ? { ...periodSelection, weekIndex: LAST_CLOSED_INDEX }
+        : shortcut.id === 'monthlyReport'
+          ? { ...periodSelection, monthIndex: LAST_CLOSED_INDEX }
+          : periodSelection
+    setReportType(shortcut.id)
+    setPeriodSelection(selection)
     // Los shortcuts generan Y descargan el reporte al instante, en el formato elegido en el selector
-    // del panel Report Shortcuts (shortcutFormat) -- antes solo agregaban la fila a Recent Reports y
-    // había que descargarla desde ahí.
-    downloadMockReport(newReport, shortcutFormat)
+    // del panel Report Shortcuts (shortcutFormat).
+    generateReport(shortcut.id, t(shortcut.titleKey), resolvePeriod(periodKindOf(shortcut.id), selection, now), game, shortcutFormat).catch((error) => {
+      console.error(error)
+      window.alert(t('admin.reports.document.exportError'))
+    })
   }
 
   const handleDeleteReport = (id: string) => {
@@ -122,38 +194,34 @@ export function AdminReportsPage() {
           <h1 className="admin-main-title">{t('admin.reports.title')}</h1>
           <p className="admin-main-subtitle">{t('admin.reports.subtitle')}</p>
         </div>
-        <ReportExportMenu />
       </div>
 
       <ReportFiltersPanel
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-        game={game}
+        periodKind={periodKind}
+        now={now}
+        period={periodSelection}
+        onPeriodChange={setPeriodSelection}
+        game={effectiveGame}
         onGameChange={setGame}
+        gameDisabled={isSubstitutions}
         reportType={reportType}
         onReportTypeChange={setReportType}
-        groupBy={groupBy}
-        onGroupByChange={setGroupBy}
-        onApply={handleApply}
         onReset={handleReset}
+        exportMenu={<ReportExportMenu onExport={(format) => generateReport(reportType, t(`admin.reports.types.${reportType}`), period, effectiveGame, format)} />}
       />
 
       <div className="admin-reports-charts-row">
-        <BetsAndPayoutsChart series={BETS_AND_PAYOUTS_SERIES} />
+        <BetsAndPayoutsChart series={data.bets} />
         {/* RTP Trend + Peak Hours apilados en la columna derecha (antes RTP Trend solo, estirado al
             alto del chart de la izquierda con espacio vacío abajo). */}
         <div className="admin-reports-side-stack">
-          <ReportRtpTrendChart series={REPORT_RTP_TREND_SERIES} />
-          <PeakHoursHeatmap
-            values={PEAK_HOURS_BETS.map((row) => row.map((v) => Math.round(v * PEAK_HOURS_GAME_SHARE[game])))}
-            averageBet={PEAK_HOURS_AVERAGE_BET}
-            periodLabel={getReportDateRangeLabel(dateRange)}
-          />
+          <ReportRtpTrendChart series={data.rtp} />
+          <PeakHoursHeatmap values={data.peakHours.sales} tickets={data.peakHours.tickets} periodLabel={formatPeriodRange(period)} />
         </div>
       </div>
 
       <div className="admin-reports-second-row">
-        <PerformanceByGameTable rows={GAME_PERFORMANCE_ROWS} total={GAME_PERFORMANCE_TOTAL} />
+        <PerformanceByGameTable rows={data.performance} total={data.performanceTotal} />
         <ReportShortcuts shortcuts={REPORT_SHORTCUTS} format={shortcutFormat} onFormatChange={setShortcutFormat} onSelect={handleShortcutSelect} />
       </div>
 

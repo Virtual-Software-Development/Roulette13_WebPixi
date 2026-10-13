@@ -8,28 +8,55 @@ import './reportRtpTrendChart.css'
 // sea el mismo). Mismo criterio de "sin librería de charts" que el resto (SVG a mano).
 const CHART_WIDTH = 1000
 const CHART_HEIGHT = 340
-const MARGIN = { top: 12, right: 12, bottom: 30, left: 56 }
-const Y_MIN = 90
-const Y_MAX = 100
-const Y_TICKS = [90, 92, 94, 96, 98, 100]
+const MARGIN = { top: 12, right: 12, bottom: 30, left: 76 }
+// El eje se ajusta a los datos del período: el RTP de un día puede salir de 90–100% (sobre todo
+// en Pick 3/4). Como mínimo muestra 90–100%.
+const Y_BASE = { min: 90, max: 100 }
+const MAX_Y_TICKS = 6
+// Etiquetas del eje X: como máximo estas, repartidas (30 días no entran todas).
+const MAX_X_LABELS = 8
 
 const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right
 const PLOT_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom
 
-function yFor(value: number): number {
-  const clamped = Math.min(Math.max(value, Y_MIN), Y_MAX)
-  return MARGIN.top + PLOT_HEIGHT - ((clamped - Y_MIN) / (Y_MAX - Y_MIN)) * PLOT_HEIGHT
+function yScale(values: number[]): { min: number; max: number; ticks: number[] } {
+  const low = Math.min(Y_BASE.min, ...values)
+  const high = Math.max(Y_BASE.max, ...values)
+  const step = [2, 5, 10, 20, 25, 50, 100].find((s) => Math.ceil(high / s) - Math.floor(low / s) <= MAX_Y_TICKS - 1) ?? 100
+  const min = Math.floor(low / step) * step
+  const max = Math.ceil(high / step) * step
+  const ticks: number[] = []
+  for (let v = min; v <= max; v += step) ticks.push(v)
+  return { min, max, ticks }
 }
 
 function xFor(index: number, count: number): number {
+  // Un solo día (Today/Yesterday): el punto va al centro.
+  if (count <= 1) return MARGIN.left + PLOT_WIDTH / 2
   return MARGIN.left + (index / (count - 1)) * PLOT_WIDTH
 }
 
 export function ReportRtpTrendChart({ series }: { series: ReportRtpTrendPoint[] }) {
   const { t } = useTranslation()
   const count = series.length
-  const rtpPoints = series.map((point, i) => `${xFor(i, count)},${yFor(point.rtp)}`).join(' ')
-  const targetPoints = series.map((point, i) => `${xFor(i, count)},${yFor(point.target)}`).join(' ')
+  const values = series.flatMap((point) => [point.rtp, point.target]).filter((v): v is number => v !== null)
+  const scale = yScale(values)
+  const yFor = (value: number) => MARGIN.top + PLOT_HEIGHT - ((value - scale.min) / (scale.max - scale.min)) * PLOT_HEIGHT
+  const labelStride = Math.ceil(count / MAX_X_LABELS)
+  const dotRadius = count > 14 ? 4 : 6
+  const hasTarget = series.some((point) => point.target !== null)
+  const pointsOf = (key: 'rtp' | 'target') =>
+    series
+      .map((point, i) => {
+        const value = point[key]
+        return value === null ? null : `${xFor(i, count)},${yFor(value)}`
+      })
+      .filter(Boolean)
+      .join(' ')
+  const rtpPoints = pointsOf('rtp')
+  // Un solo día: el objetivo se dibuja como línea horizontal de lado a lado (un punto no traza nada).
+  const singleTarget = count === 1 ? series[0].target : null
+  const targetPoints = singleTarget !== null ? `${MARGIN.left},${yFor(singleTarget)} ${CHART_WIDTH - MARGIN.right},${yFor(singleTarget)}` : pointsOf('target')
 
   return (
     <section className="admin-panel admin-report-rtp-trend">
@@ -40,12 +67,14 @@ export function ReportRtpTrendChart({ series }: { series: ReportRtpTrendPoint[] 
             <span className="admin-report-rtp-trend-legend-dot" />
             {t('admin.reports.rtpTrend.rtp')}
           </span>
-          <span className="admin-report-rtp-trend-legend-item">
-            <svg viewBox="0 0 20 6" className="admin-report-rtp-trend-legend-dash" aria-hidden="true" focusable="false">
-              <line x1="0" y1="3" x2="20" y2="3" stroke="var(--admin-text-secondary)" strokeWidth="2" strokeDasharray="5 3.5" strokeLinecap="round" />
-            </svg>
-            {t('admin.reports.rtpTrend.target')}
-          </span>
+          {hasTarget && (
+            <span className="admin-report-rtp-trend-legend-item">
+              <svg viewBox="0 0 20 6" className="admin-report-rtp-trend-legend-dash" aria-hidden="true" focusable="false">
+                <line x1="0" y1="3" x2="20" y2="3" stroke="var(--admin-text-secondary)" strokeWidth="2" strokeDasharray="5 3.5" strokeLinecap="round" />
+              </svg>
+              {t('admin.reports.rtpTrend.target')}
+            </span>
+          )}
         </div>
       </div>
 
@@ -56,7 +85,7 @@ export function ReportRtpTrendChart({ series }: { series: ReportRtpTrendPoint[] 
         role="img"
         aria-label={t('admin.reports.rtpTrend.title')}
       >
-        {Y_TICKS.map((tick) => (
+        {scale.ticks.map((tick) => (
           <g key={tick}>
             <line x1={MARGIN.left} x2={CHART_WIDTH - MARGIN.right} y1={yFor(tick)} y2={yFor(tick)} className="admin-report-rtp-trend-gridline" />
             <text x={MARGIN.left - 14} y={yFor(tick)} className="admin-report-rtp-trend-axis-label" textAnchor="end" dominantBaseline="middle">
@@ -66,7 +95,8 @@ export function ReportRtpTrendChart({ series }: { series: ReportRtpTrendPoint[] 
         ))}
 
         {series.map((point, i) => {
-          const textAnchor = i === 0 ? 'start' : i === count - 1 ? 'end' : 'middle'
+          if (i % labelStride !== 0) return null
+          const textAnchor = count <= 1 ? 'middle' : i === 0 ? 'start' : i === count - 1 ? 'end' : 'middle'
           return (
             <text key={point.label} x={xFor(i, count)} y={CHART_HEIGHT - 8} className="admin-report-rtp-trend-axis-label" textAnchor={textAnchor}>
               {point.label}
@@ -74,7 +104,7 @@ export function ReportRtpTrendChart({ series }: { series: ReportRtpTrendPoint[] 
           )
         })}
 
-        <polyline points={targetPoints} fill="none" stroke="var(--admin-text-secondary)" strokeWidth="1.5" strokeDasharray="6 5" strokeLinejoin="round" strokeLinecap="round" />
+        {hasTarget && <polyline points={targetPoints} fill="none" stroke="var(--admin-text-secondary)" strokeWidth="1.5" strokeDasharray="6 5" strokeLinejoin="round" strokeLinecap="round" />}
 
         <polyline
           points={rtpPoints}
@@ -86,9 +116,11 @@ export function ReportRtpTrendChart({ series }: { series: ReportRtpTrendPoint[] 
           className="admin-report-rtp-trend-line"
         />
 
-        {series.map((point, i) => (
-          <circle key={point.label} cx={xFor(i, count)} cy={yFor(point.rtp)} r="6" fill="#06111a" stroke="var(--admin-red)" strokeWidth="3" />
-        ))}
+        {series.map((point, i) =>
+          point.rtp === null ? null : (
+            <circle key={point.label} cx={xFor(i, count)} cy={yFor(point.rtp)} r={dotRadius} fill="#06111a" stroke="var(--admin-red)" strokeWidth="3" />
+          ),
+        )}
       </svg>
     </section>
   )

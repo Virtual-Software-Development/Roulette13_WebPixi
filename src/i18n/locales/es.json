@@ -427,46 +427,53 @@
     },
     "reports": {
       "title": "Reportes",
-      "subtitle": "Analiza el rendimiento del juego, la actividad de jugadores y las métricas financieras.",
+      "subtitle": "Analiza el rendimiento del juego, la actividad de venta y las métricas financieras.",
       "export": "Exportar",
       "exportFormats": {
         "csv": "CSV",
         "pdf": "PDF",
         "excel": "Excel"
       },
+      "document": {
+        "period": "Período",
+        "game": "Juego",
+        "generatedBy": "Generado por",
+        "generatedAt": "Generado el",
+        "timeZone": "Zona horaria",
+        "indicators": "Indicadores",
+        "indicator": "Indicador",
+        "value": "Valor",
+        "previousPeriod": "Período anterior",
+        "change": "Variación",
+        "summarySheet": "Resumen",
+        "page": "Página",
+        "of": "de",
+        "generating": "Generando…",
+        "exportError": "No se pudo generar el archivo. Intenta de nuevo.",
+        "allGamesSection": "Todos los juegos — combinado",
+        "gameSection": "{{game}} — detalle",
+        "allGamesShort": "Todos"
+      },
       "filters": {
-        "dateRange": "Rango de Fechas",
         "game": "Juego",
         "reportType": "Tipo de Reporte",
-        "groupBy": "Agrupar Por",
-        "apply": "Aplicar",
         "reset": "Restablecer",
         "gameOptions": {
           "all": "Todos los Juegos",
           "roulette": "Ruleta",
           "pick3": "Pick 3",
           "pick4": "Pick 4"
-        },
-        "groupByOptions": {
-          "day": "Día",
-          "week": "Semana",
-          "month": "Mes"
-        },
-        "dateRangeOptions": {
-          "last7Days": "Últimos 7 Días",
-          "last30Days": "Últimos 30 Días",
-          "thisMonth": "Este Mes",
-          "lastMonth": "Mes Pasado"
         }
       },
       "types": {
         "summary": "Resumen",
         "gameReport": "Reporte de Juego",
-        "playerReport": "Reporte de Jugadores",
+        "salesActivity": "Actividad por Punto de Venta",
         "financialReport": "Reporte Financiero",
         "rtpAnalysis": "Análisis de RTP",
         "weeklyReport": "Reporte Semanal",
-        "monthlyReport": "Reporte Mensual"
+        "monthlyReport": "Reporte Mensual",
+        "manualSubstitutions": "Sustituciones Manuales"
       },
       "kpi": {
         "totalBets": "Apuestas Totales",
@@ -475,7 +482,157 @@
         "rtp": "RTP",
         "vsPreviousPeriod": "vs. período anterior"
       },
-      "peakHours": {"title": "Horas Pico", "subtitle": "Apuestas totales por día y hora · {{period}}", "less": "Menos", "more": "Más", "busiest": "Más activo", "quietest": "Más tranquilo", "cell": "{{day}} {{from}}–{{to}} · {{amount}} apostado · ~{{rounds}} rondas"},
+      "views": {
+        "common": {"total": "Total", "empty": "No hay datos en este período.", "pageInfo": "{{from}}–{{to}} de {{total}}"},
+        "period": {
+          "label": "Período",
+          "week": "Semana (lun–dom)",
+          "month": "Mes",
+          "from": "Desde",
+          "to": "Hasta",
+          "partial": "(parcial)",
+          "presets": {"today": "Hoy", "yesterday": "Ayer", "last7Days": "Últimos 7 días", "last30Days": "Últimos 30 días", "thisMonth": "Este mes", "lastMonth": "Mes pasado", "custom": "Rango personalizado"}
+        },
+        "columns": {"date": "Fecha", "game": "Juego"},
+        "kpi": {
+          "sales": "Venta",
+          "prizes": "Premios",
+          "balance": "Balance",
+          "rtp": "RTP",
+          "tickets": "Tickets",
+          "avgTicket": "Ticket promedio",
+          "rounds": "Rondas",
+          "draws": "Sorteos",
+          "roundsOrDraws": "Rondas/Sorteos",
+          "bets": "Apuestas",
+          "amountBet": "Monto apostado",
+          "paid": "Pagado",
+          "pending": "Pendiente",
+          "expired": "Vencido",
+          "cashNet": "Efectivo neto",
+          "rtpReal": "RTP real",
+          "rtpTarget": "Objetivo",
+          "rtpBand": "Banda",
+          "rtpTheoretical": "RTP teórico",
+          "rtpReference": "RTP de referencia",
+          "difference": "Diferencia"
+        },
+        "summary": {
+          "chart": "Venta y balance por día",
+          "weeklyChart": "Venta por día: semana actual contra semana anterior",
+          "currentWeek": "Semana actual",
+          "previousWeek": "Semana anterior",
+          "previousMonth": "Mes anterior",
+          "byGame": "Por juego",
+          "byDay": "Por día",
+          "weekTitle": "Semana {{n}} · {{from}} – {{to}}",
+          "weekTitleIncomplete": "Semana {{n}} · {{from}} – {{to}} (incompleta)",
+          "weekSubtotal": "Subtotal semana {{n}}",
+          "monthTotal": "Total del mes",
+          "partialWeekNote": "Semana parcial: se compara contra los mismos días de la semana anterior.",
+          "partialMonthNote": "Mes parcial: se compara contra los mismos días del mes anterior."
+        },
+        "game": {
+          "byGame": "Por juego",
+          "byGameHint": "Elige un juego para ver los tipos de apuesta, la frecuencia de resultados y el detalle por ronda/sorteo.",
+          "byBetType": "Por tipo de apuesta",
+          "betType": "Tipo de apuesta",
+          "betsCount": "Cantidad de apuestas",
+          "frequencyChart": "Frecuencia de resultados por número",
+          "frequencySubtitle": "Veces que salió cada número en {{rounds}} rondas contra lo esperado (rondas ÷ 38)",
+          "groupSummary": "Por color, paridad, docena y altura",
+          "group": "Grupo",
+          "times": "Veces",
+          "expected": "Esperado",
+          "share": "% de rondas",
+          "roundDetail": "Detalle por ronda",
+          "drawDetail": "Detalle por sorteo",
+          "round": "Ronda",
+          "draw": "Sorteo",
+          "dateTime": "Fecha y hora",
+          "result": "Resultado",
+          "origin": "Origen",
+          "automatic": "Automático",
+          "manual": "Manual",
+          "user": "Usuario",
+          "topNumbers": "Números más jugados (top 20)",
+          "number": "Número",
+          "digitFrequency": "Frecuencia de dígitos",
+          "digitFrequencySubtitle": "Veces que salió cada dígito en cada posición",
+          "digit": "Dígito",
+          "position": "Posición {{n}}",
+          "groups": {"zero": "0", "doubleZero": "00", "red": "Rojo", "black": "Negro", "even": "Par", "odd": "Impar", "dozen1": "1.ª docena (1–12)", "dozen2": "2.ª docena (13–24)", "dozen3": "3.ª docena (25–36)", "low": "Bajo (1–18)", "high": "Alto (19–36)"}
+        },
+        "betTypes": {"pleno": "Pleno", "caballo": "Caballo", "calle": "Calle", "esquina": "Esquina", "cesta": "Cesta", "linea": "Línea", "columna": "Columna", "docena": "Docena", "color": "Color", "paridad": "Paridad", "altura": "Altura", "straight": "Straight", "box": "Box", "front_pair": "Front pair", "back_pair": "Back pair"},
+        "activity": {
+          "byBanca": "Por banca",
+          "byBancaHint": "Abre una banca para ver sus máquinas.",
+          "bancaMachine": "Banca / máquina",
+          "consorcio": "Consorcio",
+          "banca": "Banca",
+          "machine": "Máquina",
+          "machinesWithSales": "Máquinas con venta",
+          "lastSale": "Última venta",
+          "idleMachines": "Máquinas sin ventas",
+          "idleMachinesHint": "No vendieron tickets en el período",
+          "noIdleMachines": "Todas las máquinas vendieron en este período.",
+          "hourly": "Actividad por hora",
+          "hourlyChart": "Tickets por hora",
+          "hour": "Hora",
+          "amountDistribution": "Distribución por monto del ticket",
+          "amountRange": "Rango de monto",
+          "share": "% del total",
+          "ranges": {"upTo100": "Hasta {{currency}} 100", "from101To500": "{{currency}} 101 – 500", "from501To1000": "{{currency}} 501 – 1,000", "from1001To5000": "{{currency}} 1,001 – 5,000", "over5000": "Más de {{currency}} 5,000"}
+        },
+        "financial": {
+          "byGame": "Desglose por juego",
+          "byBanca": "Por banca",
+          "byBancaHint": "Subtotal por consorcio; abre una banca para ver sus máquinas. El Pagado se asigna a la máquina donde se cobró el premio.",
+          "chart": "Venta, premios y balance por día",
+          "subtotal": "Subtotal {{name}}",
+          "pendingList": "Premios pendientes",
+          "pendingSubtitle": "{{count}} tickets sin cobrar y sin vencer al {{date}} · {{soon}} vencen en los próximos {{days}} días",
+          "expiredList": "Premios vencidos",
+          "expiredSubtitle": "{{count}} tickets caducaron en el período sin cobrarse",
+          "noExpired": "No venció ningún premio en este período.",
+          "code": "Código",
+          "saleLocation": "Banca · máquina",
+          "roundOrDraw": "Ronda/Sorteo",
+          "soldAt": "Venta",
+          "prize": "Premio",
+          "expiresAt": "Caducidad",
+          "daysLeft": "Días para vencer"
+        },
+        "rtp": {
+          "byGame": "RTP por juego",
+          "byGameHint": "Ruleta contra su objetivo de RTP Management; Pick 3/Pick 4 contra el RTP teórico de su tabla de pagos.",
+          "consolidated": "Consolidado (informativo)",
+          "history": "Cambios de RTP",
+          "oldValue": "Valor anterior",
+          "newValue": "Valor nuevo",
+          "noChanges": "No hubo cambios de RTP en este período.",
+          "manualResults": "Resultados manuales",
+          "manualResultsHint": "Rondas cuyo resultado se cambió en Next Results",
+          "noManualResults": "No hubo resultados manuales en este período.",
+          "chart": "RTP acumulado por día",
+          "cumulative": "RTP acumulado",
+          "change": "Cambio de RTP",
+          "changeMarker": "Cambio de RTP: {{from}} → {{to}} ({{user}})",
+          "outOfBand": "El RTP real ({{rtp}}) está fuera de la banda {{min}} – {{max}}.",
+          "noPayoutTable": "La tabla de pagos de Pick 3 / Pick 4 todavía no está cargada: el RTP teórico y la diferencia aparecen como \"—\" hasta entonces.",
+          "byDraw": "RTP por sorteo",
+          "drawRtp": "RTP del sorteo"
+        }
+      },
+      "peakHours": {
+        "title": "Horas Pico",
+        "subtitle": "Apuestas totales por día y hora · {{period}}",
+        "less": "Menos",
+        "more": "Más",
+        "busiest": "Más activo",
+        "quietest": "Más tranquilo",
+        "cell": "{{day}} {{from}}–{{to}} · {{amount}} apostado · {{tickets}} tickets"
+      },
       "betsAndPayouts": {
         "title": "Apuestas, Pagos e Ingresos",
         "subtitle": "Diario · barra completa = apuestas totales, dividida en pagos e ingreso bruto de juego (GGR)",
@@ -509,9 +666,9 @@
           "title": "Rendimiento del Juego",
           "description": "Estadísticas detalladas del juego"
         },
-        "playerActivity": {
-          "title": "Actividad de Jugadores",
-          "description": "Reportes de interacción de usuarios"
+        "salesActivity": {
+          "title": "Actividad por Punto de Venta",
+          "description": "Venta por banca, máquina y hora"
         },
         "financialReport": {
           "title": "Reporte Financiero",
@@ -521,8 +678,42 @@
           "title": "Análisis de RTP",
           "description": "Tendencias y análisis de RTP"
         },
-        "weeklyReport": {"title": "Reporte Semanal", "description": "Últimos 7 días, por día"},
-        "monthlyReport": {"title": "Reporte Mensual", "description": "Mes anterior, por semana"}
+        "weeklyReport": {"title": "Reporte Semanal", "description": "Última semana cerrada, lun–dom"},
+        "monthlyReport": {"title": "Reporte Mensual", "description": "Último mes cerrado, por día"},
+        "manualSubstitutions": {"title": "Sustituciones Manuales", "description": "Cambios de resultado por período y operador"}
+      },
+      "substitutions": {
+        "date": "Fecha",
+        "kpi": {
+          "totalEvents": "Eventos Totales",
+          "annulments": "Anulaciones",
+          "annulmentRate": "Tasa de Anulaciones",
+          "rtpImpact": "Impacto en RTP"
+        },
+        "perDay": {
+          "title": "Anulaciones por Día",
+          "subtitle": "Solo ruleta · rondas cuyo resultado se cambió en Next Results",
+          "events": "Rondas jugadas",
+          "annulments": "Anulaciones",
+          "rate": "Tasa de anulaciones"
+        },
+        "impact": {
+          "title": "Impacto Acumulado en RTP",
+          "subtitle": "Puntos porcentuales vs. el resultado que había elegido el sistema",
+          "daily": "Impacto del día",
+          "cumulative": "Acumulado"
+        },
+        "operators": {
+          "title": "Desglose por Operador",
+          "operator": "Operador",
+          "annulments": "Anulaciones",
+          "share": "% del Total",
+          "rtpImpact": "Impacto RTP",
+          "lastSubstitution": "Última",
+          "noSession": "Sin sesión (sin operador)",
+          "total": "Total",
+          "empty": "No hubo sustituciones manuales en este período."
+        }
       },
       "recent": {
         "title": "Reportes Recientes",

@@ -47,6 +47,27 @@ export function RtpPieIcon() {
   )
 }
 
+// Manual Substitutions: flechas de intercambio (resultado cambiado en Next Results) y "%" (tasa de
+// anulación).
+export function SwapIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4.5 8.2h14M15 4.7l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19.5 15.8h-14M9 12.3l-3.5 3.5L9 19.3" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function PercentIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M18.5 5.5 5.5 18.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="7.3" cy="7.3" r="2.4" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="16.7" cy="16.7" r="2.4" fill="none" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  )
+}
+
 export function DownloadIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
