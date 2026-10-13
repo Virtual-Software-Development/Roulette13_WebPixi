@@ -1,8 +1,9 @@
-/* Panel horizontal único con los 4 controles + Apply/Reset (pedido explícito de la referencia:
-   ~80px de alto en desktop) -- reduce el padding vertical de .admin-panel para lograrlo. */
+/* Panel horizontal único: Tipo de reporte · Juego · Período · Export + Reset (pedido explícito de la
+   referencia: ~80px de alto en desktop) -- reduce el padding vertical de .admin-panel para
+   lograrlo. El período va primero en ancho porque en "Personalizado" suma las dos fechas. */
 .admin-report-filters {
   display: grid;
-  grid-template-columns: minmax(200px, 1.3fr) repeat(3, minmax(140px, 1fr)) auto;
+  grid-template-columns: minmax(200px, 1fr) minmax(160px, 0.8fr) minmax(280px, 2fr) auto;
   align-items: end;
   gap: 16px;
   padding-top: 14px;
@@ -27,9 +28,10 @@
   gap: 10px;
 }
 
+/* En 2 columnas Export + Reset ocupan la celda libre junto al Período (3 controles + acciones =
+   2 filas exactas) en vez de una fila propia. */
 @media (max-width: 1200px) {
   .admin-report-filters-actions {
-    grid-column: 1 / -1;
     justify-content: flex-end;
   }
 }
@@ -68,17 +70,6 @@
 
 .admin-report-filters-btn:active {
   transform: translateY(1px);
-}
-
-.admin-report-filters-btn--primary {
-  border-color: color-mix(in srgb, var(--admin-red) 55%, transparent);
-  background: linear-gradient(180deg, #ff3b48 0%, #b9101d 100%);
-  color: #fff;
-  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--admin-red) 55%, transparent);
-}
-
-.admin-report-filters-btn--primary:hover {
-  filter: brightness(1.06);
 }
 
 .admin-report-filters-btn--ghost {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { formatRoundedCurrency, reportCurrencySymbol } from '../../../utils/reportFormat'
 import './peakHoursHeatmap.css'
 
 // Heatmap día de semana × hora del total apostado -- muestra CUÁNDO se juega (ningún otro chart lo
@@ -16,18 +17,18 @@ function colorFor(value: number, min: number, max: number): string {
   return RAMP[Math.round(t * (RAMP.length - 1))]
 }
 
-const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-const compactUsd = (v: number) => (v >= 1000 ? `$${(v / 1000).toFixed(1)}K` : `$${Math.round(v)}`)
+const compactAmount = (v: number) => `${reportCurrencySymbol()} ${v >= 1000 ? `${(v / 1000).toFixed(1)}K` : Math.round(v)}`
 const hourLabel = (h: number) => `${String(h).padStart(2, '0')}:00`
 
 interface PeakHoursHeatmapProps {
-  // values[día 0=Lunes..6=Domingo][hora 0..23] = total apostado en esa franja durante el período.
+  // values[día 0=Lunes..6=Domingo][hora 0..23] = total apostado (monto) en esa franja durante el
+  // período; tickets = tickets vendidos en esa misma franja.
   values: number[][]
-  averageBet: number
+  tickets: number[][]
   periodLabel: string
 }
 
-export function PeakHoursHeatmap({ values, averageBet, periodLabel }: PeakHoursHeatmapProps) {
+export function PeakHoursHeatmap({ values, tickets, periodLabel }: PeakHoursHeatmapProps) {
   const { t, i18n } = useTranslation()
   const [hovered, setHovered] = useState<{ day: number; hour: number } | null>(null)
 
@@ -46,8 +47,8 @@ export function PeakHoursHeatmap({ values, averageBet, periodLabel }: PeakHoursH
       day: dayNames[c.day],
       from: hourLabel(c.hour),
       to: `${String(c.hour).padStart(2, '0')}:59`,
-      amount: USD.format(c.value),
-      rounds: Math.round(c.value / averageBet).toLocaleString(i18n.language),
+      amount: formatRoundedCurrency(c.value),
+      tickets: tickets[c.day][c.hour].toLocaleString(i18n.language),
     })
 
   const hoveredCell = hovered ? { ...hovered, value: values[hovered.day][hovered.hour] } : null
@@ -106,11 +107,11 @@ export function PeakHoursHeatmap({ values, averageBet, periodLabel }: PeakHoursH
           <>
             <span className="admin-peak-hours-summary">
               <span className="admin-peak-hours-summary-label">{t('admin.reports.peakHours.busiest')}</span>
-              {dayNames[peak.day]} {hourLabel(peak.hour)} · {compactUsd(peak.value)}
+              {dayNames[peak.day]} {hourLabel(peak.hour)} · {compactAmount(peak.value)}
             </span>
             <span className="admin-peak-hours-summary">
               <span className="admin-peak-hours-summary-label">{t('admin.reports.peakHours.quietest')}</span>
-              {dayNames[quietest.day]} {hourLabel(quietest.hour)} · {compactUsd(quietest.value)}
+              {dayNames[quietest.day]} {hourLabel(quietest.hour)} · {compactAmount(quietest.value)}
             </span>
           </>
         )}

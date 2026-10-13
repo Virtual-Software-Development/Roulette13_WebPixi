@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { ReportKpiCardData } from '../../../types/adminReports'
-import { CoinsIcon, PayoutIcon, RevenueBarsIcon, RtpPieIcon } from './icons'
+import { CoinsIcon, PayoutIcon, PercentIcon, RevenueBarsIcon, RtpPieIcon, SwapIcon } from './icons'
 import './reportMetricCard.css'
 
 const ICON_BY_KEY: Record<ReportKpiCardData['icon'], typeof CoinsIcon> = {
@@ -8,6 +8,8 @@ const ICON_BY_KEY: Record<ReportKpiCardData['icon'], typeof CoinsIcon> = {
   payout: PayoutIcon,
   revenue: RevenueBarsIcon,
   rtp: RtpPieIcon,
+  substitutions: SwapIcon,
+  rate: PercentIcon,
 }
 
 // Variante de AdminStatCard (../../AdminStatCard.tsx) para los KPI de Reports -- misma receta

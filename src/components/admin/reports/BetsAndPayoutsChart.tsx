@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { formatCompactCurrency, formatRoundedCurrency } from '../../../utils/reportFormat'
 import type { BetsPayoutsPoint } from '../../../types/adminReports'
 import './betsAndPayoutsChart.css'
 
@@ -12,25 +13,19 @@ import './betsAndPayoutsChart.css'
 // viewBox fijo estirado: así el chart crece en alto para llenar la columna (la columna derecha,
 // RTP Trend + Peak Hours, es más alta) sin deformar el texto ni dejar espacio vacío debajo.
 const FALLBACK_SIZE = { width: 900, height: 300 }
-const MARGIN = { top: 26, right: 8, bottom: 28, left: 56 }
+const MARGIN = { top: 26, right: 8, bottom: 28, left: 72 }
 const MAX_BAR_WIDTH = 64
 const BAR_WIDTH_RATIO = 0.42
 const SEGMENT_GAP = 2
 const CORNER_RADIUS = 4
 // Por debajo de este ancho de slot (px) no entran las etiquetas de total sobre cada barra (ej. 30
 // días) -- quedan solo en el tooltip.
-const MIN_SLOT_FOR_LABELS = 56
+const MIN_SLOT_FOR_LABELS = 70
+// Con muchos días (ej. 30) las fechas del eje X se muestran salteadas, como máximo estas.
+const MAX_X_LABELS = 12
 
 const PAYOUT_COLOR = '#2588ff'
 const GGR_COLOR = '#c98420'
-
-const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-
-function formatCompactUsd(value: number): string {
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1)}M`
-  if (value >= 1_000) return `$${Math.round(value / 1_000)}K`
-  return `$${Math.round(value)}`
-}
 
 function niceScale(maxValue: number): { yMax: number; ticks: number[] } {
   const rough = Math.max(maxValue, 1) / 4
@@ -84,6 +79,7 @@ export function BetsAndPayoutsChart({ series }: { series: BetsPayoutsPoint[] }) 
   const slotWidth = PLOT_WIDTH / Math.max(series.length, 1)
   const barWidth = Math.min(MAX_BAR_WIDTH, slotWidth * BAR_WIDTH_RATIO)
   const showTotals = slotWidth >= MIN_SLOT_FOR_LABELS
+  const labelStride = Math.ceil(series.length / MAX_X_LABELS)
   const slotCenter = (i: number) => MARGIN.left + slotWidth * i + slotWidth / 2
 
   const point = hovered !== null ? series[hovered] : null
@@ -111,21 +107,21 @@ export function BetsAndPayoutsChart({ series }: { series: BetsPayoutsPoint[] }) 
       <div className="admin-bets-payouts-stats">
         <div className="admin-bets-payouts-stat">
           <span className="admin-bets-payouts-stat-label">{t('admin.reports.betsAndPayouts.bets')}</span>
-          <span className="admin-bets-payouts-stat-value">{USD.format(totals.bets)}</span>
+          <span className="admin-bets-payouts-stat-value">{formatRoundedCurrency(totals.bets)}</span>
         </div>
         <div className="admin-bets-payouts-stat">
           <span className="admin-bets-payouts-stat-label">
             <span className="admin-bets-payouts-swatch" style={{ background: PAYOUT_COLOR }} />
             {t('admin.reports.betsAndPayouts.payout')}
           </span>
-          <span className="admin-bets-payouts-stat-value">{USD.format(totals.payout)}</span>
+          <span className="admin-bets-payouts-stat-value">{formatRoundedCurrency(totals.payout)}</span>
         </div>
         <div className="admin-bets-payouts-stat">
           <span className="admin-bets-payouts-stat-label">
             <span className="admin-bets-payouts-swatch" style={{ background: GGR_COLOR }} />
             {t('admin.reports.betsAndPayouts.ggr')}
           </span>
-          <span className="admin-bets-payouts-stat-value">{USD.format(totalGgr)}</span>
+          <span className="admin-bets-payouts-stat-value">{formatRoundedCurrency(totalGgr)}</span>
         </div>
         <div className="admin-bets-payouts-stat">
           <span className="admin-bets-payouts-stat-label">{t('admin.reports.betsAndPayouts.hold')}</span>
@@ -146,7 +142,7 @@ export function BetsAndPayoutsChart({ series }: { series: BetsPayoutsPoint[] }) 
             <g key={tick}>
               <line x1={MARGIN.left} x2={CHART_WIDTH - MARGIN.right} y1={yFor(tick)} y2={yFor(tick)} className="admin-bets-payouts-gridline" />
               <text x={MARGIN.left - 10} y={yFor(tick)} className="admin-bets-payouts-axis-label" textAnchor="end" dominantBaseline="middle">
-                {tick === 0 ? '$0' : formatCompactUsd(tick)}
+                {formatCompactCurrency(tick)}
               </text>
             </g>
           ))}
@@ -170,12 +166,14 @@ export function BetsAndPayoutsChart({ series }: { series: BetsPayoutsPoint[] }) 
                 {ggr > 0 && <path d={topRoundedRect(x, ggrTop, barWidth, ggrHeight, CORNER_RADIUS)} fill={GGR_COLOR} />}
                 {showTotals && (
                   <text x={slotCenter(i)} y={ggrTop - 7} className="admin-bets-payouts-total-label" textAnchor="middle">
-                    {formatCompactUsd(p.bets)}
+                    {formatCompactCurrency(p.bets)}
                   </text>
                 )}
-                <text x={slotCenter(i)} y={CHART_HEIGHT - 7} className="admin-bets-payouts-axis-label" textAnchor="middle">
-                  {p.label}
-                </text>
+                {i % labelStride === 0 && (
+                  <text x={slotCenter(i)} y={CHART_HEIGHT - 7} className="admin-bets-payouts-axis-label" textAnchor="middle">
+                    {p.label}
+                  </text>
+                )}
               </g>
             )
           })}
@@ -188,17 +186,17 @@ export function BetsAndPayoutsChart({ series }: { series: BetsPayoutsPoint[] }) 
             <div className="admin-bets-payouts-tooltip-title">{point.label}</div>
             <div className="admin-bets-payouts-tooltip-row">
               <span>{t('admin.reports.betsAndPayouts.bets')}</span>
-              <span className="admin-bets-payouts-tooltip-value">{USD.format(point.bets)}</span>
+              <span className="admin-bets-payouts-tooltip-value">{formatRoundedCurrency(point.bets)}</span>
             </div>
             <div className="admin-bets-payouts-tooltip-row">
               <span className="admin-bets-payouts-swatch" style={{ background: PAYOUT_COLOR }} />
               <span>{t('admin.reports.betsAndPayouts.payout')}</span>
-              <span className="admin-bets-payouts-tooltip-value">{USD.format(point.payout)}</span>
+              <span className="admin-bets-payouts-tooltip-value">{formatRoundedCurrency(point.payout)}</span>
             </div>
             <div className="admin-bets-payouts-tooltip-row">
               <span className="admin-bets-payouts-swatch" style={{ background: GGR_COLOR }} />
               <span>{t('admin.reports.betsAndPayouts.ggr')}</span>
-              <span className="admin-bets-payouts-tooltip-value">{USD.format(point.bets - point.payout)}</span>
+              <span className="admin-bets-payouts-tooltip-value">{formatRoundedCurrency(point.bets - point.payout)}</span>
             </div>
             <div className="admin-bets-payouts-tooltip-row admin-bets-payouts-tooltip-footer">
               <span>{t('admin.reports.betsAndPayouts.rtp')}</span>
@@ -223,9 +221,9 @@ export function BetsAndPayoutsChart({ series }: { series: BetsPayoutsPoint[] }) 
           {series.map((p) => (
             <tr key={p.label}>
               <th scope="row">{p.label}</th>
-              <td>{USD.format(p.bets)}</td>
-              <td>{USD.format(p.payout)}</td>
-              <td>{USD.format(p.bets - p.payout)}</td>
+              <td>{formatRoundedCurrency(p.bets)}</td>
+              <td>{formatRoundedCurrency(p.payout)}</td>
+              <td>{formatRoundedCurrency(p.bets - p.payout)}</td>
             </tr>
           ))}
         </tbody>
