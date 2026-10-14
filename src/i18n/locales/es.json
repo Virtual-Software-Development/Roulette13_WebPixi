@@ -1207,23 +1207,33 @@
       },
       "simulator": {
         "title": "Simulador de RTP",
-        "subtitle": "Prueba distintos valores de RTP y mira el impacto proyectado antes de aplicar cambios.",
+        "subtitle": "Prueba un RTP objetivo con el motor real del backend, sin registrar nada: las rondas simuladas no crean eventos, tickets ni pagos.",
         "simulationType": "Tipo de Simulación",
         "simulationTypeOptions": { "projectedResults": "Resultados Proyectados" },
         "currentTargetRtp": "RTP Objetivo Actual",
         "proposedTargetRtp": "RTP Objetivo Propuesto",
         "sampleSize": { "label": "Tamaño de Muestra", "description": "Cantidad de rondas simuladas.", "unit": "tiradas" },
-        "estimatedAverageBet": { "label": "Apuesta Promedio Estimada", "description": "Monto de apuesta promedio por ronda." },
-        "volatilityModel": {
-          "label": "Modelo de Volatilidad",
-          "description": "Usa el modelo de volatilidad estándar del juego."
-        },
-        "volatilityModelOptions": { "standard": "Estándar", "conservative": "Conservador", "aggressive": "Agresivo" },
+        "estimatedAverageBet": { "label": "Apuesta Promedio Estimada", "description": "Monto promedio de cada apuesta (se sortea entre ½ y 1½ veces este valor)." },
+        "minBand": { "label": "Banda Mínima de Prueba" },
+        "maxBand": { "label": "Banda Máxima de Prueba" },
+        "productionValue": "En producción: {{value}}",
+        "betsPerRound": { "label": "Apuestas por Ronda", "description": "Apuestas nuevas en cada ronda, con un perfil mixto de tipos de apuesta." },
         "runSimulation": "Ejecutar Simulación",
+        "running": "Simulando… {{done}} / {{total}} rondas",
+        "cancel": "Cancelar",
+        "errors": {
+          "login": "Inicia sesión en el panel de administración para usar el simulador: el backend exige una sesión de admin.",
+          "generic": "No se pudo ejecutar la simulación.",
+          "proposed": "El RTP objetivo propuesto debe estar entre 0 y 100.",
+          "bands": "Las bandas deben cumplir 0 ≤ banda mínima ≤ RTP objetivo propuesto ≤ banda máxima ≤ 100.",
+          "sampleSize": "El tamaño de muestra debe ser un número entero entre 1 y {{max}}.",
+          "betsPerRound": "Las apuestas por ronda deben ser un número entero entre 1 y {{max}}.",
+          "averageBet": "La apuesta promedio debe ser mayor que 0."
+        },
         "results": {
           "title": "Resultados de la Simulación",
           "close": "Cerrar resultados",
-          "subtitle": "Resultado estimado según la configuración propuesta.",
+          "subtitle": "{{rounds}} rondas con el motor {{engine}} · ventana dentro de banda el {{withinBand}}% de las rondas.",
           "currentRtp": "RTP Actual",
           "proposedRtp": "RTP Propuesto",
           "difference": "Diferencia",
@@ -1232,9 +1242,16 @@
           "totalBets": "Apuestas Totales",
           "projectedPayout": "Pago Proyectado",
           "projectedHouseReturn": "Retorno de Casa Proyectado",
-          "expectedRtp": "RTP Esperado"
+          "simulatedRtp": "RTP Simulado",
+          "verdict": {
+            "positive": "POSITIVO",
+            "negative": "NEGATIVO",
+            "positiveDetail": "El RTP simulado ({{rtp}}) quedó dentro de la banda de prueba {{min}} – {{max}} ({{deviation}} pp respecto al objetivo).",
+            "aboveDetail": "El RTP simulado ({{rtp}}) quedó {{gap}} pp por encima de la banda máxima ({{max}}): la casa pagaría de más.",
+            "belowDetail": "El RTP simulado ({{rtp}}) quedó {{gap}} pp por debajo de la banda mínima ({{min}}): los jugadores recibirían de menos."
+          }
         },
-        "disclaimer": "Esta es una simulación basada en modelos estadísticos. Los resultados reales pueden variar."
+        "disclaimer": "Simulación en el sandbox del backend: motor y tabla de pagos reales de producción, partiendo de su ventana de medición actual. No se registra ningún evento, ticket ni pago."
       },
       "scheduling": {
         "title": "Programación de RTP",

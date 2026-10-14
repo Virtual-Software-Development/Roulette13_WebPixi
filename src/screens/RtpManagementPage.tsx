@@ -13,8 +13,8 @@ import './rtpManagementPage.css'
 // RTP Management -- tercer contenido posible dentro de AdminPanel.tsx (junto a AdminDashboardPage/
 // RtpDashboardPage). Settings/Simulator/Scheduling son mutuamente exclusivos (pedido explícito):
 // esta página es la única dueña de `tab`, cada uno de los tres solo recibe lo que necesita por
-// props. settingsByGame vive acá (no en RtpSettingsPanel) porque Simulator necesita leer el mismo
-// Current Target RTP que Settings, sin que ambos tabs queden desincronizados.
+// props. Simulator no lee settingsByGame: su Current Target RTP es el de producción, que trae del
+// backend junto con la simulación (api/rtpSimulator.ts).
 export function RtpManagementPage() {
   const { t } = useTranslation()
   const [tab, setTab] = useState<RtpManagementTab>('settings')
@@ -53,7 +53,7 @@ export function RtpManagementPage() {
       </div>
 
       {tab === 'settings' && <RtpSettingsPanel settingsByGame={settingsByGame} onSave={handleSaveSettings} />}
-      {tab === 'simulator' && <RtpSimulatorPanel settingsByGame={settingsByGame} />}
+      {tab === 'simulator' && <RtpSimulatorPanel />}
       {tab === 'scheduling' && (
         <RtpSchedulingPanel
           profiles={profiles}

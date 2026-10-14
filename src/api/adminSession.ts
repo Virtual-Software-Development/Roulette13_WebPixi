@@ -29,6 +29,21 @@ export function restoreAdminSession(): Promise<boolean> {
   return refreshInFlight
 }
 
+// JSON de una respuesta OK; si no, lanza con el `error` que manda el backend (apperror) o el status.
+export async function readAdminJson<T>(res: Response, what: string): Promise<T> {
+  if (!res.ok) {
+    let message = `${what} failed: ${res.status}`
+    try {
+      const body = await res.json()
+      if (body?.error) message = body.error
+    } catch {
+      // cuerpo no-JSON: queda el status
+    }
+    throw new Error(message)
+  }
+  return res.json()
+}
+
 // fetch a /api con el access token si lo hay; ante un 401 renueva una vez con la cookie y reintenta.
 // Con las rutas públicas de Next Results no debería haber 401 -- si lo hay (p.ej. un backend sin
 // esas rutas públicas todavía), lanza AdminAuthError y la vista lo muestra como error de carga.

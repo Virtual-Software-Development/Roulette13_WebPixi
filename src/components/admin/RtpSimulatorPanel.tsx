@@ -1,19 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { AdminSelect, type AdminSelectOption } from './AdminSelect'
 import { AdminFormField } from './AdminFormField'
 import { InfoBanner } from './InfoBanner'
 import { StatusBadge } from './StatusBadge'
 import { RTP_GAME_ICON_URLS } from '../../data/rtpDashboardMockData'
-import { SIMULATION_TYPE_OPTIONS, VOLATILITY_MODEL_OPTIONS, runRtpSimulation } from '../../data/rtpManagementMockData'
+import { SIMULATION_TYPE_OPTIONS } from '../../data/rtpManagementMockData'
 import { GAME_LABEL_KEY, RTP_GAMES } from '../../data/rtpGameLabels'
+import { AdminAuthError } from '../../api/adminSession'
+import { fetchRtpSimDefaults, runBackendRtpSimulation, type RtpSimDefaults } from '../../api/rtpSimulator'
 import type { RtpGame } from '../../types/rtpDashboard'
-import type {
-  RtpSettingsData,
-  RtpSimulationResult,
-  SimulationType,
-  VolatilityModel,
-} from '../../types/rtpManagement'
+import type { RtpSimulationResult, SimulationType } from '../../types/rtpManagement'
 import './rtpSimulatorPanel.css'
 
 const RISK_VARIANT: Record<RtpSimulationResult['riskLevel'], 'positive' | 'warning' | 'danger'> = {
@@ -25,8 +23,18 @@ const RISK_VARIANT: Record<RtpSimulationResult['riskLevel'], 'positive' | 'warni
 const CURRENCY_FORMATTER = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 })
 const INTEGER_FORMATTER = new Intl.NumberFormat('en-US')
 
+// Tope de monto del generador del backend (validateGenerator): montoMax = 1½ × promedio.
+const MAX_BET_AMOUNT = 1_000_000
+
 function formatPercent(value: number): string {
   return `${value.toFixed(2)}%`
+}
+
+// Sin sesión de admin el backend responde 401 (AdminAuthError); el resto trae el mensaje del
+// backend (apperror, en español) o el status.
+function errorMessage(err: unknown, t: TFunction): string {
+  if (err instanceof AdminAuthError) return t('admin.rtp.management.simulator.errors.login')
+  return err instanceof Error && err.message ? err.message : t('admin.rtp.management.simulator.errors.generic')
 }
 
 function PlayIcon() {
@@ -45,29 +53,74 @@ function CloseIcon() {
   )
 }
 
-interface RtpSimulatorPanelProps {
-  settingsByGame: Record<RtpGame, RtpSettingsData>
-}
-
-// Simulator SOLO proyecta -- nunca escribe RTP_SETTINGS_BY_GAME/settingsByGame (pedido explícito).
-// Current Target RTP sí refleja el estado vivo de Settings (mismo prop settingsByGame que recibe
-// RtpSettingsPanel), para que ambos tabs no muestren números desincronizados.
-export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
+// Simulator SOLO proyecta -- nunca escribe settings (pedido explícito). Corre en el sandbox del
+// backend (api/rtpSimulator.ts): motor y pagos reales de producción, sin registrar eventos,
+// tickets ni pagos. Current Target RTP es el que producción usa AHORA (GET /rtp-sim/defaults), no
+// el mock de RTP Settings.
+export function RtpSimulatorPanel() {
   const { t } = useTranslation()
   const [game, setGame] = useState<RtpGame>('roulette')
   const [simulationType, setSimulationType] = useState<SimulationType>('projectedResults')
-  const [proposedTargetRtp, setProposedTargetRtp] = useState(settingsByGame.roulette.targetRtp)
-  const [sampleSize, setSampleSize] = useState(100000)
+  const [defaults, setDefaults] = useState<RtpSimDefaults | null>(null)
+  const [defaultsError, setDefaultsError] = useState<string | null>(null)
+  const [proposedTargetRtp, setProposedTargetRtp] = useState(0)
+  const [minBand, setMinBand] = useState(0)
+  const [maxBand, setMaxBand] = useState(0)
+  const [sampleSize, setSampleSize] = useState(10000)
+  const [betsPerRound, setBetsPerRound] = useState(20)
   const [estimatedAverageBet, setEstimatedAverageBet] = useState(10)
-  const [volatilityModel, setVolatilityModel] = useState<VolatilityModel>('standard')
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
+  const [runError, setRunError] = useState<string | null>(null)
   const [result, setResult] = useState<RtpSimulationResult | null>(null)
+  const runControllerRef = useRef<AbortController | null>(null)
 
-  const currentTargetRtp = settingsByGame[game].targetRtp
-
+  // Cambiar de juego (o salir del tab) cancela la simulación en curso -- el escenario temporal se
+  // borra en el finally de runBackendRtpSimulation.
   useEffect(() => {
-    setProposedTargetRtp(settingsByGame[game].targetRtp)
+    let cancelled = false
+    setDefaults(null)
+    setDefaultsError(null)
+    setRunError(null)
     setResult(null)
-  }, [game, settingsByGame])
+    fetchRtpSimDefaults(game)
+      .then((d) => {
+        if (cancelled) return
+        setDefaults(d)
+        setProposedTargetRtp(d.config.targetRtp)
+        setMinBand(d.config.minBand)
+        setMaxBand(d.config.maxBand)
+      })
+      .catch((err) => {
+        if (!cancelled) setDefaultsError(errorMessage(err, t))
+      })
+    return () => {
+      cancelled = true
+      runControllerRef.current?.abort()
+    }
+  }, [game, t])
+
+  const limits = defaults?.limites
+  // Mismas reglas que valida el backend (rtpsim validateConfig/validateGenerator/run), para no
+  // dejar ejecutar algo que va a rechazar.
+  const validateInput = (): string | null => {
+    if (!limits) return null
+    if (!(proposedTargetRtp > 0 && proposedTargetRtp <= 100)) return t('admin.rtp.management.simulator.errors.proposed')
+    if (!(minBand >= 0 && minBand <= proposedTargetRtp && proposedTargetRtp <= maxBand && maxBand <= 100)) {
+      return t('admin.rtp.management.simulator.errors.bands')
+    }
+    if (!(Number.isInteger(sampleSize) && sampleSize >= 1 && sampleSize <= limits.maxRondasEscenario)) {
+      return t('admin.rtp.management.simulator.errors.sampleSize', { max: INTEGER_FORMATTER.format(limits.maxRondasEscenario) })
+    }
+    if (!(Number.isInteger(betsPerRound) && betsPerRound >= 1 && betsPerRound <= limits.maxApuestas)) {
+      return t('admin.rtp.management.simulator.errors.betsPerRound', { max: INTEGER_FORMATTER.format(limits.maxApuestas) })
+    }
+    if (!(estimatedAverageBet > 0 && estimatedAverageBet * 1.5 <= MAX_BET_AMOUNT)) return t('admin.rtp.management.simulator.errors.averageBet')
+    return null
+  }
+  const inputError = validateInput()
+
+  const running = progress !== null
+  const bannerMessage = defaultsError ?? inputError ?? runError
 
   const gameOptions: AdminSelectOption<RtpGame>[] = RTP_GAMES.map((g) => ({
     value: g,
@@ -80,23 +133,27 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
     label: t(`admin.rtp.management.simulator.simulationTypeOptions.${option}`),
   }))
 
-  const volatilityOptions: AdminSelectOption<VolatilityModel>[] = VOLATILITY_MODEL_OPTIONS.map((option) => ({
-    value: option,
-    label: t(`admin.rtp.management.simulator.volatilityModelOptions.${option}`),
-  }))
-
-  const handleRun = () => {
-    setResult(
-      runRtpSimulation({
-        game,
-        simulationType,
-        currentTargetRtp,
-        proposedTargetRtp,
-        sampleSize,
-        estimatedAverageBet,
-        volatilityModel,
-      }),
-    )
+  const handleRun = async () => {
+    if (!defaults || inputError || running) return
+    const controller = new AbortController()
+    runControllerRef.current = controller
+    setRunError(null)
+    setResult(null)
+    setProgress({ done: 0, total: sampleSize })
+    try {
+      const simulation = await runBackendRtpSimulation(
+        { game, defaults, proposedTargetRtp, minBand, maxBand, rounds: sampleSize, betsPerRound, averageBet: estimatedAverageBet },
+        { signal: controller.signal, onProgress: (done, total) => setProgress({ done, total }) },
+      )
+      setResult(simulation)
+    } catch (err) {
+      if (!controller.signal.aborted) setRunError(errorMessage(err, t))
+    } finally {
+      if (runControllerRef.current === controller) {
+        runControllerRef.current = null
+        setProgress(null)
+      }
+    }
   }
 
   // Resultados como panel propio a la derecha del formulario (antes debajo, había que scrollear para
@@ -118,11 +175,18 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
             options={simulationTypeOptions}
             onChange={setSimulationType}
             label={t('admin.rtp.management.simulator.simulationType')}
+            disabled={running}
           />
         </div>
 
         <div className="admin-rtp-simulator-row admin-rtp-simulator-row--three">
-          <AdminFormField id="sim-current-target" label={t('admin.rtp.management.simulator.currentTargetRtp')} suffix="%" readOnly value={currentTargetRtp.toFixed(2)} />
+          <AdminFormField
+            id="sim-current-target"
+            label={t('admin.rtp.management.simulator.currentTargetRtp')}
+            suffix="%"
+            readOnly
+            value={defaults ? defaults.config.targetRtp.toFixed(2) : '—'}
+          />
           <AdminFormField
             id="sim-proposed-target"
             label={t('admin.rtp.management.simulator.proposedTargetRtp')}
@@ -130,7 +194,10 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
             emphasized
             type="number"
             step="0.01"
-            value={proposedTargetRtp}
+            min="0"
+            max="100"
+            disabled={!defaults || running}
+            value={defaults ? proposedTargetRtp : ''}
             onChange={(v) => setProposedTargetRtp(Number(v))}
             stepper={{
               onIncrement: () => setProposedTargetRtp((v) => Math.round((v + 0.1) * 100) / 100),
@@ -143,9 +210,51 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
             description={t('admin.rtp.management.simulator.sampleSize.description')}
             suffix={t('admin.rtp.management.simulator.sampleSize.unit')}
             type="number"
-            step="10000"
+            step="1000"
+            min="1"
+            max={limits ? String(limits.maxRondasEscenario) : undefined}
+            disabled={running}
             value={sampleSize}
             onChange={(v) => setSampleSize(Number(v))}
+          />
+        </div>
+
+        {/* Bandas del RTP de prueba -- arrancan en las de producción; el resultado es positivo si el
+            RTP simulado termina dentro de ellas. */}
+        <div className="admin-rtp-simulator-row">
+          <AdminFormField
+            id="sim-min-band"
+            label={t('admin.rtp.management.simulator.minBand.label')}
+            description={defaults ? t('admin.rtp.management.simulator.productionValue', { value: formatPercent(defaults.config.minBand) }) : undefined}
+            suffix="%"
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            disabled={!defaults || running}
+            value={defaults ? minBand : ''}
+            onChange={(v) => setMinBand(Number(v))}
+            stepper={{
+              onIncrement: () => setMinBand((v) => Math.round((v + 0.1) * 100) / 100),
+              onDecrement: () => setMinBand((v) => Math.round((v - 0.1) * 100) / 100),
+            }}
+          />
+          <AdminFormField
+            id="sim-max-band"
+            label={t('admin.rtp.management.simulator.maxBand.label')}
+            description={defaults ? t('admin.rtp.management.simulator.productionValue', { value: formatPercent(defaults.config.maxBand) }) : undefined}
+            suffix="%"
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            disabled={!defaults || running}
+            value={defaults ? maxBand : ''}
+            onChange={(v) => setMaxBand(Number(v))}
+            stepper={{
+              onIncrement: () => setMaxBand((v) => Math.round((v + 0.1) * 100) / 100),
+              onDecrement: () => setMaxBand((v) => Math.round((v - 0.1) * 100) / 100),
+            }}
           />
         </div>
 
@@ -157,21 +266,48 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
             prefix="$"
             type="number"
             step="0.5"
+            min="0"
+            disabled={running}
             value={estimatedAverageBet}
             onChange={(v) => setEstimatedAverageBet(Number(v))}
           />
-          <AdminSelect
-            value={volatilityModel}
-            options={volatilityOptions}
-            onChange={setVolatilityModel}
-            label={t('admin.rtp.management.simulator.volatilityModel.label')}
+          <AdminFormField
+            id="sim-bets-per-round"
+            label={t('admin.rtp.management.simulator.betsPerRound.label')}
+            description={t('admin.rtp.management.simulator.betsPerRound.description')}
+            type="number"
+            step="1"
+            min="1"
+            max={limits ? String(limits.maxApuestas) : undefined}
+            disabled={running}
+            value={betsPerRound}
+            onChange={(v) => setBetsPerRound(Number(v))}
           />
         </div>
 
-        <button type="button" className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--primary admin-rtp-simulator-run" onClick={handleRun}>
-          <PlayIcon />
-          {t('admin.rtp.management.simulator.runSimulation')}
-        </button>
+        {bannerMessage && <InfoBanner variant="warning" title={bannerMessage} />}
+
+        <div className="admin-rtp-simulator-actions">
+          <button
+            type="button"
+            className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--primary admin-rtp-simulator-run"
+            disabled={!defaults || inputError !== null || running}
+            onClick={handleRun}
+          >
+            <PlayIcon />
+            {progress
+              ? t('admin.rtp.management.simulator.running', {
+                  done: INTEGER_FORMATTER.format(progress.done),
+                  total: INTEGER_FORMATTER.format(progress.total),
+                })
+              : t('admin.rtp.management.simulator.runSimulation')}
+          </button>
+          {running && (
+            <button type="button" className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--ghost" onClick={() => runControllerRef.current?.abort()}>
+              {t('admin.rtp.management.simulator.cancel')}
+            </button>
+          )}
+        </div>
       </section>
 
       {result && (
@@ -179,7 +315,13 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
           <div className="admin-panel-header">
             <div>
               <h3 className="admin-rtp-simulator-results-title">{t('admin.rtp.management.simulator.results.title')}</h3>
-              <p className="admin-rtp-simulator-subtitle">{t('admin.rtp.management.simulator.results.subtitle')}</p>
+              <p className="admin-rtp-simulator-subtitle">
+                {t('admin.rtp.management.simulator.results.subtitle', {
+                  rounds: INTEGER_FORMATTER.format(result.rounds),
+                  engine: result.engine,
+                  withinBand: result.roundsWithinBandPct.toFixed(1),
+                })}
+              </p>
             </div>
             {/* Cierra el panel de resultados -- el formulario vuelve a ocupar todo el ancho. */}
             <button
@@ -191,6 +333,29 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
             >
               <CloseIcon />
             </button>
+          </div>
+
+          {/* Veredicto de la prueba: ¿el RTP simulado terminó dentro de la banda de prueba? */}
+          <div className="admin-rtp-simulator-verdict" data-outcome={result.withinBand ? 'positive' : 'negative'}>
+            <StatusBadge variant={result.withinBand ? 'positive' : 'danger'}>
+              {t(`admin.rtp.management.simulator.results.verdict.${result.withinBand ? 'positive' : 'negative'}`)}
+            </StatusBadge>
+            <span className="admin-rtp-simulator-verdict-text">
+              {t(
+                result.withinBand
+                  ? 'admin.rtp.management.simulator.results.verdict.positiveDetail'
+                  : result.simulatedRtp > result.maxBand
+                    ? 'admin.rtp.management.simulator.results.verdict.aboveDetail'
+                    : 'admin.rtp.management.simulator.results.verdict.belowDetail',
+                {
+                  rtp: formatPercent(result.simulatedRtp),
+                  min: formatPercent(result.minBand),
+                  max: formatPercent(result.maxBand),
+                  gap: Math.abs(result.simulatedRtp - (result.simulatedRtp > result.maxBand ? result.maxBand : result.minBand)).toFixed(2),
+                  deviation: `${result.deviationPp >= 0 ? '+' : ''}${result.deviationPp.toFixed(2)}`,
+                },
+              )}
+            </span>
           </div>
 
           <div className="admin-rtp-simulator-results-primary">
@@ -232,9 +397,9 @@ export function RtpSimulatorPanel({ settingsByGame }: RtpSimulatorPanelProps) {
               <span className="admin-rtp-simulator-secondary-label">{t('admin.rtp.management.simulator.results.projectedHouseReturn')}</span>
             </div>
             <span className="admin-rtp-simulator-secondary-divider" aria-hidden="true" />
-            <div className="admin-rtp-simulator-secondary-metric">
-              <span className="admin-rtp-simulator-secondary-value">{formatPercent(result.expectedRtp)}</span>
-              <span className="admin-rtp-simulator-secondary-label">{t('admin.rtp.management.simulator.results.expectedRtp')}</span>
+            <div className="admin-rtp-simulator-secondary-metric" data-tone={result.withinBand ? 'green' : 'red'}>
+              <span className="admin-rtp-simulator-secondary-value">{formatPercent(result.simulatedRtp)}</span>
+              <span className="admin-rtp-simulator-secondary-label">{t('admin.rtp.management.simulator.results.simulatedRtp')}</span>
             </div>
           </div>
 

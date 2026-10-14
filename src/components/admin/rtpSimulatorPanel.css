@@ -33,8 +33,14 @@
   }
 }
 
+.admin-rtp-simulator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
 .admin-rtp-simulator-run {
-  align-self: flex-start;
   min-width: 240px;
 }
 
@@ -76,6 +82,47 @@
 
 .admin-rtp-simulator-results .admin-rtp-simulator-secondary-divider {
   display: none;
+}
+
+/* Veredicto de la prueba -- mismos verde/rojo que StatusBadge positive/danger. */
+.admin-rtp-simulator-verdict {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  padding: 14px 16px;
+  border-radius: var(--admin-radius);
+  border: 1px solid;
+}
+
+.admin-rtp-simulator-verdict[data-outcome='positive'] {
+  background: rgba(67, 232, 106, 0.08);
+  border-color: rgba(67, 232, 106, 0.35);
+}
+
+.admin-rtp-simulator-verdict[data-outcome='negative'] {
+  background: rgba(243, 38, 53, 0.08);
+  border-color: rgba(243, 38, 53, 0.35);
+}
+
+.admin-rtp-simulator-verdict .admin-status-badge {
+  font-size: 13px;
+  padding: 4px 11px;
+}
+
+.admin-rtp-simulator-verdict-text {
+  flex: 1 1 220px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--admin-text-primary);
+}
+
+.admin-rtp-simulator-secondary-metric[data-tone='green'] .admin-rtp-simulator-secondary-value {
+  color: var(--admin-green);
+}
+
+.admin-rtp-simulator-secondary-metric[data-tone='red'] .admin-rtp-simulator-secondary-value {
+  color: var(--admin-red);
 }
 
 .admin-rtp-simulator-results-title {
