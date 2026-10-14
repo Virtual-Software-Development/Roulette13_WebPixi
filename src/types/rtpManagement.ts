@@ -37,30 +37,29 @@ export type RtpSettingsLockState = Record<RtpSettingsLockableField, RtpFieldLock
 
 export type SimulationType = 'projectedResults'
 
-export type VolatilityModel = 'standard' | 'conservative' | 'aggressive'
-
-export interface RtpSimulationInput {
-  game: RtpGame
-  simulationType: SimulationType
-  currentTargetRtp: number
-  proposedTargetRtp: number
-  sampleSize: number
-  estimatedAverageBet: number
-  volatilityModel: VolatilityModel
-}
-
 export type RtpSimulationRiskLevel = 'low' | 'medium' | 'high'
 
+// Resultado del sandbox del backend (ver api/rtpSimulator.ts) -- montos y RTP salen de rondas
+// jugadas por el motor real; riskLevel se mide por el tamaño del cambio propuesto y withinBand es
+// el veredicto de la prueba (RTP simulado dentro de [minBand, maxBand]).
 export interface RtpSimulationResult {
   currentRtp: number
   proposedRtp: number
   differencePp: number
   riskLevel: RtpSimulationRiskLevel
+  engine: string
+  rounds: number
+  roundsWithinBandPct: number
   totalBetsCount: number
   totalBetsAmount: number
   projectedPayout: number
   projectedHouseReturn: number
-  expectedRtp: number
+  simulatedRtp: number
+  minBand: number
+  maxBand: number
+  withinBand: boolean
+  // RTP simulado − RTP objetivo propuesto, en puntos porcentuales.
+  deviationPp: number
 }
 
 export type RtpProfileStatus = 'active' | 'scheduled' | 'expiringSoon' | 'expired' | 'disabled' | 'replaced'

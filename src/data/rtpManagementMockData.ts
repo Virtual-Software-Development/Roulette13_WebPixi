@@ -4,20 +4,16 @@ import type {
   RtpProfileActivity,
   RtpSettingsData,
   RtpSettingsLockState,
-  RtpSimulationInput,
-  RtpSimulationResult,
   SimulationType,
-  VolatilityModel,
 } from '../types/rtpManagement'
 
 // Mock TEMPORAL para RTP Management -- igual que rtpDashboardMockData.ts, no existe todavía un
-// servicio de RTP settings/simulator/scheduling en el proyecto (ver investigación previa: sin
-// api/store/types para esto). Reemplazar este archivo por el fetch/store real no requiere tocar
+// servicio de RTP settings/scheduling en el proyecto (ver investigación previa: sin api/store/types
+// para esto). El Simulator ya no usa este archivo salvo SIMULATION_TYPE_OPTIONS: corre en el
+// backend (api/rtpSimulator.ts). Reemplazar este archivo por el fetch/store real no requiere tocar
 // ningún componente: todos reciben estos datos por props.
 
 export const SIMULATION_TYPE_OPTIONS: SimulationType[] = ['projectedResults']
-
-export const VOLATILITY_MODEL_OPTIONS: VolatilityModel[] = ['standard', 'conservative', 'aggressive']
 
 // Mismos valores "current" que RTP_METRIC_CARDS/RTP_BANDS en rtpDashboardMockData.ts (roulette
 // 94.74/92-98, pick3 60/58-62, pick4 62/60-64) -- RTP Settings y RTP Dashboard describen el mismo
@@ -71,35 +67,6 @@ export const RTP_SETTINGS_LOCK_STATE: RtpSettingsLockState = {
   minBand: { locked: true, reasonKey: RTP_SETTINGS_LOCK_REASON_KEY, unlockAt: null },
   maxBand: { locked: true, reasonKey: RTP_SETTINGS_LOCK_REASON_KEY, unlockAt: null },
   effectiveDate: { locked: true, reasonKey: RTP_SETTINGS_LOCK_REASON_KEY, unlockAt: null },
-}
-
-function riskLevelFor(differencePp: number): RtpSimulationResult['riskLevel'] {
-  const abs = Math.abs(differencePp)
-  if (abs < 0.5) return 'low'
-  if (abs < 1.5) return 'medium'
-  return 'high'
-}
-
-// Calculo puro -- Simulator solo proyecta, nunca escribe RTP_SETTINGS_BY_GAME (pedido explícito:
-// "Simulator NO debe guardar cambios automáticamente"). totalBets/projectedPayout/houseReturn se
-// derivan de sampleSize * estimatedAverageBet con el proposedTargetRtp como payout ratio.
-export function runRtpSimulation(input: RtpSimulationInput): RtpSimulationResult {
-  const differencePp = Math.round((input.proposedTargetRtp - input.currentTargetRtp) * 100) / 100
-  const totalBetsAmount = input.sampleSize * input.estimatedAverageBet
-  const projectedPayout = Math.round(totalBetsAmount * (input.proposedTargetRtp / 100) * 100) / 100
-  const projectedHouseReturn = Math.round((totalBetsAmount - projectedPayout) * 100) / 100
-
-  return {
-    currentRtp: input.currentTargetRtp,
-    proposedRtp: input.proposedTargetRtp,
-    differencePp,
-    riskLevel: riskLevelFor(differencePp),
-    totalBetsCount: input.sampleSize,
-    totalBetsAmount,
-    projectedPayout,
-    projectedHouseReturn,
-    expectedRtp: input.proposedTargetRtp,
-  }
 }
 
 export const RTP_PROFILES: RtpProfile[] = [

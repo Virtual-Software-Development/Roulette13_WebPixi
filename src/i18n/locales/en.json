@@ -1207,23 +1207,33 @@
       },
       "simulator": {
         "title": "RTP Simulator",
-        "subtitle": "Test different RTP values and see the projected impact before applying changes.",
+        "subtitle": "Test a target RTP on the backend's real engine without recording anything: simulated rounds create no events, tickets or payments.",
         "simulationType": "Simulation Type",
         "simulationTypeOptions": { "projectedResults": "Projected Results" },
         "currentTargetRtp": "Current Target RTP",
         "proposedTargetRtp": "Proposed Target RTP",
         "sampleSize": { "label": "Sample Size", "description": "Number of simulated rounds.", "unit": "spins" },
-        "estimatedAverageBet": { "label": "Estimated Average Bet", "description": "Average bet amount per round." },
-        "volatilityModel": {
-          "label": "Volatility Model",
-          "description": "Use game's standard volatility model."
-        },
-        "volatilityModelOptions": { "standard": "Standard", "conservative": "Conservative", "aggressive": "Aggressive" },
+        "estimatedAverageBet": { "label": "Estimated Average Bet", "description": "Average amount of each bet (drawn between ½ and 1½ times this value)." },
+        "minBand": { "label": "Test Minimum Band" },
+        "maxBand": { "label": "Test Maximum Band" },
+        "productionValue": "In production: {{value}}",
+        "betsPerRound": { "label": "Bets per Round", "description": "New bets every round, with a mixed profile of bet types." },
         "runSimulation": "Run Simulation",
+        "running": "Simulating… {{done}} / {{total}} rounds",
+        "cancel": "Cancel",
+        "errors": {
+          "login": "Sign in to the admin panel to use the simulator: the backend requires an admin session.",
+          "generic": "The simulation could not be run.",
+          "proposed": "The proposed target RTP must be between 0 and 100.",
+          "bands": "Bands must satisfy 0 ≤ minimum band ≤ proposed target RTP ≤ maximum band ≤ 100.",
+          "sampleSize": "Sample size must be a whole number between 1 and {{max}}.",
+          "betsPerRound": "Bets per round must be a whole number between 1 and {{max}}.",
+          "averageBet": "The average bet must be greater than 0."
+        },
         "results": {
           "title": "Simulation Results",
           "close": "Close results",
-          "subtitle": "Estimated outcome based on the proposed settings.",
+          "subtitle": "{{rounds}} rounds on the {{engine}} engine · window inside the band in {{withinBand}}% of rounds.",
           "currentRtp": "Current RTP",
           "proposedRtp": "Proposed RTP",
           "difference": "Difference",
@@ -1232,9 +1242,16 @@
           "totalBets": "Total Bets",
           "projectedPayout": "Projected Payout",
           "projectedHouseReturn": "Projected House Return",
-          "expectedRtp": "Expected RTP"
+          "simulatedRtp": "Simulated RTP",
+          "verdict": {
+            "positive": "POSITIVE",
+            "negative": "NEGATIVE",
+            "positiveDetail": "The simulated RTP ({{rtp}}) stayed inside the test band {{min}} – {{max}} ({{deviation}} pp from the target).",
+            "aboveDetail": "The simulated RTP ({{rtp}}) ended {{gap}} pp above the maximum band ({{max}}): the house would overpay.",
+            "belowDetail": "The simulated RTP ({{rtp}}) ended {{gap}} pp below the minimum band ({{min}}): players would be underpaid."
+          }
         },
-        "disclaimer": "This is a simulation based on statistical models. Actual results may vary."
+        "disclaimer": "Simulation in the backend sandbox: production's real engine and payout table, starting from its current measurement window. No event, ticket or payment is recorded."
       },
       "scheduling": {
         "title": "RTP Scheduling",

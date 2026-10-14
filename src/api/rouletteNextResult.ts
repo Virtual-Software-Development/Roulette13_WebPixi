@@ -1,4 +1,4 @@
-import { adminFetch } from './adminSession'
+import { adminFetch, readAdminJson as readJson } from './adminSession'
 
 // Endpoints de quick-money-backend para Next Results > Roulette -- públicos (sin login); si hay una
 // sesión de admin se manda su token solo para la auditoría (ver adminSession.ts).
@@ -41,20 +41,6 @@ export interface RouletteNextResult {
 // Lo que necesita el panel: el resultado + el monto apostado a cada número (fetchBetsByNumber).
 export interface RouletteNextResultView extends RouletteNextResult {
   betsByNumber: Record<string, number> | null
-}
-
-async function readJson<T>(res: Response, what: string): Promise<T> {
-  if (!res.ok) {
-    let message = `${what} failed: ${res.status}`
-    try {
-      const body = await res.json()
-      if (body?.error) message = body.error
-    } catch {
-      // cuerpo no-JSON: queda el status
-    }
-    throw new Error(message)
-  }
-  return res.json()
 }
 
 // Monto apostado a pleno por número ("0", "00", "1".."36") en la ronda pendiente -- /api/bets es
