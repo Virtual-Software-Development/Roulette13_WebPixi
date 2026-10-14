@@ -2,12 +2,9 @@ import { useEffect, useState } from 'react'
 import { useLobbyModeStore } from '../store/useLobbyModeStore'
 import { publishPendingDraw } from '../hooks/useQuickMoneyLobbyCycle'
 import { QUICK_MONEY_VIDEO_SLOT_ID, getVideoSlot, hideVideoSlot, preloadQuickMoneyVideo } from '../video/videoElements'
-import {
-  QUICK_MONEY_VIDEO_FADE_MS,
-  QUICK_MONEY_VIDEO_FALLBACK_DURATION_MS,
-  QUICK_MONEY_VIDEO_HOLD_MS,
-  QUICK_MONEY_VIDEO_MAX_MS,
-} from '../config/quickMoneyLobbyCycle'
+import { QUICK_MONEY_VIDEO_DURATION_MS, QUICK_MONEY_VIDEO_FADE_MS } from '../config/quickMoneyLobbyCycle'
+import { QUICK_MONEY_VIDEO_END_OFFSET_MS } from '../sync/lobbyTimeline'
+import { serverNow } from '../time/serverClock'
 import { VideoErrorPanel, type VideoErrorResult } from './VideoErrorPanel'
 
 interface VideoFallback {
@@ -25,23 +22,29 @@ interface VideoFallback {
 // diferencia de Roulette entra/sale con un fade (sin slide) y no necesita el ticker de Pixi, así que
 // es un componente DOM común montado fuera de <Application>.
 //
-// Secuencia: carga -> fade in -> play -> 'ended' -> hold sobre el último frame -> fade out ->
-// publica el resultado en la tabla y pasa a 'quickMoneyResult'. Si el video no está (no llegó a
-// tiempo) o no carga, muestra VideoErrorPanel: RESULT IN durante lo que habría durado el video, el
-// resultado al llegar a 0, y sigue por el mismo 'ended' -> hold -> salida. Un video que nunca termina salta directo al final
-// (QUICK_MONEY_VIDEO_MAX_MS), para que el lobby nunca quede clavado acá.
+// Secuencia: carga -> fade in -> play -> fin del clip -> hold sobre el último frame -> fade out ->
+// publica el resultado en la tabla y pasa a 'quickMoneyResult'. Todo anclado a la hora programada del
+// sorteo (pendingDraw.drawnAt) con el reloj del servidor, no al 'ended' de esta máquina: el clip dura
+// siempre lo mismo (QUICK_MONEY_VIDEO_DURATION_MS), así que todas las máquinas pasan al resultado a la
+// vez (sync/lobbyTimeline.ts); y si esta máquina montó la vista unos ms tarde, el clip arranca
+// adelantado esa diferencia. Si el video no está (no llegó a tiempo) o no carga, muestra
+// VideoErrorPanel: RESULT IN durante lo que habría durado el video, el resultado al llegar a 0, y la
+// misma salida a la misma hora.
+const SEEK_MIN_LAG_S = 0.25
+
 export function QuickMoneyVideoView() {
   const [fallback, setFallback] = useState<VideoFallback | null>(null)
   const [exiting, setExiting] = useState(false)
 
   useEffect(() => {
     const video = getVideoSlot(QUICK_MONEY_VIDEO_SLOT_ID)
-    // Ancla del countdown del fallback: el video habría arrancado ahora (+ su fade in).
-    const startedAt = Date.now()
+    const drawnAt = useLobbyModeStore.getState().pendingDraw?.drawnAt
+    // Hora programada del sorteo: el clip arranca ahí (con su fade in) en todas las máquinas.
+    const drawAtMs = drawnAt ? new Date(drawnAt).getTime() : serverNow()
     let cancelled = false
     let finished = false
     const timers: ReturnType<typeof setTimeout>[] = []
-    const later = (fn: () => void, ms: number) => timers.push(setTimeout(fn, ms))
+    const at = (timestampMs: number, fn: () => void) => timers.push(setTimeout(fn, Math.max(0, timestampMs - serverNow())))
 
     function complete() {
       if (finished || cancelled) return
@@ -49,18 +52,16 @@ export function QuickMoneyVideoView() {
       video.style.opacity = '0'
       // Con el fallback en pantalla, el panel sale con su escala a 0 (misma duración que el fade).
       setExiting(true)
-      later(() => {
-        publishPendingDraw()
-        useLobbyModeStore.getState().setPhase('quickMoneyResult')
-      }, QUICK_MONEY_VIDEO_FADE_MS)
-    }
-
-    function handleEnded() {
-      later(complete, QUICK_MONEY_VIDEO_HOLD_MS)
+      timers.push(
+        setTimeout(() => {
+          publishPendingDraw()
+          useLobbyModeStore.getState().setPhase('quickMoneyResult')
+        }, QUICK_MONEY_VIDEO_FADE_MS)
+      )
     }
 
     function showFallback() {
-      const endedAt = startedAt + QUICK_MONEY_VIDEO_FADE_MS + QUICK_MONEY_VIDEO_FALLBACK_DURATION_MS
+      const endedAt = drawAtMs + QUICK_MONEY_VIDEO_FADE_MS + QUICK_MONEY_VIDEO_DURATION_MS
       const pendingDraw = useLobbyModeStore.getState().pendingDraw
       setFallback({
         // Capturado acá: publishPendingDraw limpia pendingDraw recién al final, pero el panel no
@@ -68,13 +69,11 @@ export function QuickMoneyVideoView() {
         result: pendingDraw ? { game: 'quickMoney', pick3: pendingDraw.pick3Result, pick4: pendingDraw.pick4Result } : null,
         endedAtIso: new Date(endedAt).toISOString(),
       })
-      // Al llegar el countdown a 0 sigue exactamente como si el video hubiera terminado.
-      later(handleEnded, Math.max(0, endedAt - Date.now()))
     }
 
     video.loop = false
-    video.addEventListener('ended', handleEnded)
-    later(complete, QUICK_MONEY_VIDEO_MAX_MS)
+    // Hold sobre el último frame y salida, a la misma hora que en las demás máquinas.
+    at(drawAtMs + QUICK_MONEY_VIDEO_END_OFFSET_MS, complete)
 
     // Ya viene precargado entero (blob descargado ~2:30 antes del sorteo, ver
     // video/quickMoneyTestVideo.ts), así que esto resuelve al instante.
@@ -83,7 +82,10 @@ export function QuickMoneyVideoView() {
     ready
       .then(() => {
         if (cancelled) return
-        video.currentTime = 0
+        // Montada unos ms tarde respecto de la hora del sorteo (polling del ciclo): el clip se adelanta
+        // lo mismo. Por debajo de SEEK_MIN_LAG_S no vale el seek.
+        const lagS = (serverNow() - drawAtMs) / 1000
+        video.currentTime = lagS > SEEK_MIN_LAG_S ? Math.min(lagS, video.duration || lagS) : 0
         video.style.display = 'block'
         // Fuerza el layout con opacity:0 antes de subirla -- recién salido de display:none, sin esto
         // el navegador aplica el 1 directo y la transition del fade in no corre.
@@ -105,7 +107,6 @@ export function QuickMoneyVideoView() {
     return () => {
       cancelled = true
       timers.forEach(clearTimeout)
-      video.removeEventListener('ended', handleEnded)
       // Oculta y rebobina sin soltar el src: queda cargado para el próximo sorteo.
       hideVideoSlot(video)
     }

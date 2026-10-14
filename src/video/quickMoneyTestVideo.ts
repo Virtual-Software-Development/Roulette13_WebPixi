@@ -1,13 +1,16 @@
 import { fetchLotteryTestVideo, lotteryTestVideoUrl, requestLotteryTestVideo } from '../api/lotteryTestVideo'
 import { useLobbyModeStore } from '../store/useLobbyModeStore'
 import { preloadQuickMoneyVideo } from './videoElements'
+import { serverNow } from '../time/serverClock'
 
 // SOLO PRUEBAS -- prepara el próximo sorteo de Quick Money del lobby compartido: QUICK_MONEY_VIDEO_
 // REQUEST_LEAD_MS antes del sorteo (ver useQuickMoneyLobbyCycle) le pide al backend números
 // aleatorios + su video (sorteo-api), espera el render, descarga el MP4 ENTERO (blob, ~70 MB -- un
 // src HTTP solo garantiza la metadata, ver loadVideoSrc) y lo deja cargado en el slot de Quick
 // Money, así a la hora del sorteo arranca sin espera. Esos números son el resultado que se publica
-// en el historial del split (useQuickMoneyDrawsStore).
+// en el historial del split (useQuickMoneyDrawsStore). El pedido lleva la hora del sorteo: el backend
+// le da a todas las máquinas el MISMO job para ese sorteo (mismo video, mismos números), aunque una
+// haya arrancado tarde y lo pida minutos después que las demás.
 
 const POLL_INTERVAL_MS = 2_000
 // La hora del sorteo del round siguiente es una estimación (el backend agenda cada round recién al
@@ -19,6 +22,9 @@ interface PreparedDraw {
   pick3: number[] | null
   pick4: number[] | null
   videoUrl: string | null
+  // El backend no pudo generar el video de este sorteo -- les pasa a todas las máquinas por igual (el
+  // job es compartido), así que todas muestran el panel de video no disponible.
+  failed: boolean
   cancelled: boolean
 }
 
@@ -27,6 +33,9 @@ export interface TakenDraw {
   pick4: number[]
   // null si el video no llegó a tiempo (o falló) -- el resultado se publica igual, sin video.
   videoUrl: string | null
+  // true si el render falló en el backend (para todas las máquinas); false si solo esta máquina no
+  // llegó a descargarlo a tiempo.
+  failed: boolean
 }
 
 let current: PreparedDraw | null = null
@@ -51,13 +60,13 @@ export function prepareQuickMoneyDraw(drawAtMs: number) {
     if (isSameDraw(current, drawAtMs)) return
     current.cancelled = true
   }
-  const prep: PreparedDraw = { drawAtMs, pick3: null, pick4: null, videoUrl: null, cancelled: false }
+  const prep: PreparedDraw = { drawAtMs, pick3: null, pick4: null, videoUrl: null, failed: false, cancelled: false }
   current = prep
   run(prep).catch((err) => console.error('[quickMoneyTestVideo] no se pudo preparar el video de Quick Money', err))
 }
 
 async function run(prep: PreparedDraw) {
-  let job = await requestLotteryTestVideo()
+  let job = await requestLotteryTestVideo(prep.drawAtMs)
   prep.pick3 = toDigits(job.pick3)
   prep.pick4 = toDigits(job.pick4)
   console.log('[quickMoneyTestVideo] pedido', job.id, job.pick3, job.pick4)
@@ -65,10 +74,13 @@ async function run(prep: PreparedDraw) {
   while (job.estado === 'generando') {
     await sleep(POLL_INTERVAL_MS)
     // Pasada la hora del sorteo ya no sirve: el resultado salió sin video.
-    if (prep.cancelled || Date.now() > prep.drawAtMs) return
+    if (prep.cancelled || serverNow() > prep.drawAtMs) return
     job = await fetchLotteryTestVideo(job.id)
   }
-  if (job.estado !== 'listo') throw new Error(job.error ?? `estado ${job.estado}`)
+  if (job.estado !== 'listo') {
+    prep.failed = true
+    throw new Error(job.error ?? `estado ${job.estado}`)
+  }
 
   const res = await fetch(lotteryTestVideoUrl(job.id))
   if (!res.ok) throw new Error(`descarga del video falló: ${res.status}`)
@@ -103,5 +115,5 @@ export function takePreparedDraw(drawAtMs: number): TakenDraw | null {
   current = null
   prep.cancelled = true
   if (!prep.pick3 || !prep.pick4) return null
-  return { pick3: prep.pick3, pick4: prep.pick4, videoUrl: prep.videoUrl }
+  return { pick3: prep.pick3, pick4: prep.pick4, videoUrl: prep.videoUrl, failed: prep.failed }
 }

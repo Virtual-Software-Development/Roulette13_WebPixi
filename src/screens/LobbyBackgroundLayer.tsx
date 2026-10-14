@@ -22,6 +22,7 @@ import { useHotColdWindow } from '../hooks/useHotColdWindow'
 import { useSpinStatsCycle } from '../hooks/useSpinStatsCycle'
 import { useCategoryHighlightEntries } from '../hooks/useCategoryHighlightEntries'
 import { useDozenColumnHighlightEntries } from '../hooks/useDozenColumnHighlightEntries'
+import { useRotorServerSync } from '../hooks/useRotorServerSync'
 import './lobbyBackgroundLayer.css'
 
 // Cuánto sube el grupo base+rotor (imagen) al ocultarse para el video de resultado -- porcentaje
@@ -70,6 +71,8 @@ export function LobbyBackgroundLayer() {
   // Espeja el último estado de congelamiento aplicado, para no tocar el DOM (classList/seek) en
   // cada tick del progreso -- solo al cruzar el umbral (ver el efecto más abajo).
   const wheelFrozenRef = useRef(false)
+  // Fase del giro desde el reloj del servidor: misma rueda, mismo ángulo en todas las máquinas.
+  useRotorServerSync(wheelRotorRef, wheelFrozenRef)
   // Mismos números y misma ventana de tiempo que NumberPanelHotCold (ver RouletteLobby.tsx) --
   // useHotColdWindow es la fuente única para ambos.
   const { shouldShow: showHotCold, hot, cold } = useHotColdWindow()

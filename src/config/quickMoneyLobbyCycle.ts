@@ -50,13 +50,10 @@ export const QUICK_MONEY_VIDEO_FADE_MS = 400
 // estimar el sorteo de Quick Money del round SIGUIENTE (pedido del video y countdown "Next Draw").
 export const FALLBACK_ROULETTE_ROUND_MS = 300_000
 
-// Red de seguridad por si el video nunca dispara 'ended' (red rota, decode colgado).
-export const QUICK_MONEY_VIDEO_MAX_MS = 90_000
-
-// Duración que se asume para el video de Quick Money cuando no está (no llegó a tiempo o no cargó)
-// y se muestra VideoErrorPanel en su lugar -- el panel cuenta esto antes de seguir. A diferencia de
-// Roulette (videoDuration.ts lee el encabezado del .webm) no hay de dónde sacar la real: el backend
-// no la informa y, si el render/descarga no terminó, no existe ningún archivo que leer. Es la
-// duración típica del clip ya usada en QUICK_MONEY_VIDEO_BUDGET_MS -- tiene que entrar en ese
-// presupuesto (fade + esto + hold) y quedar por debajo de QUICK_MONEY_VIDEO_MAX_MS.
-export const QUICK_MONEY_VIDEO_FALLBACK_DURATION_MS = 72_000
+// Duración del video de Quick Money -- siempre la misma (sorteo-api renderiza la misma plantilla:
+// 72.62s medido con ffprobe sobre los renders). Toda la secuencia del video se agenda contra esto y
+// no contra su 'ended', para que todas las máquinas pasen a quickMoneyResult a la vez (ver
+// sync/lobbyTimeline.ts) -- eso también cubre un video que nunca termina (red rota, decode colgado).
+// Es además lo que cuenta VideoErrorPanel cuando el video no está. Tiene que entrar en
+// QUICK_MONEY_VIDEO_BUDGET_MS (fade + esto + hold).
+export const QUICK_MONEY_VIDEO_DURATION_MS = 72_700

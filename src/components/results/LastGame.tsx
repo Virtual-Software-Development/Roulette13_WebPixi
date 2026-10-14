@@ -60,16 +60,20 @@ export function LastGame() {
   const currentWinner = useResultsStore((state) => state.currentWinner)
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
   const countdown = useCountdown(nextDrawStartTime)
+  const roundIntervalMs = useGameConfigStore((state) => state.roundIntervalMs)
 
-  // No hay una duración total de ronda en el backend (solo el countdown hacia la próxima) -- se
-  // infiere como el mayor remainingSeconds visto desde el último reset; en cuanto arranca una
-  // ronda nueva el countdown vuelve a subir y el ref se realinea solo. El indicador se va
-  // "llenando" (progress = 1 - remaining/total) a medida que se acerca la próxima ronda.
+  // El indicador se va "llenando" (progress = 1 - remaining/total) a medida que se acerca la próxima
+  // ronda. El total es la duración de ronda del backend (/gameInfo roundInterval), igual en todas las
+  // máquinas -- antes se infería como el mayor remainingSeconds visto desde que se montó, así que una
+  // máquina que arrancaba a mitad de ronda mostraba otro llenado hasta la ronda siguiente. Mientras no
+  // llega /gameInfo, el mismo criterio de antes.
   const cycleTotalRef = useRef(countdown.remainingSeconds || 1)
   if (countdown.remainingSeconds > cycleTotalRef.current) {
     cycleTotalRef.current = countdown.remainingSeconds
   }
-  const countdownProgress = cycleTotalRef.current > 0 ? 1 - countdown.remainingSeconds / cycleTotalRef.current : 0
+  const cycleTotalSeconds = roundIntervalMs > 0 ? roundIntervalMs / 1000 : cycleTotalRef.current
+  const countdownProgress =
+    cycleTotalSeconds > 0 ? Math.min(1, Math.max(0, 1 - countdown.remainingSeconds / cycleTotalSeconds)) : 0
 
   const tableWidth = DESIGN_WIDTH * TABLE_WIDTH_RATIO
   const tableX = (DESIGN_WIDTH - tableWidth) / 2
