@@ -21,9 +21,14 @@ export const BACKEND_DIR = process.env.BACKEND_DIR
   : path.resolve(REPO_ROOT, '..', 'quick-money-backend')
 export const BACKEND_ENV_FILE = path.join(BACKEND_DIR, '.env')
 
-// Pinned in vite.config.ts / admin/vite.config.ts (strictPort), so they're constants here too.
+// Pinned in vite.config.ts (strictPort), so they're constants here too. The root frontend runs as three
+// servers: Admin (Login + Admin Panel) on APP_PORT, Game (lobbies) on GAME_PORT and Betting (betting
+// views) on BETTING_PORT. The legacy admin/ app (dev:admin-legacy) also uses 4100, so it can't run
+// alongside the game.
 export const APP_PORT = 5173
-export const ADMIN_PORT = 4100
+export const GAME_PORT = 4100
+export const BETTING_PORT = 4200
+export const ADMIN_PORT = GAME_PORT
 const DEFAULT_API_PORT = '3000'
 
 export function readEnvFile(file) {

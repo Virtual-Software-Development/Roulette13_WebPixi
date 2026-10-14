@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { buildMediaUrl } from '../utils/media'
+import { navigateToPreview } from '../utils/navigatePreview'
 import './loginPage.css'
 
 const REMEMBERED_USERNAME_KEY = 'login.rememberedUsername'
@@ -134,6 +135,7 @@ export function LoginPage() {
       } else {
         window.localStorage.removeItem(REMEMBERED_USERNAME_KEY)
       }
+      navigateToPreview('admin')
     } catch {
       setError(t('login.error'))
     } finally {

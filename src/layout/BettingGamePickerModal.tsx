@@ -18,7 +18,10 @@ interface BettingGamePickerModalProps {
   // explícito) -- solo `disabled`, SIN ningún estilo de "seleccionado" (pedido explícito: "que no
   // se vea seleccionado también"). undefined desde Lobby/Admin: ninguna opción bloqueada.
   activeGame?: ActiveBettingGame
-  onClose: () => void
+  // 'page' = la misma tarjeta como contenido de la página de inicio de Betting (puerto 4200, ver
+  // BettingHomePage.tsx): sin backdrop, sin Escape/focus trap y sin Cancel (no hay nada que cerrar).
+  variant?: 'modal' | 'page'
+  onClose?: () => void
 }
 
 // Mismo mecanismo de backdrop/Escape/focus trap que TicketPreviewModal.tsx (rouletteBetting/) --
@@ -28,7 +31,7 @@ interface BettingGamePickerModalProps {
 // bettingGamePicker.css. Shape de "elección" (dos opciones + Cancel abajo), no de confirmación
 // simple -- mismo criterio que ConfirmDialog.tsx, sin botón X (ese patrón lo usan los modales de
 // solo-lectura tipo DrawLogModal, este no lo es).
-export function BettingGamePickerModal({ activeGame, onClose }: BettingGamePickerModalProps) {
+export function BettingGamePickerModal({ activeGame, variant = 'modal', onClose }: BettingGamePickerModalProps) {
   const { t } = useTranslation()
   const dialogRef = useRef<HTMLDivElement>(null)
   const rouletteOptionRef = useRef<HTMLButtonElement>(null)
@@ -38,8 +41,9 @@ export function BettingGamePickerModal({ activeGame, onClose }: BettingGamePicke
 
   const isRouletteDisabled = activeGame === 'roulette'
   const isQuickMoneyDisabled = activeGame === 'quickMoney'
+  const isModal = variant === 'modal'
 
-  useFocusTrap(dialogRef, true)
+  useFocusTrap(dialogRef, isModal)
 
   useEffect(() => {
     previouslyFocusedRef.current = document.activeElement as HTMLElement | null
@@ -53,60 +57,69 @@ export function BettingGamePickerModal({ activeGame, onClose }: BettingGamePicke
   }, [isRouletteDisabled, isQuickMoneyDisabled])
 
   useEffect(() => {
+    if (!isModal) return
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onClose?.()
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [isModal, onClose])
 
-  return (
-    <div className="betting-game-picker-backdrop" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        className="betting-game-picker"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="betting-game-picker-title"
-        aria-describedby="betting-game-picker-subtitle"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 id="betting-game-picker-title" className="betting-game-picker-title">
-          {t('header.bettingPicker.title')}
-        </h2>
-        <p id="betting-game-picker-subtitle" className="betting-game-picker-subtitle">
-          {t('header.bettingPicker.subtitle')}
-        </p>
+  const card = (
+    <div
+      ref={dialogRef}
+      className="betting-game-picker"
+      role={isModal ? 'dialog' : 'region'}
+      aria-modal={isModal ? 'true' : undefined}
+      aria-labelledby="betting-game-picker-title"
+      aria-describedby="betting-game-picker-subtitle"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h2 id="betting-game-picker-title" className="betting-game-picker-title">
+        {t('header.bettingPicker.title')}
+      </h2>
+      <p id="betting-game-picker-subtitle" className="betting-game-picker-subtitle">
+        {t('header.bettingPicker.subtitle')}
+      </p>
 
-        <div className="betting-game-picker-options">
-          <button
-            ref={rouletteOptionRef}
-            type="button"
-            className="betting-game-picker-option"
-            disabled={isRouletteDisabled}
-            onClick={() => navigateToPreview('roulette-betting')}
-          >
-            <img src={ROULETTE_ICON_URL} className="betting-game-picker-option-icon" alt="" />
-            <span className="betting-game-picker-option-label">{t('header.bettingPicker.roulette')}</span>
-          </button>
-          <button
-            ref={quickMoneyOptionRef}
-            type="button"
-            className="betting-game-picker-option"
-            disabled={isQuickMoneyDisabled}
-            onClick={() => navigateToPreview('quick-money-betting')}
-          >
-            <img src={QUICK_MONEY_LOGO_URL} className="betting-game-picker-option-icon betting-game-picker-option-icon--logo" alt="" />
-            <span className="betting-game-picker-option-label">{t('header.bettingPicker.quickMoney')}</span>
-          </button>
-        </div>
+      <div className="betting-game-picker-options">
+        <button
+          ref={rouletteOptionRef}
+          type="button"
+          className="betting-game-picker-option"
+          disabled={isRouletteDisabled}
+          onClick={() => navigateToPreview('roulette-betting')}
+        >
+          <img src={ROULETTE_ICON_URL} className="betting-game-picker-option-icon" alt="" />
+          <span className="betting-game-picker-option-label">{t('header.bettingPicker.roulette')}</span>
+        </button>
+        <button
+          ref={quickMoneyOptionRef}
+          type="button"
+          className="betting-game-picker-option"
+          disabled={isQuickMoneyDisabled}
+          onClick={() => navigateToPreview('quick-money-betting')}
+        >
+          <img src={QUICK_MONEY_LOGO_URL} className="betting-game-picker-option-icon betting-game-picker-option-icon--logo" alt="" />
+          <span className="betting-game-picker-option-label">{t('header.bettingPicker.quickMoney')}</span>
+        </button>
+      </div>
 
+      {isModal && (
         <div className="betting-game-picker-actions">
           <button ref={cancelButtonRef} type="button" className="betting-game-picker-cancel" onClick={onClose}>
             {t('header.bettingPicker.cancel')}
           </button>
         </div>
-      </div>
+      )}
+    </div>
+  )
+
+  if (!isModal) return <div className="betting-game-picker-page">{card}</div>
+
+  return (
+    <div className="betting-game-picker-backdrop" onClick={onClose}>
+      {card}
     </div>
   )
 }

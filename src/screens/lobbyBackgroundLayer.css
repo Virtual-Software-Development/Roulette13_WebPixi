@@ -8,6 +8,12 @@
   height: 100vh;
   z-index: -1;
   pointer-events: none;
+  /* Mismo azul noche que el fondo del Admin Panel (.admin-shell en adminLayout.css, pedido
+     explícito). Si /gameInfo trae una imagen de fondo, .lobby-background-image se pinta encima. */
+  background:
+    radial-gradient(circle at 14% 0%, rgba(30, 70, 100, 0.1) 0%, transparent 45%),
+    radial-gradient(circle at 88% 92%, rgba(90, 15, 25, 0.06) 0%, transparent 50%),
+    linear-gradient(160deg, #07131c 0%, #050d14 45%, #030a10 100%);
 }
 
 .lobby-background-image {

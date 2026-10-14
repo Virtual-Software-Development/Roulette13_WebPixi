@@ -65,6 +65,39 @@
     "currentGame": "JUEGO ACTUAL",
     "nextRoundIn": "PRÓXIMA RONDA EN"
   },
+  "roundHistory": {
+    "title": "Historial de Rondas",
+    "subtitle": "Últimas {{count}} rondas completadas",
+    "close": "Cerrar",
+    "loading": "Cargando historial de rondas…",
+    "error": "No se pudo cargar el historial de rondas.",
+    "retry": "Reintentar",
+    "empty": "Todavía no hay rondas completadas.",
+    "roundLabel": "Juego: {{round}}",
+    "columns": {
+      "round": "Ronda",
+      "date": "Fecha",
+      "time": "Hora",
+      "result": "Resultado",
+      "color": "Color",
+      "parity": "Par / Impar",
+      "range": "Bajo / Alto"
+    },
+    "colors": {
+      "red": "Rojo",
+      "black": "Negro",
+      "green": "Verde"
+    },
+    "odd": "Impar",
+    "even": "Par",
+    "low": "Bajo (1–18)",
+    "high": "Alto (19–36)",
+    "rowsPerPage": "Filas por página",
+    "showing": "Mostrando {{from}}–{{to}} de {{total}}",
+    "pagination": "Paginación",
+    "previous": "Página anterior",
+    "next": "Página siguiente"
+  },
   "gameList": {
     "title": "JUEGOS RECIENTES",
     "now": "AHORA",
@@ -929,13 +962,16 @@
           "title": "Eventos de Notificación",
           "subtitle": "Selecciona qué eventos deben activar notificaciones.",
           "items": {
-            "gameRoundStarted": "Ronda de juego iniciada",
-            "gameRoundCompleted": "Ronda de juego completada",
-            "systemErrors": "Errores del sistema",
-            "highRtpAlert": "Alerta de RTP alto",
-            "videoProcessingCompleted": "Procesamiento de video completado",
-            "videoProcessingFailed": "Procesamiento de video fallido",
-            "newUserRegistered": "Nuevo usuario registrado"
+            "rtpOutOfBand": "RTP fuera de banda (alto o bajo)",
+            "manualResultOverride": "Cambio manual de resultado",
+            "rtpSettingsChanged": "Configuración o perfil de RTP modificado",
+            "rtpProfileExpiringSoon": "Perfil de RTP por vencer",
+            "roundFailed": "Ronda fallida o cancelada",
+            "mqttBrokerBlocked": "Broker MQTT bloqueó el sistema",
+            "machineOffline": "Máquina desconectada",
+            "largeWin": "Premio grande",
+            "userAccessChanged": "Rol de usuario cambiado o cuenta desactivada",
+            "maintenanceModeToggled": "Modo de mantenimiento activado o desactivado"
           }
         }
       }

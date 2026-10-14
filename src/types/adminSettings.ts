@@ -23,17 +23,19 @@ export interface EmailNotificationSettings {
   recipients: string
 }
 
-// Tipos de evento reales de la app: no existe todavía un backend/store de notificaciones (ver
-// conversación), así que estos ids son puramente descriptivos para este mock -- no representan un
-// enum real consumido por otra parte del sistema.
+// Eventos que pueden disparar una notificación (ver la sección Notification Events de Settings).
+// Todavía no hay backend de notificaciones: estos ids son el contrato que ese backend deberá emitir.
 export type NotificationEventId =
-  | 'gameRoundStarted'
-  | 'gameRoundCompleted'
-  | 'systemErrors'
-  | 'highRtpAlert'
-  | 'videoProcessingCompleted'
-  | 'videoProcessingFailed'
-  | 'newUserRegistered'
+  | 'rtpOutOfBand'
+  | 'manualResultOverride'
+  | 'rtpSettingsChanged'
+  | 'rtpProfileExpiringSoon'
+  | 'roundFailed'
+  | 'mqttBrokerBlocked'
+  | 'machineOffline'
+  | 'largeWin'
+  | 'userAccessChanged'
+  | 'maintenanceModeToggled'
 
 export type NotificationEventsSettings = Record<NotificationEventId, boolean>
 

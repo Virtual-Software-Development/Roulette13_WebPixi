@@ -51,23 +51,30 @@ export const DEFAULT_EMAIL_NOTIFICATION_SETTINGS: EmailNotificationSettings = {
 }
 
 export const NOTIFICATION_EVENT_IDS: NotificationEventId[] = [
-  'gameRoundStarted',
-  'gameRoundCompleted',
-  'systemErrors',
-  'highRtpAlert',
-  'videoProcessingCompleted',
-  'videoProcessingFailed',
-  'newUserRegistered',
+  'rtpOutOfBand',
+  'manualResultOverride',
+  'rtpSettingsChanged',
+  'rtpProfileExpiringSoon',
+  'roundFailed',
+  'mqttBrokerBlocked',
+  'machineOffline',
+  'largeWin',
+  'userAccessChanged',
+  'maintenanceModeToggled',
 ]
 
+// Activados por defecto los que piden acción inmediata; RTP por vencer y premio grande quedan a elección.
 export const DEFAULT_NOTIFICATION_EVENTS: NotificationEventsSettings = {
-  gameRoundStarted: false,
-  gameRoundCompleted: true,
-  systemErrors: true,
-  highRtpAlert: false,
-  videoProcessingCompleted: true,
-  videoProcessingFailed: true,
-  newUserRegistered: false,
+  rtpOutOfBand: true,
+  manualResultOverride: true,
+  rtpSettingsChanged: true,
+  rtpProfileExpiringSoon: false,
+  roundFailed: true,
+  mqttBrokerBlocked: true,
+  machineOffline: true,
+  largeWin: false,
+  userAccessChanged: true,
+  maintenanceModeToggled: true,
 }
 
 export const DEFAULT_ADMIN_SETTINGS: AdminSettingsData = {

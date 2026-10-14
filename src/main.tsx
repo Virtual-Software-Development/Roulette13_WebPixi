@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './i18n'
 import { startInternetMonitor } from './network/internetMonitor.ts'
+import { APP_SURFACE, isAdminPreview, surfaceForPreview, urlForPreview } from './appSurface.ts'
 
 // Lazy en vez de import estático -- App.tsx carga @pixi/react + todo el motor de renderizado/video/
 // física de la ruleta, que Login/Admin no necesitan para nada. Con import estático, main.tsx los
@@ -26,34 +27,31 @@ const MqttGate = lazy(() => import('./screens/MqttGate.tsx').then((m) => ({ defa
 const VideoErrorPanelPreview = lazy(() =>
   import('./screens/VideoErrorPanelPreview.tsx').then((m) => ({ default: m.VideoErrorPanelPreview })),
 )
+const BettingHomePage = lazy(() => import('./screens/BettingHomePage.tsx').then((m) => ({ default: m.BettingHomePage })))
 const NotFoundView = lazy(() =>
   import('./screens/NotFoundView.tsx').then((m) => ({ default: m.NotFoundView })),
 )
 
-// Preview temporal vía ?preview=<login|admin|admin-rtp-dashboard|admin-rtp-management> -- todavía
-// no hay router en el proyecto (ver conversación), así que la elección de pantalla de nivel
-// superior (Roulette lobby / Login / Admin Panel) se resuelve leyendo el query string acá, una
-// sola vez al montar. Dentro del Admin Panel, AdminPanel.tsx navega entre sus propias vistas
-// (Dashboard/RTP Dashboard/RTP Management) en memoria (useState), sin volver a pasar por acá.
-const ADMIN_PREVIEW_VALUES = [
-  'admin',
-  'admin-game-events',
-  'admin-rtp-dashboard',
-  'admin-rtp-management',
-  'admin-next-results',
-  'admin-next-results-quick-money',
-  'admin-settings',
-  'admin-users',
-  'admin-reports',
-  'admin-system-logs',
-]
+// Todavía no hay router en el proyecto: la pantalla de nivel superior se elige leyendo ?preview=
+// una sola vez al montar (dentro del Admin Panel, AdminPanel.tsx navega entre sus vistas en memoria).
+// En dev, Admin (Login + Admin Panel), Juego (lobbies) y Betting son servidores separados -- ver
+// appSurface.ts: cada uno solo muestra sus pantallas y manda las de los otros a su puerto.
 
 // Conexión MQTT de la MÁQUINA: se abre una sola vez al arrancar, sea cual sea la pantalla, y su
 // estado queda en useMqttStore para cualquier vista. Import dinámico para no meter mqtt.js en el
 // bundle de entrada (mismo criterio que las pantallas lazy de arriba).
-void import('./mqtt/mqttConnection.ts').then((m) => m.startMqttConnection())
-// Salida a internet de la máquina, también global (ver network/internetMonitor.ts).
-startInternetMonitor()
+// Título de la pestaña: index.html (compartido por los tres servidores) dice "Roulette 13"; cada
+// servidor usa el suyo (pedido explícito). Sin separación ('all') queda el de index.html.
+if (APP_SURFACE === 'game') document.title = 'American Roulette'
+if (APP_SURFACE === 'betting') document.title = 'Game Bets'
+if (APP_SURFACE === 'admin') document.title = 'Game Administration'
+
+// Solo en los servidores de Juego y Betting (el Admin no es una máquina/terminal).
+if (APP_SURFACE !== 'admin') {
+  void import('./mqtt/mqttConnection.ts').then((m) => m.startMqttConnection())
+  // Salida a internet de la máquina, también global (ver network/internetMonitor.ts).
+  startInternetMonitor()
+}
 
 // Solo los lobbies redirigen a la pantalla de error cuando la máquina pierde MQTT o internet (ver
 // MqttGate.tsx). El resto de pantallas sigue igual; pueden leer useMqttStore si lo necesitan.
@@ -61,14 +59,27 @@ function lobbyWithMqttGate(screen: ReactNode) {
   return <MqttGate>{screen}</MqttGate>
 }
 
+// Pantalla de otro servidor: redirige a su puerto conservando ?preview= (reemplaza la entrada del
+// historial para que "atrás" no rebote de vuelta). Devuelve el mismo fallback oscuro mientras tanto.
+function redirectToOtherServer(preview: string | null) {
+  window.location.replace(urlForPreview(preview))
+  return <ScreenFallback />
+}
+
 function resolveScreen() {
   const preview = new URLSearchParams(window.location.search).get('preview')
+  // Servidor Admin: sin ?preview= muestra el Login (pedido explícito).
+  if (APP_SURFACE === 'admin' && !preview) return <LoginPage />
+  // Servidor Betting: sin ?preview= muestra el selector de juego (Choose Betting Game) como página.
+  if (APP_SURFACE === 'betting' && !preview) return <BettingHomePage />
+  if (APP_SURFACE !== 'all' && surfaceForPreview(preview) !== APP_SURFACE) return redirectToOtherServer(preview)
   if (preview === 'login') return <LoginPage />
-  if (preview && ADMIN_PREVIEW_VALUES.includes(preview)) return <AdminPanel />
+  if (isAdminPreview(preview)) return <AdminPanel />
   // Player Mode tiene botón propio en el Header (ver Header.tsx: tab 'betting'). Cashier Mode
   // queda por ahora solo accesible por URL directa -- mismo criterio ad-hoc que ya usan las
   // sub-vistas de Admin sin botón dedicado (ej. admin-rtp-management): no existe hoy ningún gate
   // de rol real que distinga cajero de jugador (ver LoginPage.tsx, auth todavía stub).
+  if (preview === 'betting') return <BettingHomePage />
   if (preview === 'roulette-betting') return <RouletteBettingView mode="player" />
   if (preview === 'roulette-betting-cashier') return <RouletteBettingView mode="cashier" />
   // Tab 'lottery' del Header (ver Header.tsx) lleva acá -- punto de entrada a Quick Money, desde

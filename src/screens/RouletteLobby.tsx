@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { SharedLayout } from '../layout/SharedLayout'
 import { useGameConfigStore } from '../store/useGameConfigStore'
+import { useRoundHistoryStore } from '../store/useRoundHistoryStore'
 import { LastGame } from '../components/results/LastGame'
 import { GameList } from '../components/results/GameList'
 import { NumberPanelHotCold } from '../components/numberPanel/NumberPanelHotCold'
@@ -9,6 +10,8 @@ import { LobbyLiveBetsPanel } from '../components/lobbyLiveBets/LobbyLiveBetsPan
 
 export function RouletteLobby() {
   const setGameConfig = useGameConfigStore((state) => state.setGameConfig)
+  // Abre el pop-up del historial (DOM, ver RoundHistoryModal.tsx, montado en App.tsx).
+  const openRoundHistory = useRoundHistoryStore((state) => state.open)
 
   useEffect(() => {
     setGameConfig({
@@ -22,7 +25,7 @@ export function RouletteLobby() {
       <SpinStatsPanel />
       <SharedLayout hideBackground>
         <LastGame />
-        <GameList />
+        <GameList onViewHistory={openRoundHistory} />
       </SharedLayout>
       <LobbyLiveBetsPanel />
     </>

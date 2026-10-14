@@ -12,11 +12,12 @@
 
 import net from 'node:net'
 import { spawnSync } from 'node:child_process'
-import { ADMIN_PORT, APP_PORT, apiPort } from './lib/devEnv.mjs'
+import { APP_PORT, BETTING_PORT, GAME_PORT, apiPort } from './lib/devEnv.mjs'
 
 const PORTS = [
-  { port: APP_PORT, label: 'root app (vite)' },
-  { port: ADMIN_PORT, label: 'admin app (vite)' },
+  { port: APP_PORT, label: 'admin panel (vite)' },
+  { port: GAME_PORT, label: 'game (vite)' },
+  { port: BETTING_PORT, label: 'betting (vite)' },
   // The backend's own HTTP_PORT (from its .env), not a hardcoded guess.
   { port: Number(apiPort()), label: 'backend (Go)' },
 ]

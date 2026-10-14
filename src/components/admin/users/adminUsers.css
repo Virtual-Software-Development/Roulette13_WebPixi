@@ -1,4 +1,4 @@
-/* Users -- compartido por UsersPage/UserStatCard/UserTable/UserAvatar/UserModal/UserFilterPopover
+/* Users -- compartido por UsersPage/UserStatCard/UserTable/UserAvatar/UserFormPanel/UserFilterPopover
    (mismo criterio que adminSettings.css/gameEventDetail.css: varios componentes de una sección
    compartiendo un único stylesheet). Se apoya en los tokens de adminLayout.css (--admin-*) y en
    .admin-panel/.admin-panel-header/.admin-panel-title/.admin-main-topbar (ya estandarizados) --
@@ -605,90 +605,55 @@
 }
 
 /* -------------------------------------------------------------------------------------------
-   User Modal -- tercera forma de modal (ver comentario en UserModal.tsx), mismo mecanismo de
-   backdrop/Escape/foco/animación que confirmDialog.css, namespace propio porque es un formulario,
-   no un mensaje simple. */
-.admin-users-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
+   Add/Edit User -- panel a la derecha de la tabla (antes un modal, pedido explícito). En pantallas
+   angostas UsersPage lo envuelve en AdminDetailPopup (adminDetailPopup.css aporta backdrop, fondo
+   opaco y scroll). Mismo criterio de alto que System Logs: .admin-users-body se achica al alto
+   disponible y el panel scrollea adentro si el formulario no entra. */
+.admin-users-body {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(3, 7, 11, 0.72);
-  backdrop-filter: blur(2px);
-  animation: admin-users-modal-fade-in 150ms ease;
+  gap: 18px;
+  flex: 0 1 auto;
+  min-height: 280px;
 }
 
-.admin-users-modal {
-  width: min(560px, 100%);
-  max-height: min(680px, 100%);
+.admin-users-body > .admin-users-table-card {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.admin-users-form {
+  flex: 0 0 clamp(360px, 32%, 460px);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding: 22px 24px;
-  border-radius: var(--admin-radius);
-  border: 1px solid var(--admin-border);
-  background: linear-gradient(180deg, rgba(12, 22, 32, 0.98) 0%, rgba(6, 13, 20, 0.99) 100%);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-  animation: admin-users-modal-scale-in 150ms ease;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 155, 185, 0.35) transparent;
 }
 
-@keyframes admin-users-modal-fade-in {
-  from {
-    opacity: 0;
-  }
+.admin-detail-popup > .admin-users-form {
+  flex-basis: auto;
 }
 
-@keyframes admin-users-modal-scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .admin-users-modal-backdrop,
-  .admin-users-modal {
-    animation: none;
-  }
-}
-
-@media (max-width: 620px) {
-  .admin-users-modal-backdrop {
-    padding: 12px;
-  }
-
-  .admin-users-modal {
-    width: 100%;
-    max-height: 100%;
-  }
-}
-
-.admin-users-modal-header {
+.admin-users-form-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-shrink: 0;
   margin-bottom: 18px;
 }
 
-.admin-users-modal-title {
+.admin-users-form-title {
   margin: 0;
   font-size: 19px;
   font-weight: 700;
   color: var(--admin-text-primary);
 }
 
-.admin-users-modal-subtitle {
-  margin: 4px 0 0;
-  font-size: 13.5px;
-  color: var(--admin-text-secondary);
-}
-
-.admin-users-modal-close {
+.admin-users-form-close {
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -705,22 +670,22 @@
     color 150ms ease;
 }
 
-.admin-users-modal-close:hover:not(:disabled) {
+.admin-users-form-close:hover:not(:disabled) {
   color: var(--admin-text-primary);
   border-color: rgba(120, 155, 185, 0.4);
 }
 
-.admin-users-modal-close:disabled {
+.admin-users-form-close:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.admin-users-modal-close svg {
+.admin-users-form-close svg {
   width: 15px;
   height: 15px;
 }
 
-.admin-users-modal-form {
+.admin-users-form-form {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -825,14 +790,14 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-green) 25%, transparent);
 }
 
-.admin-users-modal-error {
+.admin-users-form-error {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--admin-red);
 }
 
-.admin-users-modal-footer {
+.admin-users-form-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;

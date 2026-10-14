@@ -5,6 +5,7 @@ import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useNow } from '../hooks/useNow'
 import { buildMediaUrl } from '../utils/media'
 import { navigateToPreview } from '../utils/navigatePreview'
+import { APP_SURFACE } from '../appSurface'
 import { BettingGamePickerModal } from './BettingGamePickerModal'
 import './header.css'
 
@@ -13,6 +14,7 @@ import './header.css'
 const ROULETTE_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg')
 const BETTING_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/27_red_chip.svg')
 const ADMIN_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/17_gear_white.svg')
+const QUICK_MONEY_TAB_ICON_URL = buildMediaUrl('Website_svg_icons/43_quick-money-logo.svg')
 const BALANCE_ICON_URL = buildMediaUrl('Website_svg_icons/41_payouts.svg')
 const USER_ICON_URL = buildMediaUrl('Website_svg_icons/16_user_white_circle.svg')
 
@@ -41,6 +43,19 @@ function RouletteTabIcon() {
 
 function BettingTabIcon() {
   return <img src={BETTING_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
+}
+
+function QuickMoneyTabIcon() {
+  return <img src={QUICK_MONEY_TAB_ICON_URL} className="app-header-tab-icon" alt="" />
+}
+
+// Servidor de Betting (puerto 4200, ver appSurface.ts): en vez de ROULETTE/BETTING/ADMIN, el header
+// muestra un tab por juego de apuesta -- solo una vez dentro de una vista de apuesta (en la página
+// de inicio "Choose Betting Game" no hay tabs). Cambiar de juego conserva el modo (jugador/cajero).
+function bettingPreviewFor(game: ActiveBettingGame): string {
+  const isCashier = new URLSearchParams(window.location.search).get('preview')?.endsWith('-cashier') ?? false
+  const base = game === 'roulette' ? 'roulette-betting' : 'quick-money-betting'
+  return isCashier ? `${base}-cashier` : base
 }
 
 function AdminTabIcon() {
@@ -106,7 +121,7 @@ function AdminHeaderMeta() {
       <button
         type="button"
         className="app-header-admin-logout"
-        onClick={() => navigateToPreview(null)}
+        onClick={() => navigateToPreview('login')}
         aria-label={t('admin.header.logout')}
         title={t('admin.header.logout')}
       >
@@ -152,12 +167,26 @@ export function Header({ activeTab = 'roulette', activeBettingGame }: HeaderProp
   })
 
   const isAdmin = activeTab === 'admin'
+  const isBettingServer = APP_SURFACE === 'betting'
 
   return (
     <>
       <header className="app-header" data-hidden={!lobbyInfoVisible}>
         <div className="app-header-shell">
-          <div className="app-header-logo">
+          {/* En el servidor de Betting el logo vuelve a la página "Choose Betting Game". */}
+          <div
+            className={`app-header-logo${isBettingServer ? ' app-header-logo--clickable' : ''}`}
+            role={isBettingServer ? 'link' : undefined}
+            tabIndex={isBettingServer ? 0 : undefined}
+            onClick={isBettingServer ? () => navigateToPreview('betting') : undefined}
+            onKeyDown={
+              isBettingServer
+                ? (e) => {
+                    if (e.key === 'Enter') navigateToPreview('betting')
+                  }
+                : undefined
+            }
+          >
             {showLogo && logoUrl && !logoFailed && (
               <img
                 src={logoUrl}
@@ -171,38 +200,72 @@ export function Header({ activeTab = 'roulette', activeBettingGame }: HeaderProp
             )}
           </div>
 
-          <nav className="app-header-nav" aria-label={t('header.roulette')}>
-            <div
-              className={`app-header-tab app-header-tab--roulette${activeTab === 'roulette' ? '' : ' app-header-tab--clickable'}`}
-              data-active={activeTab === 'roulette'}
-              role="tab"
-              aria-selected={activeTab === 'roulette'}
-              onClick={activeTab === 'roulette' ? undefined : () => navigateToPreview(null)}
-            >
-              <RouletteTabIcon />
-              <span className="app-header-tab-label">{t('header.roulette')}</span>
-            </div>
-            <div
-              className="app-header-tab app-header-tab--betting app-header-tab--clickable"
-              data-active={false}
-              role="tab"
-              aria-selected={false}
-              onClick={() => setIsBettingPickerOpen(true)}
-            >
-              <BettingTabIcon />
-              <span className="app-header-tab-label">{t('header.betting')}</span>
-            </div>
-            <div
-              className={`app-header-tab app-header-tab--admin${activeTab === 'admin' ? '' : ' app-header-tab--clickable'}`}
-              data-active={activeTab === 'admin'}
-              role="tab"
-              aria-selected={activeTab === 'admin'}
-              onClick={activeTab === 'admin' ? undefined : () => navigateToPreview('admin')}
-            >
-              <AdminTabIcon />
-              <span className="app-header-tab-label">{t('header.admin')}</span>
-            </div>
-          </nav>
+          {isBettingServer ? (
+            <nav className="app-header-nav app-header-nav--underline" aria-label={t('header.betting')}>
+              {activeBettingGame && (
+                <>
+                  <div
+                    className={`app-header-tab app-header-tab--roulette${activeBettingGame === 'roulette' ? '' : ' app-header-tab--clickable'}`}
+                    data-active={activeBettingGame === 'roulette'}
+                    role="tab"
+                    aria-selected={activeBettingGame === 'roulette'}
+                    onClick={activeBettingGame === 'roulette' ? undefined : () => navigateToPreview(bettingPreviewFor('roulette'))}
+                  >
+                    <RouletteTabIcon />
+                    <span className="app-header-tab-label">{t('header.roulette')}</span>
+                  </div>
+                  <div
+                    className={`app-header-tab app-header-tab--lottery${activeBettingGame === 'quickMoney' ? '' : ' app-header-tab--clickable'}`}
+                    data-active={activeBettingGame === 'quickMoney'}
+                    role="tab"
+                    aria-selected={activeBettingGame === 'quickMoney'}
+                    onClick={activeBettingGame === 'quickMoney' ? undefined : () => navigateToPreview(bettingPreviewFor('quickMoney'))}
+                  >
+                    <QuickMoneyTabIcon />
+                    <span className="app-header-tab-label">{t('header.lottery')}</span>
+                  </div>
+                </>
+              )}
+            </nav>
+          ) : (
+            <nav className={`app-header-nav${APP_SURFACE === 'admin' ? ' app-header-nav--underline' : ''}`} aria-label={t('header.roulette')}>
+              {/* Servidor Admin (5173): solo el tab ADMIN (pedido explícito). */}
+              {APP_SURFACE !== 'admin' && (
+                <>
+                  <div
+                    className={`app-header-tab app-header-tab--roulette${activeTab === 'roulette' ? '' : ' app-header-tab--clickable'}`}
+                    data-active={activeTab === 'roulette'}
+                    role="tab"
+                    aria-selected={activeTab === 'roulette'}
+                    onClick={activeTab === 'roulette' ? undefined : () => navigateToPreview(null)}
+                  >
+                    <RouletteTabIcon />
+                    <span className="app-header-tab-label">{t('header.roulette')}</span>
+                  </div>
+                  <div
+                    className="app-header-tab app-header-tab--betting app-header-tab--clickable"
+                    data-active={false}
+                    role="tab"
+                    aria-selected={false}
+                    onClick={() => setIsBettingPickerOpen(true)}
+                  >
+                    <BettingTabIcon />
+                    <span className="app-header-tab-label">{t('header.betting')}</span>
+                  </div>
+                </>
+              )}
+              <div
+                className={`app-header-tab app-header-tab--admin${activeTab === 'admin' ? '' : ' app-header-tab--clickable'}`}
+                data-active={activeTab === 'admin'}
+                role="tab"
+                aria-selected={activeTab === 'admin'}
+                onClick={activeTab === 'admin' ? undefined : () => navigateToPreview('admin')}
+              >
+                <AdminTabIcon />
+                <span className="app-header-tab-label">{t('header.admin')}</span>
+              </div>
+            </nav>
+          )}
 
           <div className="app-header-spacer" />
 

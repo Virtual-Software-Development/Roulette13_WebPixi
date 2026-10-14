@@ -65,6 +65,16 @@
   padding: 0 clamp(10px, 1vw, 18px);
 }
 
+/* Servidor de Betting: el logo vuelve a "Choose Betting Game" (ver Header.tsx). */
+.app-header-logo--clickable {
+  cursor: pointer;
+}
+
+.app-header-logo--clickable:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: -4px;
+}
+
 .app-header-logo-img {
   max-height: 80px;
   max-width: 100%;
@@ -202,6 +212,46 @@
   clip-path: polygon(0 0, calc(100% - var(--skew)) 0, 100% 100%, var(--skew) 100%);
   background: linear-gradient(100deg, transparent 72%, rgba(170, 60, 60, 0.16) 90%, rgba(170, 60, 60, 0.26) 100%);
   pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------------------------
+   Tabs con subrayado -- servidores de Betting (4200, tabs de juego) y Admin (5173, ver Header.tsx:
+   .app-header-nav--underline). Misma barra/paralelogramo, pero el contenido va centrado (el padding
+   compensa la diagonal en ambos lados) y el tab activo NO se pinta de rojo: se marca con un
+   subrayado rojo a lo ancho del tab (pedido explícito). */
+.app-header-nav--underline .app-header-tab {
+  justify-content: center;
+  padding: 0 calc(clamp(16px, 1.8vw, 28px) + var(--skew));
+}
+
+.app-header-nav--underline .app-header-tab[data-active='true'] {
+  background: linear-gradient(110deg, #222a34 0%, #1a2129 55%, #20272f 100%);
+  filter: none;
+  text-shadow: none;
+}
+
+.app-header-nav--underline .app-header-tab[data-active='true']::before,
+.app-header-nav--underline .app-header-tab[data-active='true'] + .app-header-tab[data-active='false']::after {
+  content: none;
+}
+
+/* El subrayado -- a lo ancho de todo el tab, pegado a su borde inferior (no al largo del texto),
+   con un brillo suave hacia arriba. El clip-path del tab recorta sus extremos en diagonal, así la
+   línea sigue la forma del paralelogramo. */
+.app-header-nav--underline .app-header-tab[data-active='true']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #c8121a 0%, #ff3b48 50%, #c8121a 100%);
+  box-shadow: 0 0 10px 1px rgba(255, 40, 45, 0.65);
+  pointer-events: none;
+}
+
+.app-header-nav--underline .app-header-tab[data-active='false'].app-header-tab--clickable:hover {
+  color: #d6d7db;
 }
 
 /* -------------------------------------------------------------------------------------------

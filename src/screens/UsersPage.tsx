@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { UserStatCard } from '../components/admin/users/UserStatCard'
 import { UserTable } from '../components/admin/users/UserTable'
-import { UserModal, type UserModalMode } from '../components/admin/users/UserModal'
+import { UserFormPanel, type UserFormMode } from '../components/admin/users/UserFormPanel'
 import { UserFilterPopover, type RoleFilter, type StatusFilter } from '../components/admin/users/UserFilterPopover'
 import { ConfirmDialog } from '../components/admin/ConfirmDialog'
+import { AdminDetailPopup } from '../components/admin/AdminDetailPopup'
 import { PlusIcon, SearchIcon, ShieldIcon } from '../components/admin/users/icons'
 import { buildMediaUrl } from '../utils/media'
+import { useDetailAsPopup } from '../hooks/useDetailAsPopup'
 import { ADMIN_USERS, DEFAULT_USER_FORM } from '../data/adminUsersMockData'
 import type { AdminUser, AdminUserFormData, UserAvatarAccent } from '../types/adminUsers'
 import '../components/admin/users/adminUsers.css'
@@ -27,7 +29,8 @@ function simulateAction(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ACTION_DURATION_MS))
 }
 
-type ModalState = { mode: UserModalMode; user: AdminUser | null } | null
+// Add/Edit User: panel a la derecha de la tabla en desktop, pop-up en pantallas angostas.
+type FormState = { mode: UserFormMode; user: AdminUser | null } | null
 
 // Dueña de search/filtros/paginación (a diferencia de GameEventsList, que los posee internamente,
 // acá viven en el header de la página -- ver UserFilterPopover/search input abajo -- así que el
@@ -41,7 +44,9 @@ export function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [page, setPage] = useState(1)
-  const [modalState, setModalState] = useState<ModalState>(null)
+  const [formState, setFormState] = useState<FormState>(null)
+  const [saving, setSaving] = useState(false)
+  const detailAsPopup = useDetailAsPopup()
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
@@ -78,12 +83,18 @@ export function UsersPage() {
     return { total, active, inactive, admins, activePct: pct(active), inactivePct: pct(inactive), adminPct: pct(admins) }
   }, [users])
 
-  const handleCreate = () => setModalState({ mode: 'create', user: null })
-  const handleEdit = (user: AdminUser) => setModalState({ mode: 'edit', user })
+  const handleCreate = () => setFormState({ mode: 'create', user: null })
+  const handleEdit = (user: AdminUser) => setFormState({ mode: 'edit', user })
+  const closeForm = () => setFormState(null)
 
-  const handleModalSubmit = async (data: AdminUserFormData) => {
-    await simulateAction()
-    if (modalState?.mode === 'create') {
+  const handleFormSubmit = async (data: AdminUserFormData) => {
+    setSaving(true)
+    try {
+      await simulateAction()
+    } finally {
+      setSaving(false)
+    }
+    if (formState?.mode === 'create') {
       const newUser: AdminUser = {
         id: `usr-${Date.now()}`,
         fullName: data.fullName,
@@ -95,13 +106,13 @@ export function UsersPage() {
         lastLoginAt: null,
       }
       setUsers((prev) => [newUser, ...prev])
-    } else if (modalState?.user) {
-      const targetId = modalState.user.id
+    } else if (formState?.user) {
+      const targetId = formState.user.id
       setUsers((prev) =>
         prev.map((u) => (u.id === targetId ? { ...u, fullName: data.fullName, username: data.username, email: data.email, role: data.role, status: data.status } : u)),
       )
     }
-    setModalState(null)
+    setFormState(null)
   }
 
   const handleDeleteConfirm = async () => {
@@ -112,6 +123,29 @@ export function UsersPage() {
     setDeleteLoading(false)
     setDeleteTarget(null)
   }
+
+  // Mismo elemento en los dos modos (inline o dentro del pop-up). key = usuario/modo: elegir otro
+  // usuario con el panel abierto remonta el formulario con sus datos, sin arrastrar el draft anterior.
+  const userForm = formState && (
+    <UserFormPanel
+      key={formState.user?.id ?? 'new'}
+      mode={formState.mode}
+      initialData={
+        formState.mode === 'edit' && formState.user
+          ? {
+              fullName: formState.user.fullName,
+              username: formState.user.username,
+              email: formState.user.email,
+              password: '',
+              role: formState.user.role,
+              status: formState.user.status,
+            }
+          : DEFAULT_USER_FORM
+      }
+      onClose={closeForm}
+      onSubmit={handleFormSubmit}
+    />
+  )
 
   return (
     <>
@@ -166,37 +200,25 @@ export function UsersPage() {
         />
       </div>
 
-      <UserTable
-        users={pageUsers}
-        totalCount={filteredUsers.length}
-        pageStart={pageStart}
-        pageSize={PAGE_SIZE}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setPage}
-        onEdit={handleEdit}
-        onDeleteRequest={setDeleteTarget}
-      />
-
-      {modalState && (
-        <UserModal
-          mode={modalState.mode}
-          editingName={modalState.user?.fullName}
-          initialData={
-            modalState.mode === 'edit' && modalState.user
-              ? {
-                  fullName: modalState.user.fullName,
-                  username: modalState.user.username,
-                  email: modalState.user.email,
-                  password: '',
-                  role: modalState.user.role,
-                  status: modalState.user.status,
-                }
-              : DEFAULT_USER_FORM
-          }
-          onClose={() => setModalState(null)}
-          onSubmit={handleModalSubmit}
+      <div className="admin-users-body">
+        <UserTable
+          users={pageUsers}
+          totalCount={filteredUsers.length}
+          pageStart={pageStart}
+          pageSize={PAGE_SIZE}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onEdit={handleEdit}
+          onDeleteRequest={setDeleteTarget}
         />
+        {!detailAsPopup && userForm}
+      </div>
+
+      {userForm && detailAsPopup && (
+        <AdminDetailPopup labelledBy="admin-users-form-title" onClose={closeForm} dismissible={!saving}>
+          {userForm}
+        </AdminDetailPopup>
       )}
 
       {deleteTarget && (

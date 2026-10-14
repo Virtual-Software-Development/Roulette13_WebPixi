@@ -19,20 +19,45 @@ function localMediaPlugin(mediaRoot: string): Plugin {
   }
 }
 
+// Admin (Login + Admin Panel), Juego (lobbies) y Betting (vistas de apuesta) corren como tres
+// servidores del mismo código (pedido explícito) -- ver src/appSurface.ts. APP_SURFACE lo pone
+// scripts/run-app.mjs (--surface=admin|game|betting); sin él ('all') es todo en un solo servidor,
+// como antes: `npm run dev`, `npm run build` (server.js) y los tests.
+const ADMIN_PORT = 5173
+const GAME_PORT = 4100
+const BETTING_PORT = 4200
+type AppSurface = 'admin' | 'game' | 'betting' | 'all'
+
+const SURFACE_PORT: Record<AppSurface, number> = { admin: ADMIN_PORT, game: GAME_PORT, betting: BETTING_PORT, all: ADMIN_PORT }
+
+function readSurface(): AppSurface {
+  const value = process.env.APP_SURFACE
+  return value === 'admin' || value === 'game' || value === 'betting' ? value : 'all'
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const surface = readSurface()
 
   return {
     plugins: [react(), localMediaPlugin(env.MEDIA_ROOT ?? './local-media')],
+    define: {
+      __APP_SURFACE__: JSON.stringify(surface),
+      __ADMIN_PORT__: ADMIN_PORT,
+      __GAME_PORT__: GAME_PORT,
+      __BETTING_PORT__: BETTING_PORT,
+    },
+    // Caché de dependencias propia por servidor: los dos corren a la vez desde la misma carpeta y
+    // compartir node_modules/.vite hace que uno invalide al otro.
+    cacheDir: surface === 'all' ? 'node_modules/.vite' : `node_modules/.vite-${surface}`,
     // Workers como módulos ES: el de exportación de Reportes (jsPDF) tiene import() internos, que
     // el formato por defecto (iife) no admite.
     worker: { format: 'es' },
     server: {
-      // Pinned (rather than Vite's default auto-increment-on-conflict) so the admin app's dev
-      // proxy (admin/.env: API_URL) can reliably point here — a silent port bump to 5174 would
-      // otherwise break that without any obvious error.
-      port: 5173,
+      // Fijo (strictPort): cada servidor enlaza al otro por puerto (ver src/appSurface.ts), así que
+      // un salto silencioso a otro puerto rompería esos links sin error visible.
+      port: SURFACE_PORT[surface],
       strictPort: true,
       proxy: {
         '/api': {

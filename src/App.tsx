@@ -27,6 +27,7 @@ import { LIVE_TABLE_BETS_MOCK_DATA } from './data/liveTableBetsMockData'
 import { ResultStatsOverlay } from './components/resultStats/ResultStatsOverlay'
 import { RESULT_STATS_MOCK_DATA } from './data/resultStatsMockData'
 import { LeftStatsSidebarOverlay } from './components/leftStatsSidebar/LeftStatsSidebarOverlay'
+import { RoundHistoryModal } from './components/roundHistory/RoundHistoryModal'
 import { QuickMoneySplitOverlay } from './screens/QuickMoneySplitOverlay'
 import { QuickMoneyVideoView } from './screens/QuickMoneyVideoView'
 import { QuickMoneyLobbyCycle } from './hooks/useQuickMoneyLobbyCycle'
@@ -333,6 +334,7 @@ function App() {
       <LiveTableBetsOverlay data={liveTableBetsData} />
       <ResultStatsOverlay data={resultStatsData} />
       <LeftStatsSidebarOverlay data={liveTableBetsData} />
+      <RoundHistoryModal />
     </>
   )
 }

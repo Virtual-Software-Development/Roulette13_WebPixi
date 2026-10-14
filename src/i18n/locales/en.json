@@ -65,6 +65,39 @@
     "currentGame": "CURRENT GAME",
     "nextRoundIn": "NEXT ROUND IN"
   },
+  "roundHistory": {
+    "title": "Round History",
+    "subtitle": "Last {{count}} completed rounds",
+    "close": "Close",
+    "loading": "Loading round history…",
+    "error": "Could not load the round history.",
+    "retry": "Try again",
+    "empty": "No completed rounds yet.",
+    "roundLabel": "Game: {{round}}",
+    "columns": {
+      "round": "Round",
+      "date": "Date",
+      "time": "Time",
+      "result": "Result",
+      "color": "Color",
+      "parity": "Odd / Even",
+      "range": "Low / High"
+    },
+    "colors": {
+      "red": "Red",
+      "black": "Black",
+      "green": "Green"
+    },
+    "odd": "Odd",
+    "even": "Even",
+    "low": "Low (1–18)",
+    "high": "High (19–36)",
+    "rowsPerPage": "Rows per page",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
+    "pagination": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
   "gameList": {
     "title": "RECENT GAMES",
     "now": "NOW",
@@ -929,13 +962,16 @@
           "title": "Notification Events",
           "subtitle": "Select which events should trigger notifications.",
           "items": {
-            "gameRoundStarted": "Game round started",
-            "gameRoundCompleted": "Game round completed",
-            "systemErrors": "System errors",
-            "highRtpAlert": "High RTP alert",
-            "videoProcessingCompleted": "Video processing completed",
-            "videoProcessingFailed": "Video processing failed",
-            "newUserRegistered": "New user registered"
+            "rtpOutOfBand": "RTP out of band (high or low)",
+            "manualResultOverride": "Manual result override",
+            "rtpSettingsChanged": "RTP settings or profile changed",
+            "rtpProfileExpiringSoon": "RTP profile expiring soon",
+            "roundFailed": "Round failed or cancelled",
+            "mqttBrokerBlocked": "MQTT broker blocked system",
+            "machineOffline": "Machine offline",
+            "largeWin": "Large win",
+            "userAccessChanged": "User role changed or account deactivated",
+            "maintenanceModeToggled": "Maintenance mode turned on or off"
           }
         }
       }

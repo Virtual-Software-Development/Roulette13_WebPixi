@@ -106,20 +106,6 @@ export function AdminSidebar({ items, activeId, onNavigate }: AdminSidebarProps)
       </nav>
 
       <div className="admin-sidebar-footer">
-        <div className="admin-sidebar-status">
-          <span className="admin-sidebar-status-dot" aria-hidden="true" />
-          <span className="admin-sidebar-status-text">{t('admin.dashboard.systemStatus.allOperational')}</span>
-          <svg viewBox="0 0 60 16" className="admin-sidebar-status-wave" aria-hidden="true" focusable="false">
-            <polyline
-              points="0,8 8,8 12,3 16,13 20,5 24,8 60,8"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
         <span className="admin-sidebar-version">v1.0.0</span>
       </div>
     </aside>
