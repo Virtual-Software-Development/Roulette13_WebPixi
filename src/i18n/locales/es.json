@@ -1342,5 +1342,9 @@
       "title": "Sin conexión a internet",
       "description": "Esta terminal perdió la conexión a internet. Revisa el cable de red o el Wi-Fi; la pantalla vuelve sola cuando regrese la conexión."
     }
+  },
+  "sync": {
+    "title": "Sincronizando",
+    "subtitle": "Uniéndose a la ronda en curso…"
   }
 }

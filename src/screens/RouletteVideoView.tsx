@@ -7,6 +7,8 @@ import { RESULT_HOLD_MS, VIDEO_WHEEL_TRANSITION_DURATION_MS, WINNER_PANEL_LEAD_S
 import { easeInOutCubic } from '../utils/easing'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from '../video/videoElements'
 import { onVideoNearEnd } from '../utils/videoSeek'
+import { serverNow } from '../time/serverClock'
+import { RESULT_HOLD_END_OFFSET_MS } from '../sync/lobbyTimeline'
 
 // Escala del <video>, anclada arriba-al-centro (ver `transform-origin: top center` en
 // videoPool.css) -- 1 = sin escalar. Tiene que combinarse en el MISMO string de `transform` que
@@ -97,11 +99,15 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
     function handleEnded() {
       commitPendingResult()
 
-      // Deja el último frame congelado un rato (el resultado visible) antes de
-      // disparar la bajada del video y el regreso de RouletteLobby.
+      // Deja el resultado en pantalla (panel Winner) hasta la hora ABSOLUTA en que todas las máquinas
+      // bajan la rueda (sync/lobbyTimeline.ts) -- no RESULT_HOLD_MS desde este 'ended': los clips son
+      // aleatorios y duran distinto en cada máquina, así un clip corto simplemente deja el panel más
+      // tiempo. Sin T0 conocido (no debería pasar), el hold de siempre.
+      const drawStartMs = useDrawCycleStore.getState().drawStartMs
+      const holdMs = drawStartMs === null ? RESULT_HOLD_MS : drawStartMs + RESULT_HOLD_END_OFFSET_MS - serverNow()
       holdTimer = setTimeout(() => {
         useDrawCycleStore.getState().setActive(false)
-      }, RESULT_HOLD_MS)
+      }, Math.max(0, holdMs))
     }
 
     video.addEventListener('ended', handleEnded)

@@ -17,7 +17,7 @@ import { drawDiamond } from '../../utils/diamond'
 import { createVerticalGradient } from '../../utils/gradients'
 import { getRouletteColor } from '../../utils/rouletteColors'
 import { getColumnGroupPockets } from '../../utils/columnGroups'
-import { formatMoney } from '../../utils/moneyFormat'
+import { formatCompactMoney } from '../../utils/moneyFormat'
 import type { LobbyGroupBets, LobbyGroupKey, LobbyNumberBets } from '../../types/lobbyLiveBets'
 import type { LiveTableBetsData } from '../../types/liveTableBets'
 
@@ -194,7 +194,7 @@ const NumberCell = memo(function NumberCell({ pocket, total, x, y, width, height
       <pixiContainer x={width / 2} y={height / 2}>
         <pixiText text={String(pocket)} style={NUMBER_TEXT_STYLE} x={0} y={-1} anchor={topAnchor} />
         <pixiContainer y={3} scale={pulseScale}>
-          <pixiText text={formatMoney(animatedTotal)} style={AMOUNT_TEXT_STYLE} anchor={bottomAnchor} />
+          <pixiText text={formatCompactMoney(animatedTotal)} style={AMOUNT_TEXT_STYLE} anchor={bottomAnchor} />
         </pixiContainer>
       </pixiContainer>
     </pixiContainer>
@@ -260,13 +260,13 @@ const ZeroColumn = memo(function ZeroColumn({
       <pixiContainer x={width / 2} y={topBandCenterY}>
         <pixiText text="00" style={ZERO_TEXT_STYLE} x={0} y={-1} anchor={topAnchor} />
         <pixiContainer y={3} scale={pulseDoubleZero}>
-          <pixiText text={formatMoney(animatedDoubleZero)} style={ZERO_AMOUNT_STYLE} anchor={bottomAnchor} />
+          <pixiText text={formatCompactMoney(animatedDoubleZero)} style={ZERO_AMOUNT_STYLE} anchor={bottomAnchor} />
         </pixiContainer>
       </pixiContainer>
       <pixiContainer x={width / 2} y={bottomBandCenterY}>
         <pixiText text="0" style={ZERO_TEXT_STYLE} x={0} y={-1} anchor={topAnchor} />
         <pixiContainer y={3} scale={pulseZero}>
-          <pixiText text={formatMoney(animatedZero)} style={ZERO_AMOUNT_STYLE} anchor={bottomAnchor} />
+          <pixiText text={formatCompactMoney(animatedZero)} style={ZERO_AMOUNT_STYLE} anchor={bottomAnchor} />
         </pixiContainer>
       </pixiContainer>
     </pixiContainer>
@@ -334,7 +334,7 @@ const GroupCell = memo(function GroupCell({ x, y, width, height, label, total, d
       <pixiContainer x={textX} y={height / 2}>
         <pixiText text={label} style={GROUP_LABEL_STYLE} x={0} y={-3} anchor={topAnchor} />
         <pixiContainer y={3} scale={pulseScale}>
-          <pixiText text={formatMoney(animatedTotal)} style={GROUP_AMOUNT_STYLE} anchor={bottomAnchor} />
+          <pixiText text={formatCompactMoney(animatedTotal)} style={GROUP_AMOUNT_STYLE} anchor={bottomAnchor} />
         </pixiContainer>
       </pixiContainer>
     </pixiContainer>

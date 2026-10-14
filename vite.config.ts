@@ -30,6 +30,10 @@ type AppSurface = 'admin' | 'game' | 'betting' | 'all'
 
 const SURFACE_PORT: Record<AppSurface, number> = { admin: ADMIN_PORT, game: GAME_PORT, betting: BETTING_PORT, all: ADMIN_PORT }
 
+// `npm run dev:lan` (scripts/dev-lan.mjs): modo TEMPORAL para que otras máquinas de la red entren
+// por la IP de esta y vean lo mismo -- Vite escucha en todas las interfaces en vez de solo localhost.
+const LAN_PREVIEW = process.env.DEV_LAN === '1'
+
 function readSurface(): AppSurface {
   const value = process.env.APP_SURFACE
   return value === 'admin' || value === 'game' || value === 'betting' ? value : 'all'
@@ -47,6 +51,7 @@ export default defineConfig(({ mode }) => {
       __ADMIN_PORT__: ADMIN_PORT,
       __GAME_PORT__: GAME_PORT,
       __BETTING_PORT__: BETTING_PORT,
+      __LAN_PREVIEW__: LAN_PREVIEW,
     },
     // Caché de dependencias propia por servidor: los dos corren a la vez desde la misma carpeta y
     // compartir node_modules/.vite hace que uno invalide al otro.
@@ -59,6 +64,8 @@ export default defineConfig(({ mode }) => {
       // un salto silencioso a otro puerto rompería esos links sin error visible.
       port: SURFACE_PORT[surface],
       strictPort: true,
+      // Solo en `npm run dev:lan`; si no, el default de Vite (localhost).
+      host: LAN_PREVIEW ? true : undefined,
       proxy: {
         '/api': {
           // `||`, not `??`: .env.example ships an empty API_URL=, which must fall back too.

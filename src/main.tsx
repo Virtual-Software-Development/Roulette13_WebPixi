@@ -4,6 +4,7 @@ import './index.css'
 import './i18n'
 import { startInternetMonitor } from './network/internetMonitor.ts'
 import { APP_SURFACE, isAdminPreview, surfaceForPreview, urlForPreview } from './appSurface.ts'
+import { IS_LAN_VIEWER } from './lanPreview.ts'
 
 // Lazy en vez de import estático -- App.tsx carga @pixi/react + todo el motor de renderizado/video/
 // física de la ruleta, que Login/Admin no necesitan para nada. Con import estático, main.tsx los
@@ -46,9 +47,10 @@ if (APP_SURFACE === 'game') document.title = 'American Roulette'
 if (APP_SURFACE === 'betting') document.title = 'Game Bets'
 if (APP_SURFACE === 'admin') document.title = 'Game Administration'
 
-// Solo en los servidores de Juego y Betting (el Admin no es una máquina/terminal).
+// Solo en los servidores de Juego y Betting (el Admin no es una máquina/terminal). Tampoco en un
+// espectador de `npm run dev:lan` (ver lanPreview.ts): no es la terminal y no tiene credenciales.
 if (APP_SURFACE !== 'admin') {
-  void import('./mqtt/mqttConnection.ts').then((m) => m.startMqttConnection())
+  if (!IS_LAN_VIEWER) void import('./mqtt/mqttConnection.ts').then((m) => m.startMqttConnection())
   // Salida a internet de la máquina, también global (ver network/internetMonitor.ts).
   startInternetMonitor()
 }
