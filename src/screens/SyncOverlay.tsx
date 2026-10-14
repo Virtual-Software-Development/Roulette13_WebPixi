@@ -2,17 +2,14 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ensureClockTicking, useClockStore } from '../store/useClockStore'
 import { isLobbySyncing, useLobbySyncStore } from '../store/useLobbySyncStore'
-import { useGameConfigStore } from '../store/useGameConfigStore'
-import { buildMediaUrl } from '../utils/media'
 import './syncOverlay.css'
 
 const FADE_OUT_MS = 400
-const DEFAULT_LOGO_URL = buildMediaUrl('default-logo.png')
 
-// "Sincronizando…" del lobby (ver useLobbySyncStore): blur sobre todo el lobby mientras esta máquina
-// se pone a la par de las demás. DOM fuera de Pixi, como WinnerPanel, en vw/vh (regla de layout: los
-// overlays DOM no pasan por el escalado del canvas de diseño). El indicador es un arco girando con
-// transform (solo compositor): el blur ya es lo caro, el resto tiene que costar casi nada.
+// "Sincronizando…" del lobby (ver useLobbySyncStore): pantalla negra opaca sobre todo el lobby
+// mientras esta máquina se pone a la par de las demás, así no se ven los ajustes de detrás. DOM fuera
+// de Pixi, como WinnerPanel, en vw/vh (regla de layout: los overlays DOM no pasan por el escalado del
+// canvas de diseño). El indicador es un arco girando con transform (solo compositor).
 export function SyncOverlay() {
   const { t } = useTranslation()
   ensureClockTicking()
@@ -20,7 +17,6 @@ export function SyncOverlay() {
   const holdUntilMs = useLobbySyncStore((state) => state.holdUntilMs)
   // Contra el reloj compartido (tick de 200ms; re-render solo cuando el booleano cambia).
   const visible = useClockStore((clock) => isLobbySyncing({ bootDone, holdUntilMs }, clock.now))
-  const logoUrl = useGameConfigStore((state) => state.logoUrl)
   const [mounted, setMounted] = useState(visible)
 
   useEffect(() => {
@@ -42,7 +38,6 @@ export function SyncOverlay() {
       aria-live="polite"
     >
       <div className="sync-overlay-card">
-        <img className="sync-overlay-logo" src={logoUrl || DEFAULT_LOGO_URL} alt="" />
         <div className="sync-overlay-spinner" aria-hidden="true">
           <span className="sync-overlay-spinner-track" />
           <span className="sync-overlay-spinner-arc" />

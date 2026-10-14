@@ -1,5 +1,7 @@
 /* Por encima de todo el lobby (video z-index:5, panel Winner z-index:20, overlays de apuestas) y por
-   debajo de las herramientas de calibración (wheelFrameStepper z-index:1000). */
+   debajo de las herramientas de calibración (wheelFrameStepper z-index:1000). Fondo negro opaco
+   (pedido explícito): no debe verse nada de lo que se acomoda detrás mientras la máquina se pone a
+   la par -- rueda saltando de ángulo, paneles cargando, la tabla de Quick Money armándose. */
 .sync-overlay {
   position: fixed;
   inset: 0;
@@ -7,9 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(6, 9, 16, 0.62);
-  backdrop-filter: blur(1.1vw) saturate(0.75);
-  -webkit-backdrop-filter: blur(1.1vw) saturate(0.75);
+  background: #000000;
   opacity: 1;
   transition-property: opacity;
   transition-timing-function: ease-out;
@@ -29,14 +29,6 @@
   font-family: Arial, sans-serif;
   color: #ffffff;
   text-align: center;
-}
-
-.sync-overlay-logo {
-  max-height: 13vh;
-  max-width: 28vw;
-  object-fit: contain;
-  margin-bottom: 1.5vh;
-  filter: drop-shadow(0 0.4vh 1.6vh rgba(0, 0, 0, 0.55));
 }
 
 .sync-overlay-spinner {

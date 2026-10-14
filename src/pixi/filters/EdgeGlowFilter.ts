@@ -5,10 +5,10 @@ import { Filter, GlProgram, GpuProgram, UniformGroup } from 'pixi.js'
 // de abajo y el JS que anima `progress` nunca puedan desincronizarse por un literal duplicado.
 export const EDGE_GLOW_TAIL_FRACTION = 0.12
 
-// Padding del filtro (px) -- el halo/bloom se pinta un poco más allá del rect 0..width/0..height
-// del objeto base, así que el render target del filtro necesita ese margen extra para no recortarlo.
-// Mismo valor usado como constante en el shader (ver PADDING más abajo) -- si uno cambia, cambiar el
-// otro.
+// Padding del filtro, en px LOCALES de la celda -- el halo/bloom se pinta un poco más allá del rect
+// 0..width/0..height del objeto base, así que el render target del filtro necesita ese margen extra
+// para no recortarlo. Mismo valor usado como constante en el shader (ver PADDING más abajo); el
+// `padding` real del filtro (px de pantalla) es esto por la escala (ver EdgeGlowFilter.scale).
 const EDGE_GLOW_FILTER_PADDING = 6
 
 // Vertex shader compartido por todos los filtros de Pixi (posiciona el quad del filtro
@@ -57,6 +57,7 @@ uniform vec4 uInputSize;
 uniform float uWidth;
 uniform float uHeight;
 uniform float uProgress;
+uniform float uScale;
 
 const float PADDING = ${EDGE_GLOW_FILTER_PADDING}.0;
 const float TAIL_FRACTION = ${EDGE_GLOW_TAIL_FRACTION};
@@ -87,8 +88,10 @@ void main(void)
 {
     // Coordenadas locales del pixel dentro del rect width×height del objeto base (recuperadas de la
     // textura de entrada, ya con el padding restado) -- equivalente al (x, y) que recibía
-    // drawEdgeGlowTrail antes de este cambio.
-    vec2 localPos = vTextureCoord * uInputSize.xy - vec2(PADDING, PADDING);
+    // drawEdgeGlowTrail antes de este cambio. La textura del filtro está en px de PANTALLA y
+    // uWidth/uHeight en px locales: con el lobby escalado (ResponsiveStage, pantallas que no son
+    // 1920x1080) hay que dividir por la escala, o el recorrido queda más grande/chico que la celda.
+    vec2 localPos = vTextureCoord * uInputSize.xy / uScale - vec2(PADDING, PADDING);
 
     // Mismo criterio que perimeterPoint (antes en LiveTableBetsPanel.tsx) pero invertido: dado un
     // punto, encontrar a qué lado pertenece (el más cercano) y su distancia acumulada de perímetro
@@ -151,6 +154,7 @@ struct EdgeGlowUniforms {
   uWidth: f32,
   uHeight: f32,
   uProgress: f32,
+  uScale: f32,
 };
 
 @group(0) @binding(0) var<uniform> gfu: GlobalFilterUniforms;
@@ -219,7 +223,8 @@ fn mainFragment(
   let height = edgeGlowUniforms.uHeight;
   let progress = edgeGlowUniforms.uProgress;
 
-  let localPos = uv * gfu.uInputSize.xy - vec2<f32>(PADDING, PADDING);
+  // Px de pantalla -> px locales de la celda (ver el comentario equivalente en fragmentGl).
+  let localPos = uv * gfu.uInputSize.xy / edgeGlowUniforms.uScale - vec2<f32>(PADDING, PADDING);
 
   // Distancia euclídea al segmento real (clampeado), no a la línea infinita -- ver comentario
   // equivalente en el lado GLSL (fragmentGl) sobre el parche en L que causaba en las esquinas.
@@ -294,6 +299,7 @@ export class EdgeGlowFilter extends Filter {
       uWidth: { value: width, type: 'f32' },
       uHeight: { value: height, type: 'f32' },
       uProgress: { value: progress, type: 'f32' },
+      uScale: { value: 1, type: 'f32' },
     })
 
     super({
@@ -328,5 +334,15 @@ export class EdgeGlowFilter extends Filter {
 
   set height(value: number) {
     this.resources.edgeGlowUniforms.uniforms.uHeight = value
+  }
+
+  /** Escala en pantalla de la celda (px de pantalla por px local) -- ver AnimatedEdgeGlow. */
+  get scale(): number {
+    return this.resources.edgeGlowUniforms.uniforms.uScale
+  }
+
+  set scale(value: number) {
+    this.resources.edgeGlowUniforms.uniforms.uScale = value
+    this.padding = EDGE_GLOW_FILTER_PADDING * value
   }
 }

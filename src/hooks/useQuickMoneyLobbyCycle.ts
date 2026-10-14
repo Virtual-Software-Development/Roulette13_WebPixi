@@ -4,7 +4,6 @@ import { nextDrawNumber, useQuickMoneyRoundStore } from '../store/useQuickMoneyR
 import { useQuickMoneyDrawsStore } from '../store/useQuickMoneyDrawsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useGameConfigStore } from '../store/useGameConfigStore'
-import { useLobbySyncStore } from '../store/useLobbySyncStore'
 import { parseApiDateTime } from '../utils/time'
 import { serverNow } from '../time/serverClock'
 import { QUICK_MONEY_RESULT_OFFSET_MS, quickMoneyDrawAtMs } from '../sync/lobbyTimeline'
@@ -65,14 +64,14 @@ export function publishPendingDraw(rouletteDrawAtMs: number = currentRouletteDra
 // números son los del job de video COMPARTIDO del backend (o, sin backend, con semilla en ese drawNo):
 // mismo sorteo en todas las máquinas. quickMoneyVideo -> quickMoneyResult lo dispara
 // QuickMoneyVideoView a una hora absoluta; este hook solo lo corta si el bloque se queda sin tiempo.
+// Una máquina que llega tarde al video (arrancó a mitad de él, o no alcanzó a descargarlo) muestra el
+// panel de video no disponible con los mismos números, que revela y sale cuando el video termina en
+// las demás (pedido explícito, en vez de esperar con "Sincronizando…").
 export function useQuickMoneyLobbyCycle() {
   useEffect(() => {
     // Un bloque por round: se identifica el round por su hora de sorteo (cambia recién cuando App
     // reagenda el siguiente, ver handleRoundEnded).
     let lastBlockRound: string | null = null
-    // Esta máquina llegó tarde al video de Quick Money (arrancó a mitad del video, o sin tiempo para
-    // descargarlo): "Sincronizando…" y entra directo al resultado cuando el video termina en las demás.
-    let deferredResultAt: number | null = null
 
     const interval = setInterval(() => {
       const nextDrawStartTime = useGameConfigStore.getState().nextDrawStartTime
@@ -95,14 +94,6 @@ export function useQuickMoneyLobbyCycle() {
       const lobby = useLobbyModeStore.getState()
       const { active, lobbyInfoVisible } = useDrawCycleStore.getState()
 
-      if (deferredResultAt !== null) {
-        if (now < deferredResultAt && blockRemainingMs > 0) return
-        deferredResultAt = null
-        publishPendingDraw(rouletteDrawAtMs)
-        lobby.setPhase(blockRemainingMs > 0 ? 'quickMoneyResult' : 'roulette')
-        return
-      }
-
       if (lobby.phase === 'roulette') {
         // Entra a mitad del round (BLOCK_ENTER_AT_MS), nunca durante un sorteo de Roulette.
         if (!lobbyInfoVisible || active || lastBlockRound === nextDrawStartTime) return
@@ -117,16 +108,20 @@ export function useQuickMoneyLobbyCycle() {
             drawNumber: nextDrawNumber(drawNumber),
           })
           if (now < publishAt) {
-            // Las demás están mostrando su video: no se salta al medio, se espera a que termine.
-            useLobbySyncStore.getState().holdUntil(publishAt)
-            deferredResultAt = publishAt
+            // Las demás están mostrando su video: no se salta al medio, se muestra el panel de video
+            // no disponible (QuickMoneyVideoView sin video) con los números del job compartido, anclado
+            // a la misma hora del sorteo.
             void quickMoneyDigitsFor(thisRoundDrawAtMs, drawNumber).then((digits) => {
-              useLobbyModeStore.getState().setPendingDraw({
+              const current = useLobbyModeStore.getState()
+              if (current.phase !== 'roulette' || current.pendingDraw) return
+              current.setPendingDraw({
                 gameNumber: drawNumber,
                 drawnAt: toIso(thisRoundDrawAtMs),
                 pick3Result: digits.pick3,
                 pick4Result: digits.pick4,
               })
+              current.setPendingVideoUrl(null)
+              current.setPhase('quickMoneyVideo')
             })
             return
           }
@@ -175,15 +170,6 @@ export function useQuickMoneyLobbyCycle() {
       // QuickMoneyVideoView muestra entonces VideoErrorPanel con el resultado durante lo que habría
       // durado el video. Sin números del backend o sin tiempo en el bloque, resultado directo.
       if (prepared && blockRemainingMs >= QUICK_MONEY_VIDEO_BUDGET_MS) {
-        // Esta máquina arrancó tarde para descargar el video (~70 MB) pero el backend sí lo generó:
-        // las demás lo están mostrando, así que se espera con "Sincronizando…" en vez del panel de
-        // video no disponible.
-        const bootedLate = useLobbySyncStore.getState().bootAtMs > drawAtMs - QUICK_MONEY_VIDEO_REQUEST_LEAD_MS
-        if (!prepared.videoUrl && !prepared.failed && bootedLate) {
-          deferredResultAt = drawAtMs + QUICK_MONEY_RESULT_OFFSET_MS
-          useLobbySyncStore.getState().holdUntil(deferredResultAt)
-          return
-        }
         if (!prepared.videoUrl) console.warn('[quickMoneyLobbyCycle] el video no llegó a tiempo -- se muestra el panel de video no disponible')
         lobby.setPendingVideoUrl(prepared.videoUrl)
         lobby.setPhase('quickMoneyVideo')

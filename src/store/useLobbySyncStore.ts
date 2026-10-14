@@ -2,27 +2,26 @@ import { create } from 'zustand'
 
 // Estado de la pantalla "Sincronizando…" (SyncOverlay) del lobby. Se muestra:
 // - al arrancar, hasta tener el reloj del servidor, /gameInfo y las apuestas del lobby (bootDone);
-// - y si la máquina entró a mitad de un video (Roulette o Quick Money), hasta que ese video termina
-//   en las demás máquinas (holdUntilMs, hora del servidor) -- no se salta al medio del video.
+// - y en los tramos cortos de un sorteo de Roulette en los que no hay nada propio que mostrar
+//   (holdUntilMs, hora del servidor): los ~2s antes de su hora programada y la bajada final de la
+//   rueda. Si la máquina entra a mitad de un VIDEO (Roulette o Quick Money) no espera acá: muestra el
+//   panel de video no disponible, sincronizado con las demás (ver joinDrawInProgress y
+//   useQuickMoneyLobbyCycle).
 interface LobbySyncState {
   bootDone: boolean
   holdUntilMs: number
-  // Hora del servidor en que arrancó este lobby -- Quick Money la usa para saber si la máquina llegó
-  // tarde para descargar el video del sorteo (ver useQuickMoneyLobbyCycle).
-  bootAtMs: number
   setBootDone: () => void
   // Solo extiende: dos motivos superpuestos se quedan con el que termina más tarde.
   holdUntil: (untilMs: number) => void
-  reset: (bootAtMs: number) => void
+  reset: () => void
 }
 
 export const useLobbySyncStore = create<LobbySyncState>((set) => ({
   bootDone: false,
   holdUntilMs: 0,
-  bootAtMs: 0,
   setBootDone: () => set({ bootDone: true }),
   holdUntil: (untilMs) => set((state) => ({ holdUntilMs: Math.max(state.holdUntilMs, untilMs) })),
-  reset: (bootAtMs) => set({ bootDone: false, holdUntilMs: 0, bootAtMs }),
+  reset: () => set({ bootDone: false, holdUntilMs: 0 }),
 }))
 
 export function isLobbySyncing(state: Pick<LobbySyncState, 'bootDone' | 'holdUntilMs'>, nowMs: number): boolean {

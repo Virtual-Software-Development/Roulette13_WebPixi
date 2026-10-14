@@ -22,9 +22,6 @@ interface PreparedDraw {
   pick3: number[] | null
   pick4: number[] | null
   videoUrl: string | null
-  // El backend no pudo generar el video de este sorteo -- les pasa a todas las máquinas por igual (el
-  // job es compartido), así que todas muestran el panel de video no disponible.
-  failed: boolean
   cancelled: boolean
 }
 
@@ -33,9 +30,6 @@ export interface TakenDraw {
   pick4: number[]
   // null si el video no llegó a tiempo (o falló) -- el resultado se publica igual, sin video.
   videoUrl: string | null
-  // true si el render falló en el backend (para todas las máquinas); false si solo esta máquina no
-  // llegó a descargarlo a tiempo.
-  failed: boolean
 }
 
 let current: PreparedDraw | null = null
@@ -60,7 +54,7 @@ export function prepareQuickMoneyDraw(drawAtMs: number) {
     if (isSameDraw(current, drawAtMs)) return
     current.cancelled = true
   }
-  const prep: PreparedDraw = { drawAtMs, pick3: null, pick4: null, videoUrl: null, failed: false, cancelled: false }
+  const prep: PreparedDraw = { drawAtMs, pick3: null, pick4: null, videoUrl: null, cancelled: false }
   current = prep
   run(prep).catch((err) => console.error('[quickMoneyTestVideo] no se pudo preparar el video de Quick Money', err))
 }
@@ -77,10 +71,7 @@ async function run(prep: PreparedDraw) {
     if (prep.cancelled || serverNow() > prep.drawAtMs) return
     job = await fetchLotteryTestVideo(job.id)
   }
-  if (job.estado !== 'listo') {
-    prep.failed = true
-    throw new Error(job.error ?? `estado ${job.estado}`)
-  }
+  if (job.estado !== 'listo') throw new Error(job.error ?? `estado ${job.estado}`)
 
   const res = await fetch(lotteryTestVideoUrl(job.id))
   if (!res.ok) throw new Error(`descarga del video falló: ${res.status}`)
@@ -115,5 +106,5 @@ export function takePreparedDraw(drawAtMs: number): TakenDraw | null {
   current = null
   prep.cancelled = true
   if (!prep.pick3 || !prep.pick4) return null
-  return { pick3: prep.pick3, pick4: prep.pick4, videoUrl: prep.videoUrl, failed: prep.failed }
+  return { pick3: prep.pick3, pick4: prep.pick4, videoUrl: prep.videoUrl }
 }

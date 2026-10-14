@@ -207,7 +207,22 @@ function App() {
     let cancelled = false
     let cleanupDraw = () => {}
     let cleanupJoin = () => {}
-    useLobbySyncStore.getState().reset(serverNow())
+    // Los stores sobreviven a un remontaje del lobby (MqttGate lo desmonta al perder MQTT/internet y
+    // lo vuelve a montar al reconectar), pero los timers que los iban a mover se destruyen con los
+    // componentes: si la caída fue a mitad de un sorteo, `active` quedaba en true para siempre
+    // (rueda arriba, info del lobby y bolita del último ganador ocultas). Se arranca SIEMPRE desde
+    // el lobby limpio y joinDrawInProgress / el ciclo de Quick Money vuelven a ubicar la fase real.
+    useDrawCycleStore.setState({
+      pendingResult: null,
+      active: false,
+      videoArrived: false,
+      videoSlideProgress: 0,
+      winnerPanelNumber: null,
+      winnerPanelExiting: false,
+      lobbyInfoVisible: true,
+    })
+    useLobbyModeStore.setState({ phase: 'roulette', pendingDraw: null, pendingVideoUrl: null })
+    useLobbySyncStore.getState().reset()
 
     void syncServerClock()
       .catch(() => false)
@@ -216,13 +231,15 @@ function App() {
         startServerClockResync()
         cleanupDraw = scheduleDraw(() => cancelled, true, (data) => {
           applyRoughServerTime(data.serverTimeMs)
-          useLobbySyncStore.getState().reset(serverNow())
 
           const lastDraw = data.lastDraw ?? (data.history[0] && { ...data.history[0], startTime: data.history[0].time })
           const lastDrawStartMs = lastDraw ? parseApiDateTime(lastDraw.startTime).getTime() : null
           useDrawCycleStore.getState().setDrawStartMs(lastDrawStartMs)
           if (lastDraw && lastDrawStartMs !== null) {
-            cleanupJoin = joinDrawInProgress({ drawNo: lastDraw.drawNo, drawStartMs: lastDrawStartMs, result: lastDraw.result })
+            cleanupJoin = joinDrawInProgress(
+              { drawNo: lastDraw.drawNo, drawStartMs: lastDrawStartMs, result: lastDraw.result },
+              setVideoErrorRound,
+            )
           }
           // Tabla Winning Numbers de Quick Money: la misma que ya muestran las demás máquinas.
           void seedQuickMoneyDraws(data, serverNow())

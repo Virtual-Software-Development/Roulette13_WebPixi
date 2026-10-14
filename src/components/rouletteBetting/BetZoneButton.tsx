@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { BetZone } from '../../utils/rouletteBetZones'
 import type { BetSlipEntry } from '../../types/betSlip'
 import { getRouletteColor } from '../../utils/rouletteColors'
-import { formatMoney } from '../../utils/moneyFormat'
+import { formatCompactMoney } from '../../utils/moneyFormat'
 import { useBetSlipStore } from '../../store/useBetSlipStore'
 import { DiamondIcon } from './icons'
 
@@ -86,7 +86,7 @@ export function BetZoneButton({ zone, entry, disabled, onHoverChange, crossHighl
       )}
       {entry && (
         <span className="bet-zone-chip" aria-hidden="true">
-          <span className="bet-zone-chip-amount">{formatMoney(entry.stake)}</span>
+          <span className="bet-zone-chip-amount">{formatCompactMoney(entry.stake)}</span>
         </span>
       )}
     </button>

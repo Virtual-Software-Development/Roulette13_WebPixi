@@ -32,7 +32,14 @@ export function useRotorServerSync(rotorRef: RefObject<HTMLElement | null>, froz
       const target = rotorPhaseMs(now, drawStartMs, periodMs)
       const current = ((Number(animation.currentTime ?? 0) % periodMs) + periodMs) % periodMs
       const diff = Math.abs(current - target)
-      if (Math.min(diff, periodMs - diff) > MAX_DRIFT_MS) animation.currentTime = target
+      if (Math.min(diff, periodMs - diff) <= MAX_DRIFT_MS) return
+      // El rotor Y todo lo que gira con él (bolita del último ganador, chips, highlights, diamantes:
+      // la misma @keyframes lobby-wheel-spin) en el mismo instante -- useWheelRotationSync los
+      // alcanzaría recién en su próximo resync (hasta 1s), y mientras tanto la bolita se vería
+      // fuera de su casilla.
+      for (const spin of document.getAnimations()) {
+        if (spin instanceof CSSAnimation && spin.animationName === 'lobby-wheel-spin') spin.currentTime = target
+      }
     }
 
     sync()

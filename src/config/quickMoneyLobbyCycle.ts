@@ -31,8 +31,6 @@ export const ROULETTE_FOCUS_MS = 105_000
 // Tiempo que debe quedar en el bloque para arrancar el video (fade + clip de ~72s + hold). Si queda
 // menos, se salta el video y se publica el resultado directo.
 export const QUICK_MONEY_VIDEO_BUDGET_MS = 80_000
-// Cuánto queda el último frame del video de Quick Money antes del fade out.
-export const QUICK_MONEY_VIDEO_HOLD_MS = 3_000
 
 // Con cuánta anticipación al sorteo de Quick Money se le pide al backend el video de prueba
 // (números aleatorios + render en sorteo-api, ver quickMoneyTestVideo.ts). El render tarda ~75s y

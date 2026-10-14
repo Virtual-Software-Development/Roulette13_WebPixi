@@ -15,7 +15,7 @@ import { easeInOutCubic } from '../../utils/easing'
 import { drawRoundedPanel } from '../../utils/roundedPanel'
 import { createVerticalGradient } from '../../utils/gradients'
 import { getRouletteColor } from '../../utils/rouletteColors'
-import { formatMoney } from '../../utils/moneyFormat'
+import { formatCompactMoney } from '../../utils/moneyFormat'
 import { buildMediaUrl } from '../../utils/media'
 import { InfoIcon } from '../common/InfoIcon'
 import type { HotColdEntry } from '../../utils/hotColdNumbers'
@@ -350,7 +350,7 @@ const TopBetNumbersRow = memo(function TopBetNumbersRow({
       <pixiContainer x={34} y={height / 2}>
         {row ? <RouletteChip pocket={row.pocket} size={30} fontSize={15} /> : <pixiText text="--" style={PLACEHOLDER_STYLE} anchor={centerAnchor} />}
       </pixiContainer>
-      <pixiText text={row ? formatMoney(row.total) : '--'} style={AMOUNT_STYLE} x={width - 34} y={height / 2} anchor={{ x: 1, y: 0.5 }} />
+      <pixiText text={row ? formatCompactMoney(row.total) : '--'} style={AMOUNT_STYLE} x={width - 34} y={height / 2} anchor={{ x: 1, y: 0.5 }} />
       <pixiContainer x={width - 12} y={height / 2}>
         <ChipsIcon size={18} />
       </pixiContainer>

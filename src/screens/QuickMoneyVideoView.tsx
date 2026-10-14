@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLobbyModeStore } from '../store/useLobbyModeStore'
 import { publishPendingDraw } from '../hooks/useQuickMoneyLobbyCycle'
 import { QUICK_MONEY_VIDEO_SLOT_ID, getVideoSlot, hideVideoSlot, preloadQuickMoneyVideo } from '../video/videoElements'
-import { QUICK_MONEY_VIDEO_DURATION_MS, QUICK_MONEY_VIDEO_FADE_MS } from '../config/quickMoneyLobbyCycle'
+import { QUICK_MONEY_VIDEO_FADE_MS } from '../config/quickMoneyLobbyCycle'
 import { QUICK_MONEY_VIDEO_END_OFFSET_MS } from '../sync/lobbyTimeline'
 import { serverNow } from '../time/serverClock'
 import { VideoErrorPanel, type VideoErrorResult } from './VideoErrorPanel'
@@ -12,7 +12,8 @@ interface VideoFallback {
   // En Quick Money la revelación ES el final del video: el camino normal publica el resultado
   // (publishPendingDraw) recién después de 'ended', y no hay un momento de revelación anterior
   // conocido (el backend no lo informa). Así que revelación y continuación son el mismo instante y
-  // el panel nunca muestra CONTINUING IN -- revela y queda con el resultado durante el hold.
+  // el panel nunca muestra CONTINUING IN -- revela y sale en ese mismo instante, igual que el video
+  // (sin hold, pedido explícito): la pantalla de resultado que sigue muestra los mismos números.
   endedAtIso: string
 }
 
@@ -22,14 +23,16 @@ interface VideoFallback {
 // diferencia de Roulette entra/sale con un fade (sin slide) y no necesita el ticker de Pixi, así que
 // es un componente DOM común montado fuera de <Application>.
 //
-// Secuencia: carga -> fade in -> play -> fin del clip -> hold sobre el último frame -> fade out ->
-// publica el resultado en la tabla y pasa a 'quickMoneyResult'. Todo anclado a la hora programada del
+// Secuencia: carga -> fade in -> play -> fin del clip -> fade out -> publica el resultado en la tabla
+// y pasa a 'quickMoneyResult'. Sin hold después del clip (pedido explícito): el video ya termina
+// mostrando los números, así que se pasa al resultado apenas termina. Todo anclado a la hora programada del
 // sorteo (pendingDraw.drawnAt) con el reloj del servidor, no al 'ended' de esta máquina: el clip dura
 // siempre lo mismo (QUICK_MONEY_VIDEO_DURATION_MS), así que todas las máquinas pasan al resultado a la
 // vez (sync/lobbyTimeline.ts); y si esta máquina montó la vista unos ms tarde, el clip arranca
 // adelantado esa diferencia. Si el video no está (no llegó a tiempo) o no carga, muestra
-// VideoErrorPanel: RESULT IN durante lo que habría durado el video, el resultado al llegar a 0, y la
-// misma salida a la misma hora.
+// VideoErrorPanel: RESULT IN durante lo que habría durado el video y, al llegar a 0, revela y sale a la
+// misma hora que el video en las demás máquinas. Es también lo que ve una máquina que llegó tarde al
+// video (ver useQuickMoneyLobbyCycle).
 const SEEK_MIN_LAG_S = 0.25
 
 export function QuickMoneyVideoView() {
@@ -61,7 +64,7 @@ export function QuickMoneyVideoView() {
     }
 
     function showFallback() {
-      const endedAt = drawAtMs + QUICK_MONEY_VIDEO_FADE_MS + QUICK_MONEY_VIDEO_DURATION_MS
+      const endedAt = drawAtMs + QUICK_MONEY_VIDEO_END_OFFSET_MS
       const pendingDraw = useLobbyModeStore.getState().pendingDraw
       setFallback({
         // Capturado acá: publishPendingDraw limpia pendingDraw recién al final, pero el panel no
@@ -69,11 +72,14 @@ export function QuickMoneyVideoView() {
         result: pendingDraw ? { game: 'quickMoney', pick3: pendingDraw.pick3Result, pick4: pendingDraw.pick4Result } : null,
         endedAtIso: new Date(endedAt).toISOString(),
       })
+      at(endedAt, complete)
     }
 
     video.loop = false
-    // Hold sobre el último frame y salida, a la misma hora que en las demás máquinas.
-    at(drawAtMs + QUICK_MONEY_VIDEO_END_OFFSET_MS, complete)
+    // Salida apenas termina el clip: con su 'ended' o, si no llega (decode colgado), a la hora en que
+    // termina en todas las máquinas -- lo que pase primero. Los clips arrancan alineados (seek de
+    // abajo), así que el 'ended' de cada máquina cae casi en el mismo instante.
+    video.addEventListener('ended', complete)
 
     // Ya viene precargado entero (blob descargado ~2:30 antes del sorteo, ver
     // video/quickMoneyTestVideo.ts), así que esto resuelve al instante.
@@ -97,6 +103,7 @@ export function QuickMoneyVideoView() {
           video.muted = true
           void video.play()
         })
+        at(drawAtMs + QUICK_MONEY_VIDEO_END_OFFSET_MS, complete)
       })
       .catch((err) => {
         console.error('No se pudo cargar el video de Quick Money -- se muestra el panel de video no disponible', err)
@@ -107,6 +114,7 @@ export function QuickMoneyVideoView() {
     return () => {
       cancelled = true
       timers.forEach(clearTimeout)
+      video.removeEventListener('ended', complete)
       // Oculta y rebobina sin soltar el src: queda cargado para el próximo sorteo.
       hideVideoSlot(video)
     }

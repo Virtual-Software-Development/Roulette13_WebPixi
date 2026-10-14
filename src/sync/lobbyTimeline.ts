@@ -7,7 +7,6 @@ import {
   QUICK_MONEY_DRAW_AT_REMAINING_MS,
   QUICK_MONEY_VIDEO_DURATION_MS,
   QUICK_MONEY_VIDEO_FADE_MS,
-  QUICK_MONEY_VIDEO_HOLD_MS,
 } from '../config/quickMoneyLobbyCycle'
 
 // Línea de tiempo ABSOLUTA de un sorteo de Roulette en el lobby, contada desde su hora programada
@@ -67,8 +66,9 @@ export function quickMoneyDrawAtMs(rouletteDrawAtMs: number): number {
   return rouletteDrawAtMs - QUICK_MONEY_DRAW_AT_REMAINING_MS
 }
 
-// Offsets desde el sorteo de Quick Money (QD): fade in + clip + hold sobre el último frame. El fade
-// out y el paso a quickMoneyResult arrancan en QUICK_MONEY_VIDEO_END_OFFSET_MS.
-export const QUICK_MONEY_VIDEO_END_OFFSET_MS = QUICK_MONEY_VIDEO_FADE_MS + QUICK_MONEY_VIDEO_DURATION_MS + QUICK_MONEY_VIDEO_HOLD_MS
+// Offsets desde el sorteo de Quick Money (QD): el clip arranca en QD (QuickMoneyVideoView lo alinea)
+// y termina mostrando él mismo los números, así que el fade out y el paso a quickMoneyResult arrancan
+// apenas termina, sin hold (pedido explícito).
+export const QUICK_MONEY_VIDEO_END_OFFSET_MS = QUICK_MONEY_VIDEO_DURATION_MS
 // Resultado publicado en la tabla (después del fade out).
 export const QUICK_MONEY_RESULT_OFFSET_MS = QUICK_MONEY_VIDEO_END_OFFSET_MS + QUICK_MONEY_VIDEO_FADE_MS
