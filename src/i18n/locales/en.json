@@ -1235,6 +1235,8 @@
         "results": {
           "title": "Simulation Results",
           "close": "Close results",
+          "downloadCsv": "Download CSV",
+          "downloading": "Downloading…",
           "subtitle": "{{rounds}} rounds on the {{engine}} engine · window inside the band in {{withinBand}}% of rounds.",
           "currentRtp": "Current RTP",
           "proposedRtp": "Proposed RTP",

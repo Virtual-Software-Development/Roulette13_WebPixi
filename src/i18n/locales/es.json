@@ -1235,6 +1235,8 @@
         "results": {
           "title": "Resultados de la Simulación",
           "close": "Cerrar resultados",
+          "downloadCsv": "Descargar CSV",
+          "downloading": "Descargando…",
           "subtitle": "{{rounds}} rondas con el motor {{engine}} · ventana dentro de banda el {{withinBand}}% de las rondas.",
           "currentRtp": "RTP Actual",
           "proposedRtp": "RTP Propuesto",

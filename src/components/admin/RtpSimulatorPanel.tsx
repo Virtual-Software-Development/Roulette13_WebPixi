@@ -9,7 +9,13 @@ import { RTP_GAME_ICON_URLS } from '../../data/rtpDashboardMockData'
 import { SIMULATION_TYPE_OPTIONS } from '../../data/rtpManagementMockData'
 import { GAME_LABEL_KEY, RTP_GAMES } from '../../data/rtpGameLabels'
 import { AdminAuthError } from '../../api/adminSession'
-import { fetchRtpSimDefaults, runBackendRtpSimulation, type RtpSimDefaults } from '../../api/rtpSimulator'
+import {
+  deleteRtpSimScenario,
+  downloadRtpSimRoundsCsv,
+  fetchRtpSimDefaults,
+  runBackendRtpSimulation,
+  type RtpSimDefaults,
+} from '../../api/rtpSimulator'
 import type { RtpGame } from '../../types/rtpDashboard'
 import type { RtpSimulationResult, SimulationType } from '../../types/rtpManagement'
 import './rtpSimulatorPanel.css'
@@ -45,6 +51,14 @@ function PlayIcon() {
   )
 }
 
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 function CloseIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -72,7 +86,20 @@ export function RtpSimulatorPanel() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [runError, setRunError] = useState<string | null>(null)
   const [result, setResult] = useState<RtpSimulationResult | null>(null)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
   const runControllerRef = useRef<AbortController | null>(null)
+
+  // El escenario del último resultado sigue vivo en el backend para poder bajar su CSV: se borra
+  // cuando el resultado deja de mostrarse (nueva simulación, cambio de juego, cerrar resultados o
+  // salir del tab). Si nada de eso pasa, el backend lo borra solo tras 8h sin uso.
+  const scenarioId = result?.scenarioId
+  useEffect(() => {
+    if (!scenarioId) return
+    return () => {
+      void deleteRtpSimScenario(scenarioId).catch(() => {})
+    }
+  }, [scenarioId])
 
   // Cambiar de juego (o salir del tab) cancela la simulación en curso -- el escenario temporal se
   // borra en el finally de runBackendRtpSimulation.
@@ -146,6 +173,7 @@ export function RtpSimulatorPanel() {
         { signal: controller.signal, onProgress: (done, total) => setProgress({ done, total }) },
       )
       setResult(simulation)
+      setDownloadError(null)
     } catch (err) {
       if (!controller.signal.aborted) setRunError(errorMessage(err, t))
     } finally {
@@ -153,6 +181,19 @@ export function RtpSimulatorPanel() {
         runControllerRef.current = null
         setProgress(null)
       }
+    }
+  }
+
+  const handleDownload = async () => {
+    if (!result || downloading) return
+    setDownloading(true)
+    setDownloadError(null)
+    try {
+      await downloadRtpSimRoundsCsv(result.scenarioId)
+    } catch (err) {
+      setDownloadError(errorMessage(err, t))
+    } finally {
+      setDownloading(false)
     }
   }
 
@@ -323,17 +364,31 @@ export function RtpSimulatorPanel() {
                 })}
               </p>
             </div>
-            {/* Cierra el panel de resultados -- el formulario vuelve a ocupar todo el ancho. */}
-            <button
-              type="button"
-              className="admin-rtp-simulator-results-close"
-              aria-label={t('admin.rtp.management.simulator.results.close')}
-              title={t('admin.rtp.management.simulator.results.close')}
-              onClick={() => setResult(null)}
-            >
-              <CloseIcon />
-            </button>
+            <div className="admin-rtp-simulator-results-actions">
+              {/* Detalle de cada ronda (resultado, apostado, pagado, RTP) para analizar fuera. */}
+              <button
+                type="button"
+                className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--ghost-strong admin-rtp-simulator-download"
+                disabled={downloading}
+                onClick={handleDownload}
+              >
+                <DownloadIcon />
+                {downloading ? t('admin.rtp.management.simulator.results.downloading') : t('admin.rtp.management.simulator.results.downloadCsv')}
+              </button>
+              {/* Cierra el panel de resultados -- el formulario vuelve a ocupar todo el ancho. */}
+              <button
+                type="button"
+                className="admin-rtp-simulator-results-close"
+                aria-label={t('admin.rtp.management.simulator.results.close')}
+                title={t('admin.rtp.management.simulator.results.close')}
+                onClick={() => setResult(null)}
+              >
+                <CloseIcon />
+              </button>
+            </div>
           </div>
+
+          {downloadError && <InfoBanner variant="warning" title={downloadError} />}
 
           {/* Veredicto de la prueba: ¿el RTP simulado terminó dentro de la banda de prueba? */}
           <div className="admin-rtp-simulator-verdict" data-outcome={result.withinBand ? 'positive' : 'negative'}>

@@ -43,6 +43,9 @@ export type RtpSimulationRiskLevel = 'low' | 'medium' | 'high'
 // jugadas por el motor real; riskLevel se mide por el tamaño del cambio propuesto y withinBand es
 // el veredicto de la prueba (RTP simulado dentro de [minBand, maxBand]).
 export interface RtpSimulationResult {
+  // Escenario del backend que quedó con las rondas jugadas -- de ahí se descarga el CSV. Quien
+  // recibe el resultado lo borra (deleteRtpSimScenario) cuando ya no lo necesita.
+  scenarioId: string
   currentRtp: number
   proposedRtp: number
   differencePp: number
