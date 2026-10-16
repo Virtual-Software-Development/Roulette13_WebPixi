@@ -8,6 +8,11 @@ export interface PendingDrawResult {
 interface DrawCycleState {
   pendingResult: PendingDrawResult | null
   setPendingResult: (result: PendingDrawResult | null) => void
+  // Hora programada (T0, ms) del sorteo de Roulette en curso o, entre sorteos, del último -- ancla de
+  // la línea de tiempo absoluta (sync/lobbyTimeline.ts): cuándo baja la rueda, desde dónde gira el
+  // rotor del lobby. null hasta conocer algún sorteo ejecutado.
+  drawStartMs: number | null
+  setDrawStartMs: (drawStartMs: number | null) => void
   // true mientras la secuencia de video está en curso (subiendo, reproduciendo,
   // congelado en el resultado, o bajando) — leído directamente por RouletteVideoSprite
   // y por los elementos de RouletteLobby que salen/vuelven de escena en simultáneo.
@@ -58,6 +63,8 @@ interface DrawCycleState {
 export const useDrawCycleStore = create<DrawCycleState>((set) => ({
   pendingResult: null,
   setPendingResult: (pendingResult) => set({ pendingResult }),
+  drawStartMs: null,
+  setDrawStartMs: (drawStartMs) => set({ drawStartMs }),
   active: false,
   setActive: (active) => set({ active }),
   videoArrived: false,

@@ -8,7 +8,6 @@ import { VideoErrorRound, type VideoErrorRoundInfo } from './screens/VideoErrorR
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { VideoPoolLayer } from './video/VideoPoolLayer'
 import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from './video/videoElements'
-import { fetchVideoDurationMs } from './video/videoDuration'
 import { fetchGameInfo } from './api/gameInfo'
 import { applyGameInfo } from './api/applyGameInfo'
 import { fetchDrawResult } from './api/drawResult'
@@ -32,8 +31,17 @@ import { QuickMoneySplitOverlay } from './screens/QuickMoneySplitOverlay'
 import { QuickMoneyVideoView } from './screens/QuickMoneyVideoView'
 import { QuickMoneyLobbyCycle } from './hooks/useQuickMoneyLobbyCycle'
 import { useLobbyModeStore } from './store/useLobbyModeStore'
+import { useLobbySyncStore } from './store/useLobbySyncStore'
+import { applyRoughServerTime, serverNow, startServerClockResync, syncServerClock } from './time/serverClock'
+import { joinDrawInProgress } from './sync/joinDrawInProgress'
+import { seedQuickMoneyDraws } from './sync/quickMoneyHistory'
+import { SyncOverlay } from './screens/SyncOverlay'
+import type { GameInfoResponse } from './types/gameInfo'
 
-const RESULT_LEAD_MS = 500
+// Cuánto antes de la hora del sorteo se pide /drawResult y se precarga el clip. El backend ejecuta el
+// sorteo ~2s antes (resultRevealLead), así que el resultado ya existe -- con más margen de precarga,
+// menos máquinas arrancan el video tarde respecto de las demás.
+const RESULT_LEAD_MS = 1800
 // Momento en que se pide /api/bets -- pedido explícito: "10 segundos para cargar el video". Mismo
 // timer que ya agenda resultTimer/startTimer (scheduleDraw, basado en nextDraw.startTime), no uno
 // nuevo independiente.
@@ -47,11 +55,10 @@ const BETS_POLL_MS = 3000
 // video. Corto a propósito: mientras se espera, esta máquina sigue en el lobby y las demás ya
 // están mostrando el video.
 const VIDEO_LOAD_GRACE_MS = 3000
-// Solo si no hubo forma de consultar el video que se iba a mostrar (drawResult no llegó, o no se
-// pudo leer su encabezado) -- duración típica de la librería (14.7s-20.9s, medido con ffprobe).
-const UNKNOWN_VIDEO_DURATION_MS = 18_000
+// Tope de espera de las apuestas del lobby al arrancar, antes de sacar "Sincronizando…" igual.
+const BOOT_BETS_TIMEOUT_MS = 4000
 
-type DrawPreparation = { kind: 'video' } | { kind: 'error'; videoDurationMs: number; result: number | null }
+type DrawPreparation = { kind: 'video' } | { kind: 'error'; result: number | null }
 
 // Rechaza si `promise` no resolvió para `deadlineMs` (timestamp absoluto) -- ningún paso de la
 // preparación del video tiene timeout propio (ver el watchdog más abajo).
@@ -59,7 +66,7 @@ function withDeadline<T>(promise: Promise<T>, deadlineMs: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(
       () => reject(new Error('El video no terminó de cargar a tiempo')),
-      Math.max(0, deadlineMs - Date.now())
+      Math.max(0, deadlineMs - serverNow())
     )
     promise.then(
       (value) => {
@@ -85,7 +92,9 @@ function App() {
   // video (RouletteLobby se queda visible hasta ese momento, sin loader) — el
   // margen de 500ms no alcanza para bufferizar el video, así que se espera al
   // preload (videoReadyPromise) antes de activarla si todavía no terminó.
-  const scheduleDraw = useCallback((isCancelled: () => boolean, seedHistory: boolean) => {
+  // onGameInfo: solo en el arranque (ver el efecto de más abajo), con el /gameInfo ya aplicado y antes
+  // de agendar nada.
+  const scheduleDraw = useCallback((isCancelled: () => boolean, seedHistory: boolean, onGameInfo?: (data: GameInfoResponse) => void) => {
     let resultTimer: ReturnType<typeof setTimeout> | undefined
     let startTimer: ReturnType<typeof setTimeout> | undefined
     let betsTimer: ReturnType<typeof setTimeout> | undefined
@@ -95,10 +104,11 @@ function App() {
       .then((data) => {
         if (isCancelled()) return
         applyGameInfo(data, { seedHistory })
+        onGameInfo?.(data)
 
         const { drawNo, startTime } = data.nextDraw
         const drawStartMs = parseApiDateTime(startTime).getTime()
-        const msUntilStart = Math.max(0, drawStartMs - Date.now())
+        const msUntilStart = Math.max(0, drawStartMs - serverNow())
         const msUntilResult = Math.max(0, msUntilStart - RESULT_LEAD_MS)
         const msUntilBets = Math.max(0, msUntilStart - BETS_LEAD_MS)
 
@@ -119,24 +129,18 @@ function App() {
         }, msUntilBets)
 
         // Siempre resuelve (nunca rechaza) con cómo mostrar la ronda: con el video, si cargó a
-        // tiempo, o con VideoErrorRound si no -- en ese caso con la duración del video que SE IBA a
-        // mostrar, leída de su encabezado, para que el panel ocupe exactamente el mismo tiempo y
-        // esta máquina vuelva al lobby junto con las demás. Reemplaza al viejo clip de reserva
-        // fijo (mostraba un 12 aunque el resultado fuera otro, y el archivo ya no existía).
+        // tiempo, o con VideoErrorRound si no -- que ocupa la misma ventana fija que el video
+        // (sync/lobbyTimeline.ts), así esta máquina vuelve al lobby junto con las demás. Reemplaza
+        // al viejo clip de reserva fijo (mostraba un 12 aunque el resultado fuera otro, y el
+        // archivo ya no existía).
         resultTimer = setTimeout(() => {
           if (isCancelled()) return
 
-          const draw: { result: number | null; videoDuration: Promise<number> | null } = {
-            result: null,
-            videoDuration: null,
-          }
+          const draw: { result: number | null } = { result: null }
 
           const videoLoaded = fetchDrawResult(drawNo).then(async ({ result }) => {
             draw.result = result
             const videoUrl = await pickRandomDrawResultVideoUrl(result)
-            // En paralelo con la carga (son pocos KB) -- si el <video> falla, la duración ya está.
-            draw.videoDuration = fetchVideoDurationMs(videoUrl)
-            draw.videoDuration.catch(() => {})
             await loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), videoUrl)
             return videoUrl
           })
@@ -149,9 +153,9 @@ function App() {
               }
               return { kind: 'video' }
             },
-            async (err): Promise<DrawPreparation> => {
+            (err): DrawPreparation => {
               console.error('El video del sorteo no cargó -- se muestra el panel de próxima ronda en su lugar', err)
-              if (isCancelled()) return { kind: 'error', videoDurationMs: UNKNOWN_VIDEO_DURATION_MS, result: null }
+              if (isCancelled()) return { kind: 'error', result: null }
               // Corta la descarga si quedó colgada a mitad de camino.
               resetVideoSlot(getVideoSlot(DRAW_VIDEO_SLOT_ID))
               // El resultado es real aunque el video no haya cargado -- se registra igual, en el
@@ -160,12 +164,7 @@ function App() {
               if (draw.result !== null) {
                 useDrawCycleStore.getState().setPendingResult({ drawNo, result: draw.result })
               }
-              const videoDurationMs = await (draw.videoDuration ?? Promise.reject(new Error('No se llegó a elegir un video')))
-                .catch((durationErr: unknown) => {
-                  console.error('No se pudo consultar la duración del video -- se usa la típica', durationErr)
-                  return UNKNOWN_VIDEO_DURATION_MS
-                })
-              return { kind: 'error', videoDurationMs, result: draw.result }
+              return { kind: 'error', result: draw.result }
             }
           )
         }, msUntilResult)
@@ -178,16 +177,13 @@ function App() {
             // queremos que el reloj del próximo sorteo dispare la escena de juego a mitad de
             // sesión -- se pierde el frame que se estaba comparando.
             if (isCancelled() || WHEEL_VIDEO_FROZEN) return
+            useDrawCycleStore.getState().setDrawStartMs(drawStartMs)
             useDrawCycleStore.getState().setActive(true)
             useDrawCycleStore.getState().setLobbyInfoVisible(false)
             useDrawCycleStore.getState().setWinnerPanelNumber(null)
             useDrawCycleStore.getState().setWinnerPanelExiting(false)
             if (preparation.kind === 'error') {
-              setVideoErrorRound({
-                drawStartMs,
-                videoDurationMs: preparation.videoDurationMs,
-                result: preparation.result,
-              })
+              setVideoErrorRound({ drawStartMs, result: preparation.result })
             } else {
               setVideoMounted(true)
             }
@@ -208,12 +204,78 @@ function App() {
     }
   }, [])
 
+  // Arranque: primero el reloj del servidor (todo lo que sigue se agenda contra él), después el
+  // primer /gameInfo. Con él: si en las demás máquinas hay un sorteo en pantalla, esta se suma con
+  // "Sincronizando…" (joinDrawInProgress), y se cargan las mismas apuestas que muestran las demás.
   useEffect(() => {
     let cancelled = false
-    const cleanup = scheduleDraw(() => cancelled, true)
+    let cleanupDraw = () => {}
+    let cleanupJoin = () => {}
+    // Los stores sobreviven a un remontaje del lobby (MqttGate lo desmonta al perder MQTT/internet y
+    // lo vuelve a montar al reconectar), pero los timers que los iban a mover se destruyen con los
+    // componentes: si la caída fue a mitad de un sorteo, `active` quedaba en true para siempre
+    // (rueda arriba, info del lobby y bolita del último ganador ocultas). Se arranca SIEMPRE desde
+    // el lobby limpio y joinDrawInProgress / el ciclo de Quick Money vuelven a ubicar la fase real.
+    useDrawCycleStore.setState({
+      pendingResult: null,
+      active: false,
+      videoArrived: false,
+      videoSlideProgress: 0,
+      winnerPanelNumber: null,
+      winnerPanelExiting: false,
+      lobbyInfoVisible: true,
+    })
+    useLobbyModeStore.setState({ phase: 'roulette', pendingDraw: null, pendingVideoUrl: null })
+    useLobbySyncStore.getState().reset()
+
+    void syncServerClock()
+      .catch(() => false)
+      .then(() => {
+        if (cancelled) return
+        startServerClockResync()
+        cleanupDraw = scheduleDraw(() => cancelled, true, (data) => {
+          applyRoughServerTime(data.serverTimeMs)
+
+          const lastDraw = data.lastDraw ?? (data.history[0] && { ...data.history[0], startTime: data.history[0].time })
+          const lastDrawStartMs = lastDraw ? parseApiDateTime(lastDraw.startTime).getTime() : null
+          useDrawCycleStore.getState().setDrawStartMs(lastDrawStartMs)
+          if (lastDraw && lastDrawStartMs !== null) {
+            cleanupJoin = joinDrawInProgress(
+              { drawNo: lastDraw.drawNo, drawStartMs: lastDrawStartMs, result: lastDraw.result },
+              setVideoErrorRound,
+            )
+          }
+          // Tabla Winning Numbers de Quick Money: la misma que ya muestran las demás máquinas.
+          void seedQuickMoneyDraws(data, serverNow())
+
+          // Las demás máquinas muestran en el lobby los totales que pidieron BETS_LEAD_MS antes del
+          // sorteo anterior: los de ESE sorteo, no los parciales del que viene. Pasado ese momento
+          // del sorteo que viene, ya muestran los del pendiente.
+          const nextDrawStartMs = parseApiDateTime(data.nextDraw.startTime).getTime()
+          const betsDrawNo = serverNow() < nextDrawStartMs - BETS_LEAD_MS ? lastDraw?.drawNo : undefined
+          const betsLoaded = fetchBetsSummary(betsDrawNo)
+            .then((bets) => {
+              if (cancelled) return
+              useBetsSummaryStore.getState().setBetsSummary({
+                liveTableBetsData: toLiveTableBetsData(bets),
+                resultStatsData: toResultStatsData(bets),
+              })
+              // Highlights/fichas son de la mesa del video: en el lobby van apagados (ver clearHighlights
+              // más abajo, cuando `active` vuelve a false).
+              useBetsSummaryStore.getState().clearHighlights()
+            })
+            .catch((err) => console.error('No se pudo obtener /api/bets al arrancar', err))
+          const timeout = new Promise((resolve) => setTimeout(resolve, BOOT_BETS_TIMEOUT_MS))
+          void Promise.race([betsLoaded, timeout]).then(() => {
+            if (!cancelled) useLobbySyncStore.getState().setBootDone()
+          })
+        })
+      })
+
     return () => {
       cancelled = true
-      cleanup()
+      cleanupDraw()
+      cleanupJoin()
     }
   }, [scheduleDraw])
 
@@ -310,7 +372,7 @@ function App() {
       if (active || videoMounted || videoErrorRound) return
       const nextDrawStartTime = useGameConfigStore.getState().nextDrawStartTime
       if (!nextDrawStartTime) return
-      const msPastStart = Date.now() - parseApiDateTime(nextDrawStartTime).getTime()
+      const msPastStart = serverNow() - parseApiDateTime(nextDrawStartTime).getTime()
       if (msPastStart > STUCK_GRACE_MS) {
         console.warn('El sorteo no arrancó a tiempo, reagendando...', { nextDrawStartTime })
         scheduleDraw(() => false, false)
@@ -375,6 +437,7 @@ function App() {
       <ResultStatsOverlay data={resultStatsData} />
       <LeftStatsSidebarOverlay data={liveTableBetsData} />
       <RoundHistoryModal />
+      <SyncOverlay />
     </>
   )
 }

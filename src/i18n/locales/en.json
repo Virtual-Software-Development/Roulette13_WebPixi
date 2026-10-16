@@ -1508,5 +1508,8 @@
       "notEnoughToDouble": "Not enough balance to double: this bet would need {{needed}} and you have {{balance}} left after the bets in your slip.",
       "notEnoughToRebet": "Not enough balance to repeat your last bet: it needs {{needed}} and you have {{balance}} left after the bets in your slip."
     }
+  "sync": {
+    "title": "Syncing",
+    "subtitle": "Joining the current round…"
   }
 }

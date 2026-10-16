@@ -16,8 +16,8 @@ import type { CurrentEvent } from '../api/terminalTicket'
 const ROUND_DURATION_SECONDS = 300
 
 // Consecutivo a partir del último sorteo del mock (quickMoneyLobbyMockData.ts), así la tabla de
-// Winning Numbers del lobby compartido sigue una numeración coherente.
-function nextDrawNumber(previous: string): string {
+// Winning Numbers del lobby compartido sigue una numeración coherente (antes era aleatorio).
+export function nextDrawNumber(previous: string): string {
   return String((Number(previous) + 1) % 10000).padStart(4, '0')
 }
 

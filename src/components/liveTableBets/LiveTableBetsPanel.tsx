@@ -16,7 +16,7 @@ import { drawDiamond } from '../../utils/diamond'
 import { createVerticalGradient } from '../../utils/gradients'
 import { getRouletteColor } from '../../utils/rouletteColors'
 import { getColumnGroupPockets } from '../../utils/columnGroups'
-import { formatMoney } from '../../utils/moneyFormat'
+import { formatCompactMoney } from '../../utils/moneyFormat'
 import { buildMediaUrl } from '../../utils/media'
 import type { WheelPocket } from '../../types/wheel'
 import type { LiveTableBetsData, NumberBetTotal } from '../../types/liveTableBets'
@@ -274,7 +274,18 @@ function AnimatedEdgeGlow({ width, height }: { width: number; height: number }) 
 
   useEffect(() => () => filter.destroy(), [filter])
 
+  const graphicsRef = useRef<PixiGraphics>(null)
+
   useTick(() => {
+    // Escala real en pantalla (ResponsiveStage + cualquier transform de los padres): el shader trabaja
+    // en px de pantalla y necesita convertirlos a px locales de la celda (ver EdgeGlowFilter).
+    const graphics = graphicsRef.current
+    if (graphics) {
+      const { a, b } = graphics.worldTransform
+      const scale = Math.hypot(a, b)
+      if (scale > 0 && Math.abs(scale - filter.scale) > 1e-4) filter.scale = scale
+    }
+
     if (reducedMotion) return
 
     const now = performance.now()
@@ -299,7 +310,7 @@ function AnimatedEdgeGlow({ width, height }: { width: number; height: number }) 
     [width, height],
   )
 
-  return <pixiGraphics draw={drawBase} filters={[filter]} />
+  return <pixiGraphics ref={graphicsRef} draw={drawBase} filters={[filter]} />
 }
 
 const centerAnchor = { x: 0.5, y: 0.5 }
@@ -408,7 +419,7 @@ const NumberCell = memo(function NumberCell({ pocket, bet, x, y, width, height }
     <pixiContainer x={x} y={y}>
       <pixiGraphics draw={drawCell} />
       <pixiText text={String(pocket)} style={NUMBER_TEXT_STYLE} x={width / 2} y={height / 2 + NUMBER_TEXT_Y_OFFSET} anchor={topAnchor} />
-      <pixiText text={formatMoney(bet?.total)} style={AMOUNT_TEXT_STYLE} x={width / 2} y={height / 2 + AMOUNT_TEXT_Y_OFFSET} anchor={bottomAnchor} />
+      <pixiText text={formatCompactMoney(bet?.total)} style={AMOUNT_TEXT_STYLE} x={width / 2} y={height / 2 + AMOUNT_TEXT_Y_OFFSET} anchor={bottomAnchor} />
       {showChipStack && <ChipStack x={width - 12} y={12} />}
     </pixiContainer>
   )
@@ -428,7 +439,7 @@ function ZeroHalf({ label, bet, width, height }: ZeroHalfProps) {
   return (
     <pixiContainer>
       <pixiText text={label} style={ZERO_TEXT_STYLE} x={width / 2} y={height / 2 + ZERO_NUMBER_TEXT_Y_OFFSET} anchor={topAnchor} />
-      <pixiText text={formatMoney(bet?.total)} style={ZERO_AMOUNT_STYLE} x={width / 2} y={height / 2 + AMOUNT_TEXT_Y_OFFSET} anchor={bottomAnchor} />
+      <pixiText text={formatCompactMoney(bet?.total)} style={ZERO_AMOUNT_STYLE} x={width / 2} y={height / 2 + AMOUNT_TEXT_Y_OFFSET} anchor={bottomAnchor} />
       {showChipStack && <ChipStack x={width - 14} y={13} />}
     </pixiContainer>
   )
@@ -572,7 +583,7 @@ const DozenBetCell = memo(function DozenBetCell({
     <pixiContainer x={x} y={y}>
       <OutsideCellBackground width={width} height={height} corners={corners} />
       <pixiText text={label} style={DOZEN_LABEL_STYLE} x={width / 2} y={height / 2 - 4} anchor={topAnchor} />
-      <pixiText text={formatMoney(amount)} style={DOZEN_AMOUNT_STYLE} x={width / 2} y={height / 2 + 4} anchor={bottomAnchor} />
+      <pixiText text={formatCompactMoney(amount)} style={DOZEN_AMOUNT_STYLE} x={width / 2} y={height / 2 + 4} anchor={bottomAnchor} />
     </pixiContainer>
   )
 })
@@ -636,7 +647,7 @@ const OutsideBetCell = memo(function OutsideBetCell({ x, y, width, height, label
         </pixiContainer>
       )}
       <pixiText text={label ?? ''} style={OUTSIDE_LABEL_STYLE} x={textZoneX} y={hasAmount ? height / 2 - 4 : height / 2} anchor={hasAmount ? topAnchor : centerAnchor} />
-      {hasAmount && <pixiText text={formatMoney(amount)} style={OUTSIDE_AMOUNT_STYLE} x={textZoneX} y={height / 2 + 4} anchor={bottomAnchor} />}
+      {hasAmount && <pixiText text={formatCompactMoney(amount)} style={OUTSIDE_AMOUNT_STYLE} x={textZoneX} y={height / 2 + 4} anchor={bottomAnchor} />}
     </pixiContainer>
   )
 })

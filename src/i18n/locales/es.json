@@ -1508,5 +1508,8 @@
       "notEnoughToDouble": "No te alcanza el saldo para duplicar: esta apuesta necesitaría {{needed}} y te quedan {{balance}} después de las apuestas cargadas.",
       "notEnoughToRebet": "No te alcanza el saldo para repetir tu última apuesta: necesita {{needed}} y te quedan {{balance}} después de las apuestas cargadas."
     }
+  "sync": {
+    "title": "Sincronizando",
+    "subtitle": "Uniéndose a la ronda en curso…"
   }
 }

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { serverNow } from '../time/serverClock'
 
 const TICK_INTERVAL_MS = 200
 
@@ -12,7 +13,9 @@ interface ClockState {
 // desfasados, 5 árboles re-renderizando 5 veces por segundo). Con un solo `now` compartido acá,
 // useCountdown pasa a ser un selector: zustand solo re-renderiza a cada consumidor cuando SU
 // remainingSeconds entero realmente cambia (~1 vez por segundo), no en cada tick de 200ms.
-export const useClockStore = create<ClockState>(() => ({ now: Date.now() }))
+// Hora del servidor (time/serverClock.ts), no la del kiosco: todas las máquinas muestran el mismo
+// countdown aunque sus relojes estén corridos.
+export const useClockStore = create<ClockState>(() => ({ now: serverNow() }))
 
 let started = false
 
@@ -23,6 +26,6 @@ export function ensureClockTicking(): void {
   if (started) return
   started = true
   setInterval(() => {
-    useClockStore.setState({ now: Date.now() })
+    useClockStore.setState({ now: serverNow() })
   }, TICK_INTERVAL_MS)
 }

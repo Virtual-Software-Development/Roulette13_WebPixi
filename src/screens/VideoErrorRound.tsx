@@ -2,19 +2,20 @@ import { useEffect, useState } from 'react'
 import { VideoErrorPanel } from './VideoErrorPanel'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { commitPendingResult } from '../store/commitPendingResult'
+import { WINNER_PANEL_LEAD_SECONDS } from '../layout/layout.constants'
+import { serverNow } from '../time/serverClock'
 import {
-  RESULT_HOLD_MS,
-  VIDEO_WHEEL_TRANSITION_DURATION_MS,
-  WINNER_PANEL_EXIT_DURATION_MS,
-  WINNER_PANEL_LEAD_SECONDS,
-} from '../layout/layout.constants'
+  LOBBY_RETURN_OFFSET_MS,
+  PLAY_START_OFFSET_MS,
+  RESULT_HOLD_END_OFFSET_MS,
+  VIDEO_WINDOW_END_OFFSET_MS,
+  WINNER_EXIT_OFFSET_MS,
+} from '../sync/lobbyTimeline'
 
 export interface VideoErrorRoundInfo {
   // Hora programada del sorteo (/gameInfo nextDraw.startTime, en ms) -- ancla de toda la línea de
   // tiempo, igual para todas las máquinas.
   drawStartMs: number
-  // Duración del video que se iba a mostrar (ver video/videoDuration.ts).
-  videoDurationMs: number
   // Número ganador real de la ronda, o null si /drawResult no llegó a tiempo (el panel oculta la
   // sección RESULT). Se guarda acá y no se lee de pendingResult porque commitPendingResult lo
   // limpia al terminar el countdown, con el panel todavía en pantalla durante el hold.
@@ -38,11 +39,11 @@ interface VideoErrorRoundProps {
 // el video.
 export function VideoErrorRound({ round, onEnded, onFinished }: VideoErrorRoundProps) {
   const [exiting, setExiting] = useState(false)
-  const { drawStartMs, videoDurationMs } = round
-  // Instante en que el video habría terminado: subida del video + su duración, contado desde la
-  // hora programada del sorteo. Objetivo del countdown "CONTINUING IN" y de onEnded.
-  const playStartAt = drawStartMs + VIDEO_WHEEL_TRANSITION_DURATION_MS
-  const endedAt = playStartAt + videoDurationMs
+  const { drawStartMs } = round
+  // Instante en que termina la ventana reservada del video (sync/lobbyTimeline.ts), la misma en todas
+  // las máquinas sea cual sea su clip. Objetivo del countdown "CONTINUING IN" y de onEnded.
+  const playStartAt = drawStartMs + PLAY_START_OFFSET_MS
+  const endedAt = drawStartMs + VIDEO_WINDOW_END_OFFSET_MS
   // Instante en que el camino normal revela el resultado: RouletteVideoView muestra el panel Winner
   // cuando al video le quedan WINNER_PANEL_LEAD_SECONDS (onVideoNearEnd). Los videos no traen un
   // momento de revelación propio (ni el .webm ni /media-list ni el backend lo informan), así que es
@@ -52,11 +53,11 @@ export function VideoErrorRound({ round, onEnded, onFinished }: VideoErrorRoundP
   // Depende solo de los números de la línea de tiempo, no de `round` entero: re-agendar acá podría
   // volver a disparar onEnded (que agenda el próximo sorteo) si ese momento ya pasó.
   useEffect(() => {
-    const holdEndAt = endedAt + RESULT_HOLD_MS
-    const exitAt = holdEndAt + VIDEO_WHEEL_TRANSITION_DURATION_MS
-    const finishedAt = exitAt + WINNER_PANEL_EXIT_DURATION_MS
+    const holdEndAt = drawStartMs + RESULT_HOLD_END_OFFSET_MS
+    const exitAt = drawStartMs + WINNER_EXIT_OFFSET_MS
+    const finishedAt = drawStartMs + LOBBY_RETURN_OFFSET_MS
 
-    const at = (timestampMs: number, fn: () => void) => setTimeout(fn, Math.max(0, timestampMs - Date.now()))
+    const at = (timestampMs: number, fn: () => void) => setTimeout(fn, Math.max(0, timestampMs - serverNow()))
     const timers = [
       at(endedAt, () => {
         commitPendingResult()
@@ -70,7 +71,7 @@ export function VideoErrorRound({ round, onEnded, onFinished }: VideoErrorRoundP
       }),
     ]
     return () => timers.forEach(clearTimeout)
-  }, [endedAt, onEnded, onFinished])
+  }, [drawStartMs, endedAt, onEnded, onFinished])
 
   return (
     <VideoErrorPanel
