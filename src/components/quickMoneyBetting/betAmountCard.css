@@ -30,6 +30,51 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* +1 / +5 / +10 / +50 / +100: suman al monto (ver BetAmountCard). */
+.qm-amount-quick {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.qm-amount-quick-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+/* El aviso de los botones de la izquierda no debe salirse del panel por la izquierda: se alinea a
+   su borde izquierdo en vez del derecho. */
+.qm-amount-quick-wrap:nth-child(-n + 2) .bet-slip-action-message {
+  left: 0;
+  right: auto;
+}
+
+.qm-amount-quick-button {
+  width: 100%;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--qm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--qm-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.qm-amount-quick-button:hover:not(:disabled) {
+  border-color: rgba(200, 215, 230, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.qm-amount-quick-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .qm-amount-steppers {
   flex: 0 0 auto;
   display: flex;
@@ -63,13 +108,19 @@
 }
 
 .qm-amount-bettype-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
 .qm-amount-bettype {
-  flex: 1 1 0;
-  height: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 46px;
+  padding: 4px 6px;
   border-radius: 8px;
   border: 1px solid var(--qm-border);
   background: rgba(255, 255, 255, 0.03);
@@ -83,9 +134,63 @@
     color 120ms ease,
     border-color 120ms ease;
 }
-.qm-amount-bettype:hover:not([data-selected='true']) {
+.qm-amount-bettype-digits {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.qm-amount-bettype {
+  position: relative;
+}
+
+/* Jugable con los dígitos cargados: borde y fondo con el acento, texto claro. */
+.qm-amount-bettype[data-available='true'] {
+  border-color: color-mix(in srgb, var(--qm-accent, var(--qm-green)) 55%, transparent);
+  background: color-mix(in srgb, var(--qm-accent, var(--qm-green)) 8%, transparent);
   color: var(--qm-text-primary);
-  border-color: rgba(200, 215, 230, 0.4);
+}
+
+/* No jugable: apagado y punteado, para que no se lea como una opción. */
+.qm-amount-bettype:disabled {
+  border-style: dashed;
+  background: transparent;
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.qm-amount-bettype[data-available='true']:hover:not([data-selected='true']) {
+  border-color: var(--qm-accent, var(--qm-green));
+  background: color-mix(in srgb, var(--qm-accent, var(--qm-green)) 16%, transparent);
+}
+
+/* Casilla de selección: vacía en los jugables, con tilde en los elegidos. */
+.qm-amount-bettype-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border-radius: 3px;
+  border: 1.5px solid color-mix(in srgb, var(--qm-accent, var(--qm-green)) 70%, transparent);
+}
+
+.qm-amount-bettype[data-selected='true'] .qm-amount-bettype-check {
+  border-color: #fff;
+  background: #fff;
+}
+
+.qm-amount-bettype[data-selected='true'] .qm-amount-bettype-check::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 3px;
+  height: 7px;
+  border: solid #0f7a3d;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 /* Verde/amber = colores reales de marca de Pick 3/Pick 4 (ver quickMoneyLobbyTokens.css, pedido
    explícito de que combine con la nueva estética en vez de quedar morado/azul huérfano). Sin
@@ -106,9 +211,12 @@
 
 .qm-amount-bettype-hint {
   margin: -4px 0 0;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--qm-text-secondary);
-  opacity: 0.8;
+}
+
+.qm-amount-bettype-hint[data-ready='true'] {
+  color: var(--qm-text-primary);
 }
 
 .qm-add-to-slip {

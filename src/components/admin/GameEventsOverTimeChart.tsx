@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { GameEventsOverTimePoint } from '../../types/adminDashboard'
+import type { GameEventsOverTimeBucket, GameEventsOverTimePoint, GameEventsOverTimeRange } from '../../types/adminDashboard'
 import './gameEventsOverTimeChart.css'
 
 // Barras apiladas en SVG plano, mismo criterio que GamesActivityChart.tsx (el proyecto no tiene
@@ -29,32 +29,47 @@ const STATUSES: StatusSeries[] = [
   { key: 'cancelled', labelKey: 'admin.dashboard.gameEventsOverTime.cancelled', color: 'var(--admin-yellow)' },
 ]
 
-// Solo estado visual por ahora -- el mock cubre únicamente 24H (mismo criterio que el dropdown de
-// rango de GamesActivityChart, que tampoco refetchea).
-const RANGE_OPTIONS = ['24H', '7D', '30D', '90D'] as const
+// 24H va por hora; el resto, por día (GET /round-stats/timeline).
+const RANGE_OPTIONS: GameEventsOverTimeRange[] = ['24h', '7d', '30d', '90d']
+
+// Etiquetas del eje: ~12 como mucho para que no se encimen.
+const MAX_AXIS_LABELS = 12
 
 function totalOf(point: GameEventsOverTimePoint): number {
   return point.completed + point.failed + point.cancelled
 }
 
-// Escala "redonda" hacia arriba en pasos de 100 (o múltiplos) para no pasar de ~8 gridlines.
+// Escala "redonda" hacia arriba con ~4-6 gridlines (1/2/5 × 10^n), mismo criterio que
+// GamePerformanceChart.
 function niceScale(maxValue: number): { yMax: number; ticks: number[] } {
-  const step = 100 * Math.max(1, Math.ceil(maxValue / 800))
-  const yMax = Math.max(step, Math.ceil(maxValue / step) * step)
+  if (maxValue <= 0) return { yMax: 1, ticks: [0, 1] }
+  const rough = maxValue / 5
+  const magnitude = 10 ** Math.floor(Math.log10(rough))
+  const step = Math.max(1, [1, 2, 5, 10].map((m) => m * magnitude).find((s) => s >= rough) ?? 10 * magnitude)
+  const yMax = Math.ceil(maxValue / step) * step
   const ticks: number[] = []
-  for (let v = 0; v <= yMax; v += step) ticks.push(v)
+  for (let v = 0; v <= yMax + step / 2; v += step) ticks.push(v)
   return { yMax, ticks }
 }
 
-function formatHourRange(time: string): string {
-  const [hour] = time.split(':')
-  return `${time} – ${hour}:59`
+interface GameEventsOverTimeChartProps {
+  series: GameEventsOverTimePoint[]
+  bucket: GameEventsOverTimeBucket
+  range: GameEventsOverTimeRange
+  onRangeChange: (range: GameEventsOverTimeRange) => void
 }
 
-export function GameEventsOverTimeChart({ series }: { series: GameEventsOverTimePoint[] }) {
+// Rondas terminadas (completadas, fallidas, canceladas) por hora o por día -- solo cuenta rondas, nunca
+// apuestas.
+export function GameEventsOverTimeChart({ series, bucket, range, onRangeChange }: GameEventsOverTimeChartProps) {
   const { t, i18n } = useTranslation()
-  const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]>('24H')
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const axisFormat = new Intl.DateTimeFormat(i18n.language, bucket === 'hour' ? { hour: '2-digit', minute: '2-digit' } : { month: 'short', day: 'numeric' })
+  const tooltipFormat = new Intl.DateTimeFormat(
+    i18n.language,
+    bucket === 'hour' ? { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' } : { weekday: 'short', month: 'short', day: 'numeric' },
+  )
+  const labelEvery = Math.max(1, Math.ceil(series.length / MAX_AXIS_LABELS))
 
   const count = series.length
   const { yMax, ticks } = niceScale(Math.max(0, ...series.map(totalOf)))
@@ -76,7 +91,9 @@ export function GameEventsOverTimeChart({ series }: { series: GameEventsOverTime
       <div className="admin-panel-header">
         <div>
           <h2 className="admin-panel-title">{t('admin.dashboard.gameEventsOverTime.title')}</h2>
-          <p className="admin-game-events-chart-subtitle">{t('admin.dashboard.gameEventsOverTime.subtitle')}</p>
+          <p className="admin-game-events-chart-subtitle">
+            {t(bucket === 'hour' ? 'admin.dashboard.gameEventsOverTime.subtitle' : 'admin.dashboard.gameEventsOverTime.subtitleDaily')}
+          </p>
         </div>
         <div className="admin-game-events-chart-ranges" role="group">
           {RANGE_OPTIONS.map((option) => (
@@ -86,9 +103,12 @@ export function GameEventsOverTimeChart({ series }: { series: GameEventsOverTime
               className="admin-game-events-chart-range"
               data-selected={option === range}
               aria-pressed={option === range}
-              onClick={() => setRange(option)}
+              onClick={() => {
+                setHoveredIndex(null)
+                onRangeChange(option)
+              }}
             >
-              {option}
+              {option.toUpperCase()}
             </button>
           ))}
         </div>
@@ -139,7 +159,7 @@ export function GameEventsOverTimeChart({ series }: { series: GameEventsOverTime
             let stackBase = 0
             return (
               <g
-                key={point.time}
+                key={point.start}
                 className="admin-game-events-chart-bar"
                 data-dimmed={hoveredIndex !== null && hoveredIndex !== i}
                 onMouseEnter={() => setHoveredIndex(i)}
@@ -157,11 +177,10 @@ export function GameEventsOverTimeChart({ series }: { series: GameEventsOverTime
             )
           })}
 
-          {/* Una etiqueta cada 2 horas para que no se encimen. */}
           {series.map((point, i) =>
-            i % 2 === 0 ? (
-              <text key={point.time} x={slotX(i) + slotWidth / 2} y={CHART_HEIGHT - 8} className="admin-game-events-chart-axis-label" textAnchor="middle">
-                {point.time}
+            i % labelEvery === 0 ? (
+              <text key={point.start} x={slotX(i) + slotWidth / 2} y={CHART_HEIGHT - 8} className="admin-game-events-chart-axis-label" textAnchor="middle">
+                {axisFormat.format(new Date(point.start))}
               </text>
             ) : null,
           )}
@@ -175,7 +194,7 @@ export function GameEventsOverTimeChart({ series }: { series: GameEventsOverTime
             data-align={hoveredCenterPercent > 70 ? 'right' : 'left'}
             style={{ left: `${hoveredCenterPercent}%` }}
           >
-            <div className="admin-game-events-chart-tooltip-title">{formatHourRange(hovered.time)}</div>
+            <div className="admin-game-events-chart-tooltip-title">{tooltipFormat.format(new Date(hovered.start))}</div>
             {STATUSES.map((s) => (
               <div key={s.key} className="admin-game-events-chart-tooltip-row">
                 <span className="admin-game-events-chart-dot" style={{ background: s.color }} />

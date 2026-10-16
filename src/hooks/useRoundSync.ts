@@ -15,6 +15,14 @@ const RESULT_CONFIRM_DELAY_MS = 1500
 // Margen extra tras reabrir el tablero antes de volver a pedir /api/gameInfo por el próximo round
 // -- le da tiempo al backend a publicarlo.
 const NEXT_ROUND_DELAY_MS = 1500
+// Autocontrol: el ciclo es una cadena de timers/fetches de una sola vez -- si cualquier eslabón
+// no llega (pestaña en segundo plano con timers congelados por el navegador, un fetch colgado
+// mientras el backend se reinicia, la PC que se suspende), nada lo retomaba y la página quedaba en
+// 00:00 hasta recargarla a mano. Cada WATCHDOG_INTERVAL_MS (y al volver a la pestaña) se verifica
+// que la ronda no esté vencida hace más de STUCK_AFTER_DRAW_MS; si lo está, se resincroniza desde
+// cero. Un cambio de ronda normal tarda ~6s después del sorteo, así que 20s no interfiere.
+const WATCHDOG_INTERVAL_MS = 5000
+const STUCK_AFTER_DRAW_MS = 20_000
 
 // Mantiene sincronizados nextDrawStartTime/drawNumber (useGameConfigStore), el historial de
 // resultados (useResultsStore) y el estado "hay una ronda en curso" (useDrawCycleStore.active) --
@@ -36,33 +44,51 @@ const NEXT_ROUND_DELAY_MS = 1500
 export function useRoundSync() {
   useEffect(() => {
     let cancelled = false
+    // Cada (re)sincronización arranca una generación nueva: los callbacks de una generación vieja
+    // (un fetch que quedó colgado y responde tarde, por ejemplo) se descartan al llegar.
+    let generation = 0
+    // Hora del sorteo de la ronda que se está siguiendo -- null mientras se pide /gameInfo.
+    let trackedDrawMs: number | null = null
     let gameInfoTimer: ReturnType<typeof setTimeout> | undefined
     let startTimer: ReturnType<typeof setTimeout> | undefined
     let resultTimer: ReturnType<typeof setTimeout> | undefined
     let closeTimer: ReturnType<typeof setTimeout> | undefined
 
+    function clearRoundTimers() {
+      clearTimeout(gameInfoTimer)
+      clearTimeout(startTimer)
+      clearTimeout(resultTimer)
+      clearTimeout(closeTimer)
+    }
+
     // seedHistory solo en la primera carga -- de ahí en más el historial crece exclusivamente vía
     // addResult (mismo criterio que aplica applyGameInfo.ts/App.tsx: volver a hidratar desde
     // /gameInfo en cada ciclo pisaría el resultado real recién agregado).
     function scheduleGameInfoPoll(seedHistory: boolean) {
+      const gen = ++generation
+      const stale = () => cancelled || gen !== generation
+      trackedDrawMs = null
+
       fetchGameInfo()
         .then((data) => {
-          if (cancelled) return
+          if (stale()) return
           applyGameInfo(data, { seedHistory })
 
           const { drawNo, startTime } = data.nextDraw
-          const msUntilStart = Math.max(0, parseApiDateTime(startTime).getTime() - Date.now())
+          const drawMs = parseApiDateTime(startTime).getTime()
+          trackedDrawMs = drawMs
+          const msUntilStart = Math.max(0, drawMs - Date.now())
 
           startTimer = setTimeout(() => {
-            if (cancelled) return
+            if (stale()) return
             useDrawCycleStore.getState().setActive(true)
           }, msUntilStart)
 
           resultTimer = setTimeout(() => {
-            if (cancelled) return
+            if (stale()) return
             fetchDrawResult(drawNo)
               .then(({ result }) => {
-                if (cancelled) return
+                if (stale()) return
                 useResultsStore.getState().addResult({
                   id: drawNo,
                   timestamp: Date.now(),
@@ -72,9 +98,9 @@ export function useRoundSync() {
               })
               .catch((err) => console.error('No se pudo confirmar /api/drawResult', err))
               .finally(() => {
-                if (cancelled) return
+                if (stale()) return
                 closeTimer = setTimeout(() => {
-                  if (cancelled) return
+                  if (stale()) return
                   useDrawCycleStore.getState().setActive(false)
                   gameInfoTimer = setTimeout(() => scheduleGameInfoPoll(false), NEXT_ROUND_DELAY_MS)
                 }, RESULT_HOLD_MS)
@@ -83,18 +109,34 @@ export function useRoundSync() {
         })
         .catch((err) => {
           console.error('No se pudo sincronizar /api/gameInfo', err)
-          if (!cancelled) gameInfoTimer = setTimeout(() => scheduleGameInfoPoll(seedHistory), 5000)
+          if (!stale()) gameInfoTimer = setTimeout(() => scheduleGameInfoPoll(seedHistory), 5000)
         })
     }
 
+    // Ronda vencida hace demasiado (ver STUCK_AFTER_DRAW_MS): descarta la cadena actual y vuelve
+    // a pedir /gameInfo desde cero.
+    function resyncIfStuck() {
+      if (cancelled || trackedDrawMs === null) return
+      if (Date.now() - trackedDrawMs < STUCK_AFTER_DRAW_MS) return
+      console.warn('[roundSync] la ronda no avanzó después del sorteo -- resincronizando')
+      clearRoundTimers()
+      useDrawCycleStore.getState().setActive(false)
+      scheduleGameInfoPoll(false)
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') resyncIfStuck()
+    }
+
     scheduleGameInfoPoll(true)
+    const watchdog = setInterval(resyncIfStuck, WATCHDOG_INTERVAL_MS)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       cancelled = true
-      clearTimeout(gameInfoTimer)
-      clearTimeout(startTimer)
-      clearTimeout(resultTimer)
-      clearTimeout(closeTimer)
+      clearInterval(watchdog)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearRoundTimers()
       // Este hook es el único que pone `active` en true en esta pantalla (no hay video/App.tsx
       // corriendo acá) -- si se desmonta a mitad de una ronda, lo libera para no dejar el store
       // compartido trabado en true.

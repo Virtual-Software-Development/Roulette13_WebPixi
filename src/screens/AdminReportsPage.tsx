@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { gamesOf } from '../api/adminReports'
+import { InfoBanner } from '../components/admin/InfoBanner'
 import { BetsAndPayoutsChart } from '../components/admin/reports/BetsAndPayoutsChart'
 import { periodKindOf } from '../components/admin/reports/document/buildReportDocument'
+import { balanceOf, dailyTargets, rtpOf, totalsByDay, totalsByGame, weekdayHourActivity } from '../components/admin/reports/document/reportData'
 import { downloadRecentReport } from '../components/admin/reports/export/downloadReport'
 import { PeakHoursHeatmap } from '../components/admin/reports/PeakHoursHeatmap'
 import { PerformanceByGameTable } from '../components/admin/reports/PerformanceByGameTable'
@@ -11,8 +14,8 @@ import { ReportFiltersPanel } from '../components/admin/reports/ReportFiltersPan
 import type { ReportPeriodSelection } from '../components/admin/reports/ReportPeriodField'
 import { ReportRtpTrendChart } from '../components/admin/reports/ReportRtpTrendChart'
 import { ReportShortcuts } from '../components/admin/reports/ReportShortcuts'
-import { RECENT_REPORTS, REPORT_SHORTCUTS } from '../data/adminReportsMockData'
-import { balanceOf, gamesOf, rouletteTargetAt, rtpOf, totalsByDay, totalsByGame, weekdayHourActivity } from '../data/reportsMockData'
+import { REPORT_SHORTCUTS } from '../data/adminReportsConfig'
+import { describeReportError, useReportScreenData, type ReportScreenData } from '../hooks/useAdminReports'
 import type {
   BetsPayoutsPoint,
   GamePerformanceRow,
@@ -55,29 +58,30 @@ function resolvePeriod(kind: ReportPeriodKind, selection: ReportPeriodSelection,
   return customPeriod(fromIsoDate(selection.customFrom) ?? now, fromIsoDate(selection.customTo) ?? now, now)
 }
 
-// Datos de la pantalla para el período y juego elegidos (mismo motor que los archivos):
-// - Bets, Payouts & Revenue y RTP Trend: un punto por día. El objetivo de RTP solo existe para
-//   ruleta (RTP Management); Pick 3/4 y "All games" no tienen uno.
+// Datos de la pantalla para el período y juego elegidos (mismos agregados que los archivos):
+// - Bets, Payouts & Revenue y RTP Trend: un punto por día. El objetivo de RTP es el de cada juego
+//   (RTP Management); "All games" no tiene uno.
 // - Peak Hours: ventas y tickets por día de la semana y hora.
 // - Performance by Game: una fila por juego del filtro.
-function screenData(period: ReportPeriod, game: ReportGameFilter, now: Date, language: string) {
+function screenData(data: ReportScreenData, period: ReportPeriod, game: ReportGameFilter, language: string) {
   const dayLabel = new Intl.DateTimeFormat(language.startsWith('es') ? 'es' : 'en-US', { month: 'short', day: 'numeric' })
-  const days = totalsByDay(period, game, now)
+  const days = totalsByDay(data.activity, period, game)
   const bets: BetsPayoutsPoint[] = days.map(({ date, totals }) => ({ label: dayLabel.format(date), bets: totals.sales, payout: totals.prizes }))
-  const rtp: ReportRtpTrendPoint[] = days.map(({ date, totals }) => ({
+  const targets = game === 'all' ? null : dailyTargets(data.rtp, period, game)
+  const rtp: ReportRtpTrendPoint[] = days.map(({ date, totals }, i) => ({
     label: dayLabel.format(date),
     rtp: rtpOf(totals),
-    target: game === 'roulette' ? rouletteTargetAt(date) : null,
+    target: targets?.[i] ?? null,
   }))
   const games = gamesOf(game)
-  const performance: GamePerformanceRow[] = totalsByGame(period, now)
+  const performance: GamePerformanceRow[] = totalsByGame(data.activity)
     .filter((row) => games.includes(row.game))
     .map(({ game: id, totals }) => ({ id, totalBets: totals.bets, totalPayout: totals.prizes, grossRevenue: balanceOf(totals), rtp: rtpOf(totals) }))
   const performanceTotal = performance.reduce(
     (sum, row) => ({ totalBets: sum.totalBets + row.totalBets, totalPayout: sum.totalPayout + row.totalPayout, grossRevenue: sum.grossRevenue + row.grossRevenue }),
     { totalBets: 0, totalPayout: 0, grossRevenue: 0 },
   )
-  return { bets, rtp, peakHours: weekdayHourActivity(period, game, now), performance, performanceTotal }
+  return { bets, rtp, peakHours: weekdayHourActivity(data.activity, game), performance, performanceTotal }
 }
 
 // "Game Performance" + "Report" -> "Game Performance Report", pero sin duplicar cuando el título ya
@@ -111,11 +115,13 @@ function newReportId(): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+const EMPTY_SCREEN_DATA: ReportScreenData = { activity: { days: [], hours: [] }, rtp: { games: [], targets: [], changes: [] } }
+
 // Contenido puro (sin Header/Sidebar propios) -- el shell lo monta AdminPanel.tsx una única vez,
-// vía AdminLayout, mismo criterio que AdminDashboardPage.tsx. No existe todavía un
-// endpoint/store de reportes (ver reportsMockData.ts): todo el estado de acá abajo es local.
-// La pantalla es la misma para todos los tipos de reporte (gráficas y tabla por juego del período
-// y juego elegidos); el detalle de cada tipo de reporte va en el archivo descargado.
+// vía AdminLayout, mismo criterio que AdminDashboardPage.tsx. Los datos vienen de
+// quick-money-backend (GET /reports/*); Recent Reports es local a la sesión (el archivo no se
+// guarda en el backend). La pantalla es la misma para todos los tipos de reporte (gráficas y tabla
+// por juego del período y juego elegidos); el detalle de cada tipo va en el archivo descargado.
 export function AdminReportsPage() {
   const { t, i18n } = useTranslation()
 
@@ -125,14 +131,13 @@ export function AdminReportsPage() {
   const [periodSelection, setPeriodSelection] = useState<ReportPeriodSelection>(() => defaultPeriodSelection(now))
   const [game, setGame] = useState<ReportGameFilter>(DEFAULT_GAME)
   const [reportType, setReportType] = useState<ReportType>(DEFAULT_REPORT_TYPE)
-  const [recentReports, setRecentReports] = useState<RecentReportRow[]>(RECENT_REPORTS)
+  const [recentReports, setRecentReports] = useState<RecentReportRow[]>([])
   const [shortcutFormat, setShortcutFormat] = useState<RecentReportFormat>('csv')
 
-  const isSubstitutions = reportType === 'manualSubstitutions'
-  const effectiveGame: ReportGameFilter = isSubstitutions ? 'roulette' : game
   const periodKind = periodKindOf(reportType)
   const period = useMemo(() => resolvePeriod(periodKind, periodSelection, now), [periodKind, periodSelection, now])
-  const data = useMemo(() => screenData(period, effectiveGame, now, i18n.language), [period, effectiveGame, now, i18n.language])
+  const screen = useReportScreenData(period)
+  const data = useMemo(() => screenData(screen.data ?? EMPTY_SCREEN_DATA, period, game, i18n.language), [screen.data, period, game, i18n.language])
 
   const handleReset = () => {
     setPeriodSelection(defaultPeriodSelection(now))
@@ -155,7 +160,7 @@ export function AdminReportsPage() {
       generatedBy: 'Admin',
       createdAt: formatDateTime(reportNow(generatedAt)),
       period: { start: toIsoDate(reportPeriod.start), end: toIsoDate(reportPeriod.end) },
-      game: type === 'manualSubstitutions' ? 'roulette' : reportGame,
+      game: reportGame,
     }
     setRecentReports((current) => [newReport, ...current])
     return downloadRecentReport(newReport, format, t, i18n.language)
@@ -175,7 +180,7 @@ export function AdminReportsPage() {
     // del panel Report Shortcuts (shortcutFormat).
     generateReport(shortcut.id, t(shortcut.titleKey), resolvePeriod(periodKindOf(shortcut.id), selection, now), game, shortcutFormat).catch((error) => {
       console.error(error)
-      window.alert(t('admin.reports.document.exportError'))
+      window.alert(`${t('admin.reports.document.exportError')}\n\n${describeReportError(error, t)}`)
     })
   }
 
@@ -201,14 +206,23 @@ export function AdminReportsPage() {
         now={now}
         period={periodSelection}
         onPeriodChange={setPeriodSelection}
-        game={effectiveGame}
+        game={game}
         onGameChange={setGame}
-        gameDisabled={isSubstitutions}
         reportType={reportType}
         onReportTypeChange={setReportType}
         onReset={handleReset}
-        exportMenu={<ReportExportMenu onExport={(format) => generateReport(reportType, t(`admin.reports.types.${reportType}`), period, effectiveGame, format)} />}
+        exportMenu={<ReportExportMenu onExport={(format) => generateReport(reportType, t(`admin.reports.types.${reportType}`), period, game, format)} />}
       />
+
+      {screen.status === 'error' && (
+        <div className="admin-reports-state">
+          <InfoBanner variant="warning" title={t('admin.reports.errors.title')} description={describeReportError(screen.error, t)} />
+          <button type="button" className="admin-report-filters-btn admin-report-filters-btn--ghost" onClick={screen.reload}>
+            {t('admin.reports.errors.retry')}
+          </button>
+        </div>
+      )}
+      {screen.status === 'loading' && screen.data === null && <p className="admin-reports-state-text">{t('admin.reports.loading')}</p>}
 
       <div className="admin-reports-charts-row">
         <BetsAndPayoutsChart series={data.bets} />

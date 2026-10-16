@@ -532,6 +532,63 @@
   background: rgba(220, 20, 40, 0.16);
 }
 
+/* Reactivar -- verde, contraparte del rojo de Desactivar. */
+.admin-users-icon-btn--success {
+  color: var(--admin-green);
+  border-color: color-mix(in srgb, var(--admin-green) 30%, var(--admin-border));
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.admin-users-icon-btn--success:hover {
+  color: #4ade80;
+  border-color: color-mix(in srgb, var(--admin-green) 55%, transparent);
+  background: rgba(22, 163, 74, 0.16);
+}
+
+/* El admin no puede desactivarse a sí mismo (lo rechaza también el backend). */
+.admin-users-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-users-self-tag {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.admin-users-empty[data-variant='error'] {
+  color: #f87171;
+}
+
+/* Resultado de crear/editar/activar/desactivar -- mismo lenguaje que admin-settings-save-feedback. */
+.admin-users-feedback {
+  margin-bottom: 14px;
+  padding: 11px 18px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(22, 163, 74, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.admin-users-feedback[data-variant='error'] {
+  color: #f87171;
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(248, 113, 113, 0.32);
+}
+
+.admin-users-form-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--admin-text-secondary);
+}
+
 /* Footer + pagination -- mismo patrón que admin-game-events-footer/pagination. */
 .admin-users-footer {
   display: flex;
@@ -804,4 +861,9 @@
   gap: 12px;
   flex-shrink: 0;
   margin-top: 4px;
+}
+
+.admin-users-toggle-input:disabled + .admin-users-toggle-track {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

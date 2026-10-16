@@ -69,17 +69,24 @@
   color: var(--admin-red);
 }
 
-.admin-recent-rounds-game--pick3 {
+.admin-recent-rounds-game--quickMoney {
   color: var(--admin-green);
-}
-
-.admin-recent-rounds-game--pick4 {
-  color: var(--admin-amber);
 }
 
 .admin-round-pill-group {
   display: inline-flex;
   gap: 6px;
+}
+
+.admin-round-draw {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-round-draw-separator {
+  color: var(--admin-text-secondary);
+  font-weight: 700;
 }
 
 .admin-round-pill {
@@ -105,11 +112,18 @@
   background: linear-gradient(145deg, #2fbf60 0%, #17843c 100%);
 }
 
-/* Pelotas de Pick 3/Pick 4 -- blancas con letras negras (pedido explícito), a diferencia de
-   Roulette (rojo/verde arriba, sin cambios). El nombre del juego en la columna GAME sigue llevando
-   su color real (ver .admin-recent-rounds-game--pick3/--pick4 arriba); solo las pelotas de
+/* Pelotas de Quick Money (Pick 3 + Pick 4) -- blancas con letras negras (pedido explícito), a
+   diferencia de Roulette (rojo/verde arriba, sin cambios). El nombre del juego en la columna GAME sigue llevando
+   su color real (ver .admin-recent-rounds-game--quickMoney arriba); solo las pelotas de
    resultado quedan neutras. */
 .admin-round-pill[data-tone='white'] {
   background: linear-gradient(145deg, #ffffff 0%, #d9e2ec 100%);
   color: #0b1420;
+}
+
+.admin-recent-rounds-empty {
+  margin: 0;
+  padding: 14px 4px 4px;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
 }

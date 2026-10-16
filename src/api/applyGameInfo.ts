@@ -1,11 +1,9 @@
-import i18n from '../i18n'
+import { applyAppLanguage } from '../i18n/applyLanguage'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useResultsStore } from '../store/useResultsStore'
 import { buildMediaUrlOrEmpty } from '../utils/media'
 import { parseApiDateTime } from '../utils/time'
 import type { GameInfoResponse } from '../types/gameInfo'
-
-const LANGUAGE_MAP: Record<string, string> = { es: 'es', en: 'en-US' }
 
 export function applyGameInfo(data: GameInfoResponse, options: { seedHistory: boolean }) {
   useGameConfigStore.getState().setGameConfig({
@@ -42,5 +40,5 @@ export function applyGameInfo(data: GameInfoResponse, options: { seedHistory: bo
     )
   }
 
-  i18n.changeLanguage(LANGUAGE_MAP[data.language] ?? data.language)
+  applyAppLanguage(data.language)
 }

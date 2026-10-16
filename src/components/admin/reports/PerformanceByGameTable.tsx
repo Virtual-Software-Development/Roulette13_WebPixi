@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { formatCurrency, formatPercent } from '../../../utils/reportFormat'
-import { REPORT_GAME_ICON_URLS } from '../../../data/adminReportsMockData'
+import { REPORT_GAME_ICON_URLS } from '../../../data/adminReportsConfig'
 import type { GamePerformanceRow } from '../../../types/adminReports'
 import './performanceByGameTable.css'
 

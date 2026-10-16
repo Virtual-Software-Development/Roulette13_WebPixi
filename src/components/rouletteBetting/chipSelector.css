@@ -24,8 +24,33 @@
   color: var(--betting-text-secondary);
 }
 
-.chip-selector-row {
+.chip-selector-body {
   flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.chip-selector-actions {
+  justify-self: end;
+}
+
+@media (max-width: 900px) {
+  .chip-selector-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chip-selector-spacer {
+    display: none;
+  }
+
+  .chip-selector-actions {
+    justify-self: stretch;
+  }
+}
+
+.chip-selector-row {
   display: flex;
   align-items: center;
   justify-content: center;

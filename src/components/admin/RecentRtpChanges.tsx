@@ -1,13 +1,19 @@
 import { useTranslation } from 'react-i18next'
 import { StatusBadge } from './StatusBadge'
-import { RTP_GAME_ICON_URLS } from '../../data/rtpDashboardMockData'
+import { GAME_LABEL_KEY, RTP_GAME_ICON_URLS } from '../../data/rtpGameLabels'
 import type { RtpChange } from '../../types/rtpDashboard'
 import './recentRtpChanges.css'
 
-const GAME_LABEL_KEY: Record<RtpChange['game'], string> = {
-  roulette: 'admin.dashboard.gamesActivity.roulette',
-  pick3: 'admin.dashboard.gamesActivity.pick3',
-  pick4: 'admin.dashboard.gamesActivity.pick4',
+function formatDateTime(iso: string, language: string): string {
+  return new Intl.DateTimeFormat(language, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(new Date(iso))
 }
 
 function formatPercent(value: number): string {
@@ -20,7 +26,7 @@ interface RecentRtpChangesProps {
 }
 
 export function RecentRtpChanges({ changes, totalCount }: RecentRtpChangesProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   return (
     <section className="admin-panel admin-recent-rtp-changes">
@@ -41,6 +47,13 @@ export function RecentRtpChanges({ changes, totalCount }: RecentRtpChangesProps)
             </tr>
           </thead>
           <tbody>
+            {changes.length === 0 && (
+              <tr>
+                <td colSpan={6} className="admin-recent-rtp-changes-empty">
+                  {t('admin.rtp.changes.empty')}
+                </td>
+              </tr>
+            )}
             {changes.map((change) => (
               <tr key={change.id}>
                 <td>
@@ -51,11 +64,11 @@ export function RecentRtpChanges({ changes, totalCount }: RecentRtpChangesProps)
                 </td>
                 <td className="admin-recent-rtp-changes-percent">{formatPercent(change.previousTarget)}</td>
                 <td className="admin-recent-rtp-changes-percent">{formatPercent(change.newTarget)}</td>
-                <td className="admin-recent-rtp-changes-changed-by">{change.changedBy}</td>
-                <td className="admin-recent-rtp-changes-datetime">{change.dateTime}</td>
+                <td className="admin-recent-rtp-changes-changed-by">{change.changedBy ?? t('admin.rtp.changes.system')}</td>
+                <td className="admin-recent-rtp-changes-datetime">{formatDateTime(change.createdAt, i18n.language)}</td>
                 <td>
-                  <StatusBadge variant={change.status === 'applied' ? 'positive' : 'info'}>
-                    {t(`admin.rtp.changes.${change.status}`)}
+                  <StatusBadge variant={change.automatic ? 'info' : 'positive'}>
+                    {t(change.automatic ? 'admin.rtp.changes.autoApplied' : 'admin.rtp.changes.applied')}
                   </StatusBadge>
                 </td>
               </tr>

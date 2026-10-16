@@ -1,22 +1,9 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AdminFormField } from '../AdminFormField'
 import { EnvelopeIcon } from './icons'
 import { NotificationEventsSection } from './NotificationEventsSection'
 import type { EmailNotificationSettings, NotificationEventsSettings } from '../../../types/adminSettings'
 import './adminSettings.css'
-
-// Sin backend real de envío de email (ver conversación) -- simula Sending.../success con un
-// setTimeout, comentado explícitamente como mock. Feedback inline en el propio botón (el proyecto no
-// tiene un sistema de toasts).
-const ACTION_DURATION_MS = 700
-const FEEDBACK_MS = 3000
-
-type SendStatus = 'idle' | 'sending' | 'success'
-
-function simulateSendTestEmail(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ACTION_DURATION_MS))
-}
 
 interface EmailSettingsCardProps {
   enabled: boolean
@@ -30,7 +17,8 @@ interface EmailSettingsCardProps {
 // Única card de canal del tab Notifications -- combina las antiguas Notification Channels y Email
 // Settings (pedido explícito): Email es el único canal (Discord/Slack/Webhook eliminados), así que
 // su toggle encabeza la card y Recipient(s) va debajo. Sin SMTP Server/Port/Username/Password/From
-// Email (eliminados). Notification Events también vive acá, como columna derecha (pedido explícito).
+// Email (eliminados) ni Send Test Email (el backend todavía no envía emails). Notification Events
+// también vive acá, como columna derecha (pedido explícito).
 export function EmailSettingsCard({
   enabled,
   onToggleEnabled,
@@ -40,13 +28,6 @@ export function EmailSettingsCard({
   onToggleEvent,
 }: EmailSettingsCardProps) {
   const { t } = useTranslation()
-  const [sendStatus, setSendStatus] = useState<SendStatus>('idle')
-
-  useEffect(() => {
-    if (sendStatus !== 'success') return
-    const timer = setTimeout(() => setSendStatus('idle'), FEEDBACK_MS)
-    return () => clearTimeout(timer)
-  }, [sendStatus])
 
   return (
     <section className="admin-panel admin-settings-card admin-settings-card--email">
@@ -74,39 +55,13 @@ export function EmailSettingsCard({
           </label>
         </div>
 
-        {/* Send Test Email en la misma línea que Recipient(s) (ahorra una fila de alto). El label
-            invisible arriba del botón replica la fila de label del campo, así el botón queda alineado
-            con el input sin depender de una altura fija. */}
-        <div className="admin-settings-recipients-row">
-          <AdminFormField
-            id="settings-recipients"
-            label={t('admin.settings.notifications.email.recipients')}
-            description={t('admin.settings.notifications.email.recipientsHelper')}
-            value={data.recipients}
-            onChange={onChangeRecipients}
-          />
-          <div className="admin-settings-recipients-action">
-            <span className="admin-form-field-label" aria-hidden="true">
-              &nbsp;
-            </span>
-            <button
-              type="button"
-              className="admin-settings-btn admin-settings-btn--ghost"
-              disabled={sendStatus === 'sending'}
-              onClick={() => {
-                setSendStatus('sending')
-                simulateSendTestEmail().then(() => setSendStatus('success'))
-              }}
-            >
-              <EnvelopeIcon />
-              {sendStatus === 'sending'
-                ? t('admin.settings.notifications.email.sending')
-                : sendStatus === 'success'
-                  ? t('admin.settings.notifications.email.sentSuccess')
-                  : t('admin.settings.notifications.email.sendTestEmail')}
-            </button>
-          </div>
-        </div>
+        <AdminFormField
+          id="settings-recipients"
+          label={t('admin.settings.notifications.email.recipients')}
+          description={t('admin.settings.notifications.email.recipientsHelper')}
+          value={data.recipients}
+          onChange={onChangeRecipients}
+        />
       </div>
 
       <NotificationEventsSection events={events} onToggleEvent={onToggleEvent} />

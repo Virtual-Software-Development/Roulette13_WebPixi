@@ -11,4 +11,7 @@ export const env = {
   apiKey: import.meta.env.VITE_API_KEY,
   // Opcional: vacío = mismo origen (/mqtt), ver mqtt/mqttConnection.ts.
   mqttUrl: import.meta.env.VITE_MQTT_URL,
+  // TEST ONLY -- REMOVE BEFORE RELEASE: X-Terminal-Token this PC sends with real tickets from the
+  // roulette betting page (see api/rouletteTicket.ts). Set in .env as VITE_TERMINAL_TOKEN.
+  terminalToken: import.meta.env.VITE_TERMINAL_TOKEN as string | undefined,
 } as const

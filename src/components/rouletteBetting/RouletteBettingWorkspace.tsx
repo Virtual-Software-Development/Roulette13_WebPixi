@@ -7,6 +7,7 @@ import { CountdownBadge } from './CountdownBadge'
 import { RecentResultsStrip } from './RecentResultsStrip'
 import { PlayerPanel } from './PlayerPanel'
 import { CashierPanel } from './CashierPanel'
+import { RouletteBetSlipActions } from './RouletteBetSlipActions'
 import './rouletteBettingWorkspace.css'
 
 // Motor compartido entre Player y Cashier Mode -- board, countdown, recent results, chip selector
@@ -30,10 +31,14 @@ export function RouletteBettingWorkspace({ mode }: { mode: BettingMode }) {
         <CountdownBadge />
         <RecentResultsStrip />
       </div>
-      <BettingBoard disabled={boardDisabled} />
+      {/* El tablero ocupa el alto que dejan libre top-row y bottom-row y se achica para entrar ahí
+          (ver .roulette-betting-board-slot): la pantalla nunca se desborda. */}
+      <div className="roulette-betting-board-slot">
+        <BettingBoard disabled={boardDisabled} />
+      </div>
       <SelectedBetsList />
       <div className="roulette-betting-bottom-row">
-        <ChipSelector />
+        <ChipSelector actions={<RouletteBetSlipActions mode={mode} />} />
         {mode === 'player' ? <PlayerPanel /> : <CashierPanel />}
       </div>
     </div>

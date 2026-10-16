@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { StatusBadge } from './StatusBadge'
-import { RTP_GAME_ICON_URLS } from '../../data/rtpDashboardMockData'
-import { GAME_LABEL_KEY } from '../../data/rtpGameLabels'
+import { GAME_LABEL_KEY, RTP_GAME_ICON_URLS } from '../../data/rtpGameLabels'
+import { formatProfileDate, profileScheduleSummary } from './rtpProfileFormat'
 import type { RtpProfile, RtpProfileStatus } from '../../types/rtpManagement'
 import type { StatusBadgeVariant } from '../../types/rtpDashboard'
 import './rtpScheduling.css'
@@ -21,10 +21,12 @@ function formatPercent(value: number): string {
 
 interface RtpProfilesTableProps {
   profiles: RtpProfile[]
-  onToggleDisable: (id: string) => void
+  onToggleDisable: (profile: RtpProfile) => void
+  // Profile con un enable/disable en curso (su botón queda deshabilitado).
+  pendingId: number | null
 }
 
-export function RtpProfilesTable({ profiles, onToggleDisable }: RtpProfilesTableProps) {
+export function RtpProfilesTable({ profiles, onToggleDisable, pendingId }: RtpProfilesTableProps) {
   const { t } = useTranslation()
 
   if (profiles.length === 0) {
@@ -48,7 +50,7 @@ export function RtpProfilesTable({ profiles, onToggleDisable }: RtpProfilesTable
         </thead>
         <tbody>
           {profiles.map((profile) => {
-            const canToggle = profile.status === 'active' || profile.status === 'scheduled' || profile.status === 'disabled'
+            const canToggle = profile.status !== 'expired' && profile.status !== 'replaced'
             return (
               <tr key={profile.id}>
                 <td className="admin-rtp-scheduling-profile-name">{profile.name}</td>
@@ -59,15 +61,20 @@ export function RtpProfilesTable({ profiles, onToggleDisable }: RtpProfilesTable
                   </span>
                 </td>
                 <td className="admin-rtp-scheduling-percent">{formatPercent(profile.targetRtp)}</td>
-                <td className="admin-rtp-scheduling-secondary">{profile.scheduleSummary}</td>
-                <td className="admin-rtp-scheduling-secondary">{profile.start}</td>
-                <td className="admin-rtp-scheduling-secondary">{profile.expires}</td>
+                <td className="admin-rtp-scheduling-secondary">{profileScheduleSummary(profile.activeDays, profile, t)}</td>
+                <td className="admin-rtp-scheduling-secondary">{formatProfileDate(profile.startDate)}</td>
+                <td className="admin-rtp-scheduling-secondary">{formatProfileDate(profile.expiresDate)}</td>
                 <td>
                   <StatusBadge variant={STATUS_VARIANT[profile.status]}>{t(`admin.rtp.management.scheduling.status.${profile.status}`)}</StatusBadge>
                 </td>
                 <td>
                   {canToggle ? (
-                    <button type="button" className="admin-rtp-scheduling-action" onClick={() => onToggleDisable(profile.id)}>
+                    <button
+                      type="button"
+                      className="admin-rtp-scheduling-action"
+                      disabled={pendingId === profile.id}
+                      onClick={() => onToggleDisable(profile)}
+                    >
                       {profile.status === 'disabled'
                         ? t('admin.rtp.management.scheduling.actionsMenu.enable')
                         : t('admin.rtp.management.scheduling.actionsMenu.disable')}

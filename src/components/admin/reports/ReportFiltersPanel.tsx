@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AdminSelect } from '../AdminSelect'
 import { buildMediaUrl } from '../../../utils/media'
 import type { ReportPeriodKind } from '../../../utils/reportPeriod'
-import { REPORT_GAME_FILTER_OPTIONS, REPORT_TYPE_OPTIONS } from '../../../data/adminReportsMockData'
+import { REPORT_GAME_FILTER_OPTIONS, REPORT_TYPE_OPTIONS } from '../../../data/adminReportsConfig'
 import type { ReportGameFilter, ReportType } from '../../../types/adminReports'
 import { ReportPeriodField, type ReportPeriodSelection } from './ReportPeriodField'
 import './reportFiltersPanel.css'
@@ -19,8 +19,6 @@ interface ReportFiltersPanelProps {
   onPeriodChange: (value: ReportPeriodSelection) => void
   game: ReportGameFilter
   onGameChange: (value: ReportGameFilter) => void
-  // Manual Substitutions solo existe en ruleta: el select queda fijo y deshabilitado.
-  gameDisabled?: boolean
   reportType: ReportType
   onReportTypeChange: (value: ReportType) => void
   onReset: () => void
@@ -35,7 +33,6 @@ export function ReportFiltersPanel({
   onPeriodChange,
   game,
   onGameChange,
-  gameDisabled,
   reportType,
   onReportTypeChange,
   onReset,
@@ -60,7 +57,6 @@ export function ReportFiltersPanel({
         value={game}
         options={gameOptions}
         onChange={onGameChange}
-        disabled={gameDisabled}
       />
 
       <ReportPeriodField kind={periodKind} now={now} value={period} onChange={onPeriodChange} />

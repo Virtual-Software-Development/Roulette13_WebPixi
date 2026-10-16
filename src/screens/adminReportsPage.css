@@ -42,3 +42,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Carga / error de los datos del backend, debajo de los filtros. */
+.admin-reports-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-reports-state-text {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}

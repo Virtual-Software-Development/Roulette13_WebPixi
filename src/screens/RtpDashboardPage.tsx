@@ -7,17 +7,12 @@ import { CurrentBandsPanel } from '../components/admin/CurrentBandsPanel'
 import { RecentRtpChanges } from '../components/admin/RecentRtpChanges'
 import { RtpImportantNote } from '../components/admin/RtpImportantNote'
 import { RtpStabilityChart } from '../components/admin/RtpStabilityChart'
-import { useNow } from '../hooks/useNow'
-import {
-  HOUSE_MARGIN,
-  MANUAL_OVERRIDES,
-  RTP_BANDS,
-  RTP_CHANGES,
-  RTP_CHANGES_TOTAL_COUNT,
-  RTP_HISTORY_BY_RANGE,
-  RTP_METRIC_CARDS,
-  RTP_STABILITY_BY_GAME,
-} from '../data/rtpDashboardMockData'
+import { RtpLoadState } from '../components/admin/RtpLoadState'
+import { InfoBanner } from '../components/admin/InfoBanner'
+import { describeRtpError } from '../hooks/useRtpManagement'
+import { useRtpDashboard } from '../hooks/useRtpDashboard'
+import type { RtpBand } from '../types/rtpDashboard'
+import '../components/admin/rtpManagementShared.css'
 import './rtpDashboardPage.css'
 
 const LAST_UPDATED_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -41,25 +36,47 @@ function formatTimezoneOffset(date: Date): string {
 // Date Range / Game Scope / Open Settings / Open Simulator, sin RTP Distribution by Game. Esta
 // pantalla no es RTP Settings ni RTP Simulator. Contenido puro (sin Header/Sidebar propios) -- el
 // shell lo monta AdminPanel.tsx una única vez, vía AdminLayout (ver AdminDashboardPage.tsx).
+// Datos: internal/rtpstats del backend, solo de rondas COMPLETED; se refrescan cada minuto.
 export function RtpDashboardPage() {
   const { t } = useTranslation()
-  const now = useNow()
+  const { status, data, error, reload } = useRtpDashboard()
+
+  const header = (
+    <div className="admin-main-topbar">
+      <div>
+        <h1 className="admin-main-title">{t('admin.rtp.title')}</h1>
+        <p className="admin-main-subtitle">{t('admin.rtp.subtitle')}</p>
+      </div>
+    </div>
+  )
+
+  // Sin datos todavía: carga inicial o error. Con datos, un error de refresco deja los últimos.
+  if (!data) {
+    return (
+      <>
+        {header}
+        <section className="admin-panel">
+          <RtpLoadState error={status === 'error' ? describeRtpError(error, t) : null} onRetry={reload} />
+        </section>
+      </>
+    )
+  }
+
+  const { overview, history, stability, loadedAt } = data
+  const bands: RtpBand[] = overview.games.map((g) => ({ id: g.game, min: g.minBand, max: g.maxBand }))
 
   return (
     <>
-      <div className="admin-main-topbar">
-        <div>
-          <h1 className="admin-main-title">{t('admin.rtp.title')}</h1>
-          <p className="admin-main-subtitle">{t('admin.rtp.subtitle')}</p>
-        </div>
-      </div>
+      {header}
+
+      {status === 'error' && <InfoBanner variant="warning" title={describeRtpError(error, t)} />}
 
       <div className="admin-rtp-kpi-grid">
-        {RTP_METRIC_CARDS.map((card) => (
-          <RtpMetricCard key={card.id} data={card} />
+        {overview.games.map((game) => (
+          <RtpMetricCard key={game.game} data={game} />
         ))}
-        <HouseMarginCard data={HOUSE_MARGIN} />
-        <ManualOverridesCard data={MANUAL_OVERRIDES} />
+        <HouseMarginCard data={overview.houseMargin} />
+        <ManualOverridesCard count={overview.manualResults} />
       </div>
 
       {/* Dos columnas: izquierda chart + Recent RTP Changes, derecha Current Bands + RTP Stability +
@@ -67,29 +84,33 @@ export function RtpDashboardPage() {
           vacío (antes eran dos filas separadas y los paneles de la derecha se estiraban vacíos). */}
       <div className="admin-rtp-main-grid">
         <div className="admin-rtp-main-column">
-          <RtpTrendChart historyByRange={RTP_HISTORY_BY_RANGE} bands={RTP_BANDS} />
-          <RecentRtpChanges changes={RTP_CHANGES} totalCount={RTP_CHANGES_TOTAL_COUNT} />
+          <RtpTrendChart history={history} bands={bands} />
+          <RecentRtpChanges changes={overview.changes} totalCount={overview.changesTotal} />
         </div>
         <div className="admin-rtp-main-column admin-rtp-main-column--side">
-          <CurrentBandsPanel bands={RTP_BANDS} />
-          <RtpStabilityChart dataByGame={RTP_STABILITY_BY_GAME} />
+          <CurrentBandsPanel bands={bands} />
+          <RtpStabilityChart dataByGame={stability} />
           <RtpImportantNote />
         </div>
       </div>
 
       <div className="admin-rtp-footer">
-        <span>{t('admin.rtp.footer.timezone', { value: formatTimezoneOffset(now) })}</span>
+        <span>{t('admin.rtp.footer.timezone', { value: formatTimezoneOffset(loadedAt) })}</span>
         <span className="admin-rtp-footer-sep" aria-hidden="true" />
         <span>
           {t('admin.rtp.footer.lastUpdated', {
-            value: `${LAST_UPDATED_DATE_FORMATTER.format(now)} ${LAST_UPDATED_TIME_FORMATTER.format(now)}`,
+            value: `${LAST_UPDATED_DATE_FORMATTER.format(loadedAt)} ${LAST_UPDATED_TIME_FORMATTER.format(loadedAt)}`,
           })}
         </span>
-        <span className="admin-rtp-footer-sep" aria-hidden="true" />
-        <span className="admin-rtp-footer-live">
-          <span className="admin-rtp-footer-live-dot" aria-hidden="true" />
-          {t('admin.rtp.footer.live')}
-        </span>
+        {status !== 'error' && (
+          <>
+            <span className="admin-rtp-footer-sep" aria-hidden="true" />
+            <span className="admin-rtp-footer-live">
+              <span className="admin-rtp-footer-live-dot" aria-hidden="true" />
+              {t('admin.rtp.footer.live')}
+            </span>
+          </>
+        )}
       </div>
     </>
   )

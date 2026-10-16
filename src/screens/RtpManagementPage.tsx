@@ -4,27 +4,23 @@ import { RtpManagementTabs } from '../components/admin/RtpManagementTabs'
 import { RtpSettingsPanel } from '../components/admin/RtpSettingsPanel'
 import { RtpSimulatorPanel } from '../components/admin/RtpSimulatorPanel'
 import { PlusIcon, RtpSchedulingPanel } from '../components/admin/RtpSchedulingPanel'
-import { RTP_PROFILES, RTP_SETTINGS_BY_GAME } from '../data/rtpManagementMockData'
-import type { RtpGame } from '../types/rtpDashboard'
-import type { RtpManagementTab, RtpProfile, RtpSettingsData } from '../types/rtpManagement'
+import { RtpLoadState } from '../components/admin/RtpLoadState'
+import { describeRtpError, useRtpSettings } from '../hooks/useRtpManagement'
+import type { RtpManagementTab } from '../types/rtpManagement'
 import '../components/admin/rtpManagementShared.css'
 import './rtpManagementPage.css'
 
 // RTP Management -- tercer contenido posible dentro de AdminPanel.tsx (junto a AdminDashboardPage/
 // RtpDashboardPage). Settings/Simulator/Scheduling son mutuamente exclusivos (pedido explícito):
 // esta página es la única dueña de `tab`, cada uno de los tres solo recibe lo que necesita por
-// props. Simulator no lee settingsByGame: su Current Target RTP es el de producción, que trae del
-// backend junto con la simulación (api/rtpSimulator.ts).
+// props. Settings y Scheduling leen/escriben quick-money-backend (hooks/useRtpManagement.ts); la
+// configuración vigente se carga acá porque Scheduling la usa como valores iniciales de un profile
+// nuevo. Simulator trae la suya del backend junto con la simulación (api/rtpSimulator.ts).
 export function RtpManagementPage() {
   const { t } = useTranslation()
   const [tab, setTab] = useState<RtpManagementTab>('settings')
-  const [settingsByGame, setSettingsByGame] = useState<Record<RtpGame, RtpSettingsData>>(RTP_SETTINGS_BY_GAME)
-  const [profiles, setProfiles] = useState<RtpProfile[]>(RTP_PROFILES)
   const [isCreatingProfile, setIsCreatingProfile] = useState(false)
-
-  const handleSaveSettings = (game: RtpGame, data: RtpSettingsData) => {
-    setSettingsByGame((prev) => ({ ...prev, [game]: data }))
-  }
+  const settings = useRtpSettings()
 
   return (
     <>
@@ -52,12 +48,21 @@ export function RtpManagementPage() {
         )}
       </div>
 
-      {tab === 'settings' && <RtpSettingsPanel settingsByGame={settingsByGame} onSave={handleSaveSettings} />}
+      {tab === 'settings' &&
+        (settings.settingsByGame ? (
+          <RtpSettingsPanel settingsByGame={settings.settingsByGame} onSave={settings.save} />
+        ) : (
+          <section className="admin-panel">
+            <RtpLoadState
+              error={settings.status === 'error' ? describeRtpError(settings.error, t) : null}
+              onRetry={() => void settings.reload()}
+            />
+          </section>
+        ))}
       {tab === 'simulator' && <RtpSimulatorPanel />}
       {tab === 'scheduling' && (
         <RtpSchedulingPanel
-          profiles={profiles}
-          onProfilesChange={setProfiles}
+          settingsByGame={settings.settingsByGame}
           isCreating={isCreatingProfile}
           onCreatingChange={setIsCreatingProfile}
         />

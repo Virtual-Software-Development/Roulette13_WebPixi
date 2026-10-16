@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { UserStatCard } from '../components/admin/users/UserStatCard'
 import { UserTable } from '../components/admin/users/UserTable'
 import { UserFormPanel, type UserFormMode } from '../components/admin/users/UserFormPanel'
@@ -7,10 +8,13 @@ import { UserFilterPopover, type RoleFilter, type StatusFilter } from '../compon
 import { ConfirmDialog } from '../components/admin/ConfirmDialog'
 import { AdminDetailPopup } from '../components/admin/AdminDetailPopup'
 import { PlusIcon, SearchIcon, ShieldIcon } from '../components/admin/users/icons'
+import { DEFAULT_USER_FORM } from '../components/admin/users/userRoles'
+import { AdminAuthError } from '../api/adminSession'
+import { buildUserPatch, createAdminUser, updateAdminUser, type AdminUsersQuery } from '../api/adminUsers'
+import { useAdminUsers } from '../hooks/useAdminUsers'
 import { buildMediaUrl } from '../utils/media'
 import { useDetailAsPopup } from '../hooks/useDetailAsPopup'
-import { ADMIN_USERS, DEFAULT_USER_FORM } from '../data/adminUsersMockData'
-import type { AdminUser, AdminUserFormData, UserAvatarAccent } from '../types/adminUsers'
+import type { AdminUser, AdminUserFormData } from '../types/adminUsers'
 import '../components/admin/users/adminUsers.css'
 
 const TOTAL_ICON_URL = buildMediaUrl('Website_svg_icons/16_user_white_circle.svg')
@@ -18,28 +22,32 @@ const ACTIVE_ICON_URL = buildMediaUrl('Website_svg_icons/36_users_green.svg')
 const INACTIVE_ICON_URL = buildMediaUrl('Website_svg_icons/25_user_red_circle.svg')
 
 const PAGE_SIZE = 10
-const AVATAR_ACCENT_CYCLE: UserAvatarAccent[] = ['blue', 'green', 'orange', 'purple']
-
-// Sin backend real de usuarios (ver adminUsersMockData.ts) -- Create/Edit/Delete simulan el flujo
-// visual loading->success con el mismo criterio mock ya establecido en Settings (setTimeout,
-// comentado explícitamente), mutando este estado local en vez de llamar a un endpoint.
-const ACTION_DURATION_MS = 700
-
-function simulateAction(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ACTION_DURATION_MS))
-}
+const SEARCH_DEBOUNCE_MS = 300
+// Mismo criterio que Settings: el éxito se retira solo, el error queda hasta la próxima acción.
+const SUCCESS_FEEDBACK_MS = 3000
 
 // Add/Edit User: panel a la derecha de la tabla en desktop, pop-up en pantallas angostas.
 type FormState = { mode: UserFormMode; user: AdminUser | null } | null
+type Feedback = { variant: 'success' | 'error'; message: string }
 
-// Dueña de search/filtros/paginación (a diferencia de GameEventsList, que los posee internamente,
-// acá viven en el header de la página -- ver UserFilterPopover/search input abajo -- así que el
-// padre que los renderiza también necesita el estado, ver conversación) y del array de usuarios
-// (mock, mutado localmente por Create/Edit/Delete). UserTable es presentación pura: solo recibe la
-// página ya calculada.
+// Sin sesión de admin el backend responde 401 (AdminAuthError); el resto trae el mensaje del
+// backend (apperror, en español) o el status.
+function actionErrorMessage(err: unknown, t: TFunction): string {
+  if (err instanceof AdminAuthError) return t('admin.users.errors.login')
+  return t('admin.users.errors.action', { error: err instanceof Error && err.message ? err.message : String(err) })
+}
+
+function loadErrorMessage(err: unknown, t: TFunction): string {
+  if (err instanceof AdminAuthError) return t('admin.users.errors.login')
+  return t('admin.users.errors.load', { error: err instanceof Error && err.message ? err.message : String(err) })
+}
+
+// Admin > Users contra GET/POST/PATCH /users: búsqueda, filtros y paginación se resuelven en el
+// backend; las stats son conteos globales que vienen en la misma respuesta. No hay borrado: la
+// baja es desactivar (el backend además le cierra la sesión), y se puede reactivar.
 export function UsersPage() {
   const { t } = useTranslation()
-  const [users, setUsers] = useState<AdminUser[]>(ADMIN_USERS)
+  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
@@ -47,81 +55,104 @@ export function UsersPage() {
   const [formState, setFormState] = useState<FormState>(null)
   const [saving, setSaving] = useState(false)
   const detailAsPopup = useDetailAsPopup()
-  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null)
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deactivateTarget, setDeactivateTarget] = useState<AdminUser | null>(null)
+  const [deactivating, setDeactivating] = useState(false)
+  const [feedback, setFeedback] = useState<Feedback | null>(null)
 
-  const filteredUsers = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return users.filter((user) => {
-      if (roleFilter !== 'all' && user.role !== roleFilter) return false
-      if (statusFilter !== 'all' && user.status !== statusFilter) return false
-      if (!query) return true
-      return user.fullName.toLowerCase().includes(query) || user.username.toLowerCase().includes(query) || user.email.toLowerCase().includes(query)
-    })
-  }, [users, search, roleFilter, statusFilter])
-
-  // Búsqueda/filtro cambiando invalida la página actual -- mismo criterio que GameEventsList.tsx.
   useEffect(() => {
-    setPage(1)
-  }, [search, roleFilter, statusFilter])
+    const timer = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE))
-  const currentPage = Math.min(page, totalPages)
-  const pageStart = (currentPage - 1) * PAGE_SIZE
-  const pageUsers = filteredUsers.slice(pageStart, pageStart + PAGE_SIZE)
+  useEffect(() => setPage(1), [search, roleFilter, statusFilter])
 
-  // Las 4 stats se derivan de TODOS los usuarios (no de filteredUsers) -- son conteos globales,
-  // igual que Total/Active/Inactive/Admin Users de la referencia, no "resultados de la búsqueda
-  // actual". Los porcentajes sí son datos reales (count/total), a diferencia de un trend de
-  // crecimiento que no existe (ver UserStatCard.tsx).
-  const stats = useMemo(() => {
-    const total = users.length
-    const active = users.filter((u) => u.status === 'active').length
-    const inactive = total - active
-    const admins = users.filter((u) => u.role === 'admin').length
-    const pct = (n: number) => (total === 0 ? 0 : Math.round((n / total) * 100))
-    return { total, active, inactive, admins, activePct: pct(active), inactivePct: pct(inactive), adminPct: pct(admins) }
-  }, [users])
+  useEffect(() => {
+    if (feedback?.variant !== 'success') return
+    const timer = setTimeout(() => setFeedback(null), SUCCESS_FEEDBACK_MS)
+    return () => clearTimeout(timer)
+  }, [feedback])
+
+  const query: AdminUsersQuery = {
+    search: search || undefined,
+    role: roleFilter === 'all' ? undefined : roleFilter,
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  }
+  const { status, data, error, reload } = useAdminUsers(query)
+
+  const total = data?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const pageStart = (page - 1) * PAGE_SIZE
+  const users = status === 'error' ? [] : (data?.users ?? [])
+
+  // Un filtro o una desactivación dejó la página actual fuera de rango.
+  useEffect(() => {
+    if (status === 'ready' && page > totalPages) setPage(totalPages)
+  }, [status, page, totalPages])
+
+  let notice: { text: string; error?: boolean } | null = null
+  if (status === 'error') notice = { text: loadErrorMessage(error, t), error: true }
+  else if (!data) notice = { text: t('admin.users.list.loading') }
+  else if (status === 'ready' && users.length === 0) notice = { text: t('admin.users.list.empty') }
+
+  const stats = data?.stats ?? { total: 0, active: 0, inactive: 0, admins: 0 }
+  const pct = (n: number) => (stats.total === 0 ? 0 : Math.round((n / stats.total) * 100))
+  const activePct = pct(stats.active)
+  const inactivePct = pct(stats.inactive)
+  const adminPct = pct(stats.admins)
 
   const handleCreate = () => setFormState({ mode: 'create', user: null })
   const handleEdit = (user: AdminUser) => setFormState({ mode: 'edit', user })
   const closeForm = () => setFormState(null)
 
+  // Los errores se propagan: UserFormPanel muestra el mensaje del backend sin cerrar el panel.
   const handleFormSubmit = async (data: AdminUserFormData) => {
     setSaving(true)
     try {
-      await simulateAction()
+      if (formState?.mode === 'create') {
+        const created = await createAdminUser(data)
+        setFeedback({ variant: 'success', message: t('admin.users.feedback.created', { name: created.fullName }) })
+      } else if (formState?.user) {
+        const patch = buildUserPatch(formState.user, data)
+        if (Object.keys(patch).length > 0) {
+          const updated = await updateAdminUser(formState.user.id, patch)
+          setFeedback({ variant: 'success', message: t('admin.users.feedback.saved', { name: updated.fullName }) })
+        }
+      }
     } finally {
       setSaving(false)
     }
-    if (formState?.mode === 'create') {
-      const newUser: AdminUser = {
-        id: `usr-${Date.now()}`,
-        fullName: data.fullName,
-        username: data.username,
-        email: data.email,
-        role: data.role,
-        status: data.status,
-        avatarAccent: AVATAR_ACCENT_CYCLE[users.length % AVATAR_ACCENT_CYCLE.length],
-        lastLoginAt: null,
-      }
-      setUsers((prev) => [newUser, ...prev])
-    } else if (formState?.user) {
-      const targetId = formState.user.id
-      setUsers((prev) =>
-        prev.map((u) => (u.id === targetId ? { ...u, fullName: data.fullName, username: data.username, email: data.email, role: data.role, status: data.status } : u)),
-      )
-    }
     setFormState(null)
+    reload()
   }
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return
-    setDeleteLoading(true)
-    await simulateAction()
-    setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id))
-    setDeleteLoading(false)
-    setDeleteTarget(null)
+  const setActive = async (user: AdminUser, isActive: boolean) => {
+    setFeedback(null)
+    try {
+      await updateAdminUser(user.id, { isActive })
+      setFeedback({
+        variant: 'success',
+        message: t(isActive ? 'admin.users.feedback.activated' : 'admin.users.feedback.deactivated', { name: user.fullName }),
+      })
+      if (formState?.user?.id === user.id) setFormState(null)
+      reload()
+    } catch (err) {
+      setFeedback({ variant: 'error', message: actionErrorMessage(err, t) })
+    }
+  }
+
+  const handleToggleActive = (user: AdminUser) => {
+    if (user.status === 'active') setDeactivateTarget(user)
+    else void setActive(user, true)
+  }
+
+  const handleDeactivateConfirm = async () => {
+    if (!deactivateTarget) return
+    setDeactivating(true)
+    await setActive(deactivateTarget, false)
+    setDeactivating(false)
+    setDeactivateTarget(null)
   }
 
   // Mismo elemento en los dos modos (inline o dentro del pop-up). key = usuario/modo: elegir otro
@@ -130,6 +161,7 @@ export function UsersPage() {
     <UserFormPanel
       key={formState.user?.id ?? 'new'}
       mode={formState.mode}
+      isSelf={formState.user?.isSelf}
       initialData={
         formState.mode === 'edit' && formState.user
           ? {
@@ -162,8 +194,8 @@ export function UsersPage() {
               type="text"
               className="admin-users-search-input"
               placeholder={t('admin.users.search.placeholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               aria-label={t('admin.users.search.placeholder')}
             />
           </div>
@@ -175,6 +207,12 @@ export function UsersPage() {
         </div>
       </div>
 
+      {feedback && (
+        <div className="admin-users-feedback" data-variant={feedback.variant} role={feedback.variant === 'error' ? 'alert' : 'status'}>
+          {feedback.message}
+        </div>
+      )}
+
       <div className="admin-users-stats-row">
         <UserStatCard title={t('admin.users.stats.total')} value={stats.total} icon={<img src={TOTAL_ICON_URL} alt="" />} accent="blue" />
         <UserStatCard
@@ -182,35 +220,37 @@ export function UsersPage() {
           value={stats.active}
           icon={<img src={ACTIVE_ICON_URL} alt="" />}
           accent="green"
-          progress={{ percent: stats.activePct, label: `${stats.activePct}%` }}
+          progress={{ percent: activePct, label: `${activePct}%` }}
         />
         <UserStatCard
           title={t('admin.users.stats.inactive')}
           value={stats.inactive}
           icon={<img src={INACTIVE_ICON_URL} alt="" />}
           accent="red"
-          progress={{ percent: stats.inactivePct, label: `${stats.inactivePct}%` }}
+          progress={{ percent: inactivePct, label: `${inactivePct}%` }}
         />
         <UserStatCard
           title={t('admin.users.stats.admins')}
           value={stats.admins}
           icon={<ShieldIcon />}
           accent="purple"
-          progress={{ percent: stats.adminPct, label: `${stats.adminPct}%` }}
+          progress={{ percent: adminPct, label: `${adminPct}%` }}
         />
       </div>
 
       <div className="admin-users-body">
         <UserTable
-          users={pageUsers}
-          totalCount={filteredUsers.length}
+          users={users}
+          totalCount={status === 'error' ? 0 : total}
           pageStart={pageStart}
           pageSize={PAGE_SIZE}
-          currentPage={currentPage}
+          currentPage={Math.min(page, totalPages)}
           totalPages={totalPages}
           onPageChange={setPage}
           onEdit={handleEdit}
-          onDeleteRequest={setDeleteTarget}
+          onToggleActive={handleToggleActive}
+          notice={notice}
+          busy={status === 'loading'}
         />
         {!detailAsPopup && userForm}
       </div>
@@ -221,17 +261,17 @@ export function UsersPage() {
         </AdminDetailPopup>
       )}
 
-      {deleteTarget && (
+      {deactivateTarget && (
         <ConfirmDialog
-          title={t('admin.users.deleteConfirm.title')}
-          description={t('admin.users.deleteConfirm.description', { name: deleteTarget.fullName })}
-          confirmLabel={t('admin.users.deleteConfirm.confirm')}
-          confirmLoadingLabel={t('admin.users.deleteConfirm.deleting')}
-          cancelLabel={t('admin.users.deleteConfirm.cancel')}
+          title={t('admin.users.deactivateConfirm.title')}
+          description={t('admin.users.deactivateConfirm.description', { name: deactivateTarget.fullName })}
+          confirmLabel={t('admin.users.deactivateConfirm.confirm')}
+          confirmLoadingLabel={t('admin.users.deactivateConfirm.deactivating')}
+          cancelLabel={t('admin.users.deactivateConfirm.cancel')}
           danger
-          loading={deleteLoading}
-          onCancel={() => setDeleteTarget(null)}
-          onConfirm={handleDeleteConfirm}
+          loading={deactivating}
+          onCancel={() => setDeactivateTarget(null)}
+          onConfirm={() => void handleDeactivateConfirm()}
         />
       )}
     </>

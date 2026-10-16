@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { buildMediaUrl } from '../utils/media'
 import { navigateToPreview } from '../utils/navigatePreview'
+import { AdminLoginFailure, hasAdminSession, loginAdmin } from '../api/adminSession'
+import { fetchGameInfo } from '../api/gameInfo'
+import { applyAppLanguage } from '../i18n/applyLanguage'
 import './loginPage.css'
 
 const REMEMBERED_USERNAME_KEY = 'login.rememberedUsername'
@@ -87,15 +90,11 @@ function ArrowRightIcon() {
   )
 }
 
-// No hay backend de autenticación todavía (ver conversación) -- placeholder aislado a propósito
-// para que sea el único lugar a reemplazar por la llamada real (ej. POST /api/login) el día que
-// exista.
-async function placeholderLogin(username: string, password: string): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 700))
-  if (!username.trim() || !password) {
-    throw new Error('invalid-credentials')
-  }
-}
+const LOGIN_ERROR_KEY = {
+  'invalid-credentials': 'login.error',
+  'not-admin': 'login.errorNotAdmin',
+  unavailable: 'login.errorUnavailable',
+} as const
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -115,6 +114,24 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Mismo idioma que el resto del panel: el de General Settings.
+  useEffect(() => {
+    fetchGameInfo()
+      .then((info) => applyAppLanguage(info.adminLanguage ?? 'en'))
+      .catch(() => {})
+  }, [])
+
+  // Con una sesión de admin ya abierta (cookie de refresh vigente) no hace falta volver a entrar.
+  useEffect(() => {
+    let cancelled = false
+    void hasAdminSession().then((signedIn) => {
+      if (signedIn && !cancelled) navigateToPreview('admin')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   useEffect(() => {
     const remembered = window.localStorage.getItem(REMEMBERED_USERNAME_KEY)
     if (remembered) {
@@ -129,15 +146,15 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
     try {
-      await placeholderLogin(username, password)
+      await loginAdmin(username, password)
       if (rememberMe) {
         window.localStorage.setItem(REMEMBERED_USERNAME_KEY, username)
       } else {
         window.localStorage.removeItem(REMEMBERED_USERNAME_KEY)
       }
       navigateToPreview('admin')
-    } catch {
-      setError(t('login.error'))
+    } catch (err) {
+      setError(t(err instanceof AdminLoginFailure ? LOGIN_ERROR_KEY[err.reason] : LOGIN_ERROR_KEY.unavailable))
     } finally {
       setLoading(false)
     }

@@ -1,14 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { RTP_GAME_ICON_URLS } from '../../data/rtpDashboardMockData'
+import { GAME_LABEL_KEY, RTP_GAME_ICON_URLS } from '../../data/rtpGameLabels'
 import type { RtpBand } from '../../types/rtpDashboard'
 import './currentBandsPanel.css'
 
-// Verde/amber = colores reales de marca de Pick 3/Pick 4 (ver quickMoneyLobbyTokens.css, pedido
-// explícito), no los genéricos azul/morado que tenía antes.
-const ACCENT_BY_GAME: Record<RtpBand['id'], 'red' | 'green' | 'amber'> = {
+// Verde = color de marca de Quick Money (ver quickMoneyLobbyTokens.css, pedido explícito).
+const ACCENT_BY_GAME: Record<RtpBand['id'], 'red' | 'green'> = {
   roulette: 'red',
-  pick3: 'green',
-  pick4: 'amber',
+  quickMoney: 'green',
 }
 
 function InfoIcon() {
@@ -35,7 +33,7 @@ export function CurrentBandsPanel({ bands }: { bands: RtpBand[] }) {
           <div key={band.id} className="admin-current-bands-row" data-accent={ACCENT_BY_GAME[band.id]}>
             <div className="admin-current-bands-left">
               <img src={RTP_GAME_ICON_URLS[band.id]} className="admin-current-bands-icon" alt="" />
-              <span className="admin-current-bands-name">{t(band.labelKey)}</span>
+              <span className="admin-current-bands-name">{t(GAME_LABEL_KEY[band.id])}</span>
             </div>
             <span className="admin-current-bands-spacer" />
             <span className="admin-current-bands-divider" aria-hidden="true" />
@@ -43,7 +41,7 @@ export function CurrentBandsPanel({ bands }: { bands: RtpBand[] }) {
               <span className="admin-current-bands-range">
                 {band.min}% – {band.max}%
               </span>
-              <span className="admin-current-bands-width">{t('admin.rtp.currentBands.bandWidth', { value: band.widthPercent })}</span>
+              <span className="admin-current-bands-width">{t('admin.rtp.currentBands.bandWidth', { value: Math.round((band.max - band.min) * 100) / 100 })}</span>
             </div>
           </div>
         ))}

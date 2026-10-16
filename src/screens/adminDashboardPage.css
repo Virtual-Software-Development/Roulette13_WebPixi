@@ -43,3 +43,34 @@
     grid-row: auto;
   }
 }
+
+/* Carga/error de los datos del backend (GET /round-stats/*, /rounds). */
+.admin-dashboard-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-dashboard-state-text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--admin-text-secondary);
+}
+
+.admin-dashboard-retry-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-dashboard-retry-btn:hover {
+  border-color: rgba(120, 155, 185, 0.4);
+}

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { NOTIFICATION_EVENT_IDS } from '../../../data/adminSettingsMockData'
+import { NOTIFICATION_EVENT_IDS } from './settingsOptions'
 import type { NotificationEventsSettings } from '../../../types/adminSettings'
 import './adminSettings.css'
 
@@ -8,9 +8,7 @@ interface NotificationEventsSectionProps {
   onToggleEvent: (event: keyof NotificationEventsSettings) => void
 }
 
-// Solo estado de UI (sin backend de notificaciones todavía) -- estos ids son
-// descriptivos para el mock, no un enum real de eventos consumido por otra parte del sistema (ver
-// types/adminSettings.ts: no existe todavía backend/store de notificaciones).
+// Cada id es un notification_event_type del backend; solo se listan los que el backend devolvió.
 // Ya no es una card propia: vive como columna derecha dentro de EmailSettingsCard (pedido explícito
 // de fusionar Email Notifications + Notification Events).
 export function NotificationEventsSection({ events, onToggleEvent }: NotificationEventsSectionProps) {
@@ -24,13 +22,13 @@ export function NotificationEventsSection({ events, onToggleEvent }: Notificatio
       </div>
 
       <div className="admin-settings-events-list">
-        {NOTIFICATION_EVENT_IDS.map((eventId) => (
+        {NOTIFICATION_EVENT_IDS.filter((eventId) => events[eventId] !== undefined).map((eventId) => (
           <label key={eventId} className="admin-settings-event-row">
             <span className="admin-settings-checkbox">
               <input
                 type="checkbox"
                 className="admin-settings-checkbox-input"
-                checked={events[eventId]}
+                checked={events[eventId] === true}
                 onChange={() => onToggleEvent(eventId)}
               />
               <span className="admin-settings-checkbox-box" aria-hidden="true" />

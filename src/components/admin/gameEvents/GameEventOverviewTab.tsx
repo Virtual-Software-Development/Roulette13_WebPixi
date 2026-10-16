@@ -1,14 +1,15 @@
 import { GameEventStatusTimeline } from './GameEventStatusTimeline'
 import { GameEventStatisticsPanel } from './GameEventStatisticsPanel'
-import type { GameEvent } from '../../../types/adminGameEvents'
+import { GameEventOverridesPanel } from './GameEventOverridesPanel'
+import type { GameEventDetail } from '../../../types/adminGameEvents'
 import './gameEventDetail.css'
 
 interface GameEventOverviewTabProps {
-  event: GameEvent
+  event: GameEventDetail
 }
 
-// Layout: Status Timeline (entradas del Draw Log) a la izquierda, Statistics a la derecha. El Result ya no vive acá: se
-// muestra en la fila de resumen del detalle, a la izquierda de Date (ver GameEventResultSummary).
+// Layout: Status Timeline (log de la ronda) a la izquierda, Statistics (y los cambios manuales del
+// resultado, si hubo) a la derecha. El Result vive en la fila de resumen del detalle.
 export function GameEventOverviewTab({ event }: GameEventOverviewTabProps) {
   return (
     <div className="admin-game-events-overview">
@@ -17,8 +18,13 @@ export function GameEventOverviewTab({ event }: GameEventOverviewTabProps) {
       </div>
       <div className="admin-game-events-overview-side">
         <div className="admin-game-events-overview-panel">
-          <GameEventStatisticsPanel statistics={event.statistics} status={event.status} />
+          <GameEventStatisticsPanel statistics={event.statistics} status={event.status} resultMethod={event.resultMethod} />
         </div>
+        {event.overrides.length > 0 && (
+          <div className="admin-game-events-overview-panel">
+            <GameEventOverridesPanel overrides={event.overrides} />
+          </div>
+        )}
       </div>
     </div>
   )

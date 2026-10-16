@@ -2,11 +2,10 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useClickOutside } from '../../hooks/useClickOutside'
 import { buildMediaUrl } from '../../utils/media'
+import { DASHBOARD_DATE_RANGES, type DashboardDateRange } from '../../utils/dashboardDateRange'
 import './dateRangeControl.css'
 
 const CALENDAR_ICON_URL = buildMediaUrl('Website_svg_icons/33_calendar_white.svg')
-
-const DATE_RANGE_OPTIONS = ['today', 'yesterday', 'last7Days', 'last30Days', 'thisMonth'] as const
 
 function ChevronDownIcon() {
   return (
@@ -16,14 +15,10 @@ function ChevronDownIcon() {
   )
 }
 
-// Dropdown funcional -- sin lógica de calendario real detrás todavía (el proyecto no tiene
-// ninguna, ver investigación previa), solo guarda la opción elegida en estado local. El día que
-// exista un rango real que filtre los datos del dashboard, este mismo estado es el que hay que
-// levantar y pasarle a los paneles.
-export function DateRangeControl() {
+// Período del Dashboard (ver dashboardDateRangeBounds) -- controlado: el estado vive en la página.
+export function DateRangeControl({ value: selected, onChange }: { value: DashboardDateRange; onChange: (value: DashboardDateRange) => void }) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
-  const [selected, setSelected] = useState<(typeof DATE_RANGE_OPTIONS)[number]>('today')
   const containerRef = useRef<HTMLDivElement>(null)
 
   useClickOutside(containerRef, () => setIsOpen(false))
@@ -43,7 +38,7 @@ export function DateRangeControl() {
 
       {isOpen && (
         <div className="admin-dropdown-menu" role="listbox">
-          {DATE_RANGE_OPTIONS.map((option) => (
+          {DASHBOARD_DATE_RANGES.map((option) => (
             <button
               key={option}
               type="button"
@@ -52,7 +47,7 @@ export function DateRangeControl() {
               role="option"
               aria-selected={option === selected}
               onClick={() => {
-                setSelected(option)
+                onChange(option)
                 setIsOpen(false)
               }}
             >

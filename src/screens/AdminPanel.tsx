@@ -9,6 +9,10 @@ import { AdminSettingsPage } from './AdminSettingsPage'
 import { AdminReportsPage } from './AdminReportsPage'
 import { UsersPage } from './UsersPage'
 import { SystemLogsPage } from './SystemLogsPage'
+import { hasAdminSession } from '../api/adminSession'
+import { navigateToPreview } from '../utils/navigatePreview'
+import { fetchGameInfo } from '../api/gameInfo'
+import { applyAppLanguage } from '../i18n/applyLanguage'
 
 type AdminView =
   | 'admin'
@@ -56,6 +60,12 @@ function isAdminView(value: string | null): value is AdminView {
   )
 }
 
+// Next Results se usa sin login (pedido explícito); el resto del panel exige una sesión de admin y,
+// sin ella, manda al Login.
+const PUBLIC_VIEWS: AdminView[] = ['admin-next-results', 'admin-next-results-quick-money']
+
+type SessionStatus = 'checking' | 'signedIn' | 'signedOut'
+
 function getInitialView(): AdminView {
   const preview = new URLSearchParams(window.location.search).get('preview')
   return isAdminView(preview) ? preview : 'admin'
@@ -68,6 +78,30 @@ function getInitialView(): AdminView {
 // de los stores en cada click del sidebar (ver conversación).
 export function AdminPanel() {
   const [view, setView] = useState<AdminView>(getInitialView)
+  const [session, setSession] = useState<SessionStatus>('checking')
+  const needsSession = !PUBLIC_VIEWS.includes(view)
+
+  useEffect(() => {
+    let cancelled = false
+    void hasAdminSession().then((signedIn) => {
+      if (!cancelled) setSession(signedIn ? 'signedIn' : 'signedOut')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (needsSession && session === 'signedOut') navigateToPreview('login')
+  }, [needsSession, session])
+
+  // Idioma del panel = Admin Panel Language de General Settings (llega en /gameInfo, que es público,
+  // así también lo sigue Next Results sin sesión). Sin respuesta queda en inglés.
+  useEffect(() => {
+    fetchGameInfo()
+      .then((info) => applyAppLanguage(info.adminLanguage ?? 'en'))
+      .catch(() => {})
+  }, [])
 
   // Mantiene `?preview=` sincronizado sin disparar un reload (history.replaceState en vez de
   // location.href) -- así refrescar la página o copiar el link conserva la vista actual.
@@ -82,6 +116,10 @@ export function AdminPanel() {
       setView(target)
     }
   }
+
+  // Mientras se verifica la sesión (o se redirige al Login) no se monta ninguna página protegida, así
+  // no llegan a pedir datos al backend sin token.
+  if (needsSession && session !== 'signedIn') return null
 
   return (
     <AdminLayout activeId={ACTIVE_SIDEBAR_ID_BY_VIEW[view]} onNavigate={handleNavigate}>

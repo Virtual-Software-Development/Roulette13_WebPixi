@@ -1,8 +1,8 @@
 import type { QuickMoneyGameType } from '../types/quickMoneyBet'
 
 // Mock TEMPORAL para el Quick Money Lobby -- no existe todavía ningún servicio/store de historial
-// de sorteos para Quick Money (ver investigación: lo más cercano es adminGameEventsMockData.ts,
-// que vive dentro de Admin y no tiene este shape). Reemplazar por un fetch/store real no requiere
+// de sorteos para Quick Money en el lobby (Admin ya lee las rondas reales vía /rounds, con otro
+// shape). Reemplazar por un fetch/store real no requiere
 // tocar ningún componente: QuickMoneyLobby.tsx / QuickMoneyRecentResults.tsx /
 // QuickMoneyFrequencyPanel.tsx reciben esta lista por props.
 //

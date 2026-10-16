@@ -7,6 +7,8 @@ export interface GameInfoDraw {
 export interface GameInfoResponse {
   msgType: 'gameInfo'
   language: string
+  // Idioma del panel de admin (Admin Panel Language de General Settings); backends viejos no lo mandan.
+  adminLanguage?: string
   gameName: string
   logo: string
   background: string

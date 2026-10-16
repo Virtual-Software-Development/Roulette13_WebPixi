@@ -1,10 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { buildMediaUrl } from '../../../utils/media'
-import { parseApiDateTime } from '../../../utils/time'
 import { StatusBadge } from '../StatusBadge'
-import { USER_ROLE_VARIANT } from '../../../data/adminUsersMockData'
+import { USER_ROLE_VARIANT } from './userRoles'
 import { UserAvatar } from './UserAvatar'
-import { ChevronLeftIcon, ChevronRightIcon, TrashIcon } from './icons'
+import { BanIcon, CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon } from './icons'
 import type { AdminUser } from '../../../types/adminUsers'
 import './adminUsers.css'
 
@@ -22,14 +21,28 @@ interface UserTableProps {
   totalPages: number
   onPageChange: (page: number) => void
   onEdit: (user: AdminUser) => void
-  onDeleteRequest: (user: AdminUser) => void
+  onToggleActive: (user: AdminUser) => void
+  // Cargando / error / sin resultados, en lugar de las filas.
+  notice: { text: string; error?: boolean } | null
+  busy: boolean
 }
 
 // Presentación pura -- UsersPage.tsx es dueño de search/filter/paginación (viven en el header de
-// la página, no en esta card, a diferencia de GameEventsList.tsx que sí incluye su propio toolbar);
-// este componente solo recibe la página ya calculada y dispara los handlers de Edit/Delete. Mismo
-// patrón de tabla/paginación real que GameEventsList.tsx, namespace propio (admin-users-*).
-export function UserTable({ users, totalCount, pageStart, pageSize, currentPage, totalPages, onPageChange, onEdit, onDeleteRequest }: UserTableProps) {
+// la página, no en esta card) y de los pedidos al backend; este componente solo recibe la página
+// ya cargada y dispara los handlers de Edit/Desactivar/Activar. No hay borrado: la baja es lógica.
+export function UserTable({
+  users,
+  totalCount,
+  pageStart,
+  pageSize,
+  currentPage,
+  totalPages,
+  onPageChange,
+  onEdit,
+  onToggleActive,
+  notice,
+  busy,
+}: UserTableProps) {
   const { t } = useTranslation()
 
   return (
@@ -38,7 +51,7 @@ export function UserTable({ users, totalCount, pageStart, pageSize, currentPage,
         <h2 className="admin-panel-title">{t('admin.users.list.title')}</h2>
       </div>
 
-      <div className="admin-users-table-scroll">
+      <div className="admin-users-table-scroll" aria-busy={busy}>
         <table className="admin-users-table">
           <thead>
             <tr>
@@ -53,13 +66,14 @@ export function UserTable({ users, totalCount, pageStart, pageSize, currentPage,
           </thead>
           <tbody>
             {users.map((user) => {
-              const lastLogin = user.lastLoginAt ? parseApiDateTime(user.lastLoginAt) : null
+              const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null
               return (
                 <tr key={user.id}>
                   <td>
                     <div className="admin-users-name-cell">
                       <UserAvatar fullName={user.fullName} accent={user.avatarAccent} />
                       <span className="admin-users-name">{user.fullName}</span>
+                      {user.isSelf && <span className="admin-users-self-tag">{t('admin.users.table.you')}</span>}
                     </div>
                   </td>
                   <td className="admin-users-secondary">{user.username}</td>
@@ -89,14 +103,28 @@ export function UserTable({ users, totalCount, pageStart, pageSize, currentPage,
                       <button type="button" className="admin-users-icon-btn" aria-label={t('admin.users.actions.edit')} onClick={() => onEdit(user)}>
                         <img src={EDIT_ICON_URL} alt="" />
                       </button>
-                      <button
-                        type="button"
-                        className="admin-users-icon-btn admin-users-icon-btn--danger"
-                        aria-label={t('admin.users.actions.delete')}
-                        onClick={() => onDeleteRequest(user)}
-                      >
-                        <TrashIcon />
-                      </button>
+                      {user.status === 'active' ? (
+                        <button
+                          type="button"
+                          className="admin-users-icon-btn admin-users-icon-btn--danger"
+                          aria-label={t('admin.users.actions.deactivate')}
+                          title={user.isSelf ? t('admin.users.actions.cannotDeactivateSelf') : t('admin.users.actions.deactivate')}
+                          disabled={user.isSelf}
+                          onClick={() => onToggleActive(user)}
+                        >
+                          <BanIcon />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="admin-users-icon-btn admin-users-icon-btn--success"
+                          aria-label={t('admin.users.actions.activate')}
+                          title={t('admin.users.actions.activate')}
+                          onClick={() => onToggleActive(user)}
+                        >
+                          <CheckCircleIcon />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -105,7 +133,11 @@ export function UserTable({ users, totalCount, pageStart, pageSize, currentPage,
           </tbody>
         </table>
 
-        {users.length === 0 && <p className="admin-users-empty">{t('admin.users.list.empty')}</p>}
+        {notice && (
+          <p className="admin-users-empty" data-variant={notice.error ? 'error' : undefined} role={notice.error ? 'alert' : 'status'}>
+            {notice.text}
+          </p>
+        )}
       </div>
 
       <div className="admin-users-footer">

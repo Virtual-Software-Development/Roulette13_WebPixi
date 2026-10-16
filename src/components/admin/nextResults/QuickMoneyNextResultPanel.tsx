@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { buildMediaUrl } from '../../../utils/media'
-import { useQuickMoneyRoundStore } from '../../../store/useQuickMoneyRoundStore'
 import { useCountdown } from '../../../hooks/useCountdown'
+import { useQuickMoneyNextResult } from '../../../hooks/useQuickMoneyNextResult'
+import { ensureClockTicking, useClockStore } from '../../../store/useClockStore'
 import { PickResultPanel } from './PickResultPanel'
 import './nextResults.css'
 
@@ -29,6 +30,15 @@ const SCHEDULED_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
 // / header.lottery) -- este panel nunca muestra el texto "Lottery", solo "Quick Money".
 // Mismo tiempo visible que el feedback de Roulette/PickResultPanel (SUCCESS_FEEDBACK_MS).
 const FEEDBACK_MS = 3000
+const CLOCK_FORMATTER = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
+
+// El backend exige un motivo para cada cambio de resultado (queda auditado); como en Roulette, el
+// panel no lo pide y manda siempre este.
+const SUBSTITUTION_REASON = 'Manual change from Next Results'
+
+function toDigits(value: string | null): number[] | null {
+  return value == null ? null : value.split('').map(Number)
+}
 
 type PickGame = 'pick3' | 'pick4'
 
@@ -53,17 +63,26 @@ export function QuickMoneyNextResultPanel() {
   const handleResult = (game: PickGame) => (variant: 'success' | 'error') => setFeedback({ game, variant, key: Date.now() })
   const feedbackGame = feedback ? t(`admin.nextResults.quickMoney.${feedback.game}`) : ''
 
-  // Pick 3 y Pick 4 comparten un único draw cycle -- mismo drawNumber/nextDrawTime para los dos
-  // (decisión de negocio confirmada, ver useQuickMoneyRoundStore.ts: el mismo store que ya
-  // consumen RoundCountdownRow.tsx en el Betting Workspace y QuickMoneyDrawCountdown.tsx en el
-  // Lobby). Antes cada PickResultPanel armaba su propio countdown/Draw # local e independiente,
-  // que nunca coincidía entre sí -- ahora es una sola card compartida, igual que "Next Round" en
-  // RouletteNextResultPanel.
-  const nextDrawTime = useQuickMoneyRoundStore((state) => state.nextDrawTime)
-  const drawNumber = useQuickMoneyRoundStore((state) => state.drawNumber)
+  // Un sorteo produce el Pick 3 y el Pick 4 a la vez: un solo countdown/Draw # para los dos, del
+  // sorteo pendiente real del backend (ver useQuickMoneyNextResult).
+  const { status: loadStatus, data, error: loadError, substitute } = useQuickMoneyNextResult()
+  const nextDrawTime = data?.event.horaProgramada ?? ''
   const countdown = useCountdown(nextDrawTime)
-  const isDue = countdown.remainingSeconds <= 0
+  const isDue = nextDrawTime !== '' && countdown.remainingSeconds <= 0
   const timerState = isDue ? 'due' : countdown.urgent ? 'urgent' : 'normal'
+
+  ensureClockTicking()
+  const now = useClockStore((state) => state.now)
+  const changeOpen = data != null && now < new Date(data.sustitucionHasta).getTime()
+  const pick3 = toDigits(data?.pick3 ?? null)
+  const pick4 = toDigits(data?.pick4 ?? null)
+
+  // El backend guarda los 7 dígitos juntos: cambiar uno de los dos números manda el otro tal cual.
+  const updatePick = (game: PickGame) => async (digits: number[]) => {
+    if (!data || data.pick3 == null || data.pick4 == null) throw new Error('no pending result')
+    const value = digits.join('')
+    await substitute(data.event.id, game === 'pick3' ? value : data.pick3, game === 'pick4' ? value : data.pick4, SUBSTITUTION_REASON)
+  }
 
   return (
     <div className="admin-next-results-panel" data-accent="blue">
@@ -93,7 +112,7 @@ export function QuickMoneyNextResultPanel() {
             {t('admin.nextResults.nextDraw')}
           </div>
           <span className="admin-next-results-timer" data-state={timerState}>
-            {isDue ? t('admin.nextResults.dueNow') : countdown.display}
+            {isDue ? t('admin.nextResults.dueNow') : nextDrawTime ? countdown.display : '--:--'}
           </span>
           <div className="admin-next-results-timer-units">
             <span>{t('admin.nextResults.minutes')}</span>
@@ -104,38 +123,62 @@ export function QuickMoneyNextResultPanel() {
         <div className="admin-next-results-round-right">
           <div className="admin-next-results-info-block">
             <span className="admin-next-results-info-label">{t('admin.nextResults.drawNumber')}</span>
-            <span className="admin-next-results-info-value admin-next-results-info-value--emphasis">#{drawNumber}</span>
+            <span className="admin-next-results-info-value admin-next-results-info-value--emphasis">
+              {data ? `#${data.event.numeroEvento}` : '—'}
+            </span>
           </div>
           <div className="admin-next-results-info-block">
             <span className="admin-next-results-info-label">{t('admin.nextResults.scheduledTime')}</span>
-            <span className="admin-next-results-info-value">{SCHEDULED_TIME_FORMATTER.format(new Date(nextDrawTime))}</span>
+            <span className="admin-next-results-info-value">
+              {nextDrawTime ? SCHEDULED_TIME_FORMATTER.format(new Date(nextDrawTime)) : '—'}
+            </span>
           </div>
         </div>
       </div>
 
+      {data && (
+        <span className="admin-next-results-change-window" data-open={changeOpen}>
+          {changeOpen
+            ? t('admin.nextResults.changeUntil', { time: CLOCK_FORMATTER.format(new Date(data.sustitucionHasta)) })
+            : t('admin.nextResults.changeClosed')}
+        </span>
+      )}
+      {loadStatus === 'noEvent' && <p className="admin-next-results-notice">{t('admin.nextResults.quickMoney.noPendingDraw')}</p>}
+      {loadStatus === 'error' && (
+        <p className="admin-next-results-notice" data-variant="error">
+          {t('admin.nextResults.loadError', { error: loadError })}
+        </p>
+      )}
+
       <div className="admin-next-results-divider" />
 
-      <div className="admin-next-results-picks-row">
-        <PickResultPanel
-          accent="green"
-          icon={PICK3_ICON_URL}
-          title={t('admin.nextResults.quickMoney.pick3')}
-          subtitle={t('admin.nextResults.quickMoney.pick3Subtitle')}
-          updateLabel={t('admin.nextResults.updatePick3')}
-          seedDigits={[8, 4, 1]}
-          onResult={handleResult('pick3')}
-        />
+      {pick3 && pick4 && (
+        <div className="admin-next-results-picks-row">
+          <PickResultPanel
+            accent="green"
+            icon={PICK3_ICON_URL}
+            title={t('admin.nextResults.quickMoney.pick3')}
+            subtitle={t('admin.nextResults.quickMoney.pick3Subtitle')}
+            updateLabel={t('admin.nextResults.updatePick3')}
+            currentDigits={pick3}
+            disabled={!changeOpen}
+            onUpdate={updatePick('pick3')}
+            onResult={handleResult('pick3')}
+          />
 
-        <PickResultPanel
-          accent="amber"
-          icon={PICK4_ICON_URL}
-          title={t('admin.nextResults.quickMoney.pick4')}
-          subtitle={t('admin.nextResults.quickMoney.pick4Subtitle')}
-          updateLabel={t('admin.nextResults.updatePick4')}
-          seedDigits={[2, 7, 3, 9]}
-          onResult={handleResult('pick4')}
-        />
-      </div>
+          <PickResultPanel
+            accent="amber"
+            icon={PICK4_ICON_URL}
+            title={t('admin.nextResults.quickMoney.pick4')}
+            subtitle={t('admin.nextResults.quickMoney.pick4Subtitle')}
+            updateLabel={t('admin.nextResults.updatePick4')}
+            currentDigits={pick4}
+            disabled={!changeOpen}
+            onUpdate={updatePick('pick4')}
+            onResult={handleResult('pick4')}
+          />
+        </div>
+      )}
     </div>
   )
 }

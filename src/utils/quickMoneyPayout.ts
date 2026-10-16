@@ -1,51 +1,117 @@
 import type { QuickMoneyBetSlipEntry } from '../types/quickMoneyBetSlip'
-import type { QuickMoneyBetType, QuickMoneyGameType } from '../types/quickMoneyBet'
+import type { QuickMoneyBetDraw, QuickMoneyBetSelection } from '../types/quickMoneyBet'
 
-// Multiplicadores mock tipo Pick 3/Pick 4 real -- no hay motor de payout en el backend todavía
-// (mismo caso que BET_TYPE_PAYOUT_MULTIPLIER en rouletteBetPayout.ts). SIMPLIFICADO a propósito:
-// un juego de números real hace variar el pago de Box/Combo según cuántos dígitos se repiten en
-// la combinación elegida (ej. Box de 3 dígitos únicos paga distinto que uno con un par repetido)
-// -- acá se usa un valor plano por (gameType, betType) en vez de esa tabla combinatoria completa,
-// documentado como la simplificación que es. Único lugar a afinar el día que exista un motor real.
-export const QUICK_MONEY_PAYOUT_MULTIPLIER: Record<QuickMoneyGameType, Record<QuickMoneyBetType, number>> = {
-  pick3: { straight: 500, box: 80, combo: 160 },
-  pick4: { straight: 5000, box: 200, combo: 400 },
+// Reglas de premio de Quick Money -- port de QuickMoneyPrizeCalc.GetMultiplierFromFormatNumberBets
+// (script C# de referencia). Una apuesta de 1 a 4 dígitos se evalúa contra el resultado del Pick 3
+// (3 dígitos) y del Pick 4 (4 dígitos) del mismo sorteo:
+//
+//   Directo (2 dígitos): los tres "premios" son pares de dígitos --
+//     1.º = últimos 2 del Pick 3, 2.º = primeros 2 del Pick 4, 3.º = últimos 2 del Pick 4.
+//   Palé (4 dígitos): dos de esos premios juntos -- 1.º+2.º o 1.º+3.º pagan 1100, 2.º+3.º paga 100.
+//
+// El premio es multiplicador × monto apostado (igual que el script).
+
+const MULTIPLIER = {
+  single: 9,
+  directoFirst: 56,
+  directoSecond: 12,
+  directoThird: 4,
+  bolita: 75,
+  straight3: 600,
+  box3: 100,
+  straight4: 5000,
+  paleFirstPair: 1100,
+  paleSecondThird: 100,
+} as const
+
+const join = (digits: readonly number[]) => digits.join('')
+const sortedKey = (digits: readonly number[]) => [...digits].sort((a, b) => a - b).join('')
+
+// Multiplicador que paga una apuesta para un resultado concreto (0 = no gana).
+export function getPrizeMultiplier(selection: QuickMoneyBetSelection, pick3: readonly number[], pick4: readonly number[]): number {
+  const input = join(selection.digits)
+  const directFirst = `${pick3[1]}${pick3[2]}`
+  const directSecond = `${pick4[0]}${pick4[1]}`
+  const directThird = `${pick4[2]}${pick4[3]}`
+
+  switch (selection.digits.length) {
+    case 1:
+      if (selection.betType === 'single' && pick3.some((d) => String(d) === input)) return MULTIPLIER.single
+      return 0
+    case 2:
+      if (selection.betType === 'directo') {
+        if (input === directFirst) return MULTIPLIER.directoFirst
+        if (input === directSecond) return MULTIPLIER.directoSecond
+        if (input === directThird) return MULTIPLIER.directoThird
+      }
+      if (selection.betType === 'bolita') {
+        const firstTwo = `${pick3[0]}${pick3[1]}`
+        const lastTwo = `${pick3[1]}${pick3[2]}`
+        if (input === firstTwo || input === lastTwo) return MULTIPLIER.bolita
+      }
+      return 0
+    case 3:
+      if (selection.betType === 'straight' && input === join(pick3)) return MULTIPLIER.straight3
+      if (selection.betType === 'box' && sortedKey(selection.digits) === sortedKey(pick3)) return MULTIPLIER.box3
+      return 0
+    case 4:
+      if (selection.betType === 'straight' && input === join(pick4)) return MULTIPLIER.straight4
+      if (selection.betType === 'pale') {
+        if (input === directFirst + directSecond || input === directFirst + directThird) return MULTIPLIER.paleFirstPair
+        if (input === directSecond + directThird) return MULTIPLIER.paleSecondThird
+      }
+      return 0
+    default:
+      return 0
+  }
+}
+
+// Mejor multiplicador posible para la apuesta -- base de "Potential Win" antes del sorteo.
+export function getMaxMultiplier(selection: QuickMoneyBetSelection): number {
+  switch (selection.betType) {
+    case 'single':
+      return MULTIPLIER.single
+    case 'directo':
+      return MULTIPLIER.directoFirst
+    case 'bolita':
+      return MULTIPLIER.bolita
+    case 'straight':
+      return selection.digits.length === 4 ? MULTIPLIER.straight4 : MULTIPLIER.straight3
+    case 'box':
+      return MULTIPLIER.box3
+    case 'pale':
+      return MULTIPLIER.paleFirstPair
+  }
+}
+
+// Qué sorteo decide la apuesta (ver QuickMoneyBetDraw).
+export function getBetDraw(selection: QuickMoneyBetSelection): QuickMoneyBetDraw {
+  if (selection.betType === 'directo' || selection.betType === 'pale') return 'both'
+  if (selection.betType === 'straight' && selection.digits.length === 4) return 'pick4'
+  return 'pick3'
 }
 
 export interface QuickMoneyBetPayout {
-  totalReturn: number
-  profit: number
+  // Premio máximo posible (multiplicador × monto, como el script).
+  maxPrize: number
 }
 
-export function calculateBetPayout(gameType: QuickMoneyGameType, betType: QuickMoneyBetType, stake: number): QuickMoneyBetPayout {
-  const multiplier = QUICK_MONEY_PAYOUT_MULTIPLIER[gameType][betType]
-  return { totalReturn: stake * (multiplier + 1), profit: stake * multiplier }
+export function calculateBetPayout(selection: QuickMoneyBetSelection, stake: number): QuickMoneyBetPayout {
+  return { maxPrize: stake * getMaxMultiplier(selection) }
 }
 
-// totalPotentialReturn = suma de TODAS las apuestas como si cada una ganara -- mismo criterio (y
-// misma limitación) que calculateSlipTotals en rouletteBetPayout.ts.
 export function calculateSlipTotals(entries: QuickMoneyBetSlipEntry[]): { totalStake: number; totalPotentialReturn: number } {
   return entries.reduce(
-    (acc, entry) => {
-      const { totalReturn } = calculateBetPayout(entry.selection.gameType, entry.selection.betType, entry.stake)
-      return { totalStake: acc.totalStake + entry.stake, totalPotentialReturn: acc.totalPotentialReturn + totalReturn }
-    },
+    (acc, entry) => ({
+      totalStake: acc.totalStake + entry.stake,
+      totalPotentialReturn: acc.totalPotentialReturn + calculateBetPayout(entry.selection, entry.stake).maxPrize,
+    }),
     { totalStake: 0, totalPotentialReturn: 0 },
   )
 }
 
-// Máximo realmente alcanzable con los resultados de UN sorteo de Pick 3 y UN sorteo de Pick 4 --
-// mismo criterio que calculateMaxPotentialWin en rouletteBetPayout.ts, adaptado a este dominio:
-// Pick 3 y Pick 4 son sorteos independientes (pueden ganar los dos a la vez), pero dentro de un
-// mismo gameType solo puede salir UN resultado exacto por sorteo, así que dos entries del mismo
-// gameType son mutuamente excluyentes entre sí (nunca pueden ganar juntas). Se agrupa por
-// gameType, se toma el mayor totalReturn dentro de cada grupo, y se suma entre grupos.
+// Todas las apuestas se evalúan contra el mismo sorteo y cada una puede ganar por su cuenta (ej.
+// Straight y Box sobre los mismos dígitos), así que el máximo cobrable es la suma de los máximos.
 export function calculateMaxPotentialWin(entries: QuickMoneyBetSlipEntry[]): number {
-  const bestPerGameType: Partial<Record<QuickMoneyGameType, number>> = {}
-  for (const entry of entries) {
-    const { totalReturn } = calculateBetPayout(entry.selection.gameType, entry.selection.betType, entry.stake)
-    const current = bestPerGameType[entry.selection.gameType] ?? 0
-    if (totalReturn > current) bestPerGameType[entry.selection.gameType] = totalReturn
-  }
-  return Object.values(bestPerGameType).reduce((sum: number, value) => sum + (value ?? 0), 0)
+  return calculateSlipTotals(entries).totalPotentialReturn
 }

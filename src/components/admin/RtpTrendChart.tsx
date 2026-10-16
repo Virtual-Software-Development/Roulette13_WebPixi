@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useClickOutside } from '../../hooks/useClickOutside'
-import type { RtpBand, RtpHistoryPoint, RtpTrendRange } from '../../types/rtpDashboard'
+import { RTP_TREND_RANGE_DAYS, type RtpBand, type RtpHistoryPoint, type RtpTrendRange } from '../../types/rtpDashboard'
 import { RtpDeviationRows } from './RtpDeviationRows'
+import { lineSegments, polylinePoints } from './rtpChartSegments'
 import './rtpTrendChart.css'
 
 // Mismo criterio que GamesActivityChart: el proyecto no tiene ninguna librería de charts
@@ -34,7 +35,12 @@ function yFor(value: number): number {
 }
 
 function xFor(index: number, count: number): number {
-  return MARGIN.left + (index / (count - 1)) * PLOT_WIDTH
+  return MARGIN.left + (count > 1 ? (index / (count - 1)) * PLOT_WIDTH : PLOT_WIDTH / 2)
+}
+
+// date llega como YYYY-MM-DD (día en la zona del navegador): se formatea en UTC para no correrlo.
+function formatHistoryDate(date: string, language: string): string {
+  return new Intl.DateTimeFormat(language, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`))
 }
 
 function pickLabelIndices(count: number): number[] {
@@ -63,10 +69,8 @@ function ChevronDownIcon() {
 const SERIES: LineSeries[] = [
   { key: 'rouletteActual', color: 'var(--admin-red)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.roulette' },
   { key: 'rouletteTarget', color: 'var(--admin-red)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.roulette' },
-  { key: 'pick3Actual', color: 'var(--admin-green)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.pick3' },
-  { key: 'pick3Target', color: 'var(--admin-green)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.pick3' },
-  { key: 'pick4Actual', color: 'var(--admin-amber)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.pick4' },
-  { key: 'pick4Target', color: 'var(--admin-amber)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.pick4' },
+  { key: 'quickMoneyActual', color: 'var(--admin-green)', dashed: false, gameLabelKey: 'admin.dashboard.gamesActivity.quickMoney' },
+  { key: 'quickMoneyTarget', color: 'var(--admin-green)', dashed: true, gameLabelKey: 'admin.dashboard.gamesActivity.quickMoney' },
 ]
 
 // actual = Actual vs Target (líneas en escala absoluta); deviation = actual - target por juego con
@@ -76,21 +80,24 @@ type TrendView = 'actual' | 'deviation'
 const VIEW_OPTIONS: TrendView[] = ['actual', 'deviation']
 
 interface RtpTrendChartProps {
-  historyByRange: Record<RtpTrendRange, RtpHistoryPoint[]>
+  // Un punto por día, el último hoy; cada rango muestra sus últimos N días.
+  history: RtpHistoryPoint[]
   bands: RtpBand[]
 }
 
-export function RtpTrendChart({ historyByRange, bands }: RtpTrendChartProps) {
-  const { t } = useTranslation()
+export function RtpTrendChart({ history: fullHistory, bands }: RtpTrendChartProps) {
+  const { t, i18n } = useTranslation()
   const [range, setRange] = useState<RtpTrendRange>('last7Days')
   const [view, setView] = useState<TrendView>('actual')
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   useClickOutside(containerRef, () => setIsOpen(false))
 
-  const history = historyByRange[range]
+  const history = fullHistory.slice(-RTP_TREND_RANGE_DAYS[range])
   const count = history.length
   const labelIndices = pickLabelIndices(count)
+  const dateLabels = history.map((point) => formatHistoryDate(point.date, i18n.language))
+  const hasActual = history.some((point) => point.rouletteActual !== null || point.quickMoneyActual !== null)
 
   return (
     <section className="admin-panel admin-rtp-trend">
@@ -146,7 +153,7 @@ export function RtpTrendChart({ historyByRange, bands }: RtpTrendChartProps) {
       </div>
 
       {view === 'deviation' ? (
-        <RtpDeviationRows history={history} bands={bands} labelIndices={labelIndices} />
+        <RtpDeviationRows history={history} bands={bands} labelIndices={labelIndices} dateLabels={dateLabels} />
       ) : (
         <>
           <svg
@@ -175,30 +182,45 @@ export function RtpTrendChart({ historyByRange, bands }: RtpTrendChartProps) {
               const x = xFor(i, count)
               const textAnchor = i === 0 ? 'start' : i === count - 1 ? 'end' : 'middle'
               return (
-                <text key={history[i].date + i} x={x} y={CHART_HEIGHT - 8} className="admin-rtp-trend-axis-label" textAnchor={textAnchor}>
-                  {history[i].date}
+                <text key={history[i].date} x={x} y={CHART_HEIGHT - 8} className="admin-rtp-trend-axis-label" textAnchor={textAnchor}>
+                  {dateLabels[i]}
                 </text>
               )
             })}
 
-            {SERIES.map((s) => {
-              const points = history.map((point, i) => `${xFor(i, count)},${yFor(point[s.key])}`).join(' ')
-              return (
-                <polyline
-                  key={s.key}
-                  points={points}
-                  fill="none"
-                  stroke={s.color}
-                  strokeWidth={s.dashed ? 1.5 : 2}
-                  strokeDasharray={s.dashed ? '6 5' : undefined}
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  className="admin-rtp-trend-line"
-                  style={{ filter: `drop-shadow(0 0 3px color-mix(in srgb, ${s.color} 35%, transparent))` }}
-                />
-              )
-            })}
+            {SERIES.map((s) =>
+              lineSegments(
+                history.map((point) => point[s.key]),
+                (i) => xFor(i, count),
+                yFor,
+              ).map((segment, segmentIndex) =>
+                segment.length === 1 ? (
+                  <circle
+                    key={`${s.key}-${segmentIndex}`}
+                    cx={segment[0].x}
+                    cy={segment[0].y}
+                    r={3}
+                    fill={s.color}
+                  />
+                ) : (
+                  <polyline
+                    key={`${s.key}-${segmentIndex}`}
+                    points={polylinePoints(segment)}
+                    fill="none"
+                    stroke={s.color}
+                    strokeWidth={s.dashed ? 1.5 : 2}
+                    strokeDasharray={s.dashed ? '6 5' : undefined}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    className="admin-rtp-trend-line"
+                    style={{ filter: `drop-shadow(0 0 3px color-mix(in srgb, ${s.color} 35%, transparent))` }}
+                  />
+                ),
+              ),
+            )}
           </svg>
+
+          {!hasActual && <p className="admin-rtp-trend-empty">{t('admin.rtp.trendChart.empty')}</p>}
 
           <div className="admin-rtp-trend-legend">
             {SERIES.map((s) => (

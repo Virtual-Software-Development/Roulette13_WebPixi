@@ -16,11 +16,16 @@
   color: var(--betting-text-secondary);
 }
 
+/* Una sola línea: los resultados más viejos (a la derecha) que no entran pasan a una segunda línea
+   que queda oculta -- enteros, nunca una bola cortada. Si la tira crecía a dos líneas, el tablero
+   tenía que achicarse para que la pantalla entrara sin scroll. */
 .recent-results-strip-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  height: 50px;
+  overflow: hidden;
 }
 
 .recent-results-strip-empty {

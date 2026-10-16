@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useClickOutside } from '../../../hooks/useClickOutside'
 import { AdminSelect, type AdminSelectOption } from '../AdminSelect'
-import { USER_ROLES } from '../../../data/adminUsersMockData'
+import { USER_ROLES } from './userRoles'
 import { FilterIcon } from './icons'
 import type { UserRole, UserStatus } from '../../../types/adminUsers'
 import './adminUsers.css'
@@ -20,7 +20,7 @@ interface UserFilterPopoverProps {
 // Botón + panel flotante (mismo shell .admin-dropdown/.admin-dropdown-menu que DateRangeControl.tsx,
 // ver adminLayout.css) en vez de un dropdown de opción única como AdminSelect -- acá el trigger abre
 // un panel con dos filtros independientes (Role/Status, los únicos dos campos que el modelo de
-// usuario mock soporta -- pedido explícito: no inventar filtros que el modelo no tiene). Aplican al
+// usuario soporta -- pedido explícito: no inventar filtros que el modelo no tiene). Aplican al
 // cambiar, sin botón "Apply", mismo criterio que el status filter de GameEventsList.
 export function UserFilterPopover({ role, status, onChangeRole, onChangeStatus }: UserFilterPopoverProps) {
   const { t } = useTranslation()

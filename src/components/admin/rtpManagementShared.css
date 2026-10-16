@@ -198,3 +198,17 @@
   font-weight: 600;
   color: var(--admin-text-primary);
 }
+
+/* Carga / error de los datos del backend (RtpLoadState.tsx). */
+.admin-rtp-mgmt-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-rtp-mgmt-state-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--admin-text-secondary);
+}

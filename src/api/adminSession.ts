@@ -1,12 +1,85 @@
-// Sesión de admin OPCIONAL para las vistas Admin de ESTA app (?preview=admin-*). Esta app no tiene
-// login propio: Next Results usa endpoints públicos, y si hay una sesión abierta en el admin real
-// (admin/src/api/client.ts) se aprovecha solo para que el backend audite quién leyó o cambió el
-// resultado. Esa sesión deja el refresh token en una cookie HttpOnly por host (no por puerto); con
-// ella POST /auth/refresh devuelve el access token, que se guarda solo en memoria.
+// Sesión de admin de las vistas Admin (?preview=admin-*). LoginPage la abre con POST /auth/login:
+// el backend deja el refresh token en una cookie HttpOnly (path /api, por host y no por puerto) y
+// devuelve el access token, que se guarda solo en memoria. Al recargar, POST /auth/refresh lo
+// recupera con esa cookie. Next Results usa endpoints públicos: ahí la sesión solo sirve para que
+// el backend audite quién leyó o cambió el resultado.
 let accessToken: string | null = null
 let refreshInFlight: Promise<boolean> | null = null
 
 export class AdminAuthError extends Error {}
+
+export type AdminLoginFailureReason = 'invalid-credentials' | 'not-admin' | 'unavailable'
+
+export class AdminLoginFailure extends Error {
+  readonly reason: AdminLoginFailureReason
+
+  constructor(reason: AdminLoginFailureReason) {
+    super(reason)
+    this.reason = reason
+  }
+}
+
+interface AccessTokenClaims {
+  sub?: string
+  role?: string
+}
+
+// Claims del access token (JWT) -- solo para leer el usuario y el rol; quien valida la firma es el
+// backend.
+function tokenClaims(token: string | null): AccessTokenClaims | null {
+  const payload = token?.split('.')[1]
+  if (!payload) return null
+  try {
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=')))
+  } catch {
+    return null
+  }
+}
+
+// Id del usuario de la sesión actual, o null sin sesión.
+export function currentAdminUserId(): string | null {
+  return tokenClaims(accessToken)?.sub ?? null
+}
+
+async function postLogout(): Promise<void> {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+  } catch {
+    // sin red: la cookie vence sola
+  }
+}
+
+// Abre la sesión. Solo los admin entran al panel: una cuenta de cajero se cierra enseguida.
+export async function loginAdmin(username: string, password: string): Promise<void> {
+  let res: Response
+  try {
+    res = await fetch('/api/auth/login', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username.trim(), password }),
+    })
+  } catch {
+    throw new AdminLoginFailure('unavailable')
+  }
+  // 400 = no pasa la validación (ej. contraseña de menos de 8): para el usuario es lo mismo.
+  if (res.status === 400 || res.status === 401) throw new AdminLoginFailure('invalid-credentials')
+  if (!res.ok) throw new AdminLoginFailure('unavailable')
+
+  const token: string = (await res.json()).access_token
+  if (tokenClaims(token)?.role !== 'admin') {
+    await postLogout()
+    throw new AdminLoginFailure('not-admin')
+  }
+  accessToken = token
+}
+
+// Cierra la sesión en el backend (revoca el refresh token y borra la cookie).
+export async function logoutAdmin(): Promise<void> {
+  accessToken = null
+  await postLogout()
+}
 
 async function postRefresh(): Promise<boolean> {
   try {
@@ -22,11 +95,16 @@ async function postRefresh(): Promise<boolean> {
   }
 }
 
-// true si hay (o se pudo recuperar con la cookie) una sesión de admin.
+// true si hay (o se pudo recuperar con la cookie) una sesión.
 export function restoreAdminSession(): Promise<boolean> {
   if (accessToken) return Promise.resolve(true)
   if (!refreshInFlight) refreshInFlight = postRefresh().finally(() => (refreshInFlight = null))
   return refreshInFlight
+}
+
+// true si hay una sesión de un usuario con rol admin.
+export async function hasAdminSession(): Promise<boolean> {
+  return (await restoreAdminSession()) && tokenClaims(accessToken)?.role === 'admin'
 }
 
 // JSON de una respuesta OK; si no, lanza con el `error` que manda el backend (apperror) o el status.

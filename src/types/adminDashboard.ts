@@ -13,11 +13,7 @@ export interface AdminStatCardData {
   trendLabelKey?: string
 }
 
-// Pick 3 y Pick 4 se agregan en un solo valor "quickMoney" (pedido explícito: ambos pertenecen a
-// Quick Money, mismo criterio ya aplicado al admin-stat-card "Quick Money Rounds" -- ver
-// adminDashboardMockData.ts). RecentRoundGame más abajo SÍ mantiene pick3/pick4 separados: ahí cada
-// fila es una ronda real puntual, no un agregado, así que perder cuál de los dos juegos fue
-// perdería información real.
+// Quick Money es un solo juego: cada sorteo produce un número de Pick 3 y uno de Pick 4 juntos.
 export interface GamesActivitySeriesPoint {
   time: string
   roulette: number
@@ -33,11 +29,16 @@ export interface GamePerformanceRow {
 }
 
 export interface GameEventsOverTimePoint {
-  time: string
+  // Inicio del intervalo (ISO 8601); hora o día según GameEventsOverTimeBucket.
+  start: string
   completed: number
   failed: number
   cancelled: number
 }
+
+export type GameEventsOverTimeRange = '24h' | '7d' | '30d' | '90d'
+
+export type GameEventsOverTimeBucket = 'hour' | 'day'
 
 export type GamesDistributionGame = 'roulette' | 'quickMoney'
 
@@ -49,15 +50,24 @@ export interface GamesDistributionSegment {
   color: string
 }
 
-export type RecentRoundGame = 'roulette' | 'pick3' | 'pick4'
+export type RecentRoundGame = 'roulette' | 'quickMoney'
 
-export interface RecentRound {
+// Resultado de un sorteo de Quick Money: los dígitos de Pick 3 y de Pick 4 del mismo sorteo.
+export interface QuickMoneyDrawResult {
+  pick3: number[]
+  pick4: number[]
+}
+
+interface RecentRoundBase {
   id: string
   time: string
-  game: RecentRoundGame
-  result: number[]
   roundNumber: string
 }
+
+// Roulette: la casilla ('0'..'36', '00').
+export type RecentRound =
+  | (RecentRoundBase & { game: 'roulette'; result: string })
+  | (RecentRoundBase & { game: 'quickMoney'; result: QuickMoneyDrawResult })
 
 export interface SystemStatusService {
   id: string
@@ -90,20 +100,20 @@ export interface AdminSidebarItem {
 
 // Result Frequency (Dashboard) -- solo resultados ya sorteados, nunca apuestas de la ronda en curso
 // (el admin puede fijar el próximo resultado, ver Next Results & Manual Control).
-export type ResultFrequencyGame = 'roulette' | 'pick3' | 'pick4'
+export type ResultFrequencyGame = 'roulette' | 'quickMoney'
 
 export type ResultFrequencyWindow = 100 | 500 | 1000
 
 export interface ResultFrequencyBucket {
-  // Casilla de ruleta ('0', '00', '1'..'36') o dígito de Pick ('0'..'9').
+  // Casilla de ruleta ('0', '00', '1'..'36') o dígito de Quick Money ('0'..'9').
   key: string
   count: number
 }
 
 export interface ResultFrequencyData {
   rounds: number
-  // Resultados contados: = rounds en Roulette, rounds × posiciones en Pick 3/Pick 4 (cada dígito de
-  // cada posición cuenta). Base para el "expected" uniforme: draws / buckets.length.
+  // Resultados contados: = rounds en Roulette, rounds × 7 en Quick Money (cada dígito del Pick 3 y
+  // del Pick 4 de cada sorteo cuenta). Base para el "expected" uniforme: draws / buckets.length.
   draws: number
   buckets: ResultFrequencyBucket[]
 }

@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import type { RtpBand, RtpGame, RtpHistoryPoint } from '../../types/rtpDashboard'
+import { lineSegments, polylinePoints } from './rtpChartSegments'
 
 // Vista "Deviation" de RtpTrendChart: una fila por juego con actual - target (puntos porcentuales)
 // alrededor de 0 y la banda permitida sombreada. Filas separadas (small multiples) en vez de un
-// solo chart porque cada juego tiene su propia banda (Roulette -4/+2, Pick 3/Pick 4 ±2) -- en un
-// mismo eje las tres bandas se superponían. Mismo criterio SVG a mano que RtpTrendChart.
+// solo chart porque cada juego tiene su propia banda (Roulette -4/+2, Quick Money ±2) -- en un
+// mismo eje las bandas se superponían. Mismo criterio SVG a mano que RtpTrendChart.
 const ROW_WIDTH = 1000
 const ROW_HEIGHT = 124
 const ROW_PADDING_Y = 10
@@ -16,16 +17,15 @@ const PLOT_WIDTH = PLOT_RIGHT - PLOT_LEFT
 
 interface DeviationGame {
   id: RtpGame
-  actualKey: keyof Omit<RtpHistoryPoint, 'date'>
-  targetKey: keyof Omit<RtpHistoryPoint, 'date'>
+  actualKey: 'rouletteActual' | 'quickMoneyActual'
+  targetKey: 'rouletteTarget' | 'quickMoneyTarget'
   color: string
   labelKey: string
 }
 
 const GAMES: DeviationGame[] = [
   { id: 'roulette', actualKey: 'rouletteActual', targetKey: 'rouletteTarget', color: 'var(--admin-red)', labelKey: 'admin.dashboard.gamesActivity.roulette' },
-  { id: 'pick3', actualKey: 'pick3Actual', targetKey: 'pick3Target', color: 'var(--admin-green)', labelKey: 'admin.dashboard.gamesActivity.pick3' },
-  { id: 'pick4', actualKey: 'pick4Actual', targetKey: 'pick4Target', color: 'var(--admin-amber)', labelKey: 'admin.dashboard.gamesActivity.pick4' },
+  { id: 'quickMoney', actualKey: 'quickMoneyActual', targetKey: 'quickMoneyTarget', color: 'var(--admin-green)', labelKey: 'admin.dashboard.gamesActivity.quickMoney' },
 ]
 
 function round1(value: number): number {
@@ -41,9 +41,11 @@ interface RtpDeviationRowsProps {
   history: RtpHistoryPoint[]
   bands: RtpBand[]
   labelIndices: number[]
+  dateLabels: string[]
 }
 
-export function RtpDeviationRows({ history, bands, labelIndices }: RtpDeviationRowsProps) {
+// Días sin apuestas (actual null) quedan como hueco en la línea y no cuentan como fuera de banda.
+export function RtpDeviationRows({ history, bands, labelIndices, dateLabels }: RtpDeviationRowsProps) {
   const { t } = useTranslation()
   const count = history.length
   const xFor = (index: number) => PLOT_LEFT + (count > 1 ? (index / (count - 1)) * PLOT_WIDTH : PLOT_WIDTH / 2)
@@ -52,27 +54,33 @@ export function RtpDeviationRows({ history, bands, labelIndices }: RtpDeviationR
     <div className="admin-rtp-deviation">
       {GAMES.map((game, gameIndex) => {
         const band = bands.find((b) => b.id === game.id)
-        const deviations = history.map((point) => round1(point[game.actualKey] - point[game.targetKey]))
+        const deviations = history.map((point) => {
+          const actual = point[game.actualKey]
+          return actual === null ? null : round1(actual - point[game.targetKey])
+        })
+        const values = deviations.filter((d): d is number => d !== null)
         const latestTarget = history[count - 1]?.[game.targetKey] ?? 0
         // Banda relativa al target (ej. Roulette 92–98 con target 96 -> -4 / +2).
         const bandLow = band ? round1(band.min - latestTarget) : -1
         const bandHigh = band ? round1(band.max - latestTarget) : 1
-        const outFlags = deviations.map((d) => d < bandLow || d > bandHigh)
-        const latest = deviations[count - 1] ?? 0
-        const latestOut = outFlags[count - 1] ?? false
+        const outFlags = deviations.map((d) => d !== null && (d < bandLow || d > bandHigh))
+        // Último día con datos.
+        const latestIndex = deviations.findLastIndex((d) => d !== null)
+        const latest = latestIndex >= 0 ? deviations[latestIndex] : null
+        const latestOut = latestIndex >= 0 && outFlags[latestIndex]
         const outCount = outFlags.filter(Boolean).length
 
         // Escala propia de cada fila: de lo más bajo a lo más alto entre banda y datos, con aire --
         // así la banda llena la fila aunque sea asimétrica (Roulette -4 / +2).
-        const lowest = Math.min(bandLow, ...deviations)
-        const highest = Math.max(bandHigh, ...deviations)
+        const lowest = Math.min(bandLow, ...values)
+        const highest = Math.max(bandHigh, ...values)
         const pad = (highest - lowest) * 0.18
         const yMin = lowest - pad
         const yMax = highest + pad
         const isLastRow = gameIndex === GAMES.length - 1
         const svgHeight = ROW_HEIGHT + (isLastRow ? X_AXIS_HEIGHT : 0)
         const yFor = (value: number) => ROW_PADDING_Y + ((yMax - value) / (yMax - yMin)) * (ROW_HEIGHT - 2 * ROW_PADDING_Y)
-        const points = deviations.map((d, i) => `${xFor(i)},${yFor(d)}`).join(' ')
+        const segments = lineSegments(deviations, xFor, yFor)
 
         return (
           <div key={game.id} className="admin-rtp-deviation-row">
@@ -82,11 +90,13 @@ export function RtpDeviationRows({ history, bands, labelIndices }: RtpDeviationR
                 {t(game.labelKey)}
               </span>
               <span className="admin-rtp-deviation-value" data-out={latestOut}>
-                {formatPp(latest)} {t('admin.rtp.trendChart.deviation.ppUnit')}
+                {latest === null ? '—' : `${formatPp(latest)} ${t('admin.rtp.trendChart.deviation.ppUnit')}`}
               </span>
-              <span className="admin-rtp-deviation-status" data-out={latestOut}>
-                {latestOut ? t('admin.rtp.trendChart.deviation.outOfBand') : t('admin.rtp.trendChart.deviation.withinBand')}
-              </span>
+              {latest !== null && (
+                <span className="admin-rtp-deviation-status" data-out={latestOut}>
+                  {latestOut ? t('admin.rtp.trendChart.deviation.outOfBand') : t('admin.rtp.trendChart.deviation.withinBand')}
+                </span>
+              )}
               <span className="admin-rtp-deviation-band">
                 {t('admin.rtp.trendChart.deviation.band', { low: formatPp(bandLow), high: formatPp(bandHigh) })}
               </span>
@@ -121,29 +131,36 @@ export function RtpDeviationRows({ history, bands, labelIndices }: RtpDeviationR
                 </text>
               ))}
 
-              <polyline
-                points={points}
-                fill="none"
-                stroke={game.color}
-                strokeWidth={2}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                className="admin-rtp-trend-line"
-              />
+              {segments.map((segment, segmentIndex) =>
+                segment.length === 1 ? (
+                  <circle key={segmentIndex} cx={segment[0].x} cy={segment[0].y} r={3} fill={game.color} />
+                ) : (
+                  <polyline
+                    key={segmentIndex}
+                    points={polylinePoints(segment)}
+                    fill="none"
+                    stroke={game.color}
+                    strokeWidth={2}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    className="admin-rtp-trend-line"
+                  />
+                ),
+              )}
               {deviations.map((d, i) =>
-                outFlags[i] ? <circle key={i} cx={xFor(i)} cy={yFor(d)} r={4.5} className="admin-rtp-deviation-out-point" /> : null,
+                d !== null && outFlags[i] ? <circle key={i} cx={xFor(i)} cy={yFor(d)} r={4.5} className="admin-rtp-deviation-out-point" /> : null,
               )}
 
               {isLastRow &&
                 labelIndices.map((i) => (
                   <text
-                    key={history[i].date + i}
+                    key={history[i].date}
                     x={xFor(i)}
                     y={svgHeight - 6}
                     className="admin-rtp-deviation-axis-label"
                     textAnchor={i === 0 ? 'start' : i === count - 1 ? 'end' : 'middle'}
                   >
-                    {history[i].date}
+                    {dateLabels[i]}
                   </text>
                 ))}
             </svg>

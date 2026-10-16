@@ -3,32 +3,28 @@ import { useTranslation } from 'react-i18next'
 import { AdminSelect, type AdminSelectOption } from './AdminSelect'
 import { AdminFormField } from './AdminFormField'
 import { InfoBanner } from './InfoBanner'
-import { RTP_GAME_ICON_URLS } from '../../data/rtpDashboardMockData'
-import { RTP_SETTINGS_BY_GAME } from '../../data/rtpManagementMockData'
-import { GAME_LABEL_KEY, RTP_GAMES } from '../../data/rtpGameLabels'
+import { GAME_LABEL_KEY, RTP_GAMES, RTP_GAME_ICON_URLS } from '../../data/rtpGameLabels'
+import { describeRtpError } from '../../hooks/useRtpManagement'
 import type { RtpGame } from '../../types/rtpDashboard'
-import { DAYS_OF_WEEK, type DayOfWeek, type RtpProfile } from '../../types/rtpManagement'
+import { DAYS_OF_WEEK, type DayOfWeek, type NewRtpProfile, type RtpProfile, type RtpSettingsData } from '../../types/rtpManagement'
 import './rtpScheduling.css'
 
-const DATE_DISPLAY_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-
-function formatDateDisplay(iso: string): string {
-  if (!iso) return ''
-  return DATE_DISPLAY_FORMATTER.format(new Date(`${iso}T00:00:00Z`))
-}
-
-// yyyy-mm-dd en hora LOCAL -- mismo criterio que getNowAsDatetimeLocal en RtpSettingsPanel.tsx
-// (Date#toISOString() convierte a UTC primero, lo que podría correr la fecha un día).
-function getTodayAsDateInput(): string {
-  const now = new Date()
+// yyyy-mm-dd en hora LOCAL, `days` días después de hoy (Date#toISOString() convierte a UTC primero,
+// lo que podría correr la fecha un día).
+function localDateInput(days = 0): string {
+  const date = new Date()
+  date.setDate(date.getDate() + days)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
 interface RtpProfileFormProps {
   existingProfiles: RtpProfile[]
+  // Configuración vigente: valores iniciales de target/bandas; null si todavía no cargó.
+  settingsByGame: Record<RtpGame, RtpSettingsData> | null
   onCancel: () => void
-  onSave: (profile: RtpProfile) => void
+  // Lanza si el backend rechaza el profile (su mensaje se muestra en el formulario).
+  onSave: (profile: NewRtpProfile) => Promise<void>
 }
 
 // Panel inline (no overlay) para crear un RTP Profile -- el proyecto no tiene modal/dialog/drawer
@@ -41,23 +37,25 @@ interface RtpProfileFormProps {
 // opcional aparte (Restrict to specific hours each day) en vez de un modo mutuamente exclusivo.
 // Una "campaña promocional" ya no es un tipo separado: es simplemente un profile con un Profile
 // Name descriptivo (pedido explícito del usuario) -- no hay campo Campaign dedicado.
-export function RtpProfileForm({ existingProfiles, onCancel, onSave }: RtpProfileFormProps) {
+export function RtpProfileForm({ existingProfiles, settingsByGame, onCancel, onSave }: RtpProfileFormProps) {
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [game, setGame] = useState<RtpGame>('roulette')
-  const [targetRtp, setTargetRtp] = useState(RTP_SETTINGS_BY_GAME.roulette.targetRtp)
-  const [minBand, setMinBand] = useState(RTP_SETTINGS_BY_GAME.roulette.minBand)
-  const [maxBand, setMaxBand] = useState(RTP_SETTINGS_BY_GAME.roulette.maxBand)
+  const [targetRtp, setTargetRtp] = useState(0)
+  const [minBand, setMinBand] = useState(0)
+  const [maxBand, setMaxBand] = useState(0)
   const [activeDays, setActiveDays] = useState<DayOfWeek[]>(DAYS_OF_WEEK)
   const [restrictHours, setRestrictHours] = useState(false)
   const [startTime, setStartTime] = useState('18:00')
   const [endTime, setEndTime] = useState('23:59')
-  const [start, setStart] = useState('2026-09-18')
-  const [expires, setExpires] = useState('2026-09-21')
+  const [start, setStart] = useState(() => localDateInput())
+  const [expires, setExpires] = useState(() => localDateInput(6))
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   // Fijado al montar el form -- Effective From no puede ser anterior a hoy, y Expires no puede ser
   // anterior a Effective From (pedido explícito). yyyy-mm-dd compara lexicográficamente igual que
   // cronológicamente (zero-padded), así que no hace falta parsear a Date para comparar.
-  const [minStart] = useState(getTodayAsDateInput)
+  const [minStart] = useState(() => localDateInput())
 
   const handleStartChange = (value: string) => {
     const clampedStart = value < minStart ? minStart : value
@@ -71,11 +69,14 @@ export function RtpProfileForm({ existingProfiles, onCancel, onSave }: RtpProfil
     setExpires(value < start ? start : value)
   }
 
+  // Al cambiar de juego (o cuando llega la configuración) arranca desde los valores vigentes.
+  const currentSettings = settingsByGame?.[game]
   useEffect(() => {
-    setTargetRtp(RTP_SETTINGS_BY_GAME[game].targetRtp)
-    setMinBand(RTP_SETTINGS_BY_GAME[game].minBand)
-    setMaxBand(RTP_SETTINGS_BY_GAME[game].maxBand)
-  }, [game])
+    if (!currentSettings) return
+    setTargetRtp(currentSettings.targetRtp)
+    setMinBand(currentSettings.minBand)
+    setMaxBand(currentSettings.maxBand)
+  }, [currentSettings])
 
   const gameOptions: AdminSelectOption<RtpGame>[] = RTP_GAMES.map((g) => ({
     value: g,
@@ -87,31 +88,31 @@ export function RtpProfileForm({ existingProfiles, onCancel, onSave }: RtpProfil
     setActiveDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]))
   }
 
-  const hasOverlapRisk = existingProfiles.some((p) => p.game === game && (p.status === 'active' || p.status === 'scheduled'))
+  const hasOverlapRisk = existingProfiles.some((p) => p.game === game && (p.status === 'active' || p.status === 'scheduled' || p.status === 'expiringSoon'))
 
-  const canSave = name.trim().length > 0 && start.length > 0 && expires.length > 0 && activeDays.length > 0
+  const canSave = !saving && name.trim().length > 0 && start.length > 0 && expires.length > 0 && activeDays.length > 0
 
-  const buildScheduleSummary = (): string => {
-    const dayLabel = activeDays.length === 7 ? 'Daily' : activeDays.map((d) => t(`admin.rtp.management.scheduling.form.days.${d}`)).join(', ')
-    return restrictHours ? `${dayLabel} · ${startTime}-${endTime}` : dayLabel
-  }
-
-  const handleSubmit = () => {
-    const profile: RtpProfile = {
-      id: `p-${Date.now()}`,
-      name: name.trim(),
-      game,
-      targetRtp,
-      minBand,
-      maxBand,
-      scheduleSummary: buildScheduleSummary(),
-      start: formatDateDisplay(start),
-      expires: formatDateDisplay(expires),
-      status: 'scheduled',
-      createdBy: 'Admin',
-      lastUpdated: formatDateDisplay(getTodayAsDateInput()),
+  const handleSubmit = async () => {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      await onSave({
+        name: name.trim(),
+        game,
+        targetRtp,
+        minBand,
+        maxBand,
+        activeDays: DAYS_OF_WEEK.filter((d) => activeDays.includes(d)),
+        restrictHours,
+        startTime: restrictHours ? startTime : null,
+        endTime: restrictHours ? endTime : null,
+        startDate: start,
+        expiresDate: expires,
+      })
+    } catch (err) {
+      setSaveError(t('admin.rtp.management.scheduling.form.saveError', { message: describeRtpError(err, t) }))
+      setSaving(false)
     }
-    onSave(profile)
   }
 
   // Panel propio a la derecha de Scheduled Profiles (ver RtpSchedulingPanel), con X para cerrarlo.
@@ -194,8 +195,8 @@ export function RtpProfileForm({ existingProfiles, onCancel, onSave }: RtpProfil
 
       {restrictHours && (
         <div className="admin-rtp-scheduling-row">
-          <AdminFormField id="profile-start-time" label={t('admin.rtp.management.scheduling.form.startTime')} type="text" value={startTime} onChange={setStartTime} />
-          <AdminFormField id="profile-end-time" label={t('admin.rtp.management.scheduling.form.endTime')} type="text" value={endTime} onChange={setEndTime} />
+          <AdminFormField id="profile-start-time" label={t('admin.rtp.management.scheduling.form.startTime')} type="text" placeholder="HH:MM" value={startTime} onChange={setStartTime} />
+          <AdminFormField id="profile-end-time" label={t('admin.rtp.management.scheduling.form.endTime')} type="text" placeholder="HH:MM" value={endTime} onChange={setEndTime} />
         </div>
       )}
 
@@ -222,12 +223,14 @@ export function RtpProfileForm({ existingProfiles, onCancel, onSave }: RtpProfil
         <InfoBanner variant="warning" title={t('admin.rtp.management.scheduling.form.overlapWarningTitle')} description={t('admin.rtp.management.scheduling.form.overlapWarningDescription')} />
       )}
 
+      {saveError && <InfoBanner variant="warning" title={saveError} />}
+
       <div className="admin-rtp-mgmt-confirm-actions">
         <button type="button" className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--ghost" onClick={onCancel}>
           {t('admin.rtp.management.scheduling.form.cancel')}
         </button>
-        <button type="button" className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--primary" disabled={!canSave} onClick={handleSubmit}>
-          {t('admin.rtp.management.scheduling.form.save')}
+        <button type="button" className="admin-rtp-mgmt-btn admin-rtp-mgmt-btn--primary" disabled={!canSave} onClick={() => void handleSubmit()}>
+          {saving ? t('admin.rtp.management.saving') : t('admin.rtp.management.scheduling.form.save')}
         </button>
       </div>
     </section>

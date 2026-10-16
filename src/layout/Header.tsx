@@ -7,6 +7,9 @@ import { buildMediaUrl } from '../utils/media'
 import { navigateToPreview } from '../utils/navigatePreview'
 import { APP_SURFACE } from '../appSurface'
 import { BettingGamePickerModal } from './BettingGamePickerModal'
+import { logoutAdmin } from '../api/adminSession'
+import { fetchCurrentAdminUser } from '../api/adminUsers'
+import type { AdminUser } from '../types/adminUsers'
 import './header.css'
 
 // Íconos del set Website_svg_icons (ver local-media/) -- reemplazan a los SVG inline dibujados a
@@ -100,6 +103,27 @@ const ADMIN_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
 function AdminHeaderMeta() {
   const { t } = useTranslation()
   const now = useNow()
+  // Usuario de la sesión: undefined mientras carga, null sin sesión (Next Results es público).
+  const [user, setUser] = useState<AdminUser | null | undefined>(undefined)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchCurrentAdminUser()
+      .then((current) => {
+        if (!cancelled) setUser(current)
+      })
+      .catch(() => {
+        if (!cancelled) setUser(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  async function handleLogout() {
+    await logoutAdmin()
+    navigateToPreview('login')
+  }
 
   return (
     <div className="app-header-admin-meta">
@@ -113,15 +137,17 @@ function AdminHeaderMeta() {
       <div className="app-header-admin-user">
         <img src={USER_ICON_URL} className="app-header-admin-user-icon" alt="" />
         <div className="app-header-admin-user-text">
-          <span className="app-header-admin-user-name">{t('admin.header.userName')}</span>
-          <span className="app-header-admin-user-role">{t('admin.header.userRole')}</span>
+          <span className="app-header-admin-user-name">
+            {user ? user.fullName : user === null ? t('admin.header.notSignedIn') : ' '}
+          </span>
+          {user && <span className="app-header-admin-user-role">{t(`admin.users.role.${user.role}`)}</span>}
         </div>
       </div>
 
       <button
         type="button"
         className="app-header-admin-logout"
-        onClick={() => navigateToPreview('login')}
+        onClick={() => void handleLogout()}
         aria-label={t('admin.header.logout')}
         title={t('admin.header.logout')}
       >

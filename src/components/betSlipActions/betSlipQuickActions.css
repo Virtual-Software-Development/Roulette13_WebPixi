@@ -1,0 +1,99 @@
+/* Rebet / Double -- se usan dentro de las pantallas de Roulette y de Quick Money: toman el borde y
+   el texto de sus tokens (--betting-* / --qm-*) y caen a los mismos valores si no hay ninguno. */
+.bet-slip-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.bet-slip-action-wrap {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.bet-slip-action {
+  width: 100%;
+  min-width: 110px;
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--betting-border, var(--qm-border, rgba(100, 140, 170, 0.22)));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--betting-text-primary, var(--qm-text-primary, #f5f7fa));
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.bet-slip-action:hover:not(:disabled) {
+  border-color: rgba(200, 215, 230, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.bet-slip-action:focus-visible {
+  outline: 2px solid #2588ff;
+  outline-offset: 2px;
+}
+
+.bet-slip-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Motivo por el que la acción no se pudo hacer, arriba del botón -- mismo aspecto que el aviso de
+   saldo insuficiente de Place Bet (playerPanel.css). Alineado al borde derecho del botón (los
+   botones van contra el borde derecho de su panel, centrado se saldría), con la flecha en el centro
+   del botón. */
+.bet-slip-action-message {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: max-content;
+  max-width: 260px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(243, 38, 53, 0.45);
+  background: linear-gradient(180deg, rgba(40, 10, 13, 0.98) 0%, rgba(25, 6, 8, 0.98) 100%);
+  color: #ffb3b8;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  animation: bet-slip-action-message-in 160ms ease-out;
+}
+
+.bet-slip-action-message-arrow {
+  position: absolute;
+  bottom: calc(100% - 2px);
+  left: 50%;
+  z-index: 30;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(243, 38, 53, 0.45);
+  animation: bet-slip-action-message-in 160ms ease-out;
+}
+
+@keyframes bet-slip-action-message-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bet-slip-action-message,
+  .bet-slip-action-message-arrow {
+    animation: none;
+  }
+}

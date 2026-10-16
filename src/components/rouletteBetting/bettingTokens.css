@@ -19,7 +19,10 @@
   height: 100vh;
   height: 100dvh;
   box-sizing: border-box;
+  /* clip y no hidden: con hidden el navegador igual puede desplazar la pantalla por código (al
+     enfocar un elemento que asoma), que es lo que hacía aparecer el scroll. */
   overflow: hidden;
+  overflow: clip;
   display: flex;
   flex-direction: column;
   color: var(--betting-text-primary);

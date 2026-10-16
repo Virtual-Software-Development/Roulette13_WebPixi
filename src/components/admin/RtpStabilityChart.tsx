@@ -6,8 +6,8 @@ import './rtpStabilityChart.css'
 // RTP acumulado vs rondas jugadas, sobre el "embudo" del rango esperado por puro azar (target ±
 // 1.96·σ/√n, ~95%): responde "¿esta desviación es real o es suerte?". Si la línea queda dentro del
 // embudo, la diferencia con el target la explica la varianza normal; si sale y se mantiene afuera,
-// hay algo que revisar. Marca el Correction Window de RTP Settings (rondas que usa el motor para
-// calcular el RTP). SVG dibujado al tamaño real del contenedor (ResizeObserver), mismo criterio que
+// hay algo que revisar. Las rondas son las de la ventana de corrección del motor que tuvieron
+// apuestas, en orden de sorteo: el último punto es el RTP medido de la tarjeta. SVG dibujado al tamaño real del contenedor (ResizeObserver), mismo criterio que
 // BetsAndPayoutsChart, para llenar el alto libre de la columna sin deformar el texto.
 const FALLBACK_SIZE = { width: 520, height: 240 }
 const MARGIN = { top: 12, right: 12, bottom: 26, left: 46 }
@@ -15,8 +15,7 @@ const Z_95 = 1.96
 
 const GAMES: { id: RtpGame; labelKey: string; color: string }[] = [
   { id: 'roulette', labelKey: 'admin.dashboard.gamesActivity.roulette', color: 'var(--admin-red)' },
-  { id: 'pick3', labelKey: 'admin.dashboard.gamesActivity.pick3', color: 'var(--admin-green)' },
-  { id: 'pick4', labelKey: 'admin.dashboard.gamesActivity.pick4', color: 'var(--admin-amber)' },
+  { id: 'quickMoney', labelKey: 'admin.dashboard.gamesActivity.quickMoney', color: 'var(--admin-green)' },
 ]
 
 function compactRounds(n: number): string {
@@ -51,39 +50,39 @@ export function RtpStabilityChart({ dataByGame }: { dataByGame: Record<RtpGame, 
 
   const data = dataByGame[game]
   const gameDef = GAMES.find((g) => g.id === game)!
-  const halfWidth = (n: number) => (Z_95 * data.sigma * 100) / Math.sqrt(n)
+  const sigma = data.sigma
+  const halfWidth = (n: number) => (sigma === null ? 0 : (Z_95 * sigma * 100) / Math.sqrt(n))
   const points = data.points
-  const totalRounds = points[points.length - 1].rounds
-  const latest = points[points.length - 1]
-  const latestHalf = halfWidth(latest.rounds)
-  const withinRange = Math.abs(latest.rtp - data.target) <= latestHalf
+  const latest = points.length ? points[points.length - 1] : null
+  const totalRounds = latest?.rounds ?? 0
+  const withinRange = latest !== null && Math.abs(latest.rtp - data.target) <= halfWidth(latest.rounds)
 
   // Eje Y centrado en el target y escalado a la parte "asentada" (desde el ~8% de las rondas): las
-  // primeras cientos de rondas son muy ruidosas y aplastarían el resto; lo que se sale del eje se
-  // recorta contra el borde (el embudo arranca abierto, que es justamente el mensaje).
-  const settledFrom = totalRounds * 0.08
+  // primeras rondas son muy ruidosas y aplastarían el resto; lo que se sale del eje se recorta contra
+  // el borde (el embudo arranca abierto, que es justamente el mensaje).
+  const settledFrom = Math.max(1, totalRounds * 0.08)
   const settled = points.filter((p) => p.rounds >= settledFrom)
-  const yExtent = Math.max(...settled.map((p) => Math.abs(p.rtp - data.target)), halfWidth(settledFrom)) * 1.15
+  const yExtent = Math.max(1, ...settled.map((p) => Math.abs(p.rtp - data.target)), halfWidth(settledFrom)) * 1.15
   const yMin = data.target - yExtent
   const yMax = data.target + yExtent
   const yStep = niceStep(yMax - yMin, 4)
   const yTicks: number[] = []
   for (let v = Math.ceil(yMin / yStep) * yStep; v <= yMax; v += yStep) yTicks.push(Math.round(v * 100) / 100)
 
-  const xStep = niceStep(totalRounds, 4)
+  // Rondas enteras: con pocas rondas el paso "lindo" quedaría fraccionario.
+  const xStep = Math.max(1, niceStep(Math.max(totalRounds, 1), 4))
   const xTicks: number[] = []
   for (let v = 0; v <= totalRounds; v += xStep) xTicks.push(v)
 
   const plotW = size.width - MARGIN.left - MARGIN.right
   const plotH = size.height - MARGIN.top - MARGIN.bottom
-  const xFor = (n: number) => MARGIN.left + (n / totalRounds) * plotW
+  const xFor = (n: number) => MARGIN.left + (totalRounds > 0 ? (n / totalRounds) * plotW : plotW / 2)
   const yFor = (v: number) => MARGIN.top + ((yMax - Math.min(Math.max(v, yMin), yMax)) / (yMax - yMin)) * plotH
 
   const funnelTop = points.map((p) => `${xFor(p.rounds)},${yFor(data.target + halfWidth(p.rounds))}`)
   const funnelBottom = points.map((p) => `${xFor(p.rounds)},${yFor(data.target - halfWidth(p.rounds))}`).reverse()
-  const funnelPath = `M ${funnelTop.join(' L ')} L ${funnelBottom.join(' L ')} Z`
+  const funnelPath = sigma !== null && points.length > 1 ? `M ${funnelTop.join(' L ')} L ${funnelBottom.join(' L ')} Z` : null
   const linePoints = points.map((p) => `${xFor(p.rounds)},${yFor(p.rtp)}`).join(' ')
-  const windowX = data.correctionWindow <= totalRounds ? xFor(data.correctionWindow) : null
 
   const nf = new Intl.NumberFormat(i18n.language)
   const hp = hovered !== null ? points[hovered] : null
@@ -122,14 +121,18 @@ export function RtpStabilityChart({ dataByGame }: { dataByGame: Record<RtpGame, 
         </div>
       </div>
 
-      <div className="admin-rtp-stability-status" data-within={withinRange}>
-        <span className="admin-rtp-stability-status-badge">
-          {withinRange ? t('admin.rtp.stability.status.within') : t('admin.rtp.stability.status.outside')}
-        </span>
-        <span className="admin-rtp-stability-status-text">
-          {withinRange ? t('admin.rtp.stability.status.withinDetail') : t('admin.rtp.stability.status.outsideDetail')}
-        </span>
-      </div>
+      {latest === null || sigma === null ? (
+        <p className="admin-rtp-stability-empty">{t(latest === null ? 'admin.rtp.stability.empty' : 'admin.rtp.stability.notEnoughRounds')}</p>
+      ) : (
+        <div className="admin-rtp-stability-status" data-within={withinRange}>
+          <span className="admin-rtp-stability-status-badge">
+            {withinRange ? t('admin.rtp.stability.status.within') : t('admin.rtp.stability.status.outside')}
+          </span>
+          <span className="admin-rtp-stability-status-text">
+            {withinRange ? t('admin.rtp.stability.status.withinDetail') : t('admin.rtp.stability.status.outsideDetail')}
+          </span>
+        </div>
+      )}
 
       <div className="admin-rtp-stability-plot" ref={plotRef} onMouseLeave={() => setHovered(null)}>
         <svg className="admin-rtp-stability-svg" width={size.width} height={size.height} viewBox={`0 0 ${size.width} ${size.height}`} role="img" aria-label={t('admin.rtp.stability.title')}>
@@ -147,20 +150,11 @@ export function RtpStabilityChart({ dataByGame }: { dataByGame: Record<RtpGame, 
             </text>
           ))}
 
-          <path d={funnelPath} className="admin-rtp-stability-funnel" />
+          {funnelPath && <path d={funnelPath} className="admin-rtp-stability-funnel" />}
           <line x1={MARGIN.left} x2={size.width - MARGIN.right} y1={yFor(data.target)} y2={yFor(data.target)} className="admin-rtp-stability-target" />
 
-          {windowX !== null && (
-            <g>
-              <line x1={windowX} x2={windowX} y1={MARGIN.top} y2={MARGIN.top + plotH} className="admin-rtp-stability-window" />
-              <text x={windowX + 5} y={MARGIN.top + 11} className="admin-rtp-stability-window-label">
-                {t('admin.rtp.stability.correctionWindow')}
-              </text>
-            </g>
-          )}
-
           <polyline points={linePoints} fill="none" stroke={gameDef.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-          <circle cx={xFor(latest.rounds)} cy={yFor(latest.rtp)} r={4.5} fill={gameDef.color} className="admin-rtp-stability-dot" />
+          {latest && <circle cx={xFor(latest.rounds)} cy={yFor(latest.rtp)} r={4.5} fill={gameDef.color} className="admin-rtp-stability-dot" />}
 
           {hp && (
             <g>
@@ -169,7 +163,7 @@ export function RtpStabilityChart({ dataByGame }: { dataByGame: Record<RtpGame, 
             </g>
           )}
 
-          <rect x={MARGIN.left} y={MARGIN.top} width={plotW} height={plotH} fill="transparent" onMouseMove={handleMove} />
+          {latest && <rect x={MARGIN.left} y={MARGIN.top} width={plotW} height={plotH} fill="transparent" onMouseMove={handleMove} />}
         </svg>
 
         {hp && (
@@ -183,12 +177,14 @@ export function RtpStabilityChart({ dataByGame }: { dataByGame: Record<RtpGame, 
               <span>{t('admin.rtp.stability.tooltip.rtp')}</span>
               <strong>{hp.rtp.toFixed(2)}%</strong>
             </div>
-            <div className="admin-rtp-stability-tooltip-row">
-              <span>{t('admin.rtp.stability.tooltip.expected')}</span>
-              <strong>
-                {(data.target - halfWidth(hp.rounds)).toFixed(1)}–{(data.target + halfWidth(hp.rounds)).toFixed(1)}%
-              </strong>
-            </div>
+            {sigma !== null && (
+              <div className="admin-rtp-stability-tooltip-row">
+                <span>{t('admin.rtp.stability.tooltip.expected')}</span>
+                <strong>
+                  {(data.target - halfWidth(hp.rounds)).toFixed(1)}–{(data.target + halfWidth(hp.rounds)).toFixed(1)}%
+                </strong>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -198,10 +194,12 @@ export function RtpStabilityChart({ dataByGame }: { dataByGame: Record<RtpGame, 
           <span className="admin-rtp-stability-legend-line" style={{ background: gameDef.color }} />
           {t('admin.rtp.stability.legend.cumulative')}
         </span>
-        <span className="admin-rtp-stability-legend-item">
-          <span className="admin-rtp-stability-legend-funnel" />
-          {t('admin.rtp.stability.legend.expected')}
-        </span>
+        {funnelPath && (
+          <span className="admin-rtp-stability-legend-item">
+            <span className="admin-rtp-stability-legend-funnel" />
+            {t('admin.rtp.stability.legend.expected')}
+          </span>
+        )}
         <span className="admin-rtp-stability-legend-item">
           <span className="admin-rtp-stability-legend-target" />
           {t('admin.rtp.stability.legend.target', { value: data.target })}

@@ -1,59 +1,99 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
+import { AdminAuthError } from '../api/adminSession'
+import { localizeLogDescription } from '../utils/localizeLogDescription'
+import type { SystemLogsQuery } from '../api/systemLogs'
 import { AdminSelect, type AdminSelectOption } from '../components/admin/AdminSelect'
 import { AdminDetailPopup } from '../components/admin/AdminDetailPopup'
 import { AdminTablePagination } from '../components/admin/AdminTablePagination'
 import { StatusBadge } from '../components/admin/StatusBadge'
 import { SystemLogDetailsPanel } from '../components/admin/systemLogs/SystemLogDetailsPanel'
 import { SearchIcon, ChevronRightIcon } from '../components/admin/systemLogs/icons'
-import { SYSTEM_LOG_ENTRIES, SYSTEM_LOG_MODULE_ICON_URLS, SYSTEM_LOG_HUMAN_ACTOR_ICON_URL, SYSTEM_LOG_SYSTEM_ACTOR_ICON_URL } from '../data/adminSystemLogsMockData'
+import { SYSTEM_LOG_MODULE_ICON_URLS, systemLogActorIconUrl, systemLogActorName, systemLogModuleIconUrl } from '../components/admin/systemLogs/systemLogDisplay'
 import { useDetailAsPopup } from '../hooks/useDetailAsPopup'
+import { useSystemLogs } from '../hooks/useSystemLogs'
 import { parseApiDateTime } from '../utils/time'
-import {
-  SYSTEM_LOG_ACTIONS,
-  SYSTEM_LOG_ACTION_VARIANT,
-  SYSTEM_LOG_MODULES,
-  SYSTEM_LOG_STATUS_VARIANT,
-  type SystemLogAction,
-  type SystemLogEntry,
-  type SystemLogModule,
-  type SystemLogStatus,
-} from '../types/adminSystemLogs'
+import { SYSTEM_LOG_ACTIONS, SYSTEM_LOG_MODULES, systemLogActionVariant, type SystemLogEntry, type SystemLogModule } from '../types/adminSystemLogs'
 import './adminSystemLogsPage.css'
 
 const PAGE_SIZE = 10
+const SEARCH_DEBOUNCE_MS = 300
+const DAY_MS = 24 * 60 * 60 * 1000
 const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 const TIME_FORMATTER = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
 
-function actorIconUrl(actorRole: string) {
-  return actorRole === 'System' ? SYSTEM_LOG_SYSTEM_ACTOR_ICON_URL : SYSTEM_LOG_HUMAN_ACTOR_ICON_URL
-}
-
 type ModuleFilter = 'all' | SystemLogModule
-type ActionFilter = 'all' | SystemLogAction
-type StatusFilter = 'all' | SystemLogStatus
+type ActionFilter = 'all' | string
+// 'all', 'SYSTEM', 'MACHINE' o el uuid de un usuario
 type UserFilter = 'all' | string
 type DateFilter = 'any' | 'today' | 'last7Days' | 'last30Days'
 
-// Admin > Logs -- activa el ítem de sidebar "systemLogs" que hasta ahora estaba disabled/sin view
-// (ver AdminPanel.tsx / adminDashboardMockData.ts). Solo lectura: sin Export, sin acciones de
-// editar/eliminar. Cada fila abre el detalle completo en un panel a la derecha de la lista (antes un
-// modal, pedido explícito), que se cierra con su X o Escape. En pantallas angostas (tablet/teléfono,
-// ver useDetailAsPopup) ese mismo panel se abre como pop-up en vez de ir al lado.
-// Filtros instantáneos (mismo patrón que Video Management, el más reciente del Admin), sin botón
-// Apply -- ver AdminReportsPage para el patrón alternativo con Apply, descartado a pedido explícito.
+// Inicio del rango: Today desde la medianoche local, los otros dos rangos móviles.
+function dateFilterFrom(filter: DateFilter): string | undefined {
+  if (filter === 'any') return undefined
+  if (filter === 'today') {
+    const midnight = new Date()
+    midnight.setHours(0, 0, 0, 0)
+    return midnight.toISOString()
+  }
+  return new Date(Date.now() - (filter === 'last7Days' ? 7 : 30) * DAY_MS).toISOString()
+}
+
+function loadErrorMessage(err: unknown, t: TFunction): string {
+  if (err instanceof AdminAuthError) return t('admin.systemLogs.table.loginRequired')
+  return t('admin.systemLogs.table.loadError', { error: err instanceof Error && err.message ? err.message : String(err) })
+}
+
+// Admin > Logs: la tabla log del backend (GET /audit/system-logs), filtrada y paginada allá. Solo
+// lectura: sin Export, sin acciones de editar/eliminar. Cada fila abre el detalle completo en un
+// panel a la derecha de la lista, que se cierra con su X o Escape; en pantallas angostas
+// (tablet/teléfono, ver useDetailAsPopup) ese mismo panel se abre como pop-up.
+// Filtros instantáneos (mismo patrón que Video Management), sin botón Apply; la búsqueda espera a
+// que se deje de escribir. El backend no registra un estado/severidad por entrada, así que no hay
+// columna ni filtro de Status.
 export function SystemLogsPage() {
   const { t } = useTranslation()
 
+  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [dateFilter, setDateFilter] = useState<DateFilter>('any')
   const [userFilter, setUserFilter] = useState<UserFilter>('all')
   const [moduleFilter, setModuleFilter] = useState<ModuleFilter>('all')
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all')
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [page, setPage] = useState(1)
   const [selectedEntry, setSelectedEntry] = useState<SystemLogEntry | null>(null)
   const detailAsPopup = useDetailAsPopup()
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  useEffect(() => setPage(1), [search, dateFilter, userFilter, moduleFilter, actionFilter])
+
+  // from se calcula al elegir el rango, no en cada render (si no, cada render sería otro pedido).
+  const from = useMemo(() => dateFilterFrom(dateFilter), [dateFilter])
+  const query: SystemLogsQuery = {
+    from,
+    actor: userFilter === 'all' ? undefined : userFilter,
+    module: moduleFilter === 'all' ? undefined : moduleFilter,
+    action: actionFilter === 'all' ? undefined : actionFilter,
+    search: search || undefined,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  }
+  const { status, data, error } = useSystemLogs(query)
+
+  const total = data?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const pageStart = (page - 1) * PAGE_SIZE
+  const rows = status === 'error' ? [] : (data?.entries ?? [])
+
+  // Un filtro dejó la página actual fuera de rango.
+  useEffect(() => {
+    if (status === 'ready' && page > totalPages) setPage(totalPages)
+  }, [status, page, totalPages])
 
   const dateOptions: AdminSelectOption<DateFilter>[] = [
     { value: 'any', label: t('admin.systemLogs.filters.dateRangeOptions.any') },
@@ -61,56 +101,33 @@ export function SystemLogsPage() {
     { value: 'last7Days', label: t('admin.systemLogs.filters.dateRangeOptions.last7Days') },
     { value: 'last30Days', label: t('admin.systemLogs.filters.dateRangeOptions.last30Days') },
   ]
+  const actors = data?.actors
   const userOptions: AdminSelectOption<UserFilter>[] = useMemo(() => {
-    const actorRoleByName = new Map(SYSTEM_LOG_ENTRIES.map((e) => [e.actor, e.actorRole]))
-    return [
-      { value: 'all', label: t('admin.systemLogs.filters.allUsers') },
-      ...Array.from(actorRoleByName.entries()).map(([actor, role]) => ({ value: actor, label: actor, icon: actorIconUrl(role) })),
-    ]
-  }, [t])
+    const options: AdminSelectOption<UserFilter>[] = [{ value: 'all', label: t('admin.systemLogs.filters.allUsers') }]
+    if (actors?.system) options.push({ value: 'SYSTEM', label: t('admin.systemLogs.actor.system'), icon: systemLogActorIconUrl('SYSTEM') })
+    if (actors?.machine) options.push({ value: 'MACHINE', label: t('admin.systemLogs.actor.machines'), icon: systemLogActorIconUrl('MACHINE') })
+    for (const user of actors?.users ?? []) options.push({ value: user.id, label: user.username, icon: systemLogActorIconUrl('USER') })
+    return options
+  }, [actors, t])
   const moduleOptions: AdminSelectOption<ModuleFilter>[] = [
     { value: 'all', label: t('admin.systemLogs.filters.allModules') },
     ...SYSTEM_LOG_MODULES.map((m) => ({ value: m, label: t(`admin.systemLogs.module.${m}`), icon: SYSTEM_LOG_MODULE_ICON_URLS[m] })),
   ]
   const actionOptions: AdminSelectOption<ActionFilter>[] = [{ value: 'all', label: t('admin.systemLogs.filters.allActions') }, ...SYSTEM_LOG_ACTIONS.map((a) => ({ value: a, label: a }))]
-  const statusOptions: AdminSelectOption<StatusFilter>[] = [
-    { value: 'all', label: t('admin.systemLogs.filters.allStatuses') },
-    { value: 'success', label: t('admin.systemLogs.status.success') },
-    { value: 'warning', label: t('admin.systemLogs.status.warning') },
-    { value: 'failed', label: t('admin.systemLogs.status.failed') },
-  ]
-
-  const filteredEntries = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    const cutoffHours = dateFilter === 'today' ? 24 : dateFilter === 'last7Days' ? 24 * 7 : dateFilter === 'last30Days' ? 24 * 30 : null
-    return SYSTEM_LOG_ENTRIES.filter((entry) => {
-      if (moduleFilter !== 'all' && entry.module !== moduleFilter) return false
-      if (actionFilter !== 'all' && entry.action !== actionFilter) return false
-      if (statusFilter !== 'all' && entry.status !== statusFilter) return false
-      if (userFilter !== 'all' && entry.actor !== userFilter) return false
-      if (cutoffHours !== null && Date.now() - parseApiDateTime(entry.timestamp).getTime() > cutoffHours * 60 * 60 * 1000) return false
-      if (query && !entry.summary.toLowerCase().includes(query) && !entry.actor.toLowerCase().includes(query) && !entry.action.toLowerCase().includes(query) && !entry.id.includes(query)) {
-        return false
-      }
-      return true
-    })
-  }, [search, dateFilter, userFilter, moduleFilter, actionFilter, statusFilter])
-
-  useEffect(() => setPage(1), [search, dateFilter, userFilter, moduleFilter, actionFilter, statusFilter])
-
-  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / PAGE_SIZE))
-  const currentPage = Math.min(page, totalPages)
-  const pageStart = (currentPage - 1) * PAGE_SIZE
-  const pageEntries = filteredEntries.slice(pageStart, pageStart + PAGE_SIZE)
 
   function clearFilters() {
+    setSearchInput('')
     setSearch('')
     setDateFilter('any')
     setUserFilter('all')
     setModuleFilter('all')
     setActionFilter('all')
-    setStatusFilter('all')
   }
+
+  let notice: { text: string; error?: boolean } | null = null
+  if (status === 'error') notice = { text: loadErrorMessage(error, t), error: true }
+  else if (!data) notice = { text: t('admin.systemLogs.table.loading') }
+  else if (status === 'ready' && rows.length === 0) notice = { text: t('admin.systemLogs.table.empty') }
 
   return (
     <>
@@ -126,7 +143,6 @@ export function SystemLogsPage() {
         <AdminSelect label={t('admin.systemLogs.filters.user')} value={userFilter} options={userOptions} onChange={setUserFilter} />
         <AdminSelect label={t('admin.systemLogs.filters.module')} value={moduleFilter} options={moduleOptions} onChange={setModuleFilter} />
         <AdminSelect label={t('admin.systemLogs.filters.action')} value={actionFilter} options={actionOptions} onChange={setActionFilter} />
-        <AdminSelect label={t('admin.systemLogs.filters.status')} value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
 
         <div className="admin-system-logs-search-row">
           <div className="admin-system-logs-search">
@@ -135,8 +151,8 @@ export function SystemLogsPage() {
               type="text"
               className="admin-system-logs-search-input"
               placeholder={t('admin.systemLogs.filters.searchPlaceholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               aria-label={t('admin.systemLogs.filters.searchPlaceholder')}
             />
           </div>
@@ -148,7 +164,7 @@ export function SystemLogsPage() {
 
       <div className="admin-system-logs-body">
         <section className="admin-panel admin-system-logs-table-panel">
-          <div className="admin-system-logs-table-scroll">
+          <div className="admin-system-logs-table-scroll" aria-busy={status === 'loading'}>
             <table className="admin-system-logs-table">
               <thead>
                 <tr>
@@ -157,12 +173,11 @@ export function SystemLogsPage() {
                   <th>{t('admin.systemLogs.table.module')}</th>
                   <th>{t('admin.systemLogs.table.action')}</th>
                   <th>{t('admin.systemLogs.table.details')}</th>
-                  <th>{t('admin.systemLogs.table.status')}</th>
                   <th aria-hidden="true"></th>
                 </tr>
               </thead>
               <tbody>
-                {pageEntries.map((entry) => (
+                {rows.map((entry) => (
                   <tr
                     key={entry.id}
                     data-selected={entry.id === selectedEntry?.id}
@@ -182,23 +197,20 @@ export function SystemLogsPage() {
                     </td>
                     <td>
                       <span className="admin-system-logs-cell-with-icon">
-                        <img src={actorIconUrl(entry.actorRole)} alt="" />
-                        {entry.actor}
+                        <img src={systemLogActorIconUrl(entry.actorType)} alt="" />
+                        {systemLogActorName(entry, t)}
                       </span>
                     </td>
                     <td className="admin-system-logs-cell-secondary">
                       <span className="admin-system-logs-cell-with-icon">
-                        <img src={SYSTEM_LOG_MODULE_ICON_URLS[entry.module]} alt="" />
+                        <img src={systemLogModuleIconUrl(entry)} alt="" />
                         {t(`admin.systemLogs.module.${entry.module}`)}
                       </span>
                     </td>
                     <td>
-                      <StatusBadge variant={SYSTEM_LOG_ACTION_VARIANT[entry.action]}>{entry.action}</StatusBadge>
+                      <StatusBadge variant={systemLogActionVariant(entry.action)}>{entry.action}</StatusBadge>
                     </td>
-                    <td className="admin-system-logs-cell-details">{entry.summary}</td>
-                    <td>
-                      <StatusBadge variant={SYSTEM_LOG_STATUS_VARIANT[entry.status]}>{t(`admin.systemLogs.status.${entry.status}`)}</StatusBadge>
-                    </td>
+                    <td className="admin-system-logs-cell-details">{entry.summary != null ? localizeLogDescription(entry.summary, t) : t('admin.systemLogs.detail.hiddenUntilDraw')}</td>
                     <td>
                       <button
                         type="button"
@@ -216,17 +228,21 @@ export function SystemLogsPage() {
                 ))}
               </tbody>
             </table>
-            {filteredEntries.length === 0 && <p className="admin-system-logs-empty">{t('admin.systemLogs.table.empty')}</p>}
+            {notice && (
+              <p className="admin-system-logs-empty" data-variant={notice.error ? 'error' : undefined} role={notice.error ? 'alert' : undefined}>
+                {notice.text}
+              </p>
+            )}
           </div>
 
           <AdminTablePagination
-            page={currentPage}
+            page={Math.min(page, totalPages)}
             totalPages={totalPages}
             onPageChange={setPage}
             rangeLabel={
-              filteredEntries.length === 0
+              rows.length === 0
                 ? t('admin.systemLogs.table.showingCount', { from: 0, to: 0, total: 0 })
-                : t('admin.systemLogs.table.showingCount', { from: pageStart + 1, to: Math.min(pageStart + PAGE_SIZE, filteredEntries.length), total: filteredEntries.length })
+                : t('admin.systemLogs.table.showingCount', { from: pageStart + 1, to: pageStart + rows.length, total })
             }
           />
         </section>

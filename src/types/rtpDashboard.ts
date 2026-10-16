@@ -1,76 +1,84 @@
-export type RtpGame = 'roulette' | 'pick3' | 'pick4'
+export type RtpGame = 'roulette' | 'quickMoney'
 
 export type RtpKpiAccent = 'red' | 'blue' | 'purple' | 'green' | 'amber'
 
-// warning/neutral/danger/purple agregados para los estados de RTP Profile (Expiring Soon/Expired/
-// Disabled/Replaced, ver RtpProfilesTable.tsx) -- positive/info siguen siendo los únicos usados
-// por el RTP Dashboard (metric cards, Recent RTP Changes), sin cambios ahí.
+// Indicadores del RTP Dashboard (metric cards, Recent RTP Changes) y de los estados de RTP Profile
+// (ver RtpProfilesTable.tsx).
 export type StatusBadgeVariant = 'positive' | 'info' | 'warning' | 'neutral' | 'danger' | 'purple'
 
-export type RtpStatusIcon = 'check' | 'up' | 'dot'
+export type RtpStatusIcon = 'check' | 'up' | 'down' | 'dot'
 
-export interface RtpMetricCardData {
-  id: RtpGame
-  titleKey: string
-  icon: string
-  accent: RtpKpiAccent
-  current: number
-  target: number
-  statusLabelKey: string
-  statusVariant: StatusBadgeVariant
-  statusIcon: RtpStatusIcon
+// Estado del RTP medido respecto de la banda (internal/rtpstats); noData = sin apuestas en la ventana.
+export type RtpBandStatus = 'within' | 'above' | 'below' | 'noData'
+
+// Tarjeta de un juego: RTP medido sobre la ventana de corrección del motor (solo rondas COMPLETED).
+export interface RtpGameOverview {
+  game: RtpGame
+  targetRtp: number
+  minBand: number
+  maxBand: number
+  correctionWindow: number
+  correctionWindowUnlimited: boolean
+  windowRounds: number
+  // null sin apuestas en la ventana.
+  currentRtp: number | null
+  status: RtpBandStatus
 }
 
+// GGR de los últimos 7 días contra los 7 anteriores; changePct null si el anterior dio 0.
 export interface HouseMarginData {
-  icon: string
-  value: string
-  trend: string
-  trendDirection: 'up' | 'down'
-  trendLabelKey: string
+  ggr: number
+  changePct: number | null
 }
-
-export interface ManualOverridesData {
-  icon: string
-  value: number
-}
-
-export interface RtpHistoryPoint {
-  date: string
-  rouletteActual: number
-  rouletteTarget: number
-  pick3Actual: number
-  pick3Target: number
-  pick4Actual: number
-  pick4Target: number
-}
-
-// Rango del selector de Actual vs Target RTP (ver RtpTrendChart.tsx) -- cada uno resuelve a una
-// cantidad de días distinta (ver RTP_HISTORY_BY_RANGE en data/rtpDashboardMockData.ts).
-export type RtpTrendRange = 'last7Days' | 'twoWeeks' | 'threeWeeks' | 'oneMonth'
-
-export interface RtpBand {
-  id: RtpGame
-  labelKey: string
-  min: number
-  max: number
-  widthPercent: number
-}
-
-export type RtpChangeStatus = 'autoApplied' | 'applied'
 
 export interface RtpChange {
-  id: string
+  id: number
   game: RtpGame
   previousTarget: number
   newTarget: number
-  changedBy: string
-  dateTime: string
-  status: RtpChangeStatus
+  // null = el sistema.
+  changedBy: string | null
+  createdAt: string
+  automatic: boolean
 }
 
-// RTP Stability (ver RtpStabilityChart.tsx) -- RTP acumulado a medida que se juegan rondas, contra el
-// rango esperado por azar. sigma = desvío estándar del retorno por unidad apostada en una ronda
-// (mezcla de tipos de apuesta del juego): cuanto más alto, más ancho el embudo.
+export interface RtpOverview {
+  games: RtpGameOverview[]
+  houseMargin: HouseMarginData
+  // Resultados cambiados a mano en rondas COMPLETED de los últimos 7 días.
+  manualResults: number
+  changes: RtpChange[]
+  changesTotal: number
+}
+
+// Un día del gráfico Actual vs Target: actual null si ese día no hubo apuestas en rondas COMPLETED.
+export interface RtpHistoryPoint {
+  date: string
+  rouletteActual: number | null
+  rouletteTarget: number
+  quickMoneyActual: number | null
+  quickMoneyTarget: number
+}
+
+// Rango del selector de Actual vs Target RTP (ver RtpTrendChart.tsx).
+export type RtpTrendRange = 'last7Days' | 'twoWeeks' | 'threeWeeks' | 'oneMonth'
+
+export const RTP_TREND_RANGE_DAYS: Record<RtpTrendRange, number> = {
+  last7Days: 7,
+  twoWeeks: 14,
+  threeWeeks: 21,
+  oneMonth: 30,
+}
+
+export interface RtpBand {
+  id: RtpGame
+  min: number
+  max: number
+}
+
+// RTP Stability (ver RtpStabilityChart.tsx) -- RTP acumulado a lo largo de la ventana de corrección
+// (rondas con apuestas, en orden de sorteo), contra el rango esperado por azar. sigma = desvío del
+// retorno por ronda (fracción): el error esperado tras n rondas es sigma/√n. null con < 2 rondas.
 export interface RtpStabilityPoint {
   rounds: number
   rtp: number
@@ -78,7 +86,6 @@ export interface RtpStabilityPoint {
 
 export interface RtpStabilityData {
   target: number
-  sigma: number
-  correctionWindow: number
+  sigma: number | null
   points: RtpStabilityPoint[]
 }

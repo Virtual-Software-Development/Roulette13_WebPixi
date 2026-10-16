@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next'
+import { fetchReportData, logReportDownload } from '../../../../api/adminReports'
 import type { RecentReportFormat, RecentReportRow } from '../../../../types/adminReports'
 import { reportNow } from '../../../../utils/reportFormat'
 import { customPeriod, fromIsoDate } from '../../../../utils/reportPeriod'
@@ -54,27 +55,16 @@ export async function downloadReportDocument(doc: ReportDocument, format: Recent
   saveBlob(blob, `${fileBaseName.replace(/[\\/:*?"<>|\s]+/g, '-')}.${EXTENSION[format]}`)
 }
 
-// Reportes Recientes: no hay backend que guarde el archivo, así que se vuelve a armar el documento
-// con el tipo, período y juego de la fila (los datos mock son deterministas: mismas cifras).
+// Reportes Recientes: el archivo no se guarda en el backend, así que se vuelven a pedir los datos
+// con el tipo, período y juego de la fila y se arma el documento (cifras al momento de descargar).
 export async function downloadRecentReport(report: RecentReportRow, format: RecentReportFormat, t: TFunction, language: string) {
-  // Un ciclo libre antes de calcular: deja pintar el estado "Generando…".
-  await new Promise((resolve) => setTimeout(resolve, 0))
   const now = reportNow()
   const start = fromIsoDate(report.period.start) ?? now
   const end = fromIsoDate(report.period.end) ?? now
-  const doc = buildReportDocument(
-    {
-      type: report.type,
-      period: customPeriod(start, end, now),
-      kind: periodKindOf(report.type),
-      game: report.game,
-      now,
-      generatedBy: report.generatedBy,
-      generatedAt: report.createdAt,
-      byGame: true,
-    },
-    t,
-    language,
-  )
+  const request = { type: report.type, period: customPeriod(start, end, now), kind: periodKindOf(report.type), game: report.game, byGame: true }
+  const data = await fetchReportData(request)
+  const doc = buildReportDocument({ ...request, now, generatedBy: report.generatedBy, generatedAt: report.createdAt, data }, t, language)
   await downloadReportDocument(doc, format, report.name)
+  // El archivo ya se descargó: si el registro falla no se le muestra error al usuario.
+  void logReportDownload(report, format).catch((err) => console.warn('[reports] could not log the download:', err))
 }

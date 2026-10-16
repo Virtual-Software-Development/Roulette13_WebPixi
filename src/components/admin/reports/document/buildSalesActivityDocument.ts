@@ -1,10 +1,11 @@
-import { BANCAS, amountDistribution, avgTicketOf, bancaById, consorcioById, gamesOf, hourlyActivity, machineActivity, type MachineActivity } from '../../../../data/reportsMockData'
-import type { ReportGame } from '../../../../types/adminReports'
+import { REPORT_GAMES as GAMES } from '../../../../api/adminReports'
+import type { ReportGame, ReportMachinesData } from '../../../../types/adminReports'
 import { reportCurrencySymbol } from '../../../../utils/reportFormat'
 import { SERIES_COLORS, gameLabel, type BuildContext, type DocumentBody } from './documentHelpers'
+import { amountDistribution, avgTicketOf, bancasOf, hourlyActivity, machineActivity, type MachineActivity } from './reportData'
 import { column, type CellInput, type DocPanel, type DocRow } from './reportDocument'
 
-const GAMES: ReportGame[] = ['roulette', 'pick3', 'pick4']
+const EMPTY_MACHINES: ReportMachinesData = { machines: [], totals: [], amountRanges: [] }
 const pad2 = (n: number) => String(n).padStart(2, '0')
 const hourRange = (hour: number) => `${pad2(hour)}:00 – ${pad2(hour)}:59`
 
@@ -36,11 +37,11 @@ function salesRow(key: string, point: SalesPoint, withGames: boolean, children?:
 
 function machinePoint(activity: MachineActivity): SalesPoint {
   return {
-    name: activity.machine.code,
+    name: activity.machine.name,
     consorcio: '',
     machinesWithSales: null,
-    tickets: activity.totals.tickets,
-    sales: activity.totals.sales,
+    tickets: activity.tickets,
+    sales: activity.sales,
     salesByGame: activity.salesByGame,
     lastSaleAt: activity.lastSaleAt,
   }
@@ -48,23 +49,24 @@ function machinePoint(activity: MachineActivity): SalesPoint {
 
 // Actividad por punto de venta (antes "Reporte de Jugadores"): volumen y comportamiento de venta
 // por banca, máquina y hora. No hace cuadre de dinero (eso es el Financiero).
-export function buildSalesActivityDocument({ t, period, game, now }: BuildContext): DocumentBody {
-  const machines = machineActivity(period, game, now)
-  const hours = hourlyActivity(period, game, now)
-  const distribution = amountDistribution(period, game, now)
+export function buildSalesActivityDocument({ t, game, data }: BuildContext): DocumentBody {
+  const machinesData = data.machines ?? EMPTY_MACHINES
+  const machines = machineActivity(machinesData, game)
+  const hours = hourlyActivity(data.activity, game)
+  const distribution = amountDistribution(machinesData, game)
   const withGames = game === 'all'
 
-  const bancaPoints = BANCAS.map((banca) => {
-    const own = machines.filter((m) => m.machine.bancaId === banca.id)
-    const children = own.filter((m) => m.totals.tickets > 0)
-    const salesByGame = { roulette: 0, pick3: 0, pick4: 0 } as Record<ReportGame, number>
+  const bancaPoints = bancasOf(machinesData.machines).map(({ banca, consorcio }) => {
+    const own = machines.filter((m) => m.machine.banca.id === banca.id)
+    const children = own.filter((m) => m.tickets > 0)
+    const salesByGame = { roulette: 0, quickMoney: 0 } as Record<ReportGame, number>
     own.forEach((m) => GAMES.forEach((g) => (salesByGame[g] += m.salesByGame[g])))
     const point: SalesPoint = {
       name: banca.name,
-      consorcio: consorcioById(banca.consorcioId).name,
+      consorcio: consorcio.name,
       machinesWithSales: children.length,
-      tickets: own.reduce((s, m) => s + m.totals.tickets, 0),
-      sales: own.reduce((s, m) => s + m.totals.sales, 0),
+      tickets: own.reduce((s, m) => s + m.tickets, 0),
+      sales: own.reduce((s, m) => s + m.sales, 0),
       salesByGame,
       lastSaleAt: own.reduce<Date | null>((last, m) => (m.lastSaleAt && (!last || m.lastSaleAt > last) ? m.lastSaleAt : last), null),
     }
@@ -82,7 +84,8 @@ export function buildSalesActivityDocument({ t, period, game, now }: BuildContex
   }
 
   const distributionTotal = distribution.reduce((s, d) => s + d.tickets, 0)
-  const idle = machines.filter((m) => m.totals.tickets === 0)
+  // Máquinas activas sin ventas en el período.
+  const idle = machines.filter((m) => m.tickets === 0 && m.machine.isActive)
 
   const byBancaPanel: DocPanel = {
     type: 'panel',
@@ -99,7 +102,7 @@ export function buildSalesActivityDocument({ t, period, game, now }: BuildContex
           column('tickets', t('admin.reports.views.kpi.tickets'), 'count'),
           column('sales', t('admin.reports.views.kpi.sales'), 'currency'),
           // Con "Todos", la venta desglosada por juego.
-          ...(withGames ? gamesOf('all').map((g) => column(`sales-${g}`, gameLabel(t, g), 'currency')) : []),
+          ...(withGames ? GAMES.map((g) => column(`sales-${g}`, gameLabel(t, g), 'currency')) : []),
           column('avg', t('admin.reports.views.kpi.avgTicket'), 'currency'),
           column('last', t('admin.reports.views.activity.lastSale'), 'dateTime', 'right'),
         ],
@@ -180,10 +183,7 @@ export function buildSalesActivityDocument({ t, period, game, now }: BuildContex
           column('banca', t('admin.reports.views.activity.banca'), 'text'),
           column('consorcio', t('admin.reports.views.activity.consorcio'), 'text'),
         ],
-        rows: idle.map((m) => {
-          const banca = bancaById(m.machine.bancaId)
-          return { key: m.machine.id, cells: { machine: m.machine.code, banca: banca.name, consorcio: consorcioById(banca.consorcioId).name } }
-        }),
+        rows: idle.map((m) => ({ key: m.machine.id, cells: { machine: m.machine.name, banca: m.machine.banca.name, consorcio: m.machine.consorcio.name } })),
         emptyText: t('admin.reports.views.activity.noIdleMachines'),
       },
     ],

@@ -1,49 +1,56 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useCountdown } from '../../hooks/useCountdown'
+import { useQuickMoneyRoundPhase } from '../../hooks/useQuickMoneyRoundPhase'
 import { useQuickMoneyRoundStore } from '../../store/useQuickMoneyRoundStore'
-import type { QuickMoneyGameType } from '../../types/quickMoneyBet'
 import { ClockIcon } from './icons'
 import './roundCountdownRow.css'
 
-// Countdown 100% local/mock (ver useQuickMoneyRoundStore.ts) -- puramente informativo en v1, no
-// bloquea Add to Bet Slip/Place Bet por fase de ronda (a diferencia de Roulette). Pick 3 y Pick 4
-// comparten un único draw cycle (pedido explícito): las dos badges leen el mismo
-// nextDrawTime/drawNumber del store, solo cambia el color de acento. Al llegar a 0 dispara
-// advanceRound() para que el ciclo se repita solo, sin depender de nada externo.
-function RoundBadge({ gameType }: { gameType: QuickMoneyGameType }) {
+// Un solo sorteo de Quick Money decide todas las apuestas (Pick 3 y Pick 4 salen juntos).
+// Sincronizado con el backend (live, ver useQuickMoneyEventSync) cuenta hasta el cierre de apuestas
+// del sorteo abierto y muestra "Bets closed" / "Waiting for the next draw" mientras no se puede
+// apostar. Sin sincronizar sigue el reloj mock: al llegar a 0 dispara advanceRound().
+function RoundBadge() {
   const { t } = useTranslation()
-  const nextDrawTime = useQuickMoneyRoundStore((state) => state.nextDrawTime)
   const drawNumber = useQuickMoneyRoundStore((state) => state.drawNumber)
   const advanceRound = useQuickMoneyRoundStore((state) => state.advanceRound)
-  const countdown = useCountdown(nextDrawTime)
+  const { phase, countdown, live, eventId } = useQuickMoneyRoundPhase()
 
   useEffect(() => {
-    if (countdown.remainingSeconds <= 0) advanceRound()
-  }, [countdown.remainingSeconds, advanceRound])
+    if (!live && countdown.remainingSeconds <= 0) advanceRound()
+  }, [live, countdown.remainingSeconds, advanceRound])
+
+  const closed = phase === 'closed'
+  const label = !live
+    ? t('quickMoneyBettingView.countdown.label', { game: t('quickMoneyBettingView.gameType.quickMoney') })
+    : t('quickMoneyBettingView.countdown.betsCloseIn')
+  const value = !closed
+    ? countdown.display
+    : eventId === null
+      ? t('quickMoneyBettingView.countdown.waitingForDraw')
+      : t('quickMoneyBettingView.countdown.betsClosed')
 
   return (
-    <div className="qm-round-badge" data-accent={gameType}>
+    <div className="qm-round-badge" data-accent="pick3">
       <span className="qm-round-badge-icon">
         <ClockIcon />
       </span>
       <div className="qm-round-badge-text">
-        <span className="qm-round-badge-label">
-          {t('quickMoneyBettingView.countdown.label', { game: t(`quickMoneyBettingView.gameType.${gameType}`) })}
+        <span className="qm-round-badge-label">{label}</span>
+        <span className="qm-round-badge-value" data-closed={closed || undefined}>
+          {value}
         </span>
-        <span className="qm-round-badge-value">{countdown.display}</span>
       </div>
-      <span className="qm-round-badge-draw">{t('quickMoneyBettingView.countdown.round', { number: drawNumber })}</span>
+      {(!live || eventId !== null) && (
+        <span className="qm-round-badge-draw">{t('quickMoneyBettingView.countdown.round', { number: drawNumber })}</span>
+      )}
     </div>
   )
 }
 
-export function RoundCountdownRow({ gameTypes }: { gameTypes: QuickMoneyGameType[] }) {
+export function RoundCountdownRow() {
   return (
     <div className="qm-round-row">
-      {gameTypes.map((gameType) => (
-        <RoundBadge key={gameType} gameType={gameType} />
-      ))}
+      <RoundBadge />
     </div>
   )
 }
