@@ -1022,6 +1022,28 @@
   filter: saturate(0.6) brightness(0.85);
 }
 
+/* Fuera de banda: el RTP que dejaría saca al juego de la banda del perfil -- bloqueada y rayada.
+   El globo del hover (::after, arriba) sigue apareciendo: CSS :hover aplica aunque esté disabled. */
+.admin-next-results-number-cell[data-out-of-band='true']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.45) 0 4px, transparent 4px 9px);
+  pointer-events: none;
+}
+
+.admin-next-results-number-cell[data-out-of-band='true']:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.75) brightness(0.6);
+}
+
+.admin-next-results-number-cell[data-out-of-band='true']:hover::after {
+  white-space: pre;
+  text-align: center;
+  border-color: rgba(255, 90, 90, 0.6);
+}
+
 .admin-next-results-number-box[data-color='none'],
 .admin-next-results-selected-box[data-color='none'] {
   background: rgba(255, 255, 255, 0.06);

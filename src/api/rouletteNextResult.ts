@@ -36,6 +36,9 @@ export interface RouletteNextResult {
   numeroPendiente: string | null
   // Último momento en que el backend acepta cambiar el resultado (T-1:00, ROULETTE_SUBSTITUTION_CUTOFF_SECONDS).
   sustitucionHasta: string
+  // Banda de RTP del rtp_settings vigente de roulette: el backend rechaza cualquier cambio cuyo RTP
+  // resultante quede fuera de ella. Opcional: un backend anterior no la manda.
+  banda?: { min: number; max: number }
 }
 
 // Lo que necesita el panel: el resultado + el monto apostado a cada número (fetchBetsByNumber).

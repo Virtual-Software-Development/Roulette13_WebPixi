@@ -88,8 +88,22 @@ async function runRounds(id: string, rondas: number, generador: RtpSimGenerator)
   return readAdminJson(res, 'rtp-sim run rounds')
 }
 
-async function deleteScenario(id: string): Promise<void> {
+export async function deleteRtpSimScenario(id: string): Promise<void> {
   await adminFetch(`/rtp-sim/scenarios/${id}`, { method: 'DELETE' })
+}
+
+// Descarga el detalle de cada ronda jugada (resultado, apostado, pagado, RTP...) como CSV. El backend
+// lo genera en streaming y comprimido con gzip, que el navegador descomprime solo.
+export async function downloadRtpSimRoundsCsv(id: string): Promise<void> {
+  const res = await adminFetch(`/rtp-sim/scenarios/${id}/rounds.csv`)
+  if (!res.ok) await readAdminJson(res, 'rtp-sim rounds csv') // lanza con el mensaje del backend
+  const filename = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? `rtpsim-${id}.csv`
+  const url = URL.createObjectURL(await res.blob())
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 export interface BackendSimulationInput {
@@ -125,8 +139,9 @@ function generatorFor(betsPerRound: number, averageBet: number): RtpSimGenerator
 }
 
 // Crea un escenario temporal con la config de producción y el RTP objetivo + bandas de prueba, arrancando
-// desde la ventana de medición REAL de producción (solo lectura), juega `rounds` rondas con
-// apuestas nuevas cada ronda y lo borra al terminar (o al fallar/cancelar).
+// desde la ventana de medición REAL de producción (solo lectura) y juega `rounds` rondas con
+// apuestas nuevas cada ronda. Si falla o se cancela lo borra; si termina lo deja (para descargar el
+// CSV) y devuelve su id en el resultado.
 export async function runBackendRtpSimulation(
   input: BackendSimulationInput,
   options: { signal?: AbortSignal; onProgress?: (done: number, total: number) => void } = {},
@@ -173,6 +188,7 @@ export async function runBackendRtpSimulation(
       differencePp,
       riskLevel: riskLevelFor(differencePp),
       engine: view.motor,
+      scenarioId: scenario.id,
       rounds: resumen.rondas,
       roundsWithinBandPct: resumen.rondas > 0 ? (resumen.dentroDeBanda / resumen.rondas) * 100 : 0,
       totalBetsCount: resumen.rondas * input.betsPerRound,
@@ -186,8 +202,9 @@ export async function runBackendRtpSimulation(
       withinBand: simulatedRtp >= input.minBand && simulatedRtp <= input.maxBand,
       deviationPp: simulatedRtp - input.proposedTargetRtp,
     }
-  } finally {
+  } catch (err) {
     // El backend limita los escenarios por admin (y los borra solo tras 8h sin uso): no dejar basura.
-    void deleteScenario(scenario.id).catch(() => {})
+    void deleteRtpSimScenario(scenario.id).catch(() => {})
+    throw err
   }
 }

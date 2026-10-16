@@ -54,6 +54,36 @@
     "recentResults": "RECENT RESULTS",
     "notApplicable": "—"
   },
+  "winningTickets": {
+    "title": "WINNING TICKETS",
+    "gameNames": {
+      "roulette": "Roulette",
+      "quickMoney": "Quick Money"
+    },
+    "draw": "Draw #{{number}}",
+    "result": "Result",
+    "winners_one": "Winning ticket",
+    "winners_other": "Winning tickets",
+    "totalPaid": "Total prizes",
+    "continuingIn": "Continuing in",
+    "skip": "Skip",
+    "localTickets_one": "Local winning ticket",
+    "localTickets_other": "Local winning tickets",
+    "allWinners": "All winning tickets",
+    "columns": {
+      "code": "Ticket",
+      "terminal": "Terminal",
+      "game": "Game",
+      "prize": "Prize"
+    },
+    "games": {
+      "roulette": "Roulette",
+      "pick3": "Pick 3",
+      "pick4": "Pick 4"
+    },
+    "emptyTitle": "NO WINNING TICKETS",
+    "emptyMessage": "No ticket won in draw #{{number}}. Good luck in the next one!"
+  },
   "videoErrorPanel": {
     "title": "VIDEO UNAVAILABLE",
     "message": "The result video could not be loaded in time.",
@@ -1221,6 +1251,8 @@
       "updatePick4": "Update Pick 4 Result",
       "rtpCurrent": "Current RTP",
       "rtpResulting": "Resulting RTP",
+      "rtpBand": "RTP band",
+      "outOfBand": "Out of band ({{band}})",
       "decidedAtFreeze": "Decided at {{time}} (bets close {{close}})",
       "sourceLive": "Live — bets so far",
       "sourceFrozen": "Final bets",
@@ -1374,6 +1406,8 @@
         "results": {
           "title": "Simulation Results",
           "close": "Close results",
+          "downloadCsv": "Download CSV",
+          "downloading": "Downloading…",
           "subtitle": "{{rounds}} rounds on the {{engine}} engine · window inside the band in {{withinBand}}% of rounds.",
           "currentRtp": "Current RTP",
           "proposedRtp": "Proposed RTP",

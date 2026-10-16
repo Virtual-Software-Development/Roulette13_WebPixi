@@ -1,0 +1,465 @@
+/* WinningTicketsScreen -- pantalla completa del lobby con todos los tickets ganadores del sorteo.
+
+   Mismo lenguaje que VideoErrorPanel (navy/graphite, texto off-white, Poppins) con un único acento
+   dorado: el de "ganador" (trofeo, premios, ticket local). Overlay DOM fuera de ResponsiveStage:
+   tamaños con clamp(min, vw, max), el valor del medio calculado para 1920px (1vw = 19.2px). */
+.winning-tickets-screen {
+  --wt-bg: #050a10;
+  --wt-surface: #0a151d;
+  --wt-surface-top: #0c1922;
+  --wt-row: rgba(22, 48, 64, 0.38);
+  --wt-row-alt: rgba(22, 48, 64, 0.2);
+  --wt-border: rgba(120, 160, 180, 0.14);
+  --wt-divider: rgba(120, 160, 180, 0.1);
+  --wt-text-primary: #f5f7fa;
+  --wt-text-secondary: rgba(245, 247, 250, 0.62);
+  --wt-text-label: rgba(245, 247, 250, 0.5);
+  --wt-gold: #f2c14e;
+  --wt-gold-soft: rgba(242, 193, 78, 0.14);
+  --wt-gold-border: rgba(242, 193, 78, 0.55);
+
+  /* 8 / 12 / 16 / 24 / 32px en 1920px */
+  --wt-space-sm: clamp(6px, 0.417vw, 12px);
+  --wt-space-md: clamp(8px, 0.625vw, 16px);
+  --wt-space-lg: clamp(12px, 0.833vw, 20px);
+  --wt-space-xl: clamp(16px, 1.25vw, 30px);
+  --wt-space-2xl: clamp(20px, 1.667vw, 40px);
+  --wt-radius-panel: clamp(10px, 0.625vw, 16px);
+  --wt-radius-row: clamp(6px, 0.417vw, 10px);
+  /* Fila de 56px en 1920px. */
+  --wt-row-height: clamp(40px, 2.917vw, 72px);
+
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', Arial, sans-serif;
+  color: var(--wt-text-primary);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(242, 193, 78, 0.07) 0%, transparent 55%),
+    var(--wt-bg);
+}
+
+.winning-tickets-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(94vw, 1800px);
+  height: 92vh;
+  box-sizing: border-box;
+  padding: var(--wt-space-2xl) var(--wt-space-2xl) 0;
+  background: linear-gradient(180deg, var(--wt-surface-top) 0%, var(--wt-surface) 100%);
+  border: 1px solid var(--wt-border);
+  border-radius: var(--wt-radius-panel);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 12px 96px rgba(0, 0, 0, 0.36);
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Header: [trofeo + título] [resultado] [ganadores / total] ........ [countdown] [saltar]
+   --------------------------------------------------------------------------------------------- */
+.winning-tickets-header {
+  display: flex;
+  align-items: center;
+  gap: var(--wt-space-2xl);
+  padding-bottom: var(--wt-space-xl);
+  border-bottom: 1px solid var(--wt-divider);
+}
+
+.winning-tickets-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--wt-space-lg);
+}
+
+.winning-tickets-trophy {
+  width: clamp(32px, 2.5vw, 60px);
+  height: clamp(32px, 2.5vw, 60px);
+  color: var(--wt-gold);
+  filter: drop-shadow(0 0 12px rgba(242, 193, 78, 0.35));
+}
+
+/* color explícito en los títulos: index.css pinta h1/h2 con --text-h (casi negro). */
+.winning-tickets-title {
+  margin: 0;
+  color: var(--wt-text-primary);
+  font-size: clamp(22px, 1.875vw, 44px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+
+.winning-tickets-subtitle {
+  margin: clamp(2px, 0.208vw, 6px) 0 0;
+  font-size: clamp(12px, 0.938vw, 22px);
+  font-weight: 500;
+  color: var(--wt-text-secondary);
+}
+
+.winning-tickets-result,
+.winning-tickets-stat {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.208vw, 6px);
+}
+
+.winning-tickets-result {
+  padding-left: var(--wt-space-2xl);
+  border-left: 1px solid var(--wt-divider);
+}
+
+.winning-tickets-stat-label,
+.winning-tickets-countdown-label {
+  font-size: clamp(10px, 0.729vw, 18px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wt-text-label);
+}
+
+.winning-tickets-result-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(36px, 2.917vw, 70px);
+  height: clamp(36px, 2.917vw, 70px);
+  padding: 0 var(--wt-space-sm);
+  box-sizing: border-box;
+  border-radius: var(--wt-radius-row);
+  font-size: clamp(18px, 1.667vw, 40px);
+  font-weight: 700;
+  color: #fff;
+}
+
+.winning-tickets-result-number[data-color='red'] {
+  background: linear-gradient(180deg, #d92333, #a91220);
+}
+
+.winning-tickets-result-number[data-color='black'] {
+  background: linear-gradient(180deg, #24313b, #0d151b);
+  border: 1px solid rgba(160, 180, 195, 0.3);
+}
+
+.winning-tickets-result-number[data-color='green'] {
+  background: linear-gradient(180deg, #17b14d, #078a36);
+}
+
+.winning-tickets-result-picks {
+  display: flex;
+  gap: var(--wt-space-xl);
+}
+
+.winning-tickets-result-pick {
+  display: flex;
+  align-items: baseline;
+  gap: var(--wt-space-sm);
+}
+
+.winning-tickets-result-pick-label {
+  font-size: clamp(11px, 0.833vw, 20px);
+  font-weight: 600;
+  color: var(--wt-text-secondary);
+}
+
+.winning-tickets-result-pick-digits {
+  font-size: clamp(20px, 1.667vw, 40px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
+.winning-tickets-stats {
+  display: flex;
+  gap: var(--wt-space-2xl);
+  padding-left: var(--wt-space-2xl);
+  border-left: 1px solid var(--wt-divider);
+}
+
+.winning-tickets-stat-value {
+  font-size: clamp(18px, 1.458vw, 36px);
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.winning-tickets-stat-value--money {
+  color: var(--wt-gold);
+}
+
+.winning-tickets-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--wt-space-xl);
+  margin-left: auto;
+}
+
+.winning-tickets-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: clamp(2px, 0.208vw, 6px);
+}
+
+.winning-tickets-countdown-value {
+  font-size: clamp(20px, 1.667vw, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.winning-tickets-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wt-space-sm);
+  height: clamp(40px, 2.917vw, 70px);
+  padding: 0 var(--wt-space-xl);
+  border-radius: var(--wt-radius-row);
+  border: 1px solid rgba(245, 247, 250, 0.28);
+  background: rgba(245, 247, 250, 0.06);
+  color: var(--wt-text-primary);
+  font-family: inherit;
+  font-size: clamp(13px, 0.938vw, 22px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.winning-tickets-skip:hover,
+.winning-tickets-skip:focus-visible {
+  background: rgba(245, 247, 250, 0.12);
+  border-color: rgba(245, 247, 250, 0.5);
+  outline: none;
+}
+
+.winning-tickets-skip svg {
+  width: clamp(14px, 1.042vw, 24px);
+  height: clamp(14px, 1.042vw, 24px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Cuerpo: con un ticket local ganador, dos tablas lado a lado -- la local (fija) a la izquierda y la
+   general (con scroll) a la derecha. Sin ticket local, solo la general a todo el ancho.
+   --------------------------------------------------------------------------------------------- */
+.winning-tickets-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: var(--wt-space-2xl);
+  padding-top: var(--wt-space-xl);
+}
+
+.winning-tickets-table {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.winning-tickets-table--all {
+  flex: 1 1 auto;
+}
+
+.winning-tickets-table--local {
+  flex: 0 0 34%;
+  box-sizing: border-box;
+  padding: var(--wt-space-xl);
+  border-radius: var(--wt-radius-panel);
+  border: 1px solid var(--wt-gold-border);
+  background: linear-gradient(180deg, rgba(242, 193, 78, 0.1) 0%, rgba(242, 193, 78, 0.03) 100%);
+}
+
+.winning-tickets-table-title {
+  display: flex;
+  align-items: center;
+  gap: var(--wt-space-md);
+  margin: 0 0 var(--wt-space-sm);
+  font-size: clamp(14px, 1.042vw, 26px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--wt-text-primary);
+}
+
+.winning-tickets-table--local .winning-tickets-table-title {
+  color: var(--wt-gold);
+}
+
+.winning-tickets-table-title .winning-tickets-trophy {
+  width: clamp(18px, 1.354vw, 32px);
+  height: clamp(18px, 1.354vw, 32px);
+  filter: none;
+}
+
+/* Filas y encabezados: las columnas (grid-template-columns) las arma el componente según la tabla. */
+.winning-tickets-row,
+.winning-tickets-columns {
+  display: grid;
+  align-items: center;
+  column-gap: var(--wt-space-lg);
+  padding: 0 var(--wt-space-xl);
+}
+
+.winning-tickets-columns {
+  padding-top: var(--wt-space-md);
+  padding-bottom: var(--wt-space-md);
+  font-size: clamp(10px, 0.729vw, 18px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wt-text-label);
+}
+
+.winning-tickets-columns [data-column='prize'],
+.winning-tickets-cell[data-column='prize'] {
+  text-align: right;
+}
+
+.winning-tickets-row {
+  height: var(--wt-row-height);
+  margin-bottom: clamp(3px, 0.208vw, 6px);
+  border-radius: var(--wt-radius-row);
+  background: var(--wt-row);
+  font-size: clamp(14px, 1.146vw, 28px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.winning-tickets-track .winning-tickets-row:nth-child(even) {
+  background: var(--wt-row-alt);
+}
+
+.winning-tickets-cell {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.winning-tickets-cell[data-column='code'] {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.winning-tickets-cell[data-column='terminal'],
+.winning-tickets-cell[data-column='game'] {
+  color: var(--wt-text-secondary);
+}
+
+.winning-tickets-cell[data-column='prize'] {
+  font-weight: 700;
+  color: var(--wt-gold);
+}
+
+/* Ticket de esta terminal dentro de la lista general: mismo dorado, contorno y fondo tenue. */
+.winning-tickets-track .winning-tickets-row[data-local='true'] {
+  background: var(--wt-gold-soft);
+  box-shadow: inset 0 0 0 1px var(--wt-gold-border);
+}
+
+/* Tabla local: filas más grandes, sobre fondo dorado tenue. */
+.winning-tickets-local-rows {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.winning-tickets-table--local .winning-tickets-row {
+  height: calc(var(--wt-row-height) * 1.2);
+  background: rgba(5, 10, 16, 0.45);
+  font-size: clamp(15px, 1.25vw, 30px);
+}
+
+.winning-tickets-table--local .winning-tickets-columns,
+.winning-tickets-table--local .winning-tickets-row {
+  padding: 0 var(--wt-space-lg);
+}
+
+.winning-tickets-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.winning-tickets-track {
+  will-change: transform;
+}
+
+.winning-tickets-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(var(--wt-row-height) * 0.9);
+  pointer-events: none;
+}
+
+.winning-tickets-fade--top {
+  top: 0;
+  height: calc(var(--wt-row-height) * 0.35);
+  background: linear-gradient(180deg, var(--wt-surface-top) 0%, transparent 100%);
+}
+
+.winning-tickets-fade--bottom {
+  bottom: 0;
+  background: linear-gradient(0deg, var(--wt-surface) 10%, transparent 100%);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Sin ganadores
+   --------------------------------------------------------------------------------------------- */
+.winning-tickets-empty {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--wt-space-lg);
+  text-align: center;
+}
+
+.winning-tickets-empty .winning-tickets-trophy {
+  width: clamp(56px, 4.583vw, 110px);
+  height: clamp(56px, 4.583vw, 110px);
+  color: var(--wt-text-label);
+  filter: none;
+}
+
+.winning-tickets-empty-title {
+  margin: 0;
+  color: var(--wt-text-primary);
+  font-size: clamp(22px, 1.875vw, 44px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.winning-tickets-empty-message {
+  margin: 0;
+  max-width: 40ch;
+  font-size: clamp(14px, 1.146vw, 28px);
+  color: var(--wt-text-secondary);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Progreso: barra fina al pie del panel que se vacía hasta que la pantalla termina.
+   --------------------------------------------------------------------------------------------- */
+.winning-tickets-progress {
+  flex: 0 0 auto;
+  height: clamp(3px, 0.208vw, 6px);
+  margin: var(--wt-space-lg) calc(-1 * var(--wt-space-2xl)) 0;
+  background: rgba(245, 247, 250, 0.06);
+}
+
+.winning-tickets-progress-bar {
+  height: 100%;
+  background: var(--wt-gold);
+  transform-origin: left center;
+  will-change: transform;
+}
