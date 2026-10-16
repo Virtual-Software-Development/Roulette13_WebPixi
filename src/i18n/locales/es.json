@@ -54,6 +54,36 @@
     "recentResults": "RESULTADOS RECIENTES",
     "notApplicable": "—"
   },
+  "winningTickets": {
+    "title": "TICKETS GANADORES",
+    "gameNames": {
+      "roulette": "Ruleta",
+      "quickMoney": "Quick Money"
+    },
+    "draw": "Sorteo #{{number}}",
+    "result": "Resultado",
+    "winners_one": "Ticket ganador",
+    "winners_other": "Tickets ganadores",
+    "totalPaid": "Total en premios",
+    "continuingIn": "Continúa en",
+    "skip": "Saltar",
+    "localTickets_one": "Ticket ganador local",
+    "localTickets_other": "Tickets ganadores locales",
+    "allWinners": "Todos los tickets ganadores",
+    "columns": {
+      "code": "Ticket",
+      "terminal": "Terminal",
+      "game": "Juego",
+      "prize": "Premio"
+    },
+    "games": {
+      "roulette": "Ruleta",
+      "pick3": "Pick 3",
+      "pick4": "Pick 4"
+    },
+    "emptyTitle": "SIN TICKETS GANADORES",
+    "emptyMessage": "Ningún ticket ganó en el sorteo #{{number}}. ¡Suerte en el próximo!"
+  },
   "videoErrorPanel": {
     "title": "VIDEO NO DISPONIBLE",
     "message": "El video del resultado no pudo cargarse a tiempo.",

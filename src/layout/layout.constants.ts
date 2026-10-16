@@ -48,3 +48,10 @@ export const VIDEO_WHEEL_TRANSITION_DURATION_MS = 900
 export const WINNER_PANEL_LEAD_SECONDS = 2
 export const WINNER_PANEL_EXIT_DURATION_MS = 400
 
+// Pantalla de tickets ganadores (WinningTicketsScreen): cuánto dura con ganadores (el scroll recorre
+// la lista completa en ese tiempo), cuánto el estado "sin ganadores", y la pausa del scroll al
+// empezar y al terminar para que se lean la primera y la última fila.
+export const WINNING_TICKETS_DURATION_MS = 120_000
+export const WINNING_TICKETS_EMPTY_DURATION_MS = 10_000
+export const WINNING_TICKETS_SCROLL_HOLD_MS = 4_000
+
