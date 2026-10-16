@@ -1085,6 +1085,8 @@
       "updatePick4": "Update Pick 4 Result",
       "rtpCurrent": "Current RTP",
       "rtpResulting": "Resulting RTP",
+      "rtpBand": "RTP band",
+      "outOfBand": "Out of band ({{band}})",
       "decidedAtFreeze": "Decided at {{time}} (bets close {{close}})",
       "sourceLive": "Live — bets so far",
       "sourceFrozen": "Final bets",

@@ -57,6 +57,10 @@ function formatRtp(value: number | null | undefined): string {
   return value == null ? '—' : `${value.toFixed(4)}%`
 }
 
+function formatBand(band: { min: number; max: number }): string {
+  return `${band.min.toFixed(2)}% – ${band.max.toFixed(2)}%`
+}
+
 function formatClock(iso: string): string {
   return CLOCK_FORMATTER.format(new Date(iso))
 }
@@ -87,6 +91,15 @@ export function RouletteNextResultPanel() {
   const pendingSlot = data?.numeroPendiente ?? snapshot?.numeroElegido ?? null
   const pendingPocket = pendingSlot != null ? toPocket(pendingSlot) : null
   const rtpFor = (pocket: WheelPocket | null) => (pocket == null || !rtpBySlot ? null : rtpBySlot[String(pocket)])
+  // Fuera de banda = el RTP que dejaría ese número sale de [min, max] del perfil vigente. El backend
+  // rechaza esa sustitución igual; acá se bloquea la celda para no ofrecerla. El resultado actual
+  // nunca se bloquea: elegirlo no cambia nada.
+  const band = data?.banda ?? null
+  const isOutOfBand = (pocket: WheelPocket | null) => {
+    const rtp = rtpFor(pocket)
+    return band != null && rtp != null && (rtp < band.min || rtp > band.max)
+  }
+  const isBlocked = (pocket: WheelPocket | null) => pocket !== pendingPocket && isOutOfBand(pocket)
 
   ensureClockTicking()
   const now = useClockStore((state) => state.now)
@@ -112,6 +125,9 @@ export function RouletteNextResultPanel() {
 
   const hasChanges = selectedNumber != null && selectedNumber !== pendingPocket
   const actionsDisabled = !hasChanges || status === 'updating' || !changeOpen
+  // Una selección que quedó fuera de banda al refrescar (en vivo las apuestas cambian) se puede
+  // resetear pero no mandar.
+  const updateDisabled = actionsDisabled || isBlocked(selectedNumber)
 
   async function handleConfirmUpdate() {
     if (!data || selectedNumber == null) return
@@ -141,6 +157,8 @@ export function RouletteNextResultPanel() {
 
   function renderCell(n: WheelPocket) {
     const bet = betsByNumber ? (betsByNumber[String(n)] ?? 0) : null
+    const outOfBand = isOutOfBand(n)
+    const rtpLabel = `${t('admin.nextResults.rtpResulting')}: ${formatRtp(rtpFor(n))}`
     return (
       <button
         key={n}
@@ -149,9 +167,17 @@ export function RouletteNextResultPanel() {
         data-color={getRouletteColor(n)}
         data-selected={n === selectedNumber}
         data-current={n === pendingPocket}
-        // RTP que dejaría este número si saliera -- se muestra al pasar el mouse (ver CSS).
-        data-rtp={rtpBySlot ? `${t('admin.nextResults.rtpResulting')}: ${formatRtp(rtpFor(n))}` : undefined}
-        disabled={!changeOpen}
+        data-out-of-band={outOfBand}
+        // RTP que dejaría este número si saliera -- se muestra al pasar el mouse (ver CSS); fuera de
+        // banda, con el aviso y la banda arriba.
+        data-rtp={
+          rtpBySlot
+            ? outOfBand && band
+              ? `${t('admin.nextResults.outOfBand', { band: formatBand(band) })}\n${rtpLabel}`
+              : rtpLabel
+            : undefined
+        }
+        disabled={!changeOpen || isBlocked(n)}
         onClick={() => setSelectedNumber(n)}
       >
         <span className="admin-next-results-cell-number">{n}</span>
@@ -245,6 +271,12 @@ export function RouletteNextResultPanel() {
                 <span className="admin-next-results-detail-label">{t('admin.nextResults.rtpResulting')}</span>
                 <span className="admin-next-results-detail-value">{formatRtp(rtpFor(pendingPocket))}</span>
               </div>
+              {band && (
+                <div className="admin-next-results-detail">
+                  <span className="admin-next-results-detail-label">{t('admin.nextResults.rtpBand')}</span>
+                  <span className="admin-next-results-detail-value">{formatBand(band)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -350,7 +382,7 @@ export function RouletteNextResultPanel() {
             type="button"
             className="admin-next-results-btn-update"
             data-accent="red"
-            disabled={actionsDisabled}
+            disabled={updateDisabled}
             onClick={() => setStatus('confirming')}
           >
             {status === 'updating' ? (
