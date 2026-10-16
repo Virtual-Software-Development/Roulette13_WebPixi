@@ -147,7 +147,7 @@
   }
 }
 
-/* Mismo banner de éxito que .admin-next-results-feedback--header (nextResults.css). */
+/* Mismo banner de éxito/error que .admin-next-results-feedback--header (nextResults.css). */
 .admin-settings-save-feedback {
   align-self: center;
   margin-left: auto;
@@ -161,6 +161,27 @@
   color: #4ade80;
   background: rgba(22, 163, 74, 0.12);
   border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.admin-settings-save-feedback--error {
+  color: #f87171;
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(248, 113, 113, 0.32);
+}
+
+/* Carga inicial / error de carga, en lugar de las cards. */
+.admin-settings-notice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 13.5px;
+  color: #98aabf;
+}
+
+.admin-settings-notice[data-variant='error'] {
+  color: #f87171;
 }
 
 .admin-settings-btn {
@@ -194,7 +215,7 @@
   transform: translateY(1px);
 }
 
-/* Ghost neutro -- Send Test Email y Reset to Defaults (pedido explícito: "secondary, NO deben
+/* Ghost neutro -- Reset to Defaults y Retry (pedido explícito: "secondary, NO deben
    utilizar el rojo principal"). Texto secundario, más discreto que Save Changes, para que Reset no
    compita visualmente con la acción principal. */
 .admin-settings-btn--ghost {
@@ -250,35 +271,6 @@
   flex-direction: column;
   gap: 14px;
   min-width: 0;
-}
-
-/* Recipient(s) + Send Test Email en una sola línea; el botón se apila debajo en pantallas chicas. */
-.admin-settings-recipients-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 12px;
-  align-items: start;
-}
-
-.admin-settings-recipients-action {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-@media (max-width: 560px) {
-  .admin-settings-recipients-row {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 12px;
-  }
-
-  .admin-settings-recipients-action > .admin-form-field-label {
-    display: none;
-  }
-
-  .admin-settings-recipients-action {
-    align-items: flex-start;
-  }
 }
 
 .admin-settings-events-section {

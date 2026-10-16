@@ -103,11 +103,6 @@ export function comparisonPeriod(period: ReportPeriod, kind: ReportPeriodKind): 
   return { start: addDays(period.start, -length), end: addDays(period.start, -1), partial: false }
 }
 
-// Fracción del día ya transcurrida (1 para días cerrados) -- el día de hoy solo cuenta hasta ahora.
-export function dayElapsedFraction(day: Date, now: Date): number {
-  return isSameDay(day, now) ? (now.getHours() * 60 + now.getMinutes()) / 1440 : 1
-}
-
 export function formatPeriodRange(period: ReportPeriod): string {
   return isSameDay(period.start, period.end) ? formatDate(period.start) : `${formatDate(period.start)} – ${formatDate(period.end)}`
 }

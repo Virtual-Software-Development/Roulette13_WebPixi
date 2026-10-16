@@ -1,4 +1,5 @@
 import { adminFetch, readAdminJson } from './adminSession'
+import { BACKEND_GAME, type BackendGame } from './backendGame'
 import type { RtpGame } from '../types/rtpDashboard'
 import type { RtpSimulationResult, RtpSimulationRiskLevel } from '../types/rtpManagement'
 
@@ -6,6 +7,8 @@ import type { RtpSimulationResult, RtpSimulationRiskLevel } from '../types/rtpMa
 // apuestas falsas por el motor y la liquidación REALES de producción, pero vive solo en memoria
 // del backend -- no escribe events/tickets/pagos/auditoría ni publica por MQTT. Exige sesión de
 // admin (JWT con rol admin): sin ella adminFetch lanza AdminAuthError.
+
+export type RtpSimGame = BackendGame
 
 // rtpsim.Config -- mismos campos de motor que rtp_settings.
 export interface RtpSimConfig {
@@ -28,7 +31,7 @@ export interface RtpSimLimits {
 
 // rtpsim.Defaults -- configuración y motor que producción usa AHORA para el juego.
 export interface RtpSimDefaults {
-  juego: RtpGame
+  juego: RtpSimGame
   motores: string[]
   motorProduccion: string
   config: RtpSimConfig
@@ -59,12 +62,12 @@ interface RtpSimGenerator {
 }
 
 export async function fetchRtpSimDefaults(game: RtpGame): Promise<RtpSimDefaults> {
-  return readAdminJson(await adminFetch(`/rtp-sim/defaults/${game}`), 'rtp-sim defaults')
+  return readAdminJson(await adminFetch(`/rtp-sim/defaults/${BACKEND_GAME[game]}`), 'rtp-sim defaults')
 }
 
 async function createScenario(body: {
   nombre: string
-  juego: RtpGame
+  juego: RtpSimGame
   config: RtpSimConfig
   historial: { modo: 'vacio' | 'produccion' }
 }): Promise<RtpSimScenario> {
@@ -104,8 +107,8 @@ export interface BackendSimulationInput {
 // siempre dentro de los límites por ejecución del backend.
 const ROUNDS_PER_REQUEST = 5000
 
-// Perfil "mixto" del generador del backend: plenos, interiores y exteriores (roulette) o
-// straight/box/pares (pick3/pick4) con los pesos de un público típico.
+// Perfil "mixto" del generador del backend: plenos, interiores y exteriores (roulette) o la mezcla
+// de tipos de apuesta de Quick Money, con los pesos de un público típico.
 const BET_PROFILE = 'mixto'
 
 function riskLevelFor(differencePp: number): RtpSimulationRiskLevel {
@@ -141,7 +144,7 @@ export async function runBackendRtpSimulation(
 
   const scenario = await createScenario({
     nombre: `Simulator ${input.game} ${input.proposedTargetRtp}%`,
-    juego: input.game,
+    juego: BACKEND_GAME[input.game],
     // Ventana, tope y suavizado de producción; target y bandas los de la prueba (el backend exige
     // minBand ≤ targetRtp ≤ maxBand).
     config: { ...defaults.config, targetRtp: input.proposedTargetRtp, minBand: input.minBand, maxBand: input.maxBand },

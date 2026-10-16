@@ -19,11 +19,12 @@
   /* minmax(0, 1fr), no 1fr a secas -- un track "1fr" solo tiene mínimo implícito auto (basado en
      contenido); sin el minmax(0, ...) puede volver a aparecer el mismo problema de fondo que ya
      se corrigió una vez (una fila creciendo por contenido en vez de por el sobrante real). */
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  /* La fila del tablero se lleva todo el alto libre y el tablero se achica para entrar en ella
+     (.roulette-betting-board-slot): top-row y bottom-row nunca quedan fuera de la pantalla. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
     'top     betslip'
     'board   betslip'
-    '.       .'
     'bottom  bottom';
   align-content: start;
   /* Cómo mover bottom-row verticalmente (spacer "1fr" se come TODO el sobrante, ver arriba):
@@ -67,9 +68,21 @@
 /* Board -- align-self:start (no stretch): su alto real lo define aspect-ratio (ver
    BettingBoard.tsx) a partir del ancho de esta columna, nunca debe estirarse para "llenar" la
    fila o se deforma la grilla de números (units dejarían de ser cuadradas). */
-.roulette-betting-workspace .betting-board {
+.roulette-betting-board-slot {
   grid-area: board;
-  align-self: start;
+  min-height: 0;
+  /* Contenedor de tamaño: el tablero lee su alto (cqh) para no pasarse. */
+  container-type: size;
+  display: flex;
+  /* Abajo: el tablero queda alineado con el borde inferior del bet slip. */
+  align-items: flex-end;
+}
+
+/* Tan ancho como la columna, salvo que así no entre en el alto disponible: entonces el ancho que da
+   justo ese alto (30px = padding + borde del panel, que no siguen la proporción del grid). */
+.roulette-betting-board-slot .betting-board {
+  flex: 0 0 auto;
+  width: min(100%, calc((100cqh - 30px) * var(--board-cols) / var(--board-rows) + 30px));
 }
 
 .roulette-betting-workspace .bet-slip {
@@ -117,6 +130,15 @@
     overflow-y: auto;
     height: auto;
     min-height: 100%;
+  }
+
+  .roulette-betting-board-slot {
+    container-type: normal;
+    display: block;
+  }
+
+  .roulette-betting-board-slot .betting-board {
+    width: 100%;
   }
   /* A ancho completo -- el 550px fijo (pensado para matchear la columna lateral del desktop) no
      tiene sentido acá, ya no hay una segunda columna al lado. */

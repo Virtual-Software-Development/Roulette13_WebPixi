@@ -12,9 +12,7 @@ async function fetchBetsSummaryOnce(drawNo?: string): Promise<BetsSummaryRespons
   const url = drawNo ? `/api/bets?drawNo=${encodeURIComponent(drawNo)}` : '/api/bets'
   const res = await fetch(url, { headers: { Authorization: `Bearer ${env.apiKey}` } })
   if (!res.ok) throw new Error(`bets request failed: ${res.status}`)
-  const data: BetsSummaryResponse = await res.json()
-  console.log('[bets]', data)
-  return data
+  return res.json()
 }
 
 // A diferencia del resto de src/api (sin retry) -- pedido explícito: esta consulta se hace una

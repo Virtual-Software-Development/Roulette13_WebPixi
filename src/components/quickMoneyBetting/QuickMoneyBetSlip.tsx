@@ -2,8 +2,8 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BettingMode } from '../../types/bettingMode'
 import { useQuickMoneyBetSlipStore } from '../../store/useQuickMoneyBetSlipStore'
-import { calculateMaxPotentialWin, calculateSlipTotals } from '../../utils/quickMoneyPayout'
-import { getBetTypeLabel, getGameTypeLabel, formatDigits } from '../../utils/quickMoneyBetLabel'
+import { calculateMaxPotentialWin, calculateSlipTotals, getBetDraw } from '../../utils/quickMoneyPayout'
+import { getBetDrawLabel, getBetTypeLabel, formatDigits } from '../../utils/quickMoneyBetLabel'
 import { formatCurrency } from '../../utils/currencyFormat'
 import { RemoveIcon } from './icons'
 import { QuickMoneyPlayerFooter } from './QuickMoneyPlayerFooter'
@@ -47,8 +47,8 @@ export function QuickMoneyBetSlip({ mode }: { mode: BettingMode }) {
         {entries.length === 0 && <p className="qm-betslip-empty">{t('quickMoneyBettingView.betSlip.empty')}</p>}
         {entries.map((entry) => (
           <div key={entry.id} className="qm-betslip-row">
-            <span className="qm-betslip-row-game" data-accent={entry.selection.gameType}>
-              {getGameTypeLabel(entry.selection.gameType, t)}
+            <span className="qm-betslip-row-game" data-accent={getBetDraw(entry.selection)}>
+              {getBetDrawLabel(getBetDraw(entry.selection), t)}
             </span>
             <span className="qm-betslip-row-digits">{formatDigits(entry.selection.digits)}</span>
             <span className="qm-betslip-row-type">{getBetTypeLabel(entry.selection.betType, t)}</span>

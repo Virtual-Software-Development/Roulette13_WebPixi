@@ -1,4 +1,5 @@
 .player-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -87,15 +88,24 @@
   }
 }
 
+/* Flota arriba del panel, sin cambiar su alto: si ocupara lugar en el panel, la fila de abajo
+   crecería y la pantalla se desbordaría (scroll). */
 .player-panel-success {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: calc(100% + 8px);
+  z-index: 30;
   margin: 0;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(67, 232, 106, 0.4);
-  background: rgba(67, 232, 106, 0.12);
-  color: #bdf7cf;
+  padding: 8px 12px;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(67, 232, 106, 0.45);
+  background: linear-gradient(180deg, rgba(10, 38, 22, 0.98) 0%, rgba(6, 24, 14, 0.98) 100%);
+  color: #bdf7cf;
 }
 
 .player-panel-place-bet {

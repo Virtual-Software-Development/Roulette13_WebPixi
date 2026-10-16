@@ -5,12 +5,13 @@ import './gameEventDetail.css'
 
 interface GameEventPayoutsTabProps {
   payouts: GameEventPayoutRow[]
+  // Total de tickets ganadores de la ronda -- el backend manda como mucho 100 filas.
+  totalWinningTickets: number
 }
 
-// Reutiliza formatCurrency (utils/currencyFormat.ts, ya usado por RTP Simulator) para los montos --
-// no existe todavía un componente/tabla de payouts reutilizable en el proyecto (ver investigación:
-// el sidebar item "Payouts" sigue disabled), así que la tabla en sí es nueva pero el formatter no.
-export function GameEventPayoutsTab({ payouts }: GameEventPayoutsTabProps) {
+// Tickets ganadores de una ronda ya sorteada (los tickets son anónimos: no hay jugadores). El
+// código llega enmascarado desde el backend: completo alcanza para cobrar el premio.
+export function GameEventPayoutsTab({ payouts, totalWinningTickets }: GameEventPayoutsTabProps) {
   const { t } = useTranslation()
 
   if (payouts.length === 0) {
@@ -27,7 +28,8 @@ export function GameEventPayoutsTab({ payouts }: GameEventPayoutsTabProps) {
         <table className="admin-game-events-payouts-table">
           <thead>
             <tr>
-              <th>{t('admin.gameEvents.payouts.table.player')}</th>
+              <th>{t('admin.gameEvents.payouts.table.ticket')}</th>
+              <th>{t('admin.gameEvents.payouts.table.machine')}</th>
               <th>{t('admin.gameEvents.payouts.table.bet')}</th>
               <th>{t('admin.gameEvents.payouts.table.payout')}</th>
               <th>{t('admin.gameEvents.payouts.table.status')}</th>
@@ -36,7 +38,8 @@ export function GameEventPayoutsTab({ payouts }: GameEventPayoutsTabProps) {
           <tbody>
             {payouts.map((row) => (
               <tr key={row.id}>
-                <td className="admin-game-events-payouts-player">{row.player}</td>
+                <td className="admin-game-events-payouts-player">{row.ticket}</td>
+                <td>{row.machine}</td>
                 <td className="admin-game-events-payouts-amount">{formatCurrency(row.betAmount)}</td>
                 <td className="admin-game-events-payouts-amount">{formatCurrency(row.payoutAmount)}</td>
                 <td>
@@ -49,6 +52,11 @@ export function GameEventPayoutsTab({ payouts }: GameEventPayoutsTabProps) {
           </tbody>
         </table>
       </div>
+      {totalWinningTickets > payouts.length && (
+        <p className="admin-game-events-result-caption">
+          {t('admin.gameEvents.payouts.truncated', { shown: payouts.length, total: totalWinningTickets })}
+        </p>
+      )}
     </div>
   )
 }

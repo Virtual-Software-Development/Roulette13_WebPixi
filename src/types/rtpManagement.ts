@@ -15,25 +15,10 @@ export interface RtpSettingsData {
   correctionWindowUnlimited: boolean
   maxCorrectionPerEvent: number
   smoothingFactor: number
-  // yyyy-mm-ddTHH:mm, formato nativo de <input type="datetime-local"> (hora local, sin timezone).
+  // yyyy-mm-dd: desde cuándo rige la configuración actual. Solo lectura -- el backend aplica cada
+  // cambio de inmediato (a las rondas que todavía no congelaron resultado) y fecha el cambio hoy.
   effectiveDate: string
 }
-
-// Campos de RtpSettingsData que pueden quedar temporalmente bloqueados -- Correction Window/Max
-// Correction/Smoothing Factor quedan afuera a propósito: hoy siempre son editables, nunca hay
-// backend/modelo que los bloquee.
-export type RtpSettingsLockableField = 'targetRtp' | 'minBand' | 'maxBand' | 'effectiveDate'
-
-export interface RtpFieldLockInfo {
-  locked: boolean
-  // i18n key con la razón del bloqueo -- no un string plano, para poder mostrarla tanto en el
-  // tooltip del campo como en el banner general sin duplicar copy. `unlockAt` queda listo para
-  // cuando el backend real lo provea (ver rtpManagementMockData.ts) -- nunca se calcula/inventa acá.
-  reasonKey: string
-  unlockAt: string | null
-}
-
-export type RtpSettingsLockState = Record<RtpSettingsLockableField, RtpFieldLockInfo>
 
 export type SimulationType = 'projectedResults'
 
@@ -68,39 +53,54 @@ export type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
 
 export const DAYS_OF_WEEK: DayOfWeek[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
+// Fila de GET /rtp-profiles. Fechas yyyy-mm-dd (días de la operación, ambos inclusive) y horas
+// HH:MM[:SS]; status lo calcula el backend en cada lectura ('replaced' todavía no lo produce).
 export interface RtpProfile {
-  id: string
+  id: number
   name: string
   game: RtpGame
   targetRtp: number
   minBand: number
   maxBand: number
-  // Texto ya formateado para la columna SCHEDULE de la tabla (ej. "Fri-Sun · 18:00-23:59") -- mock
-  // visual, mismo criterio que RtpChange.dateTime/changedBy en rtpDashboardMockData.ts (strings
-  // planos, no localizados, porque son datos, no copy de UI). Ya no hay un "Schedule Type"
-  // separado: todo profile es siempre un rango de fechas (start/expires) con Active Days + una
-  // franja horaria opcional, y este string resume esa combinación (ver RtpProfileForm.tsx).
-  scheduleSummary: string
-  start: string
-  expires: string
+  activeDays: DayOfWeek[]
+  restrictHours: boolean
+  startTime: string | null
+  endTime: string | null
+  startDate: string
+  expiresDate: string
   status: RtpProfileStatus
   createdBy: string
-  lastUpdated: string
+  updatedAt: string
 }
 
-export type RtpProfileActivityEvent = 'activated' | 'expired' | 'disabled' | 'replaced' | 'scheduled' | 'edited'
+// Cuerpo de POST /rtp-profiles.
+export interface NewRtpProfile {
+  name: string
+  game: RtpGame
+  targetRtp: number
+  minBand: number
+  maxBand: number
+  activeDays: DayOfWeek[]
+  restrictHours: boolean
+  startTime: string | null
+  endTime: string | null
+  startDate: string
+  expiresDate: string
+}
 
-// Estado del registro histórico -- deliberadamente separado de RtpProfileStatus: una fila de
-// actividad describe un evento ya ocurrido ("Completed"), no el estado vigente de un profile.
-export type RtpProfileActivityStatus = 'completed' | 'active' | 'expired'
+export type RtpProfileActivityEvent = 'created' | 'activated' | 'expired' | 'disabled' | 'replaced' | 'edited'
 
+// Fila de GET /rtp-profile-events, con el período del profile al momento de leer.
 export interface RtpProfileActivity {
-  id: string
+  id: number
   profileName: string
   game: RtpGame
   event: RtpProfileActivityEvent
-  activePeriod: string
+  startDate: string
+  expiresDate: string
+  startTime: string | null
+  endTime: string | null
   changedBy: string
+  // ISO 8601
   dateTime: string
-  status: RtpProfileActivityStatus
 }

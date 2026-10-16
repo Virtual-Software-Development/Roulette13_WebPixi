@@ -1,12 +1,12 @@
 export interface GeneralSettingsData {
-  // Texto ya formateado para mostrar (ej. "(UTC-04:00) Eastern Time (US & Canada)") -- dato, no
-  // copy de UI, mismo criterio que los campos de RtpProfile.
+  // Nombre IANA (ej. "America/Santo_Domingo"), tal como lo guarda general_settings.timezone.
   timezone: string
-  // Código real de idioma soportado por i18n (ver src/i18n/index.ts: 'en-US' | 'es') -- nunca una
-  // lista de idiomas inventada.
+  // Código del backend ('en' | 'es') -- también es el idioma que el lobby recibe en /gameInfo.
   defaultLanguage: string
+  // Idioma del panel de admin ('en' | 'es'), aparte del de las pantallas de juego.
+  adminLanguage: string
   itemsPerPage: number
-  // Patrón de formato ya formateado (ej. "MMM d, yyyy") -- dato, no copy de UI.
+  // Uno de los patrones que acepta el backend (ver DATE_FORMAT_OPTIONS en settingsOptions.ts).
   dateFormat: string
   maintenanceMode: boolean
 }
@@ -17,14 +17,12 @@ export type NotificationChannelId = 'email'
 export type NotificationChannelsSettings = Record<NotificationChannelId, boolean>
 
 export interface EmailNotificationSettings {
-  // Coma-separado (ver referencia: "Use comma to separate multiple recipients") -- string plano,
-  // no un array (dato ya formateado como
-  // texto, no una lista editable con su propio UI de tags/chips).
+  // Coma-separado en el input; el backend lo guarda como una fila por destinatario.
   recipients: string
 }
 
-// Eventos que pueden disparar una notificación (ver la sección Notification Events de Settings).
-// Todavía no hay backend de notificaciones: estos ids son el contrato que ese backend deberá emitir.
+// Eventos de la sección Notification Events -- cada uno es un notification_event_type del backend
+// (ver EVENT_CODES en api/adminSettings.ts).
 export type NotificationEventId =
   | 'rtpOutOfBand'
   | 'manualResultOverride'
@@ -37,7 +35,8 @@ export type NotificationEventId =
   | 'userAccessChanged'
   | 'maintenanceModeToggled'
 
-export type NotificationEventsSettings = Record<NotificationEventId, boolean>
+// Partial: solo están los eventos que el backend conoce; los demás no se muestran.
+export type NotificationEventsSettings = Partial<Record<NotificationEventId, boolean>>
 
 // Todo lo editable de la página de Settings como una sola unidad -- un único Save/Reset para la
 // página entera (pedido explícito), así que el draft y el baseline guardado viven juntos.

@@ -1,11 +1,11 @@
-import type { QuickMoneyBetSelection, QuickMoneyBetType, QuickMoneyGameType } from '../types/quickMoneyBet'
+import type { QuickMoneyBetDraw, QuickMoneyBetSelection, QuickMoneyBetType } from '../types/quickMoneyBet'
 
 type Translate = (key: string) => string
 
 // Único lugar que formatea "qué apuesta es esta" para humanos -- usado tanto por QuickMoneyBetSlip
 // como por QuickMoneyTicketPreviewModal, mismo criterio que rouletteBetLabel.ts.
-export function getGameTypeLabel(gameType: QuickMoneyGameType, t: Translate): string {
-  return t(`quickMoneyBettingView.gameType.${gameType}`)
+export function getBetDrawLabel(draw: QuickMoneyBetDraw, t: Translate): string {
+  return t(`quickMoneyBettingView.gameType.${draw}`)
 }
 
 export function getBetTypeLabel(betType: QuickMoneyBetType, t: Translate): string {
@@ -19,5 +19,5 @@ export function formatDigits(digits: number[]): string {
 }
 
 export function buildQuickMoneyEntryId(selection: QuickMoneyBetSelection): string {
-  return `${selection.gameType}:${selection.betType}:${selection.digits.join('')}`
+  return `${selection.betType}:${selection.digits.join('')}`
 }

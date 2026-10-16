@@ -31,11 +31,9 @@ extend({ Container, Graphics, Text })
 // "acá entró una apuesta" es un pulso de escala (usePulseScale) en el número/monto, no un highlight
 // sostenido -- se probó con glow y quedaba más ruidoso que útil para este panel. Los datos vienen de
 // useBetsSummaryStore -- los mismos totales reales de /api/bets que ya alimentan
-// LiveTableBetsPanel/ResultStatsPanel/LeftStatsSidebar (ver App.tsx: fetchBetsSummary, BETS_LEAD_MS
-// antes del video) -- nada de datos simulados/random acá. Como esa store solo se actualiza una vez
-// por ronda (no hay todavía un feed en vivo de apuestas individuales), este panel arranca en 0 y
-// salta directo al total real de la ronda cuando ese fetch resuelve, en vez de ir subiendo de a
-// eventos individuales -- fiel a lo que el backend realmente expone hoy.
+// LiveTableBetsPanel/ResultStatsPanel/LeftStatsSidebar -- nada de datos simulados/random acá. App.tsx
+// consulta /api/bets cada pocos segundos mientras la ronda está abierta (BETS_POLL_MS), así que los
+// totales van subiendo a medida que entran tickets (animación incremental + pulso en la celda).
 //
 // Layout: mesa real de 3 filas x 12 columnas (columna 0/00 a la izquierda, apuesta de columna
 // "2:1" a la derecha, docenas y apuestas exteriores debajo) -- no una tira plana de 38 celdas.

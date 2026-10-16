@@ -525,3 +525,71 @@
   background: rgba(240, 168, 60, 0.12);
   border-color: rgba(240, 168, 60, 0.35);
 }
+
+.admin-game-events-payout-status[data-status='expired'] {
+  color: var(--admin-text-secondary);
+  background: rgba(140, 165, 190, 0.08);
+  border-color: rgba(140, 165, 190, 0.3);
+}
+
+/* -------------------------------------------------------------------------------------------
+   Cambios manuales del resultado (Overview, debajo de Statistics). */
+.admin-game-events-override-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-game-events-override {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(120, 145, 170, 0.1);
+}
+
+.admin-game-events-override:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.admin-game-events-override-results {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-game-events-override-arrow {
+  color: var(--admin-text-secondary);
+}
+
+.admin-game-events-override-reason {
+  font-size: 13.5px;
+  color: var(--admin-text-primary);
+}
+
+.admin-game-events-override-meta {
+  font-size: 12px;
+  color: var(--admin-text-secondary);
+}
+
+/* Reintento cuando falló la carga del detalle. */
+.admin-game-events-retry-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: none;
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-game-events-retry-btn:hover {
+  border-color: rgba(120, 155, 185, 0.4);
+}

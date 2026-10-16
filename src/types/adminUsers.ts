@@ -1,15 +1,12 @@
-// No existe todavía un modelo de usuario/rol real en el proyecto (ver adminUsersMockData.ts para
-// el detalle de la investigación) -- estos tipos son mock, pensados para reemplazarse por el
-// contrato real de la API el día que exista, sin tocar los componentes (mismo criterio que
-// adminGameEvents.ts/adminSettings.ts).
+// Usuarios del panel (GET/POST/PATCH /users de quick-money-backend, internal/users). Los roles son
+// los del backend: admin y cashier.
 
-export type UserRole = 'admin' | 'operator' | 'viewer'
+export type UserRole = 'admin' | 'cashier'
 
 export type UserStatus = 'active' | 'inactive'
 
-// Colorea el círculo de iniciales cuando el usuario no tiene avatar real (ver UserAvatar.tsx) --
-// la app no soporta avatares/fotos de perfil todavía (confirmado: ni upload ni campo alguno en
-// ningún tipo existente), así que esto siempre se resuelve a iniciales.
+// Color del círculo de iniciales (ver UserAvatar.tsx); el backend no guarda avatares, así que se
+// deriva del id para que cada usuario conserve el suyo.
 export type UserAvatarAccent = 'blue' | 'green' | 'orange' | 'purple'
 
 export interface AdminUser {
@@ -20,15 +17,22 @@ export interface AdminUser {
   role: UserRole
   status: UserStatus
   avatarAccent: UserAvatarAccent
-  // Formato "yyyy-MM-dd HH:mm:ss" (ver utils/time.ts:parseApiDateTime), mismo criterio que
-  // GameEvent.startTime/SystemInformationData.serverTime. null para un usuario recién creado por
-  // Add User -- nunca inició sesión todavía, así que no hay timestamp real que mostrar (evita
-  // inventar un "just now" falso, ver conversación).
+  // ISO 8601; null si nunca inició sesión (el backend registra los logins desde que existe la
+  // página, así que los usuarios anteriores arrancan en null).
   lastLoginAt: string | null
+  // El admin con la sesión actual: no puede desactivarse ni quitarse el rol.
+  isSelf: boolean
 }
 
-// Datos editables del modal Create/Edit -- password solo aplica en modo Create (ver
-// conversación: sin backend de auth real, Edit no expone ningún campo de contraseña).
+// Conteos globales, sin los filtros de la consulta.
+export interface AdminUserStats {
+  total: number
+  active: number
+  inactive: number
+  admins: number
+}
+
+// Datos del formulario Create/Edit. En Edit, password vacío = conservar la contraseña actual.
 export interface AdminUserFormData {
   fullName: string
   username: string

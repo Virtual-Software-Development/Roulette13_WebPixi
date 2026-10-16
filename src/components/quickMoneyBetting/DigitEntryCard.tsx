@@ -1,23 +1,24 @@
 import { useTranslation } from 'react-i18next'
-import type { QuickMoneyGameType } from '../../types/quickMoneyBet'
-import { QUICK_MONEY_DIGIT_COUNT } from '../../types/quickMoneyBet'
+import { QUICK_MONEY_MAX_DIGITS } from '../../types/quickMoneyBet'
 import type { QuickMoneyActiveField } from './quickMoneyBettingTypes'
 import './digitEntryCard.css'
 
 interface DigitEntryCardProps {
-  // 1 grupo (Pick 3 o Pick 4) o 2 (pestaña "Play Both", ver decisión en el plan) -- nunca más.
-  gameTypes: QuickMoneyGameType[]
-  digitsByGame: Record<QuickMoneyGameType, (number | null)[]>
+  // QUICK_MONEY_MAX_DIGITS casilleros, llenos de izquierda a derecha sin huecos.
+  digits: (number | null)[]
   activeField: QuickMoneyActiveField
-  onFocusField: (gameType: QuickMoneyGameType, index: number) => void
+  onFocusField: (index: number) => void
 }
 
-// "1 ENTER NUMBERS" de la referencia -- cada casillero es un botón que fija el foco activo (ver
-// activeField en el workspace); SharedNumberPad escribe en el que esté activo, con auto-advance
-// al siguiente casillero cuando se llena (esa lógica vive en el workspace, acá solo se pinta el
-// estado que ya llega resuelto).
-export function DigitEntryCard({ gameTypes, digitsByGame, activeField, onFocusField }: DigitEntryCardProps) {
+// Paso 1: de 1 a 4 dígitos (0-9), cualquier cantidad vale. Solo se ven los dígitos ya cargados --
+// cada uno aparece al tocarlo en el teclado -- más un casillero opcional "+" para agregar otro, así
+// la cantidad de números de la apuesta se lee de un vistazo (también en el contador). Nada sugiere
+// que haya que llegar a 4.
+export function DigitEntryCard({ digits, activeField, onFocusField }: DigitEntryCardProps) {
   const { t } = useTranslation()
+  const entered = digits.filter((digit): digit is number => digit !== null)
+  const count = entered.length
+  const activeIndex = activeField?.kind === 'digit' ? activeField.index : null
 
   return (
     <div className="qm-card">
@@ -27,36 +28,38 @@ export function DigitEntryCard({ gameTypes, digitsByGame, activeField, onFocusFi
           <h3 className="qm-card-title">{t('quickMoneyBettingView.digitEntry.title')}</h3>
           <p className="qm-card-subtitle">{t('quickMoneyBettingView.digitEntry.hint')}</p>
         </div>
+        <div className="qm-digit-count" data-accent="pick3" data-filled={count > 0} aria-live="polite">
+          {t('quickMoneyBettingView.digitEntry.count', { count })}
+        </div>
       </div>
 
-      {gameTypes.map((gameType) => (
-        <div key={gameType} className="qm-digit-group">
-          {gameTypes.length > 1 && (
-            <span className="qm-digit-group-label" data-accent={gameType}>
-              {t(`quickMoneyBettingView.gameType.${gameType}`)}
-            </span>
-          )}
-          <div className="qm-digit-boxes">
-            {Array.from({ length: QUICK_MONEY_DIGIT_COUNT[gameType] }, (_, index) => {
-              const digit = digitsByGame[gameType][index]
-              const isActive = activeField?.kind === 'digit' && activeField.gameType === gameType && activeField.index === index
-              return (
-                <button
-                  key={index}
-                  type="button"
-                  className="qm-digit-box"
-                  data-accent={gameType}
-                  data-active={isActive}
-                  aria-label={t('quickMoneyBettingView.digitEntry.digitAria', { position: index + 1 })}
-                  onClick={() => onFocusField(gameType, index)}
-                >
-                  {digit ?? ''}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      ))}
+      <div className="qm-digit-boxes" data-accent="pick3">
+        {entered.map((digit, index) => (
+          <button
+            key={index}
+            type="button"
+            className="qm-digit-box"
+            data-active={activeIndex === index}
+            aria-label={t('quickMoneyBettingView.digitEntry.digitAria', { position: index + 1 })}
+            onClick={() => onFocusField(index)}
+          >
+            {digit}
+          </button>
+        ))}
+        {count < QUICK_MONEY_MAX_DIGITS && (
+          <button
+            type="button"
+            className="qm-digit-box qm-digit-box--next"
+            data-active={activeIndex === count}
+            data-optional={count > 0}
+            aria-label={t('quickMoneyBettingView.digitEntry.digitAria', { position: count + 1 })}
+            onClick={() => onFocusField(count)}
+          >
+            <span className="qm-digit-caret" aria-hidden="true" />
+            {count > 0 && activeIndex !== count && <span className="qm-digit-plus">+</span>}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

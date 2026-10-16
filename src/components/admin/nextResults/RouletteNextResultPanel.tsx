@@ -33,7 +33,7 @@ const MONEY_FORMATTER = new Intl.NumberFormat('en-US', { style: 'currency', curr
 
 // El backend exige un motivo para cada cambio de resultado (queda auditado); el panel no lo pide
 // (pedido explícito) y manda siempre este.
-const SUBSTITUTION_REASON = 'Cambio manual desde Next Results'
+const SUBSTITUTION_REASON = 'Manual change from Next Results'
 
 // 0 y 00 van en su propia columna a la izquierda (mesa americana real); 1-36 se listan acá en
 // orden y el grid los acomoda en columnas de 3 (1,2,3 / 4,5,6 / ... / 34,35,36) vía CSS

@@ -1,8 +1,8 @@
 import type { TFunction } from 'i18next'
-import { avgTicketOf, balanceOf, rtpOf, type Totals } from '../../../../data/reportsMockData'
-import type { ReportGame, ReportGameFilter } from '../../../../types/adminReports'
+import type { ReportData, ReportGame, ReportGameFilter } from '../../../../types/adminReports'
 import { formatPoints, formatVariation } from '../../../../utils/reportFormat'
 import type { ReportPeriod, ReportPeriodKind } from '../../../../utils/reportPeriod'
+import { avgTicketOf, balanceOf, rtpOf, type Totals } from './reportData'
 import { column, type DocBlock, type DocCell, type DocColumn, type DocRow, type DocStat, type ValueFormat } from './reportDocument'
 
 export interface BuildContext {
@@ -16,6 +16,8 @@ export interface BuildContext {
   // Archivo de "Todos los juegos" con una sección por juego (ver buildReportDocument.byGameBlocks):
   // el detalle de cada juego ya viene debajo, sin "elige un juego para ver…".
   byGame?: boolean
+  // Lo que se pidió al backend para este reporte (api/adminReports.ts > fetchReportData).
+  data: ReportData
 }
 
 export interface DocumentBody {
@@ -29,7 +31,7 @@ export const SERIES_COLORS = { sales: '#2588ff', prizes: '#c98420', balance: '#1
 
 export const gameLabel = (t: TFunction, game: ReportGame | ReportGameFilter) => t(`admin.reports.filters.gameOptions.${game}`)
 
-// "Rondas" en ruleta, "Sorteos" en Pick, "Rondas/Sorteos" con todos los juegos.
+// "Rondas" en ruleta, "Sorteos" en Quick Money, "Rondas/Sorteos" con todos los juegos.
 export function roundsLabel(t: TFunction, game: ReportGameFilter): string {
   if (game === 'all') return t('admin.reports.views.kpi.roundsOrDraws')
   return t(game === 'roulette' ? 'admin.reports.views.kpi.rounds' : 'admin.reports.views.kpi.draws')

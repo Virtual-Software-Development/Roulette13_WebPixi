@@ -1,29 +1,20 @@
 import { useTranslation } from 'react-i18next'
-import { StatusBadge } from './StatusBadge'
-import { RTP_GAME_ICON_URLS } from '../../data/rtpDashboardMockData'
-import { GAME_LABEL_KEY } from '../../data/rtpGameLabels'
-import type { RtpProfileActivity, RtpProfileActivityStatus } from '../../types/rtpManagement'
-import type { StatusBadgeVariant } from '../../types/rtpDashboard'
+import { GAME_LABEL_KEY, RTP_GAME_ICON_URLS } from '../../data/rtpGameLabels'
+import type { RtpProfileActivity } from '../../types/rtpManagement'
+import { formatProfileDateTime, profileActivePeriod } from './rtpProfileFormat'
 import './rtpScheduling.css'
-
-const STATUS_VARIANT: Record<RtpProfileActivityStatus, StatusBadgeVariant> = {
-  completed: 'neutral',
-  active: 'positive',
-  expired: 'neutral',
-}
 
 interface RtpProfileActivityTableProps {
   activity: RtpProfileActivity[]
 }
 
-// Registro de trazabilidad (pedido explícito: saber qué profile estuvo activo, cuándo, quién lo
-// cambió) -- el proyecto no tiene ningún Audit Log existente para integrar (ver investigación
-// previa), así que es una tabla propia, mismo lenguaje visual que RecentRtpChanges.tsx.
+// Registro de trazabilidad (qué profile se creó/activó/desactivó, cuándo y quién) -- GET
+// /rtp-profile-events. Sin columna de estado: el backend registra eventos, no un estado por evento.
 export function RtpProfileActivityTable({ activity }: RtpProfileActivityTableProps) {
   const { t } = useTranslation()
 
   if (activity.length === 0) {
-    return <p className="admin-rtp-scheduling-empty">{t('admin.rtp.management.scheduling.empty')}</p>
+    return <p className="admin-rtp-scheduling-empty">{t('admin.rtp.management.scheduling.activityEmpty')}</p>
   }
 
   return (
@@ -37,7 +28,6 @@ export function RtpProfileActivityTable({ activity }: RtpProfileActivityTablePro
             <th>{t('admin.rtp.management.scheduling.activityTable.activePeriod')}</th>
             <th>{t('admin.rtp.management.scheduling.activityTable.changedBy')}</th>
             <th>{t('admin.rtp.management.scheduling.activityTable.dateTime')}</th>
-            <th>{t('admin.rtp.management.scheduling.activityTable.status')}</th>
           </tr>
         </thead>
         <tbody>
@@ -51,12 +41,9 @@ export function RtpProfileActivityTable({ activity }: RtpProfileActivityTablePro
                 </span>
               </td>
               <td className="admin-rtp-scheduling-secondary">{t(`admin.rtp.management.scheduling.event.${row.event}`)}</td>
-              <td className="admin-rtp-scheduling-secondary">{row.activePeriod}</td>
-              <td className="admin-rtp-scheduling-secondary">{row.changedBy}</td>
-              <td className="admin-rtp-scheduling-secondary">{row.dateTime}</td>
-              <td>
-                <StatusBadge variant={STATUS_VARIANT[row.status]}>{t(`admin.rtp.management.scheduling.activityStatus.${row.status}`)}</StatusBadge>
-              </td>
+              <td className="admin-rtp-scheduling-secondary">{profileActivePeriod(row.startDate, row.expiresDate, row)}</td>
+              <td className="admin-rtp-scheduling-secondary">{row.changedBy || '—'}</td>
+              <td className="admin-rtp-scheduling-secondary">{formatProfileDateTime(row.dateTime)}</td>
             </tr>
           ))}
         </tbody>

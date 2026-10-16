@@ -1,9 +1,8 @@
 import type { TFunction } from 'i18next'
-import { buildManualSubstitutionsReport } from '../../../../data/manualSubstitutionsMockData'
-import { REPORT_GAMES } from '../../../../data/reportsMockData'
-import type { ReportGameFilter, ReportType } from '../../../../types/adminReports'
+import { REPORT_GAMES } from '../../../../api/adminReports'
+import type { ReportData, ReportGameFilter, ReportType } from '../../../../types/adminReports'
 import { REPORT_TIME_ZONE, reportCurrencyCode } from '../../../../utils/reportFormat'
-import { formatPeriodRange, type ReportPeriod, type ReportPeriodKind } from '../../../../utils/reportPeriod'
+import { comparisonPeriod, formatPeriodRange, type ReportPeriod, type ReportPeriodKind } from '../../../../utils/reportPeriod'
 import { buildFinancialDocument } from './buildFinancialDocument'
 import { buildGameDocument } from './buildGameDocument'
 import { buildRtpDocument } from './buildRtpDocument'
@@ -11,6 +10,7 @@ import { buildSalesActivityDocument } from './buildSalesActivityDocument'
 import { buildSubstitutionsDocument } from './buildSubstitutionsDocument'
 import { buildSummaryDocument } from './buildSummaryDocument'
 import { gameLabel, type BuildContext, type DocumentBody } from './documentHelpers'
+import { buildManualSubstitutionsReport } from './reportData'
 import type { DocBlock, DocPanel, ReportDocument } from './reportDocument'
 
 export interface ReportRequest {
@@ -25,6 +25,8 @@ export interface ReportRequest {
   // Con "Todos los juegos", además del combinado va el reporte completo de cada juego, cada uno en
   // su propia sección.
   byGame?: boolean
+  // Datos del backend para este pedido (api/adminReports.ts > fetchReportData, con el mismo byGame).
+  data: ReportData
 }
 
 export const periodKindOf = (type: ReportType): ReportPeriodKind => (type === 'weeklyReport' ? 'week' : type === 'monthlyReport' ? 'month' : 'range')
@@ -46,7 +48,18 @@ function buildBody(type: ReportType, ctx: BuildContext): DocumentBody {
     case 'rtpAnalysis':
       return buildRtpDocument(ctx)
     case 'manualSubstitutions':
-      return buildSubstitutionsDocument(ctx, buildManualSubstitutionsReport(ctx.period, ctx.now))
+      return buildSubstitutionsDocument(
+        ctx,
+        buildManualSubstitutionsReport({
+          period: ctx.period,
+          previousPeriod: comparisonPeriod(ctx.period, 'range'),
+          filter: ctx.game,
+          activity: ctx.data.activity,
+          substitutions: ctx.data.substitutions ?? [],
+          previousActivity: ctx.data.previousActivity ?? { days: [], hours: [] },
+          previousSubstitutions: ctx.data.previousSubstitutions ?? [],
+        }),
+      )
   }
 }
 
@@ -69,12 +82,11 @@ function byGameBlocks(type: ReportType, ctx: BuildContext, combined: DocBlock[])
   ]
 }
 
-// Arma el documento de un reporte (archivos). Sustituciones manuales es solo ruleta.
+// Arma el documento de un reporte (archivos).
 export function buildReportDocument(request: ReportRequest, t: TFunction, language: string): ReportDocument {
-  const { type, period, kind, now } = request
-  const game: ReportGameFilter = type === 'manualSubstitutions' ? 'roulette' : request.game
+  const { type, period, kind, now, game, data } = request
   const splitByGame = !!request.byGame && game === 'all'
-  const ctx: BuildContext = { t, locale: localeOf(language), period, kind, game, now, byGame: splitByGame }
+  const ctx: BuildContext = { t, locale: localeOf(language), period, kind, game, now, byGame: splitByGame, data }
   const body = buildBody(type, ctx)
 
   const d = (key: string) => t(`admin.reports.document.${key}`)

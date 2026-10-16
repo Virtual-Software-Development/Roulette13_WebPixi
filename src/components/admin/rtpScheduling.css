@@ -129,9 +129,14 @@
     color 150ms ease;
 }
 
-.admin-rtp-scheduling-action:hover {
+.admin-rtp-scheduling-action:hover:not(:disabled) {
   color: var(--admin-text-primary);
   border-color: rgba(120, 155, 185, 0.4);
+}
+
+.admin-rtp-scheduling-action:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 /* -------------------------------------------------------------------------------------------

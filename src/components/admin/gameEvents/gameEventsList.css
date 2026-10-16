@@ -12,13 +12,14 @@
 
 .admin-game-events-list-toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   flex-shrink: 0;
 }
 
 .admin-game-events-search {
   position: relative;
-  flex: 1 1 auto;
+  flex: 1 1 180px;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -160,6 +161,10 @@
   color: var(--admin-text-secondary);
 }
 
+.admin-game-events-empty[data-error='true'] {
+  color: var(--admin-red);
+}
+
 .admin-game-events-footer {
   display: flex;
   align-items: center;
@@ -177,8 +182,8 @@
   white-space: nowrap;
 }
 
-/* Paginación -- real (pagina el array ya filtrado, ver GameEventsList.tsx), no decorativa: solo se
-   renderiza cuando hay más de una página. */
+/* Paginación del backend (GET /rounds): solo se renderiza cuando hay más de una página; muestra la
+   primera, la última y las vecinas de la actual. */
 .admin-game-events-pagination {
   display: flex;
   align-items: center;
@@ -205,6 +210,13 @@
     border-color 150ms ease,
     color 150ms ease,
     background 150ms ease;
+}
+
+.admin-game-events-page-gap {
+  min-width: 16px;
+  text-align: center;
+  color: var(--admin-text-secondary);
+  font-size: 12.5px;
 }
 
 .admin-game-events-page-btn svg {

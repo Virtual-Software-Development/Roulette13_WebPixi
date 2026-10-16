@@ -4,7 +4,7 @@ import { AdminSidebar } from './AdminSidebar'
 import { fetchGameInfo } from '../../api/gameInfo'
 import { useGameConfigStore } from '../../store/useGameConfigStore'
 import { buildMediaUrlOrEmpty } from '../../utils/media'
-import { ADMIN_SIDEBAR_ITEMS } from '../../data/adminDashboardMockData'
+import { ADMIN_SIDEBAR_ITEMS } from '../../data/adminSidebarItems'
 import './adminLayout.css'
 
 interface AdminLayoutProps {

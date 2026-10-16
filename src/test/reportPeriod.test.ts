@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { machineActivity, totalsByDay, totalsByGame, totalsFor } from '../data/reportsMockData'
 import { formatCompactCurrency, formatCurrency, formatVariation, setReportCurrency } from '../utils/reportFormat'
-import { comparisonPeriod, monthPeriods, periodDays, presetPeriod, toIsoDate, weekPeriods } from '../utils/reportPeriod'
+import { comparisonPeriod, monthPeriods, presetPeriod, toIsoDate, weekPeriods } from '../utils/reportPeriod'
 
 // Lunes 12/10/2026 15:30 (hora de Santo Domingo).
 const NOW = new Date(2026, 9, 12, 15, 30)
@@ -54,26 +53,5 @@ describe('report formats', () => {
       setReportCurrency('DOP')
     }
     expect(formatCurrency(1234.5)).toBe('RD$ 1,234.50')
-  })
-})
-
-describe('reports mock data', () => {
-  const period = presetPeriod('last7Days', NOW)
-
-  it('adds up the same totals by day, by game and by machine', () => {
-    const total = totalsFor(period, 'all', NOW)
-    const byDay = totalsByDay(period, 'all', NOW).reduce((s, d) => s + d.totals.sales, 0)
-    const byGame = totalsByGame(period, NOW).reduce((s, g) => s + g.totals.sales, 0)
-    const byMachine = machineActivity(period, 'all', NOW).reduce((s, m) => s + m.totals.sales, 0)
-    expect(byDay).toBeCloseTo(total.sales, 6)
-    expect(byGame).toBeCloseTo(total.sales, 6)
-    expect(byMachine).toBeCloseTo(total.sales, 6)
-    expect(machineActivity(period, 'all', NOW).reduce((s, m) => s + m.totals.tickets, 0)).toBe(total.tickets)
-  })
-
-  it('only counts today up to now', () => {
-    const today = totalsByDay(presetPeriod('today', NOW), 'roulette', NOW)
-    expect(periodDays(presetPeriod('today', NOW))).toHaveLength(1)
-    expect(today[0].totals.rounds).toBe(15 * 60 + 30)
   })
 })

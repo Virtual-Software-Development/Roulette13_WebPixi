@@ -1,15 +1,13 @@
 import type { QuickMoneyBetSlipEntry } from '../types/quickMoneyBetSlip'
 import type { QuickMoneyTicket } from '../types/quickMoneyTicket'
 import { calculateMaxPotentialWin, calculateSlipTotals } from '../utils/quickMoneyPayout'
+import { newTicketCode } from '../api/terminalTicket'
 
-// Sin backend de tickets/impresión todavía -- mismo criterio setTimeout que
-// data/bettingTicketMockData.ts (Roulette). Reemplazar por un POST real (y un job de impresión
-// real) sin tocar QuickMoneyCashierFooter/QuickMoneyTicketPreviewModal.
-const ACTION_DURATION_MS = 700
-
+// Arma el Ticket Preview de Cashier Mode. El número es el código con el que Issue Ticket lo envía
+// al backend (ver QuickMoneyCashierFooter), así el impreso y el guardado coinciden. Todavía no hay
+// job de impresión real.
 function generateTicketNumber(): string {
-  const random = Math.floor(Math.random() * 1_000_000)
-  return `QM-${String(random).padStart(6, '0')}`
+  return `QM${newTicketCode()}`
 }
 
 export function buildTicketPreview(
@@ -17,8 +15,7 @@ export function buildTicketPreview(
   drawNumbers: Partial<Record<'pick3' | 'pick4', string>>,
 ): QuickMoneyTicket {
   const { totalStake } = calculateSlipTotals(entries)
-  // Máximo realmente cobrable (Pick 3 + Pick 4 pueden ganar los dos a la vez, ver
-  // calculateMaxPotentialWin) -- mismo criterio que el ticket de Roulette.
+  // Máximo cobrable: cada apuesta puede ganar por su cuenta (ver calculateMaxPotentialWin).
   const totalPotentialReturn = calculateMaxPotentialWin(entries)
   return {
     id: `qm-ticket-${Date.now()}`,
@@ -30,10 +27,4 @@ export function buildTicketPreview(
     totalPotentialReturn,
     status: 'pending',
   }
-}
-
-export function issueTicket(ticket: QuickMoneyTicket): Promise<QuickMoneyTicket> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve({ ...ticket, status: 'issued' }), ACTION_DURATION_MS)
-  })
 }

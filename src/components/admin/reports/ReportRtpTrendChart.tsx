@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { ReportRtpTrendPoint } from '../../../types/adminReports'
 import './reportRtpTrendChart.css'
 
-// Distinto de components/admin/RtpTrendChart.tsx (ese grafica RTP actual/target POR JUEGO, 6
+// Distinto de components/admin/RtpTrendChart.tsx (ese grafica RTP actual/target POR JUEGO, 4
 // series) -- acá es una sola línea de RTP agregado + su target, namespace propio (mismo criterio
 // que el resto del Admin: secciones no comparten componentes de chart aunque el lenguaje visual
 // sea el mismo). Mismo criterio de "sin librería de charts" que el resto (SVG a mano).
@@ -10,7 +10,7 @@ const CHART_WIDTH = 1000
 const CHART_HEIGHT = 340
 const MARGIN = { top: 12, right: 12, bottom: 30, left: 76 }
 // El eje se ajusta a los datos del período: el RTP de un día puede salir de 90–100% (sobre todo
-// en Pick 3/4). Como mínimo muestra 90–100%.
+// en Quick Money). Como mínimo muestra 90–100%.
 const Y_BASE = { min: 90, max: 100 }
 const MAX_Y_TICKS = 6
 // Etiquetas del eje X: como máximo estas, repartidas (30 días no entran todas).

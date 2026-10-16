@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { QuickMoneyTicket } from '../../types/quickMoneyTicket'
 import { formatCurrency } from '../../utils/currencyFormat'
-import { getBetTypeLabel, getGameTypeLabel, formatDigits } from '../../utils/quickMoneyBetLabel'
+import { getBetDrawLabel, getBetTypeLabel, formatDigits } from '../../utils/quickMoneyBetLabel'
+import { getBetDraw } from '../../utils/quickMoneyPayout'
 import { TicketIcon } from './icons'
 import './quickMoneyTicketPreview.css'
 
@@ -67,8 +68,8 @@ export function QuickMoneyTicketPreviewModal({ ticket, issuing, onCancel, onIssu
         <div className="qm-ticket-preview-rows">
           {ticket.entries.map((entry) => (
             <div key={entry.id} className="qm-ticket-preview-row">
-              <span className="qm-ticket-preview-row-game" data-accent={entry.selection.gameType}>
-                {getGameTypeLabel(entry.selection.gameType, t)}
+              <span className="qm-ticket-preview-row-game" data-accent={getBetDraw(entry.selection)}>
+                {getBetDrawLabel(getBetDraw(entry.selection), t)}
               </span>
               <span className="qm-ticket-preview-row-digits">{formatDigits(entry.selection.digits)}</span>
               <span className="qm-ticket-preview-row-type">{getBetTypeLabel(entry.selection.betType, t)}</span>

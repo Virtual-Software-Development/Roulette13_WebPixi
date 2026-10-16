@@ -2,7 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AdminFormField } from '../AdminFormField'
 import { AdminSelect, type AdminSelectOption } from '../AdminSelect'
-import { USER_ROLES } from '../../../data/adminUsersMockData'
+import { AdminAuthError } from '../../../api/adminSession'
+import { USER_ROLES } from './userRoles'
 import { CloseIcon, EyeIcon, EyeOffIcon } from './icons'
 import type { AdminUserFormData, UserRole, UserStatus } from '../../../types/adminUsers'
 import './adminUsers.css'
@@ -12,7 +13,10 @@ export type UserFormMode = 'create' | 'edit'
 interface UserFormPanelProps {
   mode: UserFormMode
   initialData: AdminUserFormData
+  // El admin editándose a sí mismo: rol y estado quedan fijos (el backend tampoco los acepta).
+  isSelf?: boolean
   onClose: () => void
+  // Rechaza con el error del backend, que se muestra tal cual en el panel.
   onSubmit: (data: AdminUserFormData) => Promise<void>
 }
 
@@ -22,7 +26,7 @@ interface UserFormPanelProps {
 // aria-labelledby del pop-up en pantallas angostas (UsersPage.tsx usa el mismo id).
 const USER_FORM_TITLE_ID = 'admin-users-form-title'
 
-export function UserFormPanel({ mode, initialData, onClose, onSubmit }: UserFormPanelProps) {
+export function UserFormPanel({ mode, initialData, isSelf = false, onClose, onSubmit }: UserFormPanelProps) {
   const { t } = useTranslation()
   const [form, setForm] = useState<AdminUserFormData>(initialData)
   const [showPassword, setShowPassword] = useState(false)
@@ -50,8 +54,12 @@ export function UserFormPanel({ mode, initialData, onClose, onSubmit }: UserForm
     setSubmitting(true)
     try {
       await onSubmit(form)
-    } catch {
-      setError(mode === 'create' ? t('admin.users.modal.createError') : t('admin.users.modal.editError'))
+    } catch (err) {
+      if (err instanceof AdminAuthError) setError(t('admin.users.errors.login'))
+      else {
+        const detail = err instanceof Error && err.message ? err.message : String(err)
+        setError(t(mode === 'create' ? 'admin.users.modal.createError' : 'admin.users.modal.editError', { error: detail }))
+      }
       setSubmitting(false)
     }
   }
@@ -79,6 +87,7 @@ export function UserFormPanel({ mode, initialData, onClose, onSubmit }: UserForm
 
         <AdminFormField
           id="user-form-username"
+          autoComplete="off"
           label={t('admin.users.modal.username')}
           placeholder={t('admin.users.modal.usernamePlaceholder')}
           value={form.username}
@@ -96,33 +105,34 @@ export function UserFormPanel({ mode, initialData, onClose, onSubmit }: UserForm
           onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
         />
 
-        {mode === 'create' && (
-          <AdminFormField
-            id="user-form-password"
-            label={t('admin.users.modal.password')}
-            type={showPassword ? 'text' : 'password'}
-            placeholder={t('admin.users.modal.passwordPlaceholder')}
-            value={form.password}
-            required
-            onChange={(value) => setForm((prev) => ({ ...prev, password: value }))}
-            suffix={
-              <button
-                type="button"
-                className="admin-users-eye-btn"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? t('admin.users.modal.hidePassword') : t('admin.users.modal.showPassword')}
-              >
-                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            }
-          />
-        )}
+        <AdminFormField
+          id="user-form-password"
+          label={mode === 'create' ? t('admin.users.modal.password') : t('admin.users.modal.newPassword')}
+          type={showPassword ? 'text' : 'password'}
+          placeholder={mode === 'create' ? t('admin.users.modal.passwordPlaceholder') : t('admin.users.modal.newPasswordPlaceholder')}
+          description={mode === 'create' ? t('admin.users.modal.passwordHint') : t('admin.users.modal.newPasswordHint')}
+          value={form.password}
+          required={mode === 'create'}
+          autoComplete="new-password"
+          onChange={(value) => setForm((prev) => ({ ...prev, password: value }))}
+          suffix={
+            <button
+              type="button"
+              className="admin-users-eye-btn"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? t('admin.users.modal.hidePassword') : t('admin.users.modal.showPassword')}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          }
+        />
 
         <AdminSelect
           value={form.role}
           options={roleOptions}
           onChange={(value: UserRole) => setForm((prev) => ({ ...prev, role: value }))}
           label={t('admin.users.modal.role')}
+          disabled={isSelf}
         />
 
         <div className="admin-users-status-field">
@@ -132,6 +142,7 @@ export function UserFormPanel({ mode, initialData, onClose, onSubmit }: UserForm
               type="checkbox"
               className="admin-users-toggle-input"
               checked={form.status === 'active'}
+              disabled={isSelf}
               onChange={(e) => setForm((prev) => ({ ...prev, status: (e.target.checked ? 'active' : 'inactive') as UserStatus }))}
             />
             <span className="admin-users-toggle-track">
@@ -140,6 +151,8 @@ export function UserFormPanel({ mode, initialData, onClose, onSubmit }: UserForm
           </label>
           <span className="admin-users-status-field-value">{t(`admin.users.status.${form.status}`)}</span>
         </div>
+
+        {isSelf && <p className="admin-users-form-hint">{t('admin.users.modal.selfHint')}</p>}
 
         {error && <p className="admin-users-form-error">{error}</p>}
 

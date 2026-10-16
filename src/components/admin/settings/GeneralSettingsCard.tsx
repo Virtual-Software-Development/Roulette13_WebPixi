@@ -1,18 +1,20 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AdminFormField } from '../AdminFormField'
-import { AdminSelect, type AdminSelectOption } from '../AdminSelect'
-import { DATE_FORMAT_OPTIONS, LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from '../../../data/adminSettingsMockData'
+import { AdminSelect } from '../AdminSelect'
+import { DATE_FORMAT_OPTIONS, LANGUAGE_OPTIONS, timezoneOptions } from './settingsOptions'
 import './adminSettings.css'
 
 interface GeneralSettingsCardProps {
   timezone: string
   defaultLanguage: string
+  adminLanguage: string
   itemsPerPage: number
   dateFormat: string
   maintenanceMode: boolean
   onChangeTimezone: (value: string) => void
   onChangeDefaultLanguage: (value: string) => void
+  onChangeAdminLanguage: (value: string) => void
   onChangeItemsPerPage: (value: string) => void
   onChangeDateFormat: (value: string) => void
   onToggleMaintenanceMode: () => void
@@ -23,21 +25,20 @@ interface GeneralSettingsCardProps {
 export function GeneralSettingsCard({
   timezone,
   defaultLanguage,
+  adminLanguage,
   itemsPerPage,
   dateFormat,
   maintenanceMode,
   onChangeTimezone,
   onChangeDefaultLanguage,
+  onChangeAdminLanguage,
   onChangeItemsPerPage,
   onChangeDateFormat,
   onToggleMaintenanceMode,
 }: GeneralSettingsCardProps) {
   const { t } = useTranslation()
 
-  // Timezone y Date Format son texto ya formateado (dato, no copy de UI, ver
-  // adminSettingsMockData.ts) -- value y label son el mismo string.
-  const timezoneOptions: AdminSelectOption<string>[] = useMemo(() => TIMEZONE_OPTIONS.map((value) => ({ value, label: value })), [])
-  const dateFormatOptions: AdminSelectOption<string>[] = useMemo(() => DATE_FORMAT_OPTIONS.map((value) => ({ value, label: value })), [])
+  const zoneOptions = useMemo(() => timezoneOptions(timezone), [timezone])
 
   return (
     <section className="admin-panel admin-settings-card">
@@ -53,7 +54,7 @@ export function GeneralSettingsCard({
           orden siga siendo Timezone → Language → Items → Date. */}
       <div className="admin-settings-row">
         <div className="admin-settings-column">
-          <AdminSelect value={timezone} options={timezoneOptions} onChange={onChangeTimezone} label={t('admin.settings.general.siteInformation.timezone')} />
+          <AdminSelect value={timezone} options={zoneOptions} onChange={onChangeTimezone} label={t('admin.settings.general.siteInformation.timezone')} />
           <AdminSelect
             value={defaultLanguage}
             options={LANGUAGE_OPTIONS}
@@ -67,24 +68,34 @@ export function GeneralSettingsCard({
             label={t('admin.settings.general.other.itemsPerPage')}
             type="number"
             min="1"
+            max="500"
             value={itemsPerPage}
             onChange={onChangeItemsPerPage}
           />
-          <AdminSelect value={dateFormat} options={dateFormatOptions} onChange={onChangeDateFormat} label={t('admin.settings.general.other.dateFormat')} />
+          <AdminSelect value={dateFormat} options={DATE_FORMAT_OPTIONS} onChange={onChangeDateFormat} label={t('admin.settings.general.other.dateFormat')} />
         </div>
       </div>
 
-      <div className="admin-settings-toggle-row">
-        <label className="admin-settings-toggle">
-          <input type="checkbox" className="admin-settings-toggle-input" checked={maintenanceMode} onChange={onToggleMaintenanceMode} />
-          <span className="admin-settings-toggle-track">
-            <span className="admin-settings-toggle-thumb" />
-          </span>
-        </label>
-        <div>
-          <p className="admin-settings-toggle-label">{t('admin.settings.general.other.maintenanceMode.label')}</p>
-          <p className="admin-settings-toggle-description">{t('admin.settings.general.other.maintenanceMode.description')}</p>
+      {/* Maintenance Mode a la izquierda y el idioma del panel de admin a la derecha, bajo Date Format. */}
+      <div className="admin-settings-row">
+        <div className="admin-settings-toggle-row">
+          <label className="admin-settings-toggle">
+            <input type="checkbox" className="admin-settings-toggle-input" checked={maintenanceMode} onChange={onToggleMaintenanceMode} />
+            <span className="admin-settings-toggle-track">
+              <span className="admin-settings-toggle-thumb" />
+            </span>
+          </label>
+          <div>
+            <p className="admin-settings-toggle-label">{t('admin.settings.general.other.maintenanceMode.label')}</p>
+            <p className="admin-settings-toggle-description">{t('admin.settings.general.other.maintenanceMode.description')}</p>
+          </div>
         </div>
+        <AdminSelect
+          value={adminLanguage}
+          options={LANGUAGE_OPTIONS}
+          onChange={onChangeAdminLanguage}
+          label={t('admin.settings.general.other.adminLanguage')}
+        />
       </div>
     </section>
   )

@@ -1,30 +1,20 @@
 import { useTranslation } from 'react-i18next'
+import { parseApiDateTime } from '../../utils/time'
 import type { RecentRound } from '../../types/adminDashboard'
 import './recentRoundsPanel.css'
 
+const TIME_FORMATTER = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+
 const GAME_LABEL_KEY: Record<RecentRound['game'], string> = {
   roulette: 'admin.dashboard.gamesActivity.roulette',
-  pick3: 'admin.dashboard.gamesActivity.pick3',
-  pick4: 'admin.dashboard.gamesActivity.pick4',
+  quickMoney: 'admin.dashboard.gamesActivity.quickMoney',
 }
 
-function ResultPills({ round }: { round: RecentRound }) {
-  if (round.game === 'roulette') {
-    const [value] = round.result
-    return (
-      <span className="admin-round-pill" data-tone={value === 0 ? 'green' : 'red'}>
-        {value}
-      </span>
-    )
-  }
-
-  // Pelotas de Pick 3/Pick 4 blancas con letras negras (pedido explícito) -- el color real de
-  // marca de cada juego (verde/amber) queda solo en el nombre del juego, columna GAME.
-  const tone = 'white'
+function DigitPills({ digits }: { digits: number[] }) {
   return (
     <span className="admin-round-pill-group">
-      {round.result.map((value, i) => (
-        <span key={i} className="admin-round-pill" data-tone={tone}>
+      {digits.map((value, i) => (
+        <span key={i} className="admin-round-pill" data-tone="white">
           {value}
         </span>
       ))}
@@ -32,6 +22,27 @@ function ResultPills({ round }: { round: RecentRound }) {
   )
 }
 
+function ResultPills({ round }: { round: RecentRound }) {
+  if (round.game === 'roulette') {
+    return (
+      <span className="admin-round-pill" data-tone={round.result === '0' || round.result === '00' ? 'green' : 'red'}>
+        {round.result}
+      </span>
+    )
+  }
+
+  // Quick Money: Pick 3 y Pick 4 del mismo sorteo, pelotas blancas con letras negras (pedido
+  // explícito) -- el color de marca queda solo en el nombre del juego, columna GAME.
+  return (
+    <span className="admin-round-draw">
+      <DigitPills digits={round.result.pick3} />
+      <span className="admin-round-draw-separator" aria-hidden="true">·</span>
+      <DigitPills digits={round.result.pick4} />
+    </span>
+  )
+}
+
+// Últimas rondas ya sorteadas (GET /rounds?status=COMPLETED) -- nunca la ronda en curso.
 export function RecentRoundsPanel({ rounds }: { rounds: RecentRound[] }) {
   const { t } = useTranslation()
 
@@ -53,7 +64,7 @@ export function RecentRoundsPanel({ rounds }: { rounds: RecentRound[] }) {
         <tbody>
           {rounds.map((round) => (
             <tr key={round.id}>
-              <td className="admin-recent-rounds-time">{round.time}</td>
+              <td className="admin-recent-rounds-time">{TIME_FORMATTER.format(parseApiDateTime(round.time))}</td>
               <td>
                 <span className={`admin-recent-rounds-game admin-recent-rounds-game--${round.game}`}>
                   {t(GAME_LABEL_KEY[round.game])}
@@ -67,6 +78,7 @@ export function RecentRoundsPanel({ rounds }: { rounds: RecentRound[] }) {
           ))}
         </tbody>
       </table>
+      {rounds.length === 0 && <p className="admin-recent-rounds-empty">{t('admin.dashboard.recentRounds.empty')}</p>}
     </section>
   )
 }

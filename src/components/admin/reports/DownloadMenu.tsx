@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useClickOutside } from '../../../hooks/useClickOutside'
 import type { RecentReportFormat, RecentReportRow } from '../../../types/adminReports'
+import { describeReportError } from '../../../hooks/useAdminReports'
 import { downloadRecentReport } from './export/downloadReport'
 import { DownloadIcon } from './icons'
 import './recentReportsPanel.css'
@@ -85,7 +86,7 @@ export function DownloadMenu({ report }: { report: RecentReportRow }) {
                 downloadRecentReport(report, format, t, i18n.language)
                   .catch((error) => {
                     console.error(error)
-                    window.alert(t('admin.reports.document.exportError'))
+                    window.alert(`${t('admin.reports.document.exportError')}\n\n${describeReportError(error, t)}`)
                   })
                   .finally(() => setIsBusy(false))
               }}

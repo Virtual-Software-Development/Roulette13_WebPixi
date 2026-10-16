@@ -22,3 +22,7 @@
   font-weight: 600;
   color: var(--admin-green);
 }
+
+.admin-house-margin-trend[data-direction='down'] {
+  color: var(--admin-red);
+}

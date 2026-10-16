@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { InfoBanner } from '../InfoBanner'
 import { StatusBadge } from '../StatusBadge'
 import { GameEventTabs, type GameEventTab } from './GameEventTabs'
 import { GameEventOverviewTab } from './GameEventOverviewTab'
@@ -8,19 +9,23 @@ import { GameEventResultSummary } from './GameEventResultSummary'
 import { CloseIcon, HourglassIcon } from './icons'
 import { buildMediaUrl } from '../../../utils/media'
 import { parseApiDateTime } from '../../../utils/time'
-import { GAME_EVENT_GAME_VARIANT, GAME_EVENT_STATUS_VARIANT } from '../../../data/adminGameEventsMockData'
+import { GAME_EVENT_GAME_VARIANT, GAME_EVENT_STATUS_VARIANT, gameEventName } from '../../../data/gameEventBadges'
 import { GAME_LABEL_KEY } from '../../../data/rtpGameLabels'
-import type { GameEvent } from '../../../types/adminGameEvents'
+import type { GameEventDetail } from '../../../types/adminGameEvents'
 import './gameEventDetail.css'
 
 const CALENDAR_ICON_URL = buildMediaUrl('Website_svg_icons/33_calendar_white.svg')
 const CLOCK_ICON_URL = buildMediaUrl('Website_svg_icons/30_clock_white.svg')
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-const TIME_FORMATTER = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' })
+const TIME_FORMATTER = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
 
 interface GameEventDetailPanelProps {
-  event: GameEvent | null
+  // null mientras carga, si falló o si no hay ninguno seleccionado.
+  event: GameEventDetail | null
+  loading?: boolean
+  error?: string | null
+  onRetry?: () => void
   // Solo cuando el panel se abre como pop-up (pantallas angostas, ver GameEventsPage.tsx): muestra
   // el botón X en la esquina superior derecha. Inline en desktop el panel siempre está visible.
   onClose?: () => void
@@ -29,36 +34,61 @@ interface GameEventDetailPanelProps {
 // aria-labelledby del pop-up (GameEventsPage.tsx usa el mismo id).
 const GAME_EVENT_DETAIL_TITLE_ID = 'admin-game-events-detail-title'
 
-// Panel derecho (detail) -- se remonta por completo al cambiar `event` (ver key={event.id} en
-// GameEventsPage.tsx): así el tab activo siempre vuelve a su estado inicial al
-// seleccionar otro evento, sin arrastrar estado del anterior.
-export function GameEventDetailPanel({ event, onClose }: GameEventDetailPanelProps) {
+function durationSeconds(event: GameEventDetail): number | null {
+  if (!event.startTime || !event.endTime) return null
+  const ms = parseApiDateTime(event.endTime).getTime() - parseApiDateTime(event.startTime).getTime()
+  return ms >= 0 ? Math.round(ms / 1000) : null
+}
+
+// Panel derecho (detail) -- se remonta por completo al cambiar de evento (ver key en
+// GameEventsPage.tsx): así el tab activo siempre vuelve a su estado inicial.
+export function GameEventDetailPanel({ event, loading = false, error = null, onRetry, onClose }: GameEventDetailPanelProps) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<GameEventTab>('overview')
 
   if (!event) {
     return (
-      <section className="admin-panel admin-game-events-detail admin-game-events-detail--empty">
-        <p className="admin-game-events-empty-title">{t('admin.gameEvents.detail.emptyTitle')}</p>
-        <p className="admin-game-events-empty-description">{t('admin.gameEvents.detail.emptyDescription')}</p>
+      <section className="admin-panel admin-game-events-detail admin-game-events-detail--empty" aria-busy={loading}>
+        {error ? (
+          <>
+            <InfoBanner variant="warning" title={error} />
+            {onRetry && (
+              <button type="button" className="admin-game-events-retry-btn" onClick={onRetry}>
+                {t('admin.gameEvents.retry')}
+              </button>
+            )}
+          </>
+        ) : loading ? (
+          <p className="admin-game-events-empty-description">{t('admin.gameEvents.detail.loading')}</p>
+        ) : (
+          <>
+            <p className="admin-game-events-empty-title">{t('admin.gameEvents.detail.emptyTitle')}</p>
+            <p className="admin-game-events-empty-description">{t('admin.gameEvents.detail.emptyDescription')}</p>
+          </>
+        )}
+        {onClose && (
+          <button type="button" className="admin-game-events-detail-close" aria-label={t('admin.gameEvents.detail.close')} onClick={onClose}>
+            <CloseIcon />
+          </button>
+        )}
       </section>
     )
   }
 
-  const startDate = parseApiDateTime(event.startTime)
+  const startDate = parseApiDateTime(event.startTime ?? event.scheduledAt)
   const endDate = event.endTime ? parseApiDateTime(event.endTime) : null
+  const duration = durationSeconds(event)
 
   return (
     <section className="admin-panel admin-game-events-detail">
       <div className="admin-game-events-detail-header">
         <div>
           <h2 id={GAME_EVENT_DETAIL_TITLE_ID} className="admin-game-events-detail-title">
-            {event.name}
+            {gameEventName(event, t)}
           </h2>
-          {event.description && <p className="admin-game-events-detail-description">{event.description}</p>}
         </div>
         <div className="admin-game-events-detail-header-aside">
-          <span className="admin-game-events-detail-id">#{event.id}</span>
+          <span className="admin-game-events-detail-id">{event.code}</span>
           {onClose && (
             <button type="button" className="admin-game-events-detail-close" aria-label={t('admin.gameEvents.detail.close')} onClick={onClose}>
               <CloseIcon />
@@ -70,10 +100,11 @@ export function GameEventDetailPanel({ event, onClose }: GameEventDetailPanelPro
       <div className="admin-game-events-detail-badges">
         <StatusBadge variant={GAME_EVENT_GAME_VARIANT[event.game]}>{t(GAME_LABEL_KEY[event.game])}</StatusBadge>
         <StatusBadge variant={GAME_EVENT_STATUS_VARIANT[event.status]}>{t(`admin.gameEvents.status.${event.status}`)}</StatusBadge>
+        {event.resultMethod === 'manual' && <StatusBadge variant="purple">{t('admin.gameEvents.resultMethod.manual')}</StatusBadge>}
       </div>
 
       <div className="admin-game-events-summary">
-        <GameEventResultSummary game={event.game} result={event.result} drawnAt={event.resultDrawnAt} />
+        <GameEventResultSummary draw={event} drawnAt={event.resultDrawnAt} />
         <div className="admin-game-events-summary-item">
           <span className="admin-game-events-summary-heading">
             <img src={CALENDAR_ICON_URL} alt="" />
@@ -101,9 +132,11 @@ export function GameEventDetailPanel({ event, onClose }: GameEventDetailPanelPro
             <span className="admin-game-events-summary-label">{t('admin.gameEvents.metadata.duration')}</span>
           </span>
           <span className="admin-game-events-summary-value">
-            {event.durationMinutes !== null
-              ? t('admin.gameEvents.metadata.durationMinutes', { count: event.durationMinutes })
-              : t('admin.gameEvents.metadata.notApplicable')}
+            {duration === null
+              ? t('admin.gameEvents.metadata.notApplicable')
+              : duration < 60
+                ? t('admin.gameEvents.metadata.durationSeconds', { count: duration })
+                : t('admin.gameEvents.metadata.durationMinutesSeconds', { minutes: Math.floor(duration / 60), seconds: duration % 60 })}
           </span>
         </div>
       </div>
@@ -111,7 +144,7 @@ export function GameEventDetailPanel({ event, onClose }: GameEventDetailPanelPro
       <GameEventTabs active={tab} onChange={setTab} />
 
       {tab === 'overview' && <GameEventOverviewTab event={event} />}
-      {tab === 'payouts' && <GameEventPayoutsTab payouts={event.payouts} />}
+      {tab === 'payouts' && <GameEventPayoutsTab payouts={event.payouts} totalWinningTickets={event.statistics?.winningTickets ?? 0} />}
     </section>
   )
 }

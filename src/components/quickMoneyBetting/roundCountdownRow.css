@@ -52,6 +52,11 @@
   color: var(--qm-text-primary);
 }
 
+.qm-round-badge-value[data-closed] {
+  font-size: 14px;
+  color: var(--qm-text-secondary);
+}
+
 .qm-round-badge-draw {
   margin-left: auto;
   flex-shrink: 0;

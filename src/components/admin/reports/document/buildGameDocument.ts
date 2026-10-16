@@ -1,26 +1,19 @@
 import type { TFunction } from 'i18next'
-import {
-  ROULETTE_SLOTS,
-  balanceOf,
-  betTypeTotals,
-  digitFrequency,
-  periodRounds,
-  rouletteFrequency,
-  rouletteGroupSummary,
-  rtpOf,
-  topPlayedNumbers,
-  totalsByGame,
-  totalsFor,
-  type BetTypeTotals,
-  type RoundRecord,
-  type Totals,
-} from '../../../../data/reportsMockData'
-import type { ReportGame } from '../../../../types/adminReports'
+import type { ReportBetType, ReportGame, ReportGameData, ReportRound, ReportRounds } from '../../../../types/adminReports'
 import { formatCount } from '../../../../utils/reportFormat'
 import { SERIES_COLORS, gameLabel, roundsLabel, type BuildContext, type DocumentBody } from './documentHelpers'
+import { ROULETTE_SLOTS, balanceOf, betTypeKey, betTypesOf, rouletteGroupSummary, rtpOf, totalsByGame, totalsFor, type Totals } from './reportData'
 import { column, type DocBlock, type DocPanel, type DocRow } from './reportDocument'
 
 const DETAIL_PAGE_SIZE = 15
+
+const EMPTY_GAME_DATA: ReportGameData = {
+  betTypes: [],
+  rouletteRounds: 0,
+  rouletteFrequency: ROULETTE_SLOTS.map((slot) => ({ slot, count: 0 })),
+  digits: { draws: 0, pick3: [], pick4: [] },
+  topNumbers: [],
+}
 
 function gameRow(key: string, label: string, totals: Totals): DocRow {
   return {
@@ -38,14 +31,17 @@ function gameRow(key: string, label: string, totals: Totals): DocRow {
   }
 }
 
-function betTypeRow(key: string, label: string, r: Pick<BetTypeTotals, 'bets' | 'amount' | 'prizes'>): DocRow {
+export const betTypeLabel = (t: TFunction, row: Pick<ReportBetType, 'game' | 'code' | 'digits' | 'name'>) =>
+  t(`admin.reports.views.betTypes.${betTypeKey(row.game, row.code, row.digits)}`, { defaultValue: row.name })
+
+function betTypeRow(key: string, label: string, r: Pick<ReportBetType, 'bets' | 'amount' | 'prizes'>): DocRow {
   return {
     key,
     cells: { type: label, bets: r.bets, amount: r.amount, prizes: r.prizes, balance: r.amount - r.prizes, rtp: r.amount > 0 ? (r.prizes / r.amount) * 100 : null },
   }
 }
 
-function betTypesPanel(t: TFunction, rows: BetTypeTotals[]): DocPanel {
+function betTypesPanel(t: TFunction, rows: ReportBetType[]): DocPanel {
   const total = rows.reduce((acc, r) => ({ bets: acc.bets + r.bets, amount: acc.amount + r.amount, prizes: acc.prizes + r.prizes }), { bets: 0, amount: 0, prizes: 0 })
   return {
     type: 'panel',
@@ -62,21 +58,21 @@ function betTypesPanel(t: TFunction, rows: BetTypeTotals[]): DocPanel {
           column('balance', t('admin.reports.views.kpi.balance'), 'currency'),
           column('rtp', t('admin.reports.views.kpi.rtp'), 'percent'),
         ],
-        rows: rows.map((r) => betTypeRow(r.type, t(`admin.reports.views.betTypes.${r.type}`), r)),
+        rows: rows.map((r) => betTypeRow(`${r.code}-${r.digits ?? ''}`, betTypeLabel(t, r), r)),
         footer: [betTypeRow('total', t('admin.reports.views.common.total'), total)],
       },
     ],
   }
 }
 
-function roundDetailPanel(ctx: BuildContext, rounds: RoundRecord[], game: ReportGame): DocPanel {
-  const { t } = ctx
+function roundDetailPanel(t: TFunction, rounds: ReportRounds | undefined, game: ReportGame): DocPanel {
   const isRoulette = game === 'roulette'
   const columns = [
     column('id', t(isRoulette ? 'admin.reports.views.game.round' : 'admin.reports.views.game.draw'), 'text'),
     column('at', t('admin.reports.views.game.dateTime'), 'dateTime'),
     column('result', t('admin.reports.views.game.result'), 'text', 'right'),
-    ...(isRoulette ? [column('origin', t('admin.reports.views.game.origin'), 'text'), column('user', t('admin.reports.views.game.user'), 'text')] : []),
+    column('origin', t('admin.reports.views.game.origin'), 'text'),
+    column('user', t('admin.reports.views.game.user'), 'text'),
     column('tickets', t('admin.reports.views.kpi.tickets'), 'count'),
     column('amount', t('admin.reports.views.kpi.amountBet'), 'currency'),
     column('prizes', t('admin.reports.views.kpi.prizes'), 'currency'),
@@ -84,22 +80,24 @@ function roundDetailPanel(ctx: BuildContext, rounds: RoundRecord[], game: Report
   ]
   const manual = t('admin.reports.views.game.manual')
   const automatic = t('admin.reports.views.game.automatic')
+  const items = rounds?.items ?? []
   return {
     type: 'panel',
     key: 'rounds',
     title: t(isRoulette ? 'admin.reports.views.game.roundDetail' : 'admin.reports.views.game.drawDetail'),
+    subtitle: rounds?.truncated ? t('admin.reports.views.game.roundsTruncated', { count: formatCount(items.length) }) : undefined,
     content: [
       {
         type: 'table',
         columns,
-        rows: rounds.map((r) => ({
+        rows: items.map((r: ReportRound) => ({
           key: r.id,
           cells: {
-            id: r.id,
+            id: r.code,
             at: r.at,
             result: { value: r.result, strong: true },
             origin: { value: r.manual ? manual : automatic, tag: r.manual ? 'manual' : 'plain' },
-            user: r.user ?? null,
+            user: r.manual ? r.user : null,
             tickets: r.tickets,
             amount: r.amount,
             prizes: r.prizes,
@@ -107,16 +105,17 @@ function roundDetailPanel(ctx: BuildContext, rounds: RoundRecord[], game: Report
           },
         })),
         pageSize: DETAIL_PAGE_SIZE,
+        emptyText: t('admin.reports.views.game.noRounds'),
       },
     ],
   }
 }
 
 function rouletteBlocks(t: TFunction, ctx: BuildContext): DocBlock[] {
-  const { period, now } = ctx
-  const frequency = rouletteFrequency(period, now)
+  const data = ctx.data.game ?? EMPTY_GAME_DATA
+  const frequency = data.rouletteFrequency
   const groups = rouletteGroupSummary(frequency)
-  const totalRounds = frequency.reduce((sum, f) => sum + f.count, 0)
+  const totalRounds = data.rouletteRounds
   const frequencyPanel: DocPanel = {
     type: 'panel',
     key: 'frequency',
@@ -126,7 +125,7 @@ function rouletteBlocks(t: TFunction, ctx: BuildContext): DocBlock[] {
       {
         type: 'barChart',
         categoryLabel: t('admin.reports.views.game.number'),
-        categories: ROULETTE_SLOTS,
+        categories: frequency.map((f) => f.slot),
         series: [{ key: 'count', label: t('admin.reports.views.game.times'), color: SERIES_COLORS.sales, values: frequency.map((f) => f.count) }],
         reference: { value: totalRounds / 38, label: t('admin.reports.views.game.expected') },
         valueFormat: 'roundCount',
@@ -160,18 +159,22 @@ function rouletteBlocks(t: TFunction, ctx: BuildContext): DocBlock[] {
     ],
   }
   return [
-    betTypesPanel(t, betTypeTotals(period, 'roulette', now)),
+    betTypesPanel(t, betTypesOf(data.betTypes, 'roulette')),
     { type: 'row', panels: [frequencyPanel, groupsPanel] },
-    roundDetailPanel(ctx, periodRounds(period, 'roulette', now).slice().reverse(), 'roulette'),
+    roundDetailPanel(t, ctx.data.rounds?.roulette, 'roulette'),
   ]
 }
 
-function pickBlocks(t: TFunction, ctx: BuildContext, game: 'pick3' | 'pick4'): DocBlock[] {
-  const { period, now } = ctx
-  const top = topPlayedNumbers(period, game, now)
-  const digits = digitFrequency(period, game, now)
+function quickMoneyBlocks(t: TFunction, ctx: BuildContext): DocBlock[] {
+  const data = ctx.data.game ?? EMPTY_GAME_DATA
+  // Una columna por posición: primero las del Pick 3 y después las del Pick 4 del mismo sorteo.
+  const positions = [
+    ...data.digits.pick3.map((counts, p) => ({ key: `p3-${p}`, label: t('admin.reports.views.game.pick3Position', { n: p + 1 }), counts })),
+    ...data.digits.pick4.map((counts, p) => ({ key: `p4-${p}`, label: t('admin.reports.views.game.pick4Position', { n: p + 1 }), counts })),
+  ]
+  const typeLabel = (number: string, code: string) => betTypeLabel(t, { game: 'quickMoney', code, digits: number.length, name: code })
   return [
-    betTypesPanel(t, betTypeTotals(period, game, now)),
+    betTypesPanel(t, betTypesOf(data.betTypes, 'quickMoney')),
     {
       type: 'row',
       panels: [
@@ -185,10 +188,21 @@ function pickBlocks(t: TFunction, ctx: BuildContext, game: 'pick3' | 'pick4'): D
               columns: [
                 column('rank', '#', 'text'),
                 column('number', t('admin.reports.views.game.number'), 'text'),
+                column('types', t('admin.reports.views.game.betType'), 'text'),
                 column('bets', t('admin.reports.views.game.betsCount'), 'count'),
                 column('amount', t('admin.reports.views.kpi.amountBet'), 'currency'),
               ],
-              rows: top.map((r, i) => ({ key: r.number, cells: { rank: String(i + 1), number: { value: r.number, strong: true }, bets: r.bets, amount: r.amount } })),
+              rows: data.topNumbers.map((r, i) => ({
+                key: r.number,
+                cells: {
+                  rank: String(i + 1),
+                  number: { value: r.number, strong: true },
+                  types: r.betTypes.map((code) => typeLabel(r.number, code)).join(', '),
+                  bets: r.bets,
+                  amount: r.amount,
+                },
+              })),
+              emptyText: t('admin.reports.views.game.noBets'),
             },
           ],
         },
@@ -200,29 +214,26 @@ function pickBlocks(t: TFunction, ctx: BuildContext, game: 'pick3' | 'pick4'): D
           content: [
             {
               type: 'table',
-              columns: [
-                column('digit', t('admin.reports.views.game.digit'), 'text'),
-                ...digits.map((_, p) => column(`p${p}`, t('admin.reports.views.game.position', { n: p + 1 }), 'count')),
-              ],
+              columns: [column('digit', t('admin.reports.views.game.digit'), 'text'), ...positions.map((position) => column(position.key, position.label, 'count'))],
               rows: Array.from({ length: 10 }, (_, digit) => ({
                 key: String(digit),
-                cells: { digit: { value: String(digit), strong: true }, ...Object.fromEntries(digits.map((position, p) => [`p${p}`, position[digit]])) },
+                cells: { digit: { value: String(digit), strong: true }, ...Object.fromEntries(positions.map((position) => [position.key, position.counts[digit] ?? 0])) },
               })),
             },
           ],
         },
       ],
     },
-    roundDetailPanel(ctx, periodRounds(period, game, now).slice().reverse(), game),
+    roundDetailPanel(t, ctx.data.rounds?.quickMoney, 'quickMoney'),
   ]
 }
 
 // Reporte de Juego: qué se apuesta (tipos de apuesta), qué sale (frecuencia) y cómo fue cada
 // ronda/sorteo. Con "Todos" solo la tabla por juego (el detalle se ve eligiendo un juego).
 export function buildGameDocument(ctx: BuildContext): DocumentBody {
-  const { t, period, game, now } = ctx
+  const { t, game, data } = ctx
   if (game === 'roulette') return { blocks: rouletteBlocks(t, ctx) }
-  if (game !== 'all') return { blocks: pickBlocks(t, ctx, game) }
+  if (game !== 'all') return { blocks: quickMoneyBlocks(t, ctx) }
 
   return {
     blocks: [
@@ -244,8 +255,8 @@ export function buildGameDocument(ctx: BuildContext): DocumentBody {
               column('balance', t('admin.reports.views.kpi.balance'), 'currency'),
               column('rtp', t('admin.reports.views.kpi.rtp'), 'percent'),
             ],
-            rows: totalsByGame(period, now).map(({ game: g, totals }) => gameRow(g, gameLabel(t, g), totals)),
-            footer: [gameRow('total', t('admin.reports.views.common.total'), totalsFor(period, 'all', now))],
+            rows: totalsByGame(data.activity).map(({ game: g, totals }) => gameRow(g, gameLabel(t, g), totals)),
+            footer: [gameRow('total', t('admin.reports.views.common.total'), totalsFor(data.activity, 'all'))],
           },
         ],
       },

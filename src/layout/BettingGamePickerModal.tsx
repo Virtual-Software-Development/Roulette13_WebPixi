@@ -7,7 +7,7 @@ import type { ActiveBettingGame } from './Header'
 import './bettingGamePicker.css'
 
 // Mismos assets ya usados como identidad de cada juego en Admin (RtpDashboard/NextResults/
-// VideoLibrarySettings, ver adminReportsMockData.ts/rtpDashboardMockData.ts) -- 43_quick-money-
+// VideoLibrarySettings, ver adminReportsConfig.ts/rtpGameLabels.ts) -- 43_quick-money-
 // logo.svg es el único asset del set con un logo real (texto "Quick Money" integrado a la marca),
 // más distintivo que el ícono de dado genérico que ya usa el tab del Header.
 const ROULETTE_ICON_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg')

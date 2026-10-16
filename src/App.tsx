@@ -12,7 +12,7 @@ import { fetchGameInfo } from './api/gameInfo'
 import { applyGameInfo } from './api/applyGameInfo'
 import { fetchDrawResult } from './api/drawResult'
 import { fetchLastResults } from './api/lastResults'
-import { fetchBetsSummary } from './api/betsSummary'
+import { fetchBetsSummary, fetchBetsSummaryOnce } from './api/betsSummary'
 import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
 import { useResultsStore } from './store/useResultsStore'
@@ -46,6 +46,10 @@ const RESULT_LEAD_MS = 1800
 // timer que ya agenda resultTimer/startTimer (scheduleDraw, basado en nextDraw.startTime), no uno
 // nuevo independiente.
 const BETS_LEAD_MS = 10_000
+// Además, mientras la ronda está abierta el lobby vuelve a pedir /api/bets cada pocos segundos, para
+// que el panel LIVE BETS muestre las apuestas a medida que entran (el backend ya devuelve los totales
+// en vivo de la ronda pendiente, calculados de los tickets).
+const BETS_POLL_MS = 3000
 // Margen, contado desde la hora programada del sorteo, para que el video termine de cargar. Pasado
 // esto (o antes, si la carga falla del todo) la ronda se muestra con VideoErrorRound en lugar del
 // video. Corto a propósito: mientras se espera, esta máquina sigue en el lobby y las demás ya
@@ -306,6 +310,42 @@ function App() {
       cancelled = true
     }
   }, [active])
+
+  // Polling de /api/bets (ver BETS_POLL_MS). Solo escribe en el store si la respuesta cambió: así
+  // las celdas del panel solo pulsan cuando de verdad entra una apuesta, y no vuelve a encender los
+  // highlights que clearHighlights() apagó al terminar el video si los totales siguen iguales.
+  useEffect(() => {
+    let stopped = false
+    let inFlight = false
+    let lastSnapshot = ''
+    const poll = () => {
+      if (inFlight) return
+      inFlight = true
+      fetchBetsSummaryOnce()
+        .then((data) => {
+          if (stopped) return
+          const snapshot = JSON.stringify(data)
+          if (snapshot === lastSnapshot) return
+          lastSnapshot = snapshot
+          useBetsSummaryStore.getState().setBetsSummary({
+            liveTableBetsData: toLiveTableBetsData(data),
+            resultStatsData: toResultStatsData(data),
+          })
+        })
+        .catch(() => {
+          // Silencioso: el próximo tick vuelve a intentar.
+        })
+        .finally(() => {
+          inFlight = false
+        })
+    }
+    poll()
+    const intervalId = setInterval(poll, BETS_POLL_MS)
+    return () => {
+      stopped = true
+      clearInterval(intervalId)
+    }
+  }, [])
 
   // Apaga highlighted/showChipStack de LiveTableBetsPanel (pedido explícito: "cuando se oculte
   // apagas el highlight y apagas la moneda también") -- se dispara junto con `active=false`, el

@@ -155,7 +155,9 @@
     "signIn": "Sign in",
     "signingIn": "Signing in…",
     "secureAccessOnly": "Secure access only",
-    "error": "Invalid username or password."
+    "error": "Invalid username or password.",
+    "errorNotAdmin": "This account doesn't have access to the admin panel.",
+    "errorUnavailable": "Can't reach the server. Try again."
   },
   "bettingView": {
     "title": "Roulette Betting",
@@ -242,7 +244,8 @@
     "gameType": {
       "pick3": "Pick 3",
       "pick4": "Pick 4",
-      "playBoth": "Play Both"
+      "both": "Pick 3 + 4",
+      "quickMoney": "Quick Money"
     },
     "numberPad": {
       "title": "Shared Number Pad",
@@ -253,8 +256,10 @@
     },
     "digitEntry": {
       "title": "Enter Numbers",
-      "hint": "Tap this field, then use the keypad.",
-      "digitAria": "Digit {{position}}"
+      "hint": "Enter 1 to 4 numbers (0–9) using the keypad. Any amount of numbers is a valid bet.",
+      "digitAria": "Digit {{position}}",
+      "count_one": "{{count}} number",
+      "count_other": "{{count}} numbers"
     },
     "amountEntry": {
       "title": "Enter Bet Amount",
@@ -263,12 +268,22 @@
       "decrease": "Decrease amount",
       "betTypeLabel": "Bet Type",
       "betType": {
+        "single": "Single",
+        "directo": "Directo",
+        "bolita": "Bolita",
         "straight": "Straight",
         "box": "Box",
-        "combo": "Combo"
+        "pale": "Palé"
       },
-      "betTypeHint": "Select one or more bet types",
-      "addToBetSlip": "Add to Bet Slip"
+      "addToBetSlip": "Add to Bet Slip",
+      "enterAmountFirst": "Enter a bet amount",
+      "betTypeDigits_one": "{{digits}} number",
+      "betTypeDigits_other": "{{digits}} numbers",
+      "betTypeHint_one": "With {{count}} number you can play: {{types}}. Select one or more.",
+      "betTypeHint_other": "With {{count}} numbers you can play: {{types}}. Select one or more.",
+      "betTypeEmptyHint": "Enter at least one number to choose a bet type.",
+      "quickAddAria": "Add ${{amount}} to the bet amount",
+      "quickAddNotEnough": "Not enough balance: this bet would need {{needed}} and you have {{balance}} left after the bets in your slip."
     },
     "betSlip": {
       "title": "Bet Slip ({{count}})",
@@ -284,19 +299,24 @@
     },
     "countdown": {
       "label": "Next {{game}} Draw",
-      "round": "#{{number}}"
+      "round": "#{{number}}",
+      "betsCloseIn": "Bets close in",
+      "betsClosed": "Bets closed",
+      "waitingForDraw": "Waiting for the next draw"
     },
     "player": {
       "balanceLabel": "Balance",
       "placeBet": "Place Bet",
       "placing": "Placing…",
       "insufficientBalance": "Insufficient balance for the current bets.",
-      "betPlacedSuccess": "Bet placed successfully."
+      "betPlacedSuccess": "Bet placed successfully.",
+      "placeBetFailed": "Couldn't place the bet. Try again."
     },
     "cashier": {
       "totalToCollect": "Total to Collect",
       "confirmBet": "Confirm Bet",
       "ticketIssued": "Ticket issued successfully.",
+      "issueFailed": "Couldn't issue the ticket. Try again.",
       "issueTicket": "Issue Ticket",
       "issuing": "Issuing…",
       "ticketPreview": {
@@ -344,9 +364,8 @@
   },
   "admin": {
     "header": {
-      "userName": "Admin",
-      "userRole": "Administrator",
-      "logout": "Log out"
+      "logout": "Log out",
+      "notSignedIn": "Not signed in"
     },
     "nav": {
       "sectionTitle": "Admin Panel",
@@ -384,15 +403,12 @@
       "kpi": {
         "rouletteRounds": "Roulette Rounds",
         "quickMoneyRounds": "Quick Money Rounds",
-        "activeUsers": "Active Users",
         "vsYesterday": "vs. yesterday",
-        "onlineNow": "online now"
+        "activeMachines": "Active Machines"
       },
       "gamesActivity": {
         "title": "Games Activity",
         "roulette": "Roulette",
-        "pick3": "Pick 3",
-        "pick4": "Pick 4",
         "quickMoney": "Quick Money"
       },
       "gamesDistribution": {
@@ -401,7 +417,7 @@
       },
       "gamePerformance": {
         "title": "Game Performance Comparison",
-        "subtitle": "Compare total wagers, payouts, and GGR across games",
+        "subtitle": "Wagers, payouts and GGR of the rounds drawn in the selected period",
         "totalWagers": "Total Wagers",
         "totalPayouts": "Total Payouts",
         "ggr": "GGR",
@@ -416,11 +432,12 @@
       },
       "gameEventsOverTime": {
         "title": "Game Events Over Time",
-        "subtitle": "Completed, failed and cancelled events per hour",
+        "subtitle": "Completed, failed and cancelled rounds per hour",
         "completed": "Completed",
         "failed": "Failed",
         "cancelled": "Cancelled",
-        "total": "Total"
+        "total": "Total",
+        "subtitleDaily": "Completed, failed and cancelled rounds per day"
       },
       "resultFrequency": {
         "title": "Result Frequency",
@@ -444,7 +461,8 @@
         "time": "Time",
         "game": "Game",
         "result": "Result",
-        "roundNumber": "Round #"
+        "roundNumber": "Round #",
+        "empty": "No rounds drawn yet."
       },
       "systemStatus": {
         "title": "System Status",
@@ -456,7 +474,11 @@
         "api": "API",
         "online": "Online",
         "offline": "Offline"
-      }
+      },
+      "loading": "Loading dashboard…",
+      "loadError": "Couldn't load the dashboard: {{error}}",
+      "loginRequired": "Sign in to the admin panel to see the dashboard: the backend requires an admin session.",
+      "retry": "Retry"
     },
     "reports": {
       "title": "Reports",
@@ -494,8 +516,7 @@
         "gameOptions": {
           "all": "All Games",
           "roulette": "Roulette",
-          "pick3": "Pick 3",
-          "pick4": "Pick 4"
+          "quickMoney": "Quick Money"
         }
       },
       "types": {
@@ -593,10 +614,14 @@
           "digitFrequency": "Digit frequency",
           "digitFrequencySubtitle": "Times each digit came up in each position",
           "digit": "Digit",
-          "position": "Position {{n}}",
-          "groups": {"zero": "0", "doubleZero": "00", "red": "Red", "black": "Black", "even": "Even", "odd": "Odd", "dozen1": "1st dozen (1–12)", "dozen2": "2nd dozen (13–24)", "dozen3": "3rd dozen (25–36)", "low": "Low (1–18)", "high": "High (19–36)"}
+          "pick3Position": "Pick 3 · Position {{n}}",
+          "pick4Position": "Pick 4 · Position {{n}}",
+          "groups": {"zero": "0", "doubleZero": "00", "red": "Red", "black": "Black", "even": "Even", "odd": "Odd", "dozen1": "1st dozen (1–12)", "dozen2": "2nd dozen (13–24)", "dozen3": "3rd dozen (25–36)", "low": "Low (1–18)", "high": "High (19–36)"},
+          "roundsTruncated": "Showing the latest {{count}} rounds/draws of the period.",
+          "noRounds": "No rounds drawn in this period.",
+          "noBets": "No bets in this period."
         },
-        "betTypes": {"pleno": "Straight", "caballo": "Split", "calle": "Street", "esquina": "Corner", "cesta": "Basket", "linea": "Six line", "columna": "Column", "docena": "Dozen", "color": "Color", "paridad": "Even/Odd", "altura": "High/Low", "straight": "Straight", "box": "Box", "front_pair": "Front pair", "back_pair": "Back pair"},
+        "betTypes": {"pleno": "Straight", "caballo": "Split", "calle": "Street", "esquina": "Corner", "cesta": "Basket", "linea": "Six line", "columna": "Column", "docena": "Dozen", "color": "Color", "paridad": "Even/Odd", "altura": "High/Low", "box": "Box", "single": "Single", "directo": "Directo", "bolita": "Bolita", "straight3": "Straight (3 digits)", "straight4": "Straight (4 digits)", "pale": "Palé"},
         "activity": {
           "byBanca": "By betting shop",
           "byBancaHint": "Open a shop to see its machines.",
@@ -634,11 +659,12 @@
           "soldAt": "Sold",
           "prize": "Prize",
           "expiresAt": "Expires",
-          "daysLeft": "Days left"
+          "daysLeft": "Days left",
+          "noPending": "No pending prizes at the close of the period."
         },
         "rtp": {
           "byGame": "RTP by game",
-          "byGameHint": "Roulette against its RTP Management target; Pick 3/Pick 4 against the theoretical RTP of their payout table.",
+          "byGameHint": "Each game against its RTP Management target (profile or base target of each day, weighted by rounds).",
           "consolidated": "Consolidated (informative)",
           "history": "RTP changes",
           "oldValue": "Previous value",
@@ -652,9 +678,9 @@
           "change": "RTP change",
           "changeMarker": "RTP change: {{from}} → {{to}} ({{user}})",
           "outOfBand": "The actual RTP ({{rtp}}) is outside the band {{min}} – {{max}}.",
-          "noPayoutTable": "The Pick 3 / Pick 4 payout table is not loaded yet: the theoretical RTP and the difference show \"—\" until it is.",
           "byDraw": "RTP by draw",
-          "drawRtp": "Draw RTP"
+          "drawRtp": "Draw RTP",
+          "noTheoretical": "Quick Money pays by prize tiers that combine Pick 3 and Pick 4, so its theoretical RTP per bet type is not calculated: the theoretical RTP and the difference show \"—\"."
         }
       },
       "peakHours": {
@@ -725,8 +751,8 @@
         },
         "perDay": {
           "title": "Annulments per Day",
-          "subtitle": "Roulette only · rounds whose result was changed in Next Results",
-          "events": "Rounds played",
+          "subtitle": "Rounds and draws whose result was changed in Next Results",
+          "events": "Rounds/draws played",
           "annulments": "Annulments",
           "rate": "Annulment rate"
         },
@@ -775,43 +801,58 @@
         "renameInputLabel": "Report name",
         "renameSave": "Save",
         "renameCancel": "Cancel"
+      },
+      "loading": "Loading report data…",
+      "errors": {
+        "title": "The report data could not be loaded.",
+        "load": "Could not load the data from the backend.",
+        "login": "Sign in to the admin panel to see reports: the backend requires an admin session.",
+        "retry": "Retry"
       }
     },
     "gameEvents": {
-      "subtitle": "Manage and monitor all scheduled and past game events",
-      "search": { "placeholder": "Search events..." },
-      "filter": { "allStatuses": "All Statuses" },
+      "subtitle": "Scheduled, open and drawn rounds of every game",
+      "search": { "placeholder": "Search by round code..." },
+      "filter": { "allStatuses": "All Statuses", "allGames": "All Games" },
       "status": {
         "completed": "Completed",
         "live": "Live",
-        "scheduled": "Scheduled"
+        "scheduled": "Scheduled",
+        "bettingOpen": "Betting Open",
+        "bettingClosed": "Betting Closed",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
       },
       "table": {
-        "id": "ID",
+        "id": "Round",
         "name": "Name",
         "game": "Game",
         "startTime": "Start Time",
         "status": "Status"
       },
       "list": {
-        "showingCount": "Showing {{from}}–{{to}} of {{total}} events",
-        "empty": "No events match your search.",
+        "showingCount": "Showing {{from}}–{{to}} of {{total}} rounds",
+        "empty": "No rounds match your search.",
         "pagination": "Pagination",
         "previousPage": "Previous page",
-        "nextPage": "Next page"
+        "nextPage": "Next page",
+        "loading": "Loading game events…"
       },
       "detail": {
-        "emptyTitle": "Select an event",
-        "emptyDescription": "Choose an event from the list to see its details.",
-        "close": "Close"
+        "emptyTitle": "Select a round",
+        "emptyDescription": "Choose a round from the list to see its details.",
+        "close": "Close",
+        "loading": "Loading round…"
       },
       "metadata": {
         "date": "Date",
         "startTime": "Start Time",
         "endTime": "End Time",
         "duration": "Duration",
-        "durationMinutes": "{{count}} minutes",
-        "notApplicable": "—"
+        "notApplicable": "—",
+        "durationSeconds_one": "{{count}} second",
+        "durationSeconds_other": "{{count}} seconds",
+        "durationMinutesSeconds": "{{minutes}} min {{seconds}} s"
       },
       "tabs": {
         "overview": "Overview",
@@ -819,14 +860,7 @@
       },
       "overview": {
         "statusTimeline": {
-          "title": "Status Timeline",
-          "pending": "Pending",
-          "steps": {
-            "created": "Event Created",
-            "started": "Started",
-            "drawCompleted": "Draw Completed",
-            "resultsPublished": "Results Published"
-          }
+          "title": "Status Timeline"
         },
         "result": {
           "title": "Result",
@@ -837,26 +871,49 @@
           "title": "Statistics",
           "totalBets": "Total Bets",
           "totalPayout": "Total Payout",
-          "uniquePlayers": "Unique Players",
           "status": "Status",
-          "empty": "Statistics not available yet"
+          "empty": "Statistics are available once the round has been drawn",
+          "tickets": "Tickets",
+          "totalWagered": "Total Wagered",
+          "ggr": "GGR",
+          "winningTickets": "Winning Tickets",
+          "rtp": "Round RTP",
+          "resultMethod": "Result",
+          "notDrawn": "This round was not drawn: it has no statistics"
+        },
+        "overrides": {
+          "title": "Manual Result Changes",
+          "changedTo": "changed to",
+          "by": "by {{user}}",
+          "anonymous": "without a session"
         }
       },
       "payouts": {
         "table": {
-          "player": "Player",
           "bet": "Bet Amount",
           "payout": "Payout Amount",
-          "status": "Status"
+          "status": "Status",
+          "ticket": "Ticket",
+          "machine": "Machine"
         },
         "status": {
           "paid": "Paid",
-          "pending": "Pending"
+          "pending": "Pending",
+          "expired": "Expired"
         },
-        "empty": "No payouts recorded for this event."
+        "empty": "No winning tickets in this round.",
+        "truncated": "Showing the {{shown}} largest of {{total}} winning tickets."
       },
       "drawLog": {
         "empty": "No log entries available."
+      },
+      "roundName": "{{game}} #{{number}}",
+      "loadError": "Couldn't load the game events: {{error}}",
+      "loginRequired": "Sign in to the admin panel to see the game events: the backend requires an admin session.",
+      "retry": "Retry",
+      "resultMethod": {
+        "automatic": "Automatic",
+        "manual": "Manual result"
       }
     },
     "shared": {"pagination": "Pagination", "previousPage": "Previous page", "nextPage": "Next page", "rowActions": "Row actions"},
@@ -873,8 +930,6 @@
         "allModules": "All Modules",
         "action": "Action",
         "allActions": "All Actions",
-        "status": "Status",
-        "allStatuses": "All Statuses",
         "clear": "Clear Filters"
       },
       "module": {
@@ -883,22 +938,23 @@
         "rtp": "RTP",
         "users": "Users",
         "events": "Events",
-        "videos": "Videos",
         "reports": "Reports",
         "settings": "Settings",
-        "system": "System"
+        "system": "System",
+        "games": "Games"
       },
-      "status": { "success": "Success", "warning": "Warning", "failed": "Failed" },
       "table": {
         "dateTime": "Date & Time",
         "user": "User",
         "module": "Module",
         "action": "Action",
         "details": "Details",
-        "status": "Status",
         "viewDetails": "View details",
         "empty": "No system logs found. Try changing your filters or date range.",
-        "showingCount": "Showing {{from}}–{{to}} of {{total}} entries"
+        "showingCount": "Showing {{from}}–{{to}} of {{total}} entries",
+        "loading": "Loading system logs…",
+        "loadError": "Could not load system logs: {{error}}",
+        "loginRequired": "Sign in to the admin panel to see the system logs: the backend requires an admin session."
       },
       "detail": {
         "title": "Log Details",
@@ -907,9 +963,64 @@
         "user": "User",
         "module": "Module",
         "action": "Action",
-        "status": "Status",
         "changeLabel": "Change",
-        "detailsLabel": "Details"
+        "detailsLabel": "Details",
+        "hiddenUntilDraw": "Hidden until the round is drawn.",
+        "game": "Game",
+        "round": "Round",
+        "targetUser": "Target User",
+        "rtpProfile": "RTP Profile",
+        "fields": {
+          "targetRtp": "Target RTP"
+        }
+      },
+      "actor": {
+        "system": "System",
+        "machine": "Machine",
+        "machines": "Machines"
+      },
+      "descriptions": {
+        "pendingRead": "Pending result read",
+        "pendingReadFrom": "Pending result read from {{ip}}",
+        "rouletteRoundCreated": "Roulette round created",
+        "rouletteRoundDrawn": "Roulette round drawn: {{result}}",
+        "quickMoneyDrawCreated": "Quick Money draw created",
+        "quickMoneyDrawDrawn": "Quick Money draw drawn: Pick 3 {{pick3}}, Pick 4 {{pick4}}",
+        "lotteryDrawCreated": "Lottery draw created (Pick 3 and Pick 4)",
+        "lotteryDrawDrawn": "Lottery draw drawn: Pick 3 {{pick3}}, Pick 4 {{pick4}}",
+        "engineDecided": "Result decided by the {{engine}} engine (amount bet in the round: {{amount}})",
+        "engineFailed": "The {{engine}} engine could not decide the result; the provisional one stays: {{error}}",
+        "manualResult": "Manual result change: {{reason}}",
+        "reasons": {
+          "nextResults": "Manual change from Next Results"
+        },
+        "rtpUpdated": "{{game}} RTP updated",
+        "rtpProfile": "RTP profile \"{{name}}\": {{event}}",
+        "rtpProfileEvents": {
+          "created": "created",
+          "disabled": "disabled",
+          "enabled": "enabled"
+        },
+        "userCreated": "User {{username}} created ({{role}})",
+        "userUpdated": "User {{username}} updated: {{changes}}",
+        "userDeactivated": "User {{username}} deactivated",
+        "login": "{{username}} signed in",
+        "changes": {
+          "username": "username {{from}} → {{to}}",
+          "fullName": "name \"{{from}}\" → \"{{to}}\"",
+          "email": "email {{from}} → {{to}}",
+          "role": "role {{from}} → {{to}}",
+          "reactivated": "reactivated",
+          "passwordReset": "password reset"
+        },
+        "userCreatedInactive": "User {{username}} created ({{role}}), inactive",
+        "maintenanceOn": "Maintenance mode turned on",
+        "maintenanceOff": "Maintenance mode turned off",
+        "reportDownloaded": "Report downloaded: {{report}} ({{format}}), {{from}} to {{to}}, {{game}}",
+        "rouletteRoundFailed_one": "Roulette round failed: not drawn within {{minutes}} minutes of its scheduled time ({{count}} pending ticket cancelled)",
+        "rouletteRoundFailed_other": "Roulette round failed: not drawn within {{minutes}} minutes of its scheduled time ({{count}} pending tickets cancelled)",
+        "quickMoneyDrawFailed_one": "Quick Money draw failed: not drawn within {{minutes}} minutes of its scheduled time ({{count}} pending ticket cancelled)",
+        "quickMoneyDrawFailed_other": "Quick Money draw failed: not drawn within {{minutes}} minutes of its scheduled time ({{count}} pending tickets cancelled)"
       }
     },
     "settings": {
@@ -920,7 +1031,7 @@
       "resetToDefaults": "Reset to Defaults",
       "resetConfirm": {
         "title": "Reset all settings to defaults?",
-        "description": "General and notification settings on this page will go back to their default values. Nothing is applied until you click Save Changes.",
+        "description": "General settings and notification events go back to their defaults; recipients are kept. Nothing is applied until you click Save Changes.",
         "confirm": "Reset to Defaults",
         "cancel": "Cancel"
       },
@@ -935,7 +1046,8 @@
           "maintenanceMode": {
             "label": "Maintenance Mode",
             "description": "Restrict access to administrators only."
-          }
+          },
+          "adminLanguage": "Admin Panel Language"
         },
         "card": {
           "title": "General Settings",
@@ -953,10 +1065,7 @@
           "title": "Email Notifications",
           "subtitle": "Turn email notifications on or off and choose who receives them.",
           "recipients": "Recipient(s)",
-          "recipientsHelper": "Use comma to separate multiple recipients.",
-          "sendTestEmail": "Send Test Email",
-          "sending": "Sending...",
-          "sentSuccess": "Test email sent"
+          "recipientsHelper": "Use comma to separate multiple recipients."
         },
         "events": {
           "title": "Notification Events",
@@ -974,6 +1083,14 @@
             "maintenanceModeToggled": "Maintenance mode turned on or off"
           }
         }
+      },
+      "loading": "Loading settings…",
+      "loadError": "Could not load settings: {{error}}",
+      "retry": "Try again",
+      "saving": "Saving…",
+      "saveError": "Could not save settings: {{error}}",
+      "errors": {
+        "login": "Sign in to the admin panel to view and change settings: the backend requires an admin session."
       }
     },
     "users": {
@@ -989,7 +1106,7 @@
         "allStatuses": "All Statuses",
         "clear": "Clear filters"
       },
-      "role": { "admin": "Admin", "operator": "Operator", "viewer": "Viewer" },
+      "role": { "admin": "Admin", "cashier": "Cashier" },
       "status": { "active": "Active", "inactive": "Inactive" },
       "stats": { "total": "Total Users", "active": "Active Users", "inactive": "Inactive Users", "admins": "Admin Users" },
       "list": {
@@ -998,7 +1115,8 @@
         "showingCount": "Showing {{from}} to {{to}} of {{total}} users",
         "pagination": "Pagination",
         "previousPage": "Previous page",
-        "nextPage": "Next page"
+        "nextPage": "Next page",
+        "loading": "Loading users..."
       },
       "table": {
         "name": "Name",
@@ -1008,9 +1126,10 @@
         "status": "Status",
         "lastLogin": "Last Login",
         "actions": "Actions",
-        "neverLoggedIn": "Never logged in"
+        "neverLoggedIn": "Never logged in",
+        "you": "You"
       },
-      "actions": { "edit": "Edit user", "delete": "Delete user" },
+      "actions": { "edit": "Edit user", "deactivate": "Deactivate user", "activate": "Activate user", "cannotDeactivateSelf": "You can't deactivate your own user" },
       "modal": {
         "createTitle": "Create User",
         "editTitle": "Edit User",
@@ -1032,14 +1151,30 @@
         "saveSubmit": "Save Changes",
         "creating": "Creating...",
         "saving": "Saving...",
-        "createError": "Unable to create user. Try again.",
-        "editError": "Unable to save changes. Try again."
+        "createError": "Unable to create user: {{error}}",
+        "editError": "Unable to save changes: {{error}}",
+        "passwordHint": "At least 8 characters.",
+        "newPassword": "New Password",
+        "newPasswordPlaceholder": "Leave blank to keep the current one",
+        "newPasswordHint": "Setting a new password signs the user out.",
+        "selfHint": "You can't change your own role or status."
       },
-      "deleteConfirm": {
-        "title": "Delete User",
-        "description": "Are you sure you want to delete {{name}}? This action cannot be undone.",
-        "confirm": "Delete User",
-        "deleting": "Deleting...",
+      "errors": {
+        "login": "Sign in to the admin panel to manage users: the backend requires an admin session.",
+        "load": "Unable to load users: {{error}}",
+        "action": "Unable to update the user: {{error}}"
+      },
+      "feedback": {
+        "created": "User {{name}} created.",
+        "saved": "Changes to {{name}} saved.",
+        "activated": "User {{name}} activated.",
+        "deactivated": "User {{name}} deactivated and signed out."
+      },
+      "deactivateConfirm": {
+        "title": "Deactivate User",
+        "description": "{{name}} will be signed out and won't be able to log in. You can reactivate the account at any time.",
+        "confirm": "Deactivate",
+        "deactivating": "Deactivating...",
         "cancel": "Cancel"
       }
     },
@@ -1079,7 +1214,8 @@
         "pick3": "Pick 3",
         "pick4": "Pick 4",
         "pick3Subtitle": "Next Pick 3 Result",
-        "pick4Subtitle": "Next Pick 4 Result"
+        "pick4Subtitle": "Next Pick 4 Result",
+        "noPendingDraw": "No pending Quick Money draw right now."
       },
       "updatePick3": "Update Pick 3 Result",
       "updatePick4": "Update Pick 4 Result",
@@ -1101,23 +1237,26 @@
       "target": "Target",
       "status": {
         "withinBand": "Within Band",
-        "aboveTarget": "Above Target",
-        "onTarget": "On Target"
+        "aboveBand": "Above Band",
+        "belowBand": "Below Band",
+        "noData": "No Data"
       },
       "metrics": {
         "rouletteTitle": "Roulette RTP",
-        "pick3Title": "Pick 3 RTP",
-        "pick4Title": "Pick 4 RTP"
+        "quickMoneyTitle": "Quick Money RTP",
+        "windowRounds_one": "Measured over {{formatted}} completed round",
+        "windowRounds_other": "Measured over {{formatted}} completed rounds"
       },
       "houseMargin": {
         "title": "House Margin",
-        "trendLabel": "vs. previous 7 days"
+        "trendLabel": "vs. previous 7 days",
+        "lastSevenDays": "Last 7 days"
       },
       "manualOverrides": {
         "title": "Manual Overrides",
-        "activeOverrides": "active overrides"
+        "lastSevenDays": "manual results in the last 7 days"
       },
-      "stability": {"title": "RTP Stability", "subtitle": "Cumulative RTP vs. rounds played, against the luck-expected range", "correctionWindow": "Correction window", "status": {"within": "Within expected range", "withinDetail": "Gap from target is normal variance.", "outside": "Outside expected range", "outsideDetail": "Gap is larger than luck explains."}, "tooltip": {"after": "After {{rounds}} rounds", "rtp": "RTP", "expected": "Expected range"}, "legend": {"cumulative": "Cumulative RTP", "expected": "Expected range (95%)", "target": "Target {{value}}%"}},
+      "stability": {"title": "RTP Stability", "subtitle": "Cumulative RTP vs. rounds played, against the luck-expected range", "status": {"within": "Within expected range", "withinDetail": "Gap from target is normal variance.", "outside": "Outside expected range", "outsideDetail": "Gap is larger than luck explains."}, "tooltip": {"after": "After {{rounds}} rounds", "rtp": "RTP", "expected": "Expected range"}, "legend": {"cumulative": "Cumulative RTP", "expected": "Expected range (95%)", "target": "Target {{value}}%"}, "empty": "No completed rounds with bets in the correction window yet.", "notEnoughRounds": "At least 2 rounds with bets are needed to estimate the expected range."},
       "trendChart": {
         "title": "Actual vs Target RTP",
         "actualSuffix": "(Actual)",
@@ -1128,7 +1267,8 @@
           "twoWeeks": "2 Weeks",
           "threeWeeks": "3 Weeks",
           "oneMonth": "1 Month"
-        }
+        },
+        "empty": "No bets in completed rounds in this period."
       },
       "currentBands": {
         "title": "Current Bands",
@@ -1145,7 +1285,9 @@
         "status": "Status",
         "autoApplied": "Auto Applied",
         "applied": "Applied",
-        "showingCount": "Showing {{shown}} of {{total}} changes"
+        "showingCount": "Showing {{shown}} of {{total}} changes",
+        "system": "System",
+        "empty": "No RTP target changes yet."
       },
       "importantNote": {
         "title": "Important Note",
@@ -1179,12 +1321,11 @@
         },
         "maxCorrection": { "label": "Max Correction Per Event", "description": "Maximum relative change per event." },
         "smoothingFactor": { "label": "Smoothing Factor", "description": "Weight for recent results (0 - 1)." },
-        "effectiveDate": { "label": "Effective Date", "description": "When these settings will take effect." },
+        "effectiveDate": { "label": "Effective Date", "currentDescription": "Date the current settings took effect. Saved changes apply immediately." },
         "infoBanner": {
           "title": "Changes will be applied to future rounds only.",
           "description": "Current ongoing games will not be affected."
         },
-        "resetToDefaults": "Reset to Defaults",
         "saveSettings": "Save Settings",
         "confirm": {
           "title": "Confirm RTP Settings Change",
@@ -1194,16 +1335,16 @@
           "effectiveDate": "Effective Date",
           "cancel": "Cancel",
           "confirm": "Confirm & Save",
-          "description": "You are about to change the RTP settings for this game. This affects real rounds from the effective date onward."
+          "descriptionImmediate": "You are about to change the RTP settings for this game. This affects real rounds starting with the next ones.",
+          "immediately": "Immediately (next rounds)"
         },
         "lock": {
-          "badge": "Locked",
-          "reason": "Temporarily locked. You can review its current value, but cannot currently edit it."
+          "badge": "Locked"
         },
         "save": {
-          "noChangesReason": "No changes to save yet.",
-          "allLockedReason": "All editable settings are temporarily locked."
-        }
+          "noChangesReason": "No changes to save yet."
+        },
+        "saveError": "Settings could not be saved: {{message}}"
       },
       "simulator": {
         "title": "RTP Simulator",
@@ -1276,8 +1417,7 @@
           "event": "Event",
           "activePeriod": "Active Period",
           "changedBy": "Changed By",
-          "dateTime": "Date / Time",
-          "status": "Status"
+          "dateTime": "Date / Time"
         },
         "actionsMenu": {
           "disable": "Disable",
@@ -1291,18 +1431,13 @@
           "disabled": "Disabled",
           "replaced": "Replaced"
         },
-        "activityStatus": {
-          "completed": "Completed",
-          "active": "Active",
-          "expired": "Expired"
-        },
         "event": {
           "activated": "Activated",
           "expired": "Expired",
           "disabled": "Disabled",
           "replaced": "Replaced",
-          "scheduled": "Scheduled",
-          "edited": "Edited"
+          "edited": "Edited",
+          "created": "Created"
         },
         "form": {
           "close": "Close",
@@ -1321,8 +1456,19 @@
           "save": "Save Profile",
           "overlapWarningTitle": "This game already has an active or scheduled profile.",
           "overlapWarningDescription": "Check for overlapping schedules before saving.",
-          "days": { "mon": "Mon", "tue": "Tue", "wed": "Wed", "thu": "Thu", "fri": "Fri", "sat": "Sat", "sun": "Sun" }
-        }
+          "days": { "mon": "Mon", "tue": "Tue", "wed": "Wed", "thu": "Thu", "fri": "Fri", "sat": "Sat", "sun": "Sun" },
+          "saveError": "The profile could not be saved: {{message}}"
+        },
+        "daily": "Daily",
+        "activityEmpty": "No profile activity yet.",
+        "toggleError": "The profile could not be updated: {{message}}"
+      },
+      "loading": "Loading…",
+      "retry": "Retry",
+      "saving": "Saving…",
+      "errors": {
+        "login": "Sign in to the admin panel to manage RTP: the backend requires an admin session.",
+        "load": "Could not load the data from the backend."
       }
     }
   }
@@ -1343,6 +1489,25 @@
       "description": "This terminal lost its internet connection. Check the network cable or Wi-Fi; the screen comes back on its own when the connection returns."
     }
   },
+  "betSlipActions": {
+    "rebet": "Rebet",
+    "double": "Double",
+    "board": {
+      "rebetHint": "Place your previous bet on the board again",
+      "doubleHint": "Double every bet on the board",
+      "noPreviousBet": "There's no previous bet to repeat yet.",
+      "nothingToDouble": "Place some chips first: there's nothing to double.",
+      "notEnoughToDouble": "Not enough balance to double: you'd need {{needed}} and your balance is {{balance}}.",
+      "notEnoughToRebet": "Not enough balance to repeat your previous bet: it needs {{needed}} and your balance is {{balance}}."
+    },
+    "form": {
+      "rebetHint": "Fill in the form with the last bet you added",
+      "doubleHint": "Double the bet amount",
+      "noPreviousBet": "There's no previous bet to repeat yet.",
+      "nothingToDouble": "Enter a bet amount and a bet type first: there's nothing to double.",
+      "notEnoughToDouble": "Not enough balance to double: this bet would need {{needed}} and you have {{balance}} left after the bets in your slip.",
+      "notEnoughToRebet": "Not enough balance to repeat your last bet: it needs {{needed}} and you have {{balance}} left after the bets in your slip."
+    }
   "sync": {
     "title": "Syncing",
     "subtitle": "Joining the current round…"

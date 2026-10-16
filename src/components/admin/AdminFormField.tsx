@@ -39,6 +39,8 @@ interface AdminFormFieldProps {
   // Intento de edición (click o tecla que no sea Tab) sobre el input -- ej. un campo readOnly
   // bloqueado muestra por qué no se puede editar (ver RtpSettingsPanel.tsx).
   onEditAttempt?: () => void
+  // p.ej. "new-password": que el navegador no autocomplete la contraseña guardada del admin.
+  autoComplete?: string
 }
 
 function ChevronUpIcon() {
@@ -82,6 +84,7 @@ export function AdminFormField({
   labelAddon,
   describedById,
   onEditAttempt,
+  autoComplete,
 }: AdminFormFieldProps) {
   return (
     <div className="admin-form-field" data-emphasized={emphasized} data-readonly={readOnly} data-disabled={disabled}>
@@ -106,6 +109,7 @@ export function AdminFormField({
           readOnly={readOnly}
           disabled={disabled}
           aria-describedby={describedById}
+          autoComplete={autoComplete}
           onChange={onChange ? (e) => onChange(e.target.value) : undefined}
           onClick={onEditAttempt}
           onKeyDown={onEditAttempt ? (e) => e.key !== 'Tab' && e.key !== 'Shift' && onEditAttempt() : undefined}

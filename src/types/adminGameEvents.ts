@@ -1,31 +1,33 @@
+import type { QuickMoneyDrawResult } from './adminDashboard'
 import type { RtpGame } from './rtpDashboard'
 
-// Reutiliza RtpGame ('roulette'|'pick3'|'pick4') -- mismo set de juegos que RTP Management/Next
+// Reutiliza RtpGame ('roulette'|'quickMoney') -- mismo set de juegos que RTP Management/Next
 // Results, no existe un juego distinto para Game Events (ver GAME_LABEL_KEY/RTP_GAME_ICON_URLS).
 export type GameEventGame = RtpGame
 
-export type GameEventStatus = 'completed' | 'live' | 'scheduled'
+// round_status del backend (GET /rounds de quick-money-backend).
+export type GameEventStatus = 'scheduled' | 'bettingOpen' | 'bettingClosed' | 'live' | 'completed' | 'failed' | 'cancelled'
 
-export type GameEventTimelineStepId = 'created' | 'started' | 'drawCompleted' | 'resultsPublished'
-
-export interface GameEventTimelineStep {
-  id: GameEventTimelineStepId
-  // null = etapa todavía no alcanzada (ver GameEventStatusTimeline.tsx) -- nunca se inventa un
-  // timestamp para una etapa futura.
-  timestamp: string | null
-}
-
+// Solo de rondas ya sorteadas (COMPLETED): el admin nunca ve apuestas de una ronda abierta.
 export interface GameEventStatistics {
-  totalBets: number
-  totalPayout: number
-  uniquePlayers: number
+  tickets: number
+  bets: number
+  wagered: number
+  paid: number
+  ggr: number
+  winningBets: number
+  winningTickets: number
+  // % pagado sobre apostado; null sin apuestas.
+  rtp: number | null
 }
 
-export type GameEventPayoutStatus = 'paid' | 'pending'
+export type GameEventPayoutStatus = 'paid' | 'pending' | 'expired'
 
+// Un ticket ganador -- los tickets son anónimos (no hay jugadores), el código viene enmascarado.
 export interface GameEventPayoutRow {
   id: string
-  player: string
+  ticket: string
+  machine: string
   betAmount: number
   payoutAmount: number
   status: GameEventPayoutStatus
@@ -34,28 +36,41 @@ export interface GameEventPayoutRow {
 export interface GameEventLogEntry {
   id: string
   timestamp: string
-  // Texto ya formateado, no un i18n key -- mismo criterio que RtpProfile.scheduleSummary/
-  // RtpProfileActivity.changedBy (son datos, no copy de UI).
+  // Texto que guarda el backend (log.description), no un i18n key.
   message: string
 }
 
-export interface GameEvent {
+export interface GameEventOverride {
+  originalResult: GameEventDraw
+  newResult: GameEventDraw
+  reason: string
+  // null = cambiado desde Next Results sin sesión.
+  user: string | null
+  createdAt: string
+}
+
+// null mientras la ronda no se sorteó. Roulette: la casilla ('0'..'36', '00'); Quick Money: el
+// Pick 3 y el Pick 4 del mismo sorteo.
+export type GameEventDraw = { game: 'roulette'; result: string | null } | { game: 'quickMoney'; result: QuickMoneyDrawResult | null }
+
+interface GameEventBase {
   id: string
-  name: string
-  game: GameEventGame
+  code: string
+  // Número del sorteo del día ("0533").
+  number: string
   status: GameEventStatus
-  description?: string
-  date: string
-  startTime: string
+  scheduledAt: string
+  startTime: string | null
   endTime: string | null
-  durationMinutes: number | null
-  // null mientras el evento no tiene resultado (scheduled/live) -- el tamaño del array depende
-  // del juego (1 para Roulette, 3 para Pick 3, 4 para Pick 4), nunca se asume una cantidad fija.
-  result: number[] | null
   resultDrawnAt: string | null
-  timeline: GameEventTimelineStep[]
-  // null mientras el evento no tiene estadísticas todavía (scheduled/live).
+  resultMethod: 'automatic' | 'manual' | null
+}
+
+export type GameEvent = GameEventBase & GameEventDraw
+
+export type GameEventDetail = GameEvent & {
   statistics: GameEventStatistics | null
+  overrides: GameEventOverride[]
   payouts: GameEventPayoutRow[]
   logEntries: GameEventLogEntry[]
 }

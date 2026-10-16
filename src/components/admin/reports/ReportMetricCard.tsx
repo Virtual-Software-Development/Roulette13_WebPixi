@@ -31,12 +31,14 @@ export function ReportMetricCard({ data }: { data: ReportKpiCardData }) {
       <div className="admin-report-metric-card-body">
         <span className="admin-report-metric-card-title">{t(data.titleKey)}</span>
         <span className="admin-report-metric-card-value">{data.value}</span>
-        <div className="admin-report-metric-card-trend">
-          <span className={`admin-report-metric-card-trend-value admin-report-metric-card-trend-value--${data.trendTone}`}>
-            {data.trend}
-          </span>
-          <span className="admin-report-metric-card-trend-label">{t(data.trendLabelKey)}</span>
-        </div>
+        {data.trend && data.trendTone && data.trendLabelKey && (
+          <div className="admin-report-metric-card-trend">
+            <span className={`admin-report-metric-card-trend-value admin-report-metric-card-trend-value--${data.trendTone}`}>
+              {data.trend}
+            </span>
+            <span className="admin-report-metric-card-trend-label">{t(data.trendLabelKey)}</span>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -5,25 +5,19 @@ import { useBetSlipStore } from '../../store/useBetSlipStore'
 import { calculateSlipTotals } from '../../utils/rouletteBetPayout'
 import { formatMoney } from '../../utils/moneyFormat'
 import { useBettingRoundPhase } from '../../hooks/useBettingRoundPhase'
+import { placeRouletteTicket } from '../../api/rouletteTicket'
 import './playerPanel.css'
 
-// Sin backend de apuestas/balance real todavía (ver investigación: useGameConfigStore.balance no
-// lo escribe ningún endpoint hoy) -- mismo criterio mock que el resto del Admin (setTimeout +
-// comentario explícito). Confirmar debita el balance vía el setter genérico ya existente
-// (setGameConfig), sin tocar la forma del store -- ese es el único punto a reemplazar el día que
-// exista un POST /api/placeBet real.
-const ACTION_DURATION_MS = 700
-
-function simulateAction(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ACTION_DURATION_MS))
-}
+// Place Bet sends the slip as a real ticket (POST /api/tickets, see api/rouletteTicket.ts) on the
+// round open for betting. The balance is still local only (no balance backend yet): it is debited
+// here once the backend accepts the ticket.
 
 export function PlayerPanel() {
   const { t } = useTranslation()
   const balance = useGameConfigStore((state) => state.balance)
   const setGameConfig = useGameConfigStore((state) => state.setGameConfig)
   const entries = useBetSlipStore((state) => state.entries)
-  const clearAll = useBetSlipStore((state) => state.clearAll)
+  const markPlaced = useBetSlipStore((state) => state.markPlaced)
   const { phase } = useBettingRoundPhase()
   const [submitting, setSubmitting] = useState(false)
   const [justPlaced, setJustPlaced] = useState(false)
@@ -47,9 +41,16 @@ export function PlayerPanel() {
       return
     }
     setSubmitting(true)
-    await simulateAction()
+    try {
+      await placeRouletteTicket(entries)
+    } catch (err) {
+      // The slip stays as it was, so it's clear nothing was placed.
+      console.error('[betting] could not place the ticket:', err instanceof Error ? err.message : err)
+      setSubmitting(false)
+      return
+    }
     setGameConfig({ balance: balance - totalStake })
-    clearAll()
+    markPlaced()
     setSubmitting(false)
     setJustPlaced(true)
     setTimeout(() => setJustPlaced(false), 2500)

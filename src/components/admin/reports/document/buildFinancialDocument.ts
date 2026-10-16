@@ -1,23 +1,12 @@
 import type { TFunction } from 'i18next'
-import {
-  BANCAS,
-  CONSORCIOS,
-  MACHINES,
-  addFinancial,
-  bancaById,
-  cashNetOf,
-  emptyFinancial,
-  expiredTickets,
-  financialByGame,
-  financialByMachine,
-  pendingTickets,
-  totalsByDay,
-  type FinancialRow,
-  type PrizeTicket,
-} from '../../../../data/reportsMockData'
+import type { ReportMachine, ReportMachinesData, ReportPrizeTicket, ReportUnpaidPrizes } from '../../../../types/adminReports'
 import { formatCount, formatDate, formatDayMonth } from '../../../../utils/reportFormat'
 import { SERIES_COLORS, gameLabel, type BuildContext, type DocumentBody } from './documentHelpers'
+import { addFinancial, bancasOf, cashNetOf, emptyFinancial, financialByGame, financialByMachine, totalsByDay, type FinancialRow } from './reportData'
 import { column, type DocBlock, type DocColumn, type DocRow, type DocStat } from './reportDocument'
+
+const EMPTY_MACHINES: ReportMachinesData = { machines: [], totals: [], amountRanges: [] }
+const EMPTY_PRIZES = { count: 0, amount: 0, items: [], truncated: false }
 
 const EXPIRING_SOON_DAYS = 7
 const LIST_PAGE_SIZE = 10
@@ -49,32 +38,45 @@ function moneyRow(key: string, label: string, consorcio: string, row: FinancialR
 // Reporte Financiero: venta, premios, balance, pagado, pendiente, vencido y efectivo neto, en
 // jerarquía consorcio -> banca -> máquina, más las listas de tickets pendientes y vencidos.
 export function buildFinancialDocument(ctx: BuildContext): DocumentBody {
-  const { t, period, game, now } = ctx
-  const byMachine = financialByMachine(period, game, now)
+  const { t, period, game, data } = ctx
+  const machinesData = data.machines ?? EMPTY_MACHINES
+  const unpaid: ReportUnpaidPrizes = data.unpaidPrizes ?? { cutoff: period.end, pending: EMPTY_PRIZES, expired: EMPTY_PRIZES }
+  const byMachine = financialByMachine(machinesData, game)
   const total = emptyFinancial()
   for (const row of byMachine.values()) addFinancial(total, row)
-  const days = totalsByDay(period, game, now)
-  const pending = pendingTickets(period, game, now)
-  const expired = expiredTickets(period, game, now)
+  const days = totalsByDay(data.activity, period, game)
+  const ofGame = (ticket: ReportPrizeTicket) => game === 'all' || ticket.game === game
+  const pending = unpaid.pending.items.filter(ofGame)
+  const expired = unpaid.expired.items.filter(ofGame)
+  // Con un juego, el total del backend (de ambos juegos) no aplica: se cuenta la lista.
+  const pendingCount = game === 'all' ? unpaid.pending.count : pending.length
+  const expiredCount = game === 'all' ? unpaid.expired.count : expired.length
   const totalRow = moneyRow('total', t('admin.reports.views.common.total'), '', total)
+  const machineById = new Map(machinesData.machines.map((m) => [m.id, m]))
 
   // Por banca, con subtotal por consorcio; cada banca trae sus máquinas como filas hijas.
-  const bancaRows: DocRow[] = CONSORCIOS.flatMap((consorcio) => {
+  const bancas = bancasOf(machinesData.machines)
+  const consorcios = [...new Map(bancas.map((b) => [b.consorcio.id, b.consorcio])).values()]
+  const bancaRows: DocRow[] = consorcios.flatMap((consorcio) => {
     const subtotal = emptyFinancial()
-    const rows = BANCAS.filter((b) => b.consorcioId === consorcio.id).map((banca) => {
-      const machines = MACHINES.filter((m) => m.bancaId === banca.id)
-      const row = emptyFinancial()
-      machines.forEach((m) => addFinancial(row, byMachine.get(m.id)!))
-      addFinancial(subtotal, row)
-      return moneyRow(banca.id, banca.name, consorcio.name, row, { children: machines.map((m) => moneyRow(m.id, m.code, '', byMachine.get(m.id)!)) })
-    })
+    const rows = bancas
+      .filter((b) => b.consorcio.id === consorcio.id)
+      .map(({ banca, machines }) => {
+        const row = emptyFinancial()
+        machines.forEach((m) => addFinancial(row, byMachine.get(m.id)!))
+        addFinancial(subtotal, row)
+        return moneyRow(banca.id, banca.name, consorcio.name, row, { children: machines.map((m) => moneyRow(m.id, m.name, '', byMachine.get(m.id)!)) })
+      })
     return [...rows, moneyRow(`sub-${consorcio.id}`, t('admin.reports.views.financial.subtotal', { name: consorcio.name }), '', subtotal, { kind: 'subtotal' })]
   })
 
-  const closeDate = period.end
-  const daysLeft = (ticket: PrizeTicket) => Math.round((ticket.expiresAt.getTime() - closeDate.getTime()) / MS_PER_DAY)
+  const closeDate = unpaid.cutoff
+  const daysLeft = (ticket: ReportPrizeTicket) => Math.max(0, Math.ceil((ticket.expiresAt.getTime() - closeDate.getTime()) / MS_PER_DAY))
   const expiringSoon = pending.filter((p) => daysLeft(p) <= EXPIRING_SOON_DAYS).length
-  const location = (ticket: PrizeTicket) => `${bancaById(ticket.machine.bancaId).name} · ${ticket.machine.code}`
+  const location = (ticket: ReportPrizeTicket) => {
+    const machine: ReportMachine | undefined = machineById.get(ticket.machineId)
+    return machine ? `${machine.banca.name} · ${machine.name}` : ticket.machineId
+  }
 
   const totals = moneyValues(total)
   const stats: DocStat[] = MONEY_KEYS.map((key) => ({ key, label: t(`admin.reports.views.kpi.${key}`), value: totals[key], format: 'currency' }))
@@ -90,7 +92,7 @@ export function buildFinancialDocument(ctx: BuildContext): DocumentBody {
         {
           type: 'table',
           columns: moneyColumns(t, t('admin.reports.views.columns.game'), false),
-          rows: financialByGame(period, now).map(({ game: g, row }) => moneyRow(g, gameLabel(t, g), '', row)),
+          rows: financialByGame(machinesData).map(({ game: g, row }) => moneyRow(g, gameLabel(t, g), '', row)),
           footer: [totalRow],
         },
       ],
@@ -129,7 +131,7 @@ export function buildFinancialDocument(ctx: BuildContext): DocumentBody {
     column('prize', t('admin.reports.views.financial.prize'), 'currency'),
     column('expires', t('admin.reports.views.financial.expiresAt'), 'date', 'right'),
   ]
-  const ticketCells = (r: PrizeTicket) => ({ code: r.code, game: gameLabel(t, r.game), location: location(r), round: r.roundId, sold: r.soldAt, prize: r.prize, expires: r.expiresAt })
+  const ticketCells = (r: ReportPrizeTicket) => ({ code: r.code, game: gameLabel(t, r.game), location: location(r), round: r.round, sold: r.soldAt, prize: r.prize, expires: r.expiresAt })
 
   blocks.push(
     {
@@ -143,16 +145,17 @@ export function buildFinancialDocument(ctx: BuildContext): DocumentBody {
       type: 'panel',
       key: 'pending',
       title: t('admin.reports.views.financial.pendingList'),
-      subtitle: t('admin.reports.views.financial.pendingSubtitle', { count: formatCount(pending.length), soon: formatCount(expiringSoon), days: EXPIRING_SOON_DAYS, date: formatDate(closeDate) }),
+      subtitle: t('admin.reports.views.financial.pendingSubtitle', { count: formatCount(pendingCount), soon: formatCount(expiringSoon), days: EXPIRING_SOON_DAYS, date: formatDate(closeDate) }),
       content: [
         {
           type: 'table',
           columns: [...ticketColumns(true), column('days', t('admin.reports.views.financial.daysLeft'), 'count')],
-          rows: pending.map((r) => {
+          rows: pending.map((r, i) => {
             const soon = daysLeft(r) <= EXPIRING_SOON_DAYS
-            return { key: r.code, tone: soon ? 'warning' : undefined, cells: { ...ticketCells(r), days: soon ? { value: daysLeft(r), tag: 'warning' } : daysLeft(r) } }
+            return { key: `${i}-${r.code}`, tone: soon ? 'warning' : undefined, cells: { ...ticketCells(r), days: soon ? { value: daysLeft(r), tag: 'warning' } : daysLeft(r) } }
           }),
           pageSize: LIST_PAGE_SIZE,
+          emptyText: t('admin.reports.views.financial.noPending'),
         },
       ],
     },
@@ -160,12 +163,12 @@ export function buildFinancialDocument(ctx: BuildContext): DocumentBody {
       type: 'panel',
       key: 'expired',
       title: t('admin.reports.views.financial.expiredList'),
-      subtitle: t('admin.reports.views.financial.expiredSubtitle', { count: formatCount(expired.length) }),
+      subtitle: t('admin.reports.views.financial.expiredSubtitle', { count: formatCount(expiredCount) }),
       content: [
         {
           type: 'table',
           columns: ticketColumns(false),
-          rows: expired.map((r) => ({ key: r.code, cells: ticketCells(r) })),
+          rows: expired.map((r, i) => ({ key: `${i}-${r.code}`, cells: ticketCells(r) })),
           pageSize: LIST_PAGE_SIZE,
           emptyText: t('admin.reports.views.financial.noExpired'),
         },

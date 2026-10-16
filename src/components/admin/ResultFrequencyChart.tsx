@@ -18,8 +18,7 @@ const BASELINE_Y = MARGIN.top + PLOT_HEIGHT
 
 const GAMES: { id: ResultFrequencyGame; labelKey: string }[] = [
   { id: 'roulette', labelKey: 'admin.dashboard.gamesActivity.roulette' },
-  { id: 'pick3', labelKey: 'admin.dashboard.gamesActivity.pick3' },
-  { id: 'pick4', labelKey: 'admin.dashboard.gamesActivity.pick4' },
+  { id: 'quickMoney', labelKey: 'admin.dashboard.gamesActivity.quickMoney' },
 ]
 
 const WINDOWS: ResultFrequencyWindow[] = [100, 500, 1000]
@@ -27,8 +26,7 @@ const WINDOWS: ResultFrequencyWindow[] = [100, 500, 1000]
 // Mismos colores de juego que Recent Rounds (columna GAME); en Roulette cada barra usa el color
 // real de su casilla. "Black" se pinta gris pizarra -- negro puro desaparece sobre el fondo oscuro.
 const GAME_BAR_COLOR: Record<Exclude<ResultFrequencyGame, 'roulette'>, string> = {
-  pick3: 'var(--admin-green)',
-  pick4: 'var(--admin-amber)',
+  quickMoney: 'var(--admin-green)',
 }
 
 const ROULETTE_BAR_COLOR: Record<RouletteColor, string> = {

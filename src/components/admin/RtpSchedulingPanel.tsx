@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { InfoBanner } from './InfoBanner'
+import { RtpLoadState } from './RtpLoadState'
 import { RtpProfileForm } from './RtpProfileForm'
 import { RtpProfilesTable } from './RtpProfilesTable'
 import { RtpProfileActivityTable } from './RtpProfileActivityTable'
-import { RTP_PROFILE_ACTIVITY } from '../../data/rtpManagementMockData'
-import type { RtpProfile } from '../../types/rtpManagement'
+import { describeRtpError, useRtpProfiles } from '../../hooks/useRtpManagement'
+import type { RtpGame } from '../../types/rtpDashboard'
+import type { RtpProfile, RtpSettingsData } from '../../types/rtpManagement'
 import './rtpScheduling.css'
 
 export function PlusIcon() {
@@ -15,28 +19,37 @@ export function PlusIcon() {
 }
 
 interface RtpSchedulingPanelProps {
-  profiles: RtpProfile[]
-  onProfilesChange: (profiles: RtpProfile[]) => void
+  // Configuración vigente (valores iniciales de un profile nuevo); null mientras carga o si falló.
+  settingsByGame: Record<RtpGame, RtpSettingsData> | null
   // El botón "Create RTP Profile" vive en RtpManagementPage (a la derecha de la barra de tabs), así
   // que el estado abierto/cerrado del formulario llega por props.
   isCreating: boolean
   onCreatingChange: (isCreating: boolean) => void
 }
 
-// Scheduling programa perfiles TEMPORALES -- no toca RTP_SETTINGS_BY_GAME/Settings (pedido
-// explícito: "no mezclar Settings con Scheduling"). "Create RTP Profile" abre un panel inline (sin
-// modal, ver RtpProfileForm.tsx) en vez de un overlay que el proyecto no tiene.
-export function RtpSchedulingPanel({ profiles, onProfilesChange, isCreating, onCreatingChange }: RtpSchedulingPanelProps) {
+// Scheduling programa perfiles TEMPORALES (rtp_profile en el backend) -- no toca la configuración
+// base de Settings (pedido explícito: "no mezclar Settings con Scheduling"). "Create RTP Profile"
+// abre un panel a la derecha (ver RtpProfileForm.tsx).
+export function RtpSchedulingPanel({ settingsByGame, isCreating, onCreatingChange }: RtpSchedulingPanelProps) {
   const { t } = useTranslation()
+  const { status, profiles, activity, error, reload, create, setDisabled } = useRtpProfiles()
+  const [pendingId, setPendingId] = useState<number | null>(null)
+  const [toggleError, setToggleError] = useState<string | null>(null)
 
-  const handleCreate = (profile: RtpProfile) => {
-    onProfilesChange([profile, ...profiles])
-    onCreatingChange(false)
+  const handleToggleDisable = async (profile: RtpProfile) => {
+    setPendingId(profile.id)
+    setToggleError(null)
+    try {
+      await setDisabled(profile.id, profile.status !== 'disabled')
+    } catch (err) {
+      setToggleError(t('admin.rtp.management.scheduling.toggleError', { message: describeRtpError(err, t) }))
+    } finally {
+      setPendingId(null)
+    }
   }
 
-  const handleToggleDisable = (id: string) => {
-    onProfilesChange(profiles.map((p) => (p.id === id ? { ...p, status: p.status === 'disabled' ? 'scheduled' : 'disabled' } : p)))
-  }
+  const loadState =
+    status === 'ready' ? null : <RtpLoadState error={status === 'error' ? describeRtpError(error, t) : null} onRetry={reload} />
 
   return (
     <div className="admin-rtp-scheduling" data-creating={isCreating}>
@@ -46,19 +59,29 @@ export function RtpSchedulingPanel({ profiles, onProfilesChange, isCreating, onC
             <h2 className="admin-panel-title">{t('admin.rtp.management.scheduling.scheduledProfiles')}</h2>
           </div>
 
-          <RtpProfilesTable profiles={profiles} onToggleDisable={handleToggleDisable} />
+          {toggleError && <InfoBanner variant="warning" title={toggleError} />}
+          {loadState ?? <RtpProfilesTable profiles={profiles} pendingId={pendingId} onToggleDisable={(p) => void handleToggleDisable(p)} />}
         </section>
 
         <section className="admin-panel admin-rtp-scheduling-activity">
           <div className="admin-panel-header">
             <h2 className="admin-panel-title">{t('admin.rtp.management.scheduling.recentActivity')}</h2>
           </div>
-          <RtpProfileActivityTable activity={RTP_PROFILE_ACTIVITY} />
+          {loadState ?? <RtpProfileActivityTable activity={activity} />}
         </section>
       </div>
 
-      {/* Formulario como panel a la derecha (antes inline dentro de Scheduled Profiles). */}
-      {isCreating && <RtpProfileForm existingProfiles={profiles} onCancel={() => onCreatingChange(false)} onSave={handleCreate} />}
+      {isCreating && (
+        <RtpProfileForm
+          existingProfiles={profiles}
+          settingsByGame={settingsByGame}
+          onCancel={() => onCreatingChange(false)}
+          onSave={async (input) => {
+            await create(input)
+            onCreatingChange(false)
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 .qm-numberpad {
   width: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -27,17 +28,25 @@
 }
 
 .qm-numberpad-grid {
+  /* Ocupa el alto que le queda al panel (contenedor de tamaño) y las teclas -- columnas de 3, filas
+     de 4, redondas -- toman el lado que entra en ese alto y ese ancho, con tope en 150px (más grande
+     de lo necesario para un teclado numérico). Así el teclado nunca se sale de la pantalla. */
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: size;
   display: grid;
-  /* Ancho fijo (no 1fr) -- con 1fr cada tecla crecía a 1/3 del ancho del panel (~140px), mucho
-     más grande de lo necesario para un teclado numérico. justify-content:center para que el
-     grid, ya angosto, quede centrado en vez de pegado a la izquierda. */
-  grid-template-columns: repeat(3, 150px);
+  grid-template-columns: repeat(3, max-content);
+  grid-auto-rows: max-content;
   justify-content: center;
+  align-content: start;
   gap: 10px;
   margin-top: 4px;
 }
 
 .qm-numberpad-key {
+  /* El lado sale del grid (contenedor de tamaño, ver .qm-numberpad-grid): 4 filas y 3 columnas con
+     10px de separación, 4px de margen arriba. */
+  width: min(150px, calc((100cqh - 4px - 30px) / 4), calc((100cqw - 20px) / 3));
   aspect-ratio: 1 / 1;
   border-radius: 999px;
   border: 1px solid var(--qm-border);

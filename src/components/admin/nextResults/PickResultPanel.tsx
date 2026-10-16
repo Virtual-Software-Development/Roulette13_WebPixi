@@ -18,8 +18,6 @@ const DIGIT_OPTIONS: AdminSelectOption<string>[] = Array.from({ length: 10 }, (_
 // que un toast con auto-dismiss (el proyecto no tiene ninguno propio todavía, ver investigación
 // previa), pero acotado a esta card en vez de un sistema global nuevo.
 const SUCCESS_FEEDBACK_MS = 3000
-// Duración de la actualización simulada -- ver comentario en performUpdate() más abajo.
-const UPDATE_DURATION_MS = 700
 
 type UpdateStatus = 'idle' | 'confirming' | 'updating' | 'success' | 'error'
 
@@ -29,7 +27,12 @@ interface PickResultPanelProps {
   title: string
   subtitle: string
   updateLabel: string
-  seedDigits: number[]
+  // Resultado pendiente del sorteo para este número (Pick 3 o Pick 4).
+  currentDigits: number[]
+  // Cambios cerrados (pasó el límite de sustitución del sorteo).
+  disabled?: boolean
+  // Envía el cambio al backend; si rechaza, la card queda en 'error'.
+  onUpdate: (digits: number[]) => Promise<void>
   // Resultado de un Update confirmado -- el feedback ("Pick 3 result updated") ya no vive en esta
   // card: lo muestra QuickMoneyNextResultPanel en la esquina superior derecha del panel Quick Money.
   onResult?: (result: 'success' | 'error') => void
@@ -40,23 +43,25 @@ interface PickResultPanelProps {
 // y semillas. El countdown/Draw #/Scheduled Time YA NO viven acá (antes cada card tenía su propio
 // reloj independiente) -- Pick 3 y Pick 4 comparten un único draw cycle (decisión de negocio
 // confirmada, ver useQuickMoneyRoundStore.ts), así que esa info ahora es una sola card compartida
-// en QuickMoneyNextResultPanel.tsx, igual que "Next Round" en RouletteNextResultPanel. El proyecto
-// hoy no tiene NINGÚN endpoint de escritura para Quick Money -- todo el estado de esta card es
-// local, listo para reemplazar por un fetch/store real más adelante (ver performUpdate).
-export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, seedDigits, onResult }: PickResultPanelProps) {
+// en QuickMoneyNextResultPanel.tsx, igual que "Next Round" en RouletteNextResultPanel, que es
+// también quien trae el resultado real del backend y lo cambia (onUpdate).
+export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, currentDigits, disabled = false, onUpdate, onResult }: PickResultPanelProps) {
   const { t } = useTranslation()
 
-  // currentDigits = lo que hoy está programado como próximo resultado; draftDigits = lo que el
-  // admin está armando en los selectors, todavía sin confirmar. Solo currentDigits alimenta las
-  // bolas de "Current Result"; solo un Update confirmado copia draftDigits -> currentDigits.
-  const [currentDigits, setCurrentDigits] = useState(seedDigits)
-  const [draftDigits, setDraftDigits] = useState(seedDigits)
+  // currentDigits = lo que hoy está programado como próximo resultado (backend); draftDigits = lo
+  // que el admin está armando en los selectors, todavía sin confirmar. Cada resultado nuevo que
+  // llega (otro sorteo, o el cambio ya guardado) reinicia la selección.
+  const [draftDigits, setDraftDigits] = useState(currentDigits)
   const [status, setStatus] = useState<UpdateStatus>('idle')
+  const currentKey = currentDigits.join('')
+  useEffect(() => {
+    setDraftDigits(currentKey.split('').map(Number))
+  }, [currentKey])
 
   const changedFlags = useMemo(() => draftDigits.map((digit, index) => digit !== currentDigits[index]), [draftDigits, currentDigits])
   const hasChanges = changedFlags.some(Boolean)
   const digitOptions = useMemo(() => DIGIT_OPTIONS, [])
-  const actionsDisabled = !hasChanges || status === 'updating'
+  const actionsDisabled = !hasChanges || status === 'updating' || disabled
 
   // El feedback de éxito se retira solo, como un toast -- si el admin dispara otro Update antes
   // de que expire, este timer queda huérfano pero ya no importa (el siguiente render lo reemplaza).
@@ -66,21 +71,10 @@ export function PickResultPanel({ accent, icon, title, subtitle, updateLabel, se
     return () => clearTimeout(timer)
   }, [status])
 
-  // No existe todavía un endpoint real de escritura para Quick Money (ver comentario de arriba) --
-  // esta función demuestra el flujo confirming -> updating -> success/error tal cual lo vería el
-  // usuario final. Reemplazar el cuerpo por el fetch/mutation real no requiere tocar el resto del
-  // componente: el try/catch ya está listo para que un rechazo real dispare el estado 'error'.
-  function performUpdate(digits: number[]): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve, UPDATE_DURATION_MS, digits)
-    })
-  }
-
   async function handleConfirmUpdate() {
     setStatus('updating')
     try {
-      await performUpdate(draftDigits)
-      setCurrentDigits(draftDigits)
+      await onUpdate(draftDigits)
       setStatus('success')
       onResult?.('success')
     } catch {

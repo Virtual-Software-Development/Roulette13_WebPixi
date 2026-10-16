@@ -85,6 +85,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.admin-recent-rtp-changes-empty {
+  text-align: center;
+  color: var(--admin-text-secondary);
+}
+
 .admin-recent-rtp-changes-footer {
   margin: 12px 0 0;
   text-align: center;

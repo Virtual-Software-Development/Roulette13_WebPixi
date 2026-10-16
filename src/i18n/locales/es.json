@@ -155,7 +155,9 @@
     "signIn": "Iniciar sesión",
     "signingIn": "Iniciando sesión…",
     "secureAccessOnly": "Acceso seguro únicamente",
-    "error": "Usuario o contraseña inválidos."
+    "error": "Usuario o contraseña inválidos.",
+    "errorNotAdmin": "Esta cuenta no tiene acceso al panel de administración.",
+    "errorUnavailable": "No se pudo conectar con el servidor. Intentá de nuevo."
   },
   "bettingView": {
     "title": "Apuestas de Ruleta",
@@ -242,7 +244,8 @@
     "gameType": {
       "pick3": "Pick 3",
       "pick4": "Pick 4",
-      "playBoth": "Jugar Ambos"
+      "both": "Pick 3 + 4",
+      "quickMoney": "Quick Money"
     },
     "numberPad": {
       "title": "Teclado Numérico Compartido",
@@ -253,8 +256,10 @@
     },
     "digitEntry": {
       "title": "Ingresá los Números",
-      "hint": "Tocá este campo y usá el teclado.",
-      "digitAria": "Dígito {{position}}"
+      "hint": "Ingresá de 1 a 4 números (0–9) con el teclado. Cualquier cantidad es una apuesta válida.",
+      "digitAria": "Dígito {{position}}",
+      "count_one": "{{count}} número",
+      "count_other": "{{count}} números"
     },
     "amountEntry": {
       "title": "Ingresá el Monto",
@@ -263,12 +268,22 @@
       "decrease": "Reducir monto",
       "betTypeLabel": "Tipo de Apuesta",
       "betType": {
-        "straight": "Directo",
+        "single": "Single",
+        "directo": "Directo",
+        "bolita": "Bolita",
+        "straight": "Straight",
         "box": "Box",
-        "combo": "Combo"
+        "pale": "Palé"
       },
-      "betTypeHint": "Elegí uno o varios tipos de apuesta",
-      "addToBetSlip": "Agregar a Apuestas"
+      "addToBetSlip": "Agregar a Apuestas",
+      "enterAmountFirst": "Ingresá un monto",
+      "betTypeDigits_one": "{{digits}} número",
+      "betTypeDigits_other": "{{digits}} números",
+      "betTypeHint_one": "Con {{count}} número podés jugar: {{types}}. Elegí una o más.",
+      "betTypeHint_other": "Con {{count}} números podés jugar: {{types}}. Elegí una o más.",
+      "betTypeEmptyHint": "Ingresá al menos un número para elegir una jugada.",
+      "quickAddAria": "Sumar ${{amount}} al monto de la apuesta",
+      "quickAddNotEnough": "No te alcanza el saldo: esta apuesta necesitaría {{needed}} y te quedan {{balance}} después de las apuestas cargadas."
     },
     "betSlip": {
       "title": "Apuestas ({{count}})",
@@ -284,19 +299,24 @@
     },
     "countdown": {
       "label": "Próximo Sorteo {{game}}",
-      "round": "#{{number}}"
+      "round": "#{{number}}",
+      "betsCloseIn": "Las apuestas cierran en",
+      "betsClosed": "Apuestas cerradas",
+      "waitingForDraw": "Esperando el próximo sorteo"
     },
     "player": {
       "balanceLabel": "Saldo",
       "placeBet": "Apostar",
       "placing": "Apostando…",
       "insufficientBalance": "Saldo insuficiente para las apuestas actuales.",
-      "betPlacedSuccess": "Apuesta realizada con éxito."
+      "betPlacedSuccess": "Apuesta realizada con éxito.",
+      "placeBetFailed": "No se pudo realizar la apuesta. Intentá de nuevo."
     },
     "cashier": {
       "totalToCollect": "Total a Cobrar",
       "confirmBet": "Confirmar Apuesta",
       "ticketIssued": "Ticket emitido con éxito.",
+      "issueFailed": "No se pudo emitir el ticket. Intentá de nuevo.",
       "issueTicket": "Emitir Ticket",
       "issuing": "Emitiendo…",
       "ticketPreview": {
@@ -344,9 +364,8 @@
   },
   "admin": {
     "header": {
-      "userName": "Admin",
-      "userRole": "Administrador",
-      "logout": "Cerrar sesión"
+      "logout": "Cerrar sesión",
+      "notSignedIn": "Sin sesión"
     },
     "nav": {
       "sectionTitle": "Panel Admin",
@@ -384,15 +403,12 @@
       "kpi": {
         "rouletteRounds": "Rondas de Ruleta",
         "quickMoneyRounds": "Rondas Quick Money",
-        "activeUsers": "Usuarios Activos",
         "vsYesterday": "vs. ayer",
-        "onlineNow": "en línea ahora"
+        "activeMachines": "Máquinas Activas"
       },
       "gamesActivity": {
         "title": "Actividad de Juegos",
         "roulette": "Ruleta",
-        "pick3": "Pick 3",
-        "pick4": "Pick 4",
         "quickMoney": "Quick Money"
       },
       "gamesDistribution": {
@@ -401,7 +417,7 @@
       },
       "gamePerformance": {
         "title": "Comparación de Rendimiento por Juego",
-        "subtitle": "Compara apuestas totales, pagos y GGR entre juegos",
+        "subtitle": "Apuestas, pagos y GGR de las rondas sorteadas en el período elegido",
         "totalWagers": "Apuestas Totales",
         "totalPayouts": "Pagos Totales",
         "ggr": "GGR",
@@ -416,11 +432,12 @@
       },
       "gameEventsOverTime": {
         "title": "Eventos de Juego en el Tiempo",
-        "subtitle": "Eventos completados, fallidos y cancelados por hora",
+        "subtitle": "Rondas completadas, fallidas y canceladas por hora",
         "completed": "Completados",
         "failed": "Fallidos",
         "cancelled": "Cancelados",
-        "total": "Total"
+        "total": "Total",
+        "subtitleDaily": "Rondas completadas, fallidas y canceladas por día"
       },
       "resultFrequency": {
         "title": "Frecuencia de Resultados",
@@ -444,7 +461,8 @@
         "time": "Hora",
         "game": "Juego",
         "result": "Resultado",
-        "roundNumber": "Ronda #"
+        "roundNumber": "Ronda #",
+        "empty": "Todavía no hay rondas sorteadas."
       },
       "systemStatus": {
         "title": "Estado del Sistema",
@@ -456,7 +474,11 @@
         "api": "API",
         "online": "En línea",
         "offline": "Fuera de línea"
-      }
+      },
+      "loading": "Cargando el dashboard…",
+      "loadError": "No se pudo cargar el dashboard: {{error}}",
+      "loginRequired": "Iniciá sesión en el panel de admin para ver el dashboard: el backend requiere una sesión de admin.",
+      "retry": "Reintentar"
     },
     "reports": {
       "title": "Reportes",
@@ -494,8 +516,7 @@
         "gameOptions": {
           "all": "Todos los Juegos",
           "roulette": "Ruleta",
-          "pick3": "Pick 3",
-          "pick4": "Pick 4"
+          "quickMoney": "Quick Money"
         }
       },
       "types": {
@@ -593,10 +614,14 @@
           "digitFrequency": "Frecuencia de dígitos",
           "digitFrequencySubtitle": "Veces que salió cada dígito en cada posición",
           "digit": "Dígito",
-          "position": "Posición {{n}}",
-          "groups": {"zero": "0", "doubleZero": "00", "red": "Rojo", "black": "Negro", "even": "Par", "odd": "Impar", "dozen1": "1.ª docena (1–12)", "dozen2": "2.ª docena (13–24)", "dozen3": "3.ª docena (25–36)", "low": "Bajo (1–18)", "high": "Alto (19–36)"}
+          "pick3Position": "Pick 3 · Posición {{n}}",
+          "pick4Position": "Pick 4 · Posición {{n}}",
+          "groups": {"zero": "0", "doubleZero": "00", "red": "Rojo", "black": "Negro", "even": "Par", "odd": "Impar", "dozen1": "1.ª docena (1–12)", "dozen2": "2.ª docena (13–24)", "dozen3": "3.ª docena (25–36)", "low": "Bajo (1–18)", "high": "Alto (19–36)"},
+          "roundsTruncated": "Se muestran las últimas {{count}} rondas/sorteos del período.",
+          "noRounds": "No hubo rondas sorteadas en este período.",
+          "noBets": "No hubo apuestas en este período."
         },
-        "betTypes": {"pleno": "Pleno", "caballo": "Caballo", "calle": "Calle", "esquina": "Esquina", "cesta": "Cesta", "linea": "Línea", "columna": "Columna", "docena": "Docena", "color": "Color", "paridad": "Paridad", "altura": "Altura", "straight": "Straight", "box": "Box", "front_pair": "Front pair", "back_pair": "Back pair"},
+        "betTypes": {"pleno": "Pleno", "caballo": "Caballo", "calle": "Calle", "esquina": "Esquina", "cesta": "Cesta", "linea": "Línea", "columna": "Columna", "docena": "Docena", "color": "Color", "paridad": "Paridad", "altura": "Altura", "box": "Box", "single": "Single", "directo": "Directo", "bolita": "Bolita", "straight3": "Straight (3 dígitos)", "straight4": "Straight (4 dígitos)", "pale": "Palé"},
         "activity": {
           "byBanca": "Por banca",
           "byBancaHint": "Abre una banca para ver sus máquinas.",
@@ -634,11 +659,12 @@
           "soldAt": "Venta",
           "prize": "Premio",
           "expiresAt": "Caducidad",
-          "daysLeft": "Días para vencer"
+          "daysLeft": "Días para vencer",
+          "noPending": "No hay premios pendientes al cierre del período."
         },
         "rtp": {
           "byGame": "RTP por juego",
-          "byGameHint": "Ruleta contra su objetivo de RTP Management; Pick 3/Pick 4 contra el RTP teórico de su tabla de pagos.",
+          "byGameHint": "Cada juego contra su objetivo de RTP Management (el del perfil o el base de cada día, ponderado por rondas).",
           "consolidated": "Consolidado (informativo)",
           "history": "Cambios de RTP",
           "oldValue": "Valor anterior",
@@ -652,9 +678,9 @@
           "change": "Cambio de RTP",
           "changeMarker": "Cambio de RTP: {{from}} → {{to}} ({{user}})",
           "outOfBand": "El RTP real ({{rtp}}) está fuera de la banda {{min}} – {{max}}.",
-          "noPayoutTable": "La tabla de pagos de Pick 3 / Pick 4 todavía no está cargada: el RTP teórico y la diferencia aparecen como \"—\" hasta entonces.",
           "byDraw": "RTP por sorteo",
-          "drawRtp": "RTP del sorteo"
+          "drawRtp": "RTP del sorteo",
+          "noTheoretical": "Quick Money paga por niveles de premio que combinan Pick 3 y Pick 4, así que no se calcula su RTP teórico por tipo de apuesta: el RTP teórico y la diferencia aparecen como \"—\"."
         }
       },
       "peakHours": {
@@ -725,8 +751,8 @@
         },
         "perDay": {
           "title": "Anulaciones por Día",
-          "subtitle": "Solo ruleta · rondas cuyo resultado se cambió en Next Results",
-          "events": "Rondas jugadas",
+          "subtitle": "Rondas y sorteos cuyo resultado se cambió en Next Results",
+          "events": "Rondas/sorteos jugados",
           "annulments": "Anulaciones",
           "rate": "Tasa de anulaciones"
         },
@@ -775,43 +801,58 @@
         "renameInputLabel": "Nombre del reporte",
         "renameSave": "Guardar",
         "renameCancel": "Cancelar"
+      },
+      "loading": "Cargando los datos del reporte…",
+      "errors": {
+        "title": "No se pudieron cargar los datos del reporte.",
+        "load": "No se pudieron cargar los datos del backend.",
+        "login": "Iniciá sesión en el panel de administración para ver los reportes: el backend requiere una sesión de admin.",
+        "retry": "Reintentar"
       }
     },
     "gameEvents": {
-      "subtitle": "Gestiona y monitorea todos los eventos de juego programados y pasados",
-      "search": { "placeholder": "Buscar eventos..." },
-      "filter": { "allStatuses": "Todos los Estados" },
+      "subtitle": "Rondas programadas, abiertas y sorteadas de cada juego",
+      "search": { "placeholder": "Buscar por código de ronda..." },
+      "filter": { "allStatuses": "Todos los Estados", "allGames": "Todos los Juegos" },
       "status": {
         "completed": "Completado",
         "live": "En Vivo",
-        "scheduled": "Programado"
+        "scheduled": "Programado",
+        "bettingOpen": "Apuestas Abiertas",
+        "bettingClosed": "Apuestas Cerradas",
+        "failed": "Fallido",
+        "cancelled": "Cancelado"
       },
       "table": {
-        "id": "ID",
+        "id": "Ronda",
         "name": "Nombre",
         "game": "Juego",
         "startTime": "Hora de Inicio",
         "status": "Estado"
       },
       "list": {
-        "showingCount": "Mostrando {{from}}–{{to}} de {{total}} eventos",
-        "empty": "Ningún evento coincide con tu búsqueda.",
+        "showingCount": "Mostrando {{from}}–{{to}} de {{total}} rondas",
+        "empty": "Ninguna ronda coincide con tu búsqueda.",
         "pagination": "Paginación",
         "previousPage": "Página anterior",
-        "nextPage": "Página siguiente"
+        "nextPage": "Página siguiente",
+        "loading": "Cargando los eventos de juego…"
       },
       "detail": {
-        "emptyTitle": "Selecciona un evento",
-        "emptyDescription": "Elige un evento de la lista para ver sus detalles.",
-        "close": "Cerrar"
+        "emptyTitle": "Elegí una ronda",
+        "emptyDescription": "Elegí una ronda de la lista para ver sus detalles.",
+        "close": "Cerrar",
+        "loading": "Cargando la ronda…"
       },
       "metadata": {
         "date": "Fecha",
         "startTime": "Hora de Inicio",
         "endTime": "Hora de Fin",
         "duration": "Duración",
-        "durationMinutes": "{{count}} minutos",
-        "notApplicable": "—"
+        "notApplicable": "—",
+        "durationSeconds_one": "{{count}} segundo",
+        "durationSeconds_other": "{{count}} segundos",
+        "durationMinutesSeconds": "{{minutes}} min {{seconds}} s"
       },
       "tabs": {
         "overview": "Resumen",
@@ -819,14 +860,7 @@
       },
       "overview": {
         "statusTimeline": {
-          "title": "Línea de Tiempo del Estado",
-          "pending": "Pendiente",
-          "steps": {
-            "created": "Evento Creado",
-            "started": "Iniciado",
-            "drawCompleted": "Sorteo Completado",
-            "resultsPublished": "Resultados Publicados"
-          }
+          "title": "Línea de Tiempo del Estado"
         },
         "result": {
           "title": "Resultado",
@@ -837,26 +871,49 @@
           "title": "Estadísticas",
           "totalBets": "Apuestas Totales",
           "totalPayout": "Pago Total",
-          "uniquePlayers": "Jugadores Únicos",
           "status": "Estado",
-          "empty": "Estadísticas no disponibles todavía"
+          "empty": "Las estadísticas están disponibles cuando la ronda ya se sorteó",
+          "tickets": "Tickets",
+          "totalWagered": "Total Apostado",
+          "ggr": "GGR",
+          "winningTickets": "Tickets Ganadores",
+          "rtp": "RTP de la Ronda",
+          "resultMethod": "Resultado",
+          "notDrawn": "Esta ronda no se sorteó: no tiene estadísticas"
+        },
+        "overrides": {
+          "title": "Cambios Manuales del Resultado",
+          "changedTo": "cambiado a",
+          "by": "por {{user}}",
+          "anonymous": "sin sesión"
         }
       },
       "payouts": {
         "table": {
-          "player": "Jugador",
           "bet": "Monto Apostado",
           "payout": "Monto Pagado",
-          "status": "Estado"
+          "status": "Estado",
+          "ticket": "Ticket",
+          "machine": "Máquina"
         },
         "status": {
           "paid": "Pagado",
-          "pending": "Pendiente"
+          "pending": "Pendiente",
+          "expired": "Vencido"
         },
-        "empty": "No hay pagos registrados para este evento."
+        "empty": "No hay tickets ganadores en esta ronda.",
+        "truncated": "Se muestran los {{shown}} mayores de {{total}} tickets ganadores."
       },
       "drawLog": {
         "empty": "No hay entradas de registro disponibles."
+      },
+      "roundName": "{{game}} #{{number}}",
+      "loadError": "No se pudieron cargar los eventos de juego: {{error}}",
+      "loginRequired": "Iniciá sesión en el panel de admin para ver los eventos de juego: el backend requiere una sesión de admin.",
+      "retry": "Reintentar",
+      "resultMethod": {
+        "automatic": "Automático",
+        "manual": "Resultado manual"
       }
     },
     "shared": {"pagination": "Paginación", "previousPage": "Página anterior", "nextPage": "Página siguiente", "rowActions": "Acciones de fila"},
@@ -873,8 +930,6 @@
         "allModules": "Todos los Módulos",
         "action": "Acción",
         "allActions": "Todas las Acciones",
-        "status": "Estado",
-        "allStatuses": "Todos los Estados",
         "clear": "Limpiar Filtros"
       },
       "module": {
@@ -883,22 +938,23 @@
         "rtp": "RTP",
         "users": "Usuarios",
         "events": "Eventos",
-        "videos": "Videos",
         "reports": "Reportes",
         "settings": "Configuración",
-        "system": "Sistema"
+        "system": "Sistema",
+        "games": "Juegos"
       },
-      "status": { "success": "Éxito", "warning": "Advertencia", "failed": "Fallido" },
       "table": {
         "dateTime": "Fecha y Hora",
         "user": "Usuario",
         "module": "Módulo",
         "action": "Acción",
         "details": "Detalles",
-        "status": "Estado",
         "viewDetails": "Ver detalles",
         "empty": "No se encontraron registros del sistema. Intenta cambiar tus filtros o rango de fecha.",
-        "showingCount": "Mostrando {{from}}–{{to}} de {{total}} registros"
+        "showingCount": "Mostrando {{from}}–{{to}} de {{total}} registros",
+        "loading": "Cargando los logs del sistema…",
+        "loadError": "No se pudieron cargar los logs del sistema: {{error}}",
+        "loginRequired": "Iniciá sesión en el panel de admin para ver los logs del sistema: el backend requiere una sesión de admin."
       },
       "detail": {
         "title": "Detalles del Registro",
@@ -907,9 +963,64 @@
         "user": "Usuario",
         "module": "Módulo",
         "action": "Acción",
-        "status": "Estado",
         "changeLabel": "Cambio",
-        "detailsLabel": "Detalles"
+        "detailsLabel": "Detalles",
+        "hiddenUntilDraw": "Oculto hasta que se sortee la ronda.",
+        "game": "Juego",
+        "round": "Ronda",
+        "targetUser": "Usuario afectado",
+        "rtpProfile": "Perfil de RTP",
+        "fields": {
+          "targetRtp": "RTP objetivo"
+        }
+      },
+      "actor": {
+        "system": "Sistema",
+        "machine": "Máquina",
+        "machines": "Máquinas"
+      },
+      "descriptions": {
+        "pendingRead": "Lectura del resultado pendiente",
+        "pendingReadFrom": "Lectura del resultado pendiente desde {{ip}}",
+        "rouletteRoundCreated": "Ronda de ruleta creada",
+        "rouletteRoundDrawn": "Ronda de ruleta ejecutada: {{result}}",
+        "quickMoneyDrawCreated": "Sorteo de Quick Money creado",
+        "quickMoneyDrawDrawn": "Sorteo de Quick Money ejecutado: Pick 3 {{pick3}}, Pick 4 {{pick4}}",
+        "lotteryDrawCreated": "Sorteo de lotería creado (Pick 3 y Pick 4)",
+        "lotteryDrawDrawn": "Sorteo de lotería ejecutado: Pick 3 {{pick3}}, Pick 4 {{pick4}}",
+        "engineDecided": "Resultado decidido por el motor {{engine}} (apostado en la ronda: {{amount}})",
+        "engineFailed": "Motor {{engine}}: no se pudo decidir el resultado, se mantiene el provisional: {{error}}",
+        "manualResult": "Sustitución manual del resultado: {{reason}}",
+        "reasons": {
+          "nextResults": "Cambio manual desde Next Results"
+        },
+        "rtpUpdated": "RTP de {{game}} actualizado",
+        "rtpProfile": "Perfil de RTP \"{{name}}\": {{event}}",
+        "rtpProfileEvents": {
+          "created": "creado",
+          "disabled": "deshabilitado",
+          "enabled": "habilitado"
+        },
+        "userCreated": "Usuario {{username}} creado ({{role}})",
+        "userUpdated": "Usuario {{username}} actualizado: {{changes}}",
+        "userDeactivated": "Usuario {{username}} desactivado",
+        "login": "Inicio de sesión de {{username}}",
+        "changes": {
+          "username": "usuario {{from}} → {{to}}",
+          "fullName": "nombre \"{{from}}\" → \"{{to}}\"",
+          "email": "email {{from}} → {{to}}",
+          "role": "rol {{from}} → {{to}}",
+          "reactivated": "reactivado",
+          "passwordReset": "contraseña restablecida"
+        },
+        "userCreatedInactive": "Usuario {{username}} creado ({{role}}), inactivo",
+        "maintenanceOn": "Modo de mantenimiento activado",
+        "maintenanceOff": "Modo de mantenimiento desactivado",
+        "reportDownloaded": "Reporte descargado: {{report}} ({{format}}), del {{from}} al {{to}}, {{game}}",
+        "rouletteRoundFailed_one": "Ronda de ruleta fallida: no se sorteó dentro de los {{minutes}} minutos de su horario ({{count}} ticket pendiente cancelado)",
+        "rouletteRoundFailed_other": "Ronda de ruleta fallida: no se sorteó dentro de los {{minutes}} minutos de su horario ({{count}} tickets pendientes cancelados)",
+        "quickMoneyDrawFailed_one": "Sorteo de Quick Money fallido: no se sorteó dentro de los {{minutes}} minutos de su horario ({{count}} ticket pendiente cancelado)",
+        "quickMoneyDrawFailed_other": "Sorteo de Quick Money fallido: no se sorteó dentro de los {{minutes}} minutos de su horario ({{count}} tickets pendientes cancelados)"
       }
     },
     "settings": {
@@ -920,7 +1031,7 @@
       "resetToDefaults": "Restablecer Valores Predeterminados",
       "resetConfirm": {
         "title": "¿Restablecer toda la configuración?",
-        "description": "La configuración general y de notificaciones de esta página volverá a sus valores predeterminados. No se aplica nada hasta que hagas clic en Guardar Cambios.",
+        "description": "La configuración general y los eventos de notificación vuelven a sus valores por defecto; los destinatarios se mantienen. No se aplica nada hasta que hagas clic en Guardar Cambios.",
         "confirm": "Restablecer",
         "cancel": "Cancelar"
       },
@@ -935,7 +1046,8 @@
           "maintenanceMode": {
             "label": "Modo de Mantenimiento",
             "description": "Restringe el acceso solo a administradores."
-          }
+          },
+          "adminLanguage": "Idioma del Panel de Admin"
         },
         "card": {
           "title": "Configuración General",
@@ -953,10 +1065,7 @@
           "title": "Notificaciones por Email",
           "subtitle": "Activa o desactiva las notificaciones por email y elige quién las recibe.",
           "recipients": "Destinatario(s)",
-          "recipientsHelper": "Usa comas para separar varios destinatarios.",
-          "sendTestEmail": "Enviar Email de Prueba",
-          "sending": "Enviando...",
-          "sentSuccess": "Email de prueba enviado"
+          "recipientsHelper": "Usa comas para separar varios destinatarios."
         },
         "events": {
           "title": "Eventos de Notificación",
@@ -974,6 +1083,14 @@
             "maintenanceModeToggled": "Modo de mantenimiento activado o desactivado"
           }
         }
+      },
+      "loading": "Cargando configuración…",
+      "loadError": "No se pudo cargar la configuración: {{error}}",
+      "retry": "Intentá de nuevo",
+      "saving": "Guardando…",
+      "saveError": "No se pudo guardar la configuración: {{error}}",
+      "errors": {
+        "login": "Iniciá sesión en el panel de admin para ver y cambiar la configuración: el backend requiere una sesión de admin."
       }
     },
     "users": {
@@ -989,7 +1106,7 @@
         "allStatuses": "Todos los Estados",
         "clear": "Limpiar filtros"
       },
-      "role": { "admin": "Admin", "operator": "Operador", "viewer": "Espectador" },
+      "role": { "admin": "Admin", "cashier": "Cajero" },
       "status": { "active": "Activo", "inactive": "Inactivo" },
       "stats": { "total": "Usuarios Totales", "active": "Usuarios Activos", "inactive": "Usuarios Inactivos", "admins": "Usuarios Admin" },
       "list": {
@@ -998,7 +1115,8 @@
         "showingCount": "Mostrando {{from}} a {{to}} de {{total}} usuarios",
         "pagination": "Paginación",
         "previousPage": "Página anterior",
-        "nextPage": "Página siguiente"
+        "nextPage": "Página siguiente",
+        "loading": "Cargando usuarios..."
       },
       "table": {
         "name": "Nombre",
@@ -1008,21 +1126,22 @@
         "status": "Estado",
         "lastLogin": "Último Acceso",
         "actions": "Acciones",
-        "neverLoggedIn": "Nunca inició sesión"
+        "neverLoggedIn": "Nunca inició sesión",
+        "you": "Vos"
       },
-      "actions": { "edit": "Editar usuario", "delete": "Eliminar usuario" },
+      "actions": { "edit": "Editar usuario", "deactivate": "Desactivar usuario", "activate": "Activar usuario", "cannotDeactivateSelf": "No podés desactivar tu propio usuario" },
       "modal": {
         "createTitle": "Crear Usuario",
         "editTitle": "Editar Usuario",
         "close": "Cerrar",
         "fullName": "Nombre Completo",
-        "fullNamePlaceholder": "Ingresa el nombre completo",
+        "fullNamePlaceholder": "Ingresá el nombre completo",
         "username": "Usuario",
-        "usernamePlaceholder": "Ingresa el usuario",
+        "usernamePlaceholder": "Ingresá el usuario",
         "email": "Correo Electrónico",
-        "emailPlaceholder": "Ingresa el correo electrónico",
+        "emailPlaceholder": "Ingresá el correo electrónico",
         "password": "Contraseña",
-        "passwordPlaceholder": "Ingresa la contraseña",
+        "passwordPlaceholder": "Ingresá la contraseña",
         "showPassword": "Mostrar contraseña",
         "hidePassword": "Ocultar contraseña",
         "role": "Rol",
@@ -1032,14 +1151,30 @@
         "saveSubmit": "Guardar Cambios",
         "creating": "Creando...",
         "saving": "Guardando...",
-        "createError": "No se pudo crear el usuario. Intenta de nuevo.",
-        "editError": "No se pudieron guardar los cambios. Intenta de nuevo."
+        "createError": "No se pudo crear el usuario: {{error}}",
+        "editError": "No se pudieron guardar los cambios: {{error}}",
+        "passwordHint": "Mínimo 8 caracteres.",
+        "newPassword": "Nueva Contraseña",
+        "newPasswordPlaceholder": "Dejala vacía para conservar la actual",
+        "newPasswordHint": "Una contraseña nueva cierra la sesión del usuario.",
+        "selfHint": "No podés cambiar tu propio rol ni tu estado."
       },
-      "deleteConfirm": {
-        "title": "Eliminar Usuario",
-        "description": "¿Estás seguro de que deseas eliminar a {{name}}? Esta acción no se puede deshacer.",
-        "confirm": "Eliminar Usuario",
-        "deleting": "Eliminando...",
+      "errors": {
+        "login": "Iniciá sesión en el panel de admin para gestionar usuarios: el backend requiere una sesión de admin.",
+        "load": "No se pudieron cargar los usuarios: {{error}}",
+        "action": "No se pudo actualizar el usuario: {{error}}"
+      },
+      "feedback": {
+        "created": "Usuario {{name}} creado.",
+        "saved": "Cambios de {{name}} guardados.",
+        "activated": "Usuario {{name}} activado.",
+        "deactivated": "Usuario {{name}} desactivado; se cerró su sesión."
+      },
+      "deactivateConfirm": {
+        "title": "Desactivar Usuario",
+        "description": "{{name}} va a perder su sesión y no va a poder iniciar sesión. Podés reactivar la cuenta cuando quieras.",
+        "confirm": "Desactivar",
+        "deactivating": "Desactivando...",
         "cancel": "Cancelar"
       }
     },
@@ -1079,7 +1214,8 @@
         "pick3": "Pick 3",
         "pick4": "Pick 4",
         "pick3Subtitle": "Próximo Resultado de Pick 3",
-        "pick4Subtitle": "Próximo Resultado de Pick 4"
+        "pick4Subtitle": "Próximo Resultado de Pick 4",
+        "noPendingDraw": "No hay ningún sorteo de Quick Money pendiente ahora."
       },
       "updatePick3": "Actualizar Resultado de Pick 3",
       "updatePick4": "Actualizar Resultado de Pick 4",
@@ -1101,23 +1237,26 @@
       "target": "Objetivo",
       "status": {
         "withinBand": "Dentro de Banda",
-        "aboveTarget": "Sobre el Objetivo",
-        "onTarget": "En el Objetivo"
+        "aboveBand": "Sobre la Banda",
+        "belowBand": "Bajo la Banda",
+        "noData": "Sin Datos"
       },
       "metrics": {
         "rouletteTitle": "RTP de Ruleta",
-        "pick3Title": "RTP de Pick 3",
-        "pick4Title": "RTP de Pick 4"
+        "quickMoneyTitle": "RTP de Quick Money",
+        "windowRounds_one": "Medido sobre {{formatted}} ronda completada",
+        "windowRounds_other": "Medido sobre {{formatted}} rondas completadas"
       },
       "houseMargin": {
         "title": "Margen de la Casa",
-        "trendLabel": "vs. últimos 7 días"
+        "trendLabel": "vs. los 7 días anteriores",
+        "lastSevenDays": "Últimos 7 días"
       },
       "manualOverrides": {
         "title": "Anulaciones Manuales",
-        "activeOverrides": "anulaciones activas"
+        "lastSevenDays": "resultados manuales en los últimos 7 días"
       },
-      "stability": {"title": "Estabilidad del RTP", "subtitle": "RTP acumulado vs. rondas jugadas, contra el rango esperado por suerte", "correctionWindow": "Ventana de corrección", "status": {"within": "Dentro del rango esperado", "withinDetail": "La diferencia es varianza normal.", "outside": "Fuera del rango esperado", "outsideDetail": "La diferencia supera lo que explica la suerte."}, "tooltip": {"after": "Tras {{rounds}} rondas", "rtp": "RTP", "expected": "Rango esperado"}, "legend": {"cumulative": "RTP acumulado", "expected": "Rango esperado (95%)", "target": "Objetivo {{value}}%"}},
+      "stability": {"title": "Estabilidad del RTP", "subtitle": "RTP acumulado vs. rondas jugadas, contra el rango esperado por suerte", "status": {"within": "Dentro del rango esperado", "withinDetail": "La diferencia es varianza normal.", "outside": "Fuera del rango esperado", "outsideDetail": "La diferencia supera lo que explica la suerte."}, "tooltip": {"after": "Tras {{rounds}} rondas", "rtp": "RTP", "expected": "Rango esperado"}, "legend": {"cumulative": "RTP acumulado", "expected": "Rango esperado (95%)", "target": "Objetivo {{value}}%"}, "empty": "Todavía no hay rondas completadas con apuestas en la ventana de corrección.", "notEnoughRounds": "Se necesitan al menos 2 rondas con apuestas para estimar el rango esperado."},
       "trendChart": {
         "title": "RTP Actual vs Objetivo",
         "actualSuffix": "(Actual)",
@@ -1128,7 +1267,8 @@
           "twoWeeks": "2 Semanas",
           "threeWeeks": "3 Semanas",
           "oneMonth": "1 Mes"
-        }
+        },
+        "empty": "No hubo apuestas en rondas completadas en este período."
       },
       "currentBands": {
         "title": "Bandas Actuales",
@@ -1145,7 +1285,9 @@
         "status": "Estado",
         "autoApplied": "Auto Aplicado",
         "applied": "Aplicado",
-        "showingCount": "Mostrando {{shown}} de {{total}} cambios"
+        "showingCount": "Mostrando {{shown}} de {{total}} cambios",
+        "system": "Sistema",
+        "empty": "Todavía no hay cambios de objetivo de RTP."
       },
       "importantNote": {
         "title": "Nota Importante",
@@ -1179,12 +1321,11 @@
         },
         "maxCorrection": { "label": "Corrección Máxima por Evento", "description": "Cambio relativo máximo por evento." },
         "smoothingFactor": { "label": "Factor de Suavizado", "description": "Peso de los resultados recientes (0 - 1)." },
-        "effectiveDate": { "label": "Fecha de Vigencia", "description": "Cuándo entrará en vigencia esta configuración." },
+        "effectiveDate": { "label": "Fecha de Vigencia", "currentDescription": "Fecha desde la que rige la configuración actual. Los cambios guardados se aplican de inmediato." },
         "infoBanner": {
           "title": "Los cambios se aplicarán solo a rondas futuras.",
           "description": "Las partidas en curso no se verán afectadas."
         },
-        "resetToDefaults": "Restablecer Valores",
         "saveSettings": "Guardar Configuración",
         "confirm": {
           "title": "Confirmar Cambio de Configuración de RTP",
@@ -1194,16 +1335,16 @@
           "effectiveDate": "Fecha de Vigencia",
           "cancel": "Cancelar",
           "confirm": "Confirmar y Guardar",
-          "description": "Estás a punto de cambiar la configuración de RTP de este juego. Esto afecta rondas reales a partir de la fecha de vigencia."
+          "descriptionImmediate": "Estás por cambiar la configuración de RTP de este juego. Afecta a rondas reales a partir de las próximas.",
+          "immediately": "De inmediato (próximas rondas)"
         },
         "lock": {
-          "badge": "Bloqueado",
-          "reason": "Temporalmente bloqueado. Puedes revisar su valor actual, pero por ahora no puedes editarlo."
+          "badge": "Bloqueado"
         },
         "save": {
-          "noChangesReason": "Todavía no hay cambios para guardar.",
-          "allLockedReason": "Todos los parámetros editables están temporalmente bloqueados."
-        }
+          "noChangesReason": "Todavía no hay cambios para guardar."
+        },
+        "saveError": "No se pudo guardar la configuración: {{message}}"
       },
       "simulator": {
         "title": "Simulador de RTP",
@@ -1276,8 +1417,7 @@
           "event": "Evento",
           "activePeriod": "Período Activo",
           "changedBy": "Modificado Por",
-          "dateTime": "Fecha / Hora",
-          "status": "Estado"
+          "dateTime": "Fecha / Hora"
         },
         "actionsMenu": {
           "disable": "Deshabilitar",
@@ -1291,18 +1431,13 @@
           "disabled": "Deshabilitado",
           "replaced": "Reemplazado"
         },
-        "activityStatus": {
-          "completed": "Completado",
-          "active": "Activo",
-          "expired": "Vencido"
-        },
         "event": {
           "activated": "Activado",
           "expired": "Vencido",
           "disabled": "Deshabilitado",
           "replaced": "Reemplazado",
-          "scheduled": "Programado",
-          "edited": "Editado"
+          "edited": "Editado",
+          "created": "Creado"
         },
         "form": {
           "close": "Cerrar",
@@ -1321,8 +1456,19 @@
           "save": "Guardar Perfil",
           "overlapWarningTitle": "Este juego ya tiene un perfil activo o programado.",
           "overlapWarningDescription": "Revisa que no se superpongan los horarios antes de guardar.",
-          "days": { "mon": "Lun", "tue": "Mar", "wed": "Mié", "thu": "Jue", "fri": "Vie", "sat": "Sáb", "sun": "Dom" }
-        }
+          "days": { "mon": "Lun", "tue": "Mar", "wed": "Mié", "thu": "Jue", "fri": "Vie", "sat": "Sáb", "sun": "Dom" },
+          "saveError": "No se pudo guardar el perfil: {{message}}"
+        },
+        "daily": "Todos los días",
+        "activityEmpty": "Todavía no hay actividad de perfiles.",
+        "toggleError": "No se pudo actualizar el perfil: {{message}}"
+      },
+      "loading": "Cargando…",
+      "retry": "Reintentar",
+      "saving": "Guardando…",
+      "errors": {
+        "login": "Iniciá sesión en el panel de administración para gestionar el RTP: el backend requiere una sesión de admin.",
+        "load": "No se pudieron cargar los datos del backend."
       }
     }
   }
@@ -1343,6 +1489,25 @@
       "description": "Esta terminal perdió la conexión a internet. Revisa el cable de red o el Wi-Fi; la pantalla vuelve sola cuando regrese la conexión."
     }
   },
+  "betSlipActions": {
+    "rebet": "Repetir",
+    "double": "Duplicar",
+    "board": {
+      "rebetHint": "Volvé a poner tu apuesta anterior en el tablero",
+      "doubleHint": "Duplicá cada apuesta del tablero",
+      "noPreviousBet": "Todavía no hay una apuesta anterior para repetir.",
+      "nothingToDouble": "Primero poné alguna ficha: no hay nada para duplicar.",
+      "notEnoughToDouble": "No te alcanza el saldo para duplicar: necesitás {{needed}} y tu saldo es {{balance}}.",
+      "notEnoughToRebet": "No te alcanza el saldo para repetir tu apuesta anterior: necesita {{needed}} y tu saldo es {{balance}}."
+    },
+    "form": {
+      "rebetHint": "Completá el formulario con la última apuesta que agregaste",
+      "doubleHint": "Duplicá el monto de la apuesta",
+      "noPreviousBet": "Todavía no hay una apuesta anterior para repetir.",
+      "nothingToDouble": "Primero ingresá un monto y un tipo de apuesta: no hay nada para duplicar.",
+      "notEnoughToDouble": "No te alcanza el saldo para duplicar: esta apuesta necesitaría {{needed}} y te quedan {{balance}} después de las apuestas cargadas.",
+      "notEnoughToRebet": "No te alcanza el saldo para repetir tu última apuesta: necesita {{needed}} y te quedan {{balance}} después de las apuestas cargadas."
+    }
   "sync": {
     "title": "Sincronizando",
     "subtitle": "Uniéndose a la ronda en curso…"

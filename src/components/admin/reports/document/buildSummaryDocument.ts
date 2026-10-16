@@ -1,7 +1,7 @@
-import { addTotals, balanceOf, emptyTotals, totalsByDay, totalsByGame, totalsFor, type Totals } from '../../../../data/reportsMockData'
 import { formatDate, formatDayMonth } from '../../../../utils/reportFormat'
 import { comparisonPeriod } from '../../../../utils/reportPeriod'
 import { SERIES_COLORS, gameLabel, totalsColumns, totalsRow, totalsStats, type BuildContext, type DocumentBody } from './documentHelpers'
+import { addTotals, balanceOf, emptyTotals, totalsByDay, totalsByGame, totalsFor, type Totals } from './reportData'
 import type { DocBlock, DocChart, DocRow, DocTable } from './reportDocument'
 
 // Resumen, Semanal y Mensual son el mismo reporte (docs: "Resumen de la propuesta"): cambian el
@@ -9,13 +9,14 @@ import type { DocBlock, DocChart, DocRow, DocTable } from './reportDocument'
 // - Resumen: rango libre, sin comparación.
 // - Semanal: semana lun–dom; comparación con la anterior; gráfica semana actual vs anterior.
 // - Mensual: mes; comparación con el anterior; tabla por día dividida por semana, con subtotales.
-export function buildSummaryDocument({ t, locale, period, kind, game, now }: BuildContext): DocumentBody {
+export function buildSummaryDocument({ t, locale, period, kind, game, data }: BuildContext): DocumentBody {
   const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: 'short' })
   const compare = kind === 'range' ? null : comparisonPeriod(period, kind)
-  const totals = totalsFor(period, game, now)
-  const previous = compare ? totalsFor(compare, game, now) : undefined
-  const days = totalsByDay(period, game, now)
-  const previousDays = compare ? totalsByDay(compare, game, now) : []
+  const previousActivity = data.previousActivity ?? { days: [], hours: [] }
+  const totals = totalsFor(data.activity, game)
+  const previous = compare ? totalsFor(previousActivity, game) : undefined
+  const days = totalsByDay(data.activity, period, game)
+  const previousDays = compare ? totalsByDay(previousActivity, compare, game) : []
 
   const previousLabel = kind === 'week' ? t('admin.reports.views.summary.previousWeek') : kind === 'month' ? t('admin.reports.views.summary.previousMonth') : undefined
   const dayLabel = (date: Date) => `${weekdayFormatter.format(date)} ${formatDate(date)}`
@@ -60,8 +61,8 @@ export function buildSummaryDocument({ t, locale, period, kind, game, now }: Bui
   }
 
   if (game === 'all') {
-    const byGame = totalsByGame(period, now)
-    const previousByGame = compare ? totalsByGame(compare, now) : []
+    const byGame = totalsByGame(data.activity)
+    const previousByGame = compare ? totalsByGame(previousActivity) : []
     blocks.push({
       type: 'panel',
       key: 'byGame',

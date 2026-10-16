@@ -38,19 +38,22 @@ export function CloseIcon() {
   )
 }
 
-export function TrashIcon() {
+// Desactivar: círculo tachado.
+export function BanIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        d="M5 7h14M9.5 7V5.2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V7M7 7l.8 12a1.4 1.4 0 0 0 1.4 1.3h5.6a1.4 1.4 0 0 0 1.4-1.3L17 7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <line x1="10" y1="10.5" x2="10.4" y2="16.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <line x1="14" y1="10.5" x2="13.6" y2="16.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M6.4 17.6 17.6 6.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// Reactivar: círculo con tilde.
+export function CheckCircleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m8.5 12.3 2.4 2.4 4.6-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

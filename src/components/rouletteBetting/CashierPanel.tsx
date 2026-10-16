@@ -18,7 +18,7 @@ export function CashierPanel() {
   const { t } = useTranslation()
   const drawNumber = useGameConfigStore((state) => state.drawNumber)
   const entries = useBetSlipStore((state) => state.entries)
-  const clearAll = useBetSlipStore((state) => state.clearAll)
+  const markPlaced = useBetSlipStore((state) => state.markPlaced)
   const { phase } = useBettingRoundPhase()
   const [stage, setStage] = useState<'building' | 'preview'>('building')
   const [ticket, setTicket] = useState<BettingTicket | null>(null)
@@ -46,7 +46,7 @@ export function CashierPanel() {
     setIssuing(false)
     setStage('building')
     setTicket(null)
-    clearAll()
+    markPlaced()
     setJustIssued(true)
     setTimeout(() => setJustIssued(false), 2500)
   }

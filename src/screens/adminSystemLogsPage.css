@@ -262,3 +262,7 @@
   font-size: 13.5px;
   color: var(--admin-text-secondary);
 }
+
+.admin-system-logs-empty[data-variant='error'] {
+  color: #f87171;
+}

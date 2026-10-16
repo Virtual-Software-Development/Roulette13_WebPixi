@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { type CSSProperties, useMemo, useState } from 'react'
 import { ACTIVE_WHEEL_TYPE } from '../../data/wheelOrder'
 import { buildRouletteBetZones, BETTING_BOARD_GRID, type BetZone } from '../../utils/rouletteBetZones'
 import type { WheelPocket } from '../../types/wheel'
@@ -39,7 +39,12 @@ export function BettingBoard({ disabled }: BettingBoardProps) {
   }, [hoveredZone])
 
   return (
-    <div className="betting-board" data-disabled={disabled}>
+    <div
+      className="betting-board"
+      data-disabled={disabled}
+      // Proporción del grid, para que el workspace pueda achicar el tablero según el alto disponible.
+      style={{ '--board-cols': BETTING_BOARD_GRID.totalColumns, '--board-rows': BETTING_BOARD_GRID.totalRows } as CSSProperties}
+    >
       <div
         className="betting-board-grid"
         style={{
