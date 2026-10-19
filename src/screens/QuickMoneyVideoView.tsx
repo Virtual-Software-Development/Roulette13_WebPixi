@@ -81,8 +81,8 @@ export function QuickMoneyVideoView() {
     // abajo), así que el 'ended' de cada máquina cae casi en el mismo instante.
     video.addEventListener('ended', complete)
 
-    // Ya viene precargado entero (blob descargado ~2:30 antes del sorteo, ver
-    // video/quickMoneyTestVideo.ts), así que esto resuelve al instante.
+    // Ya viene precargado entero (blob descargado al ejecutarse el sorteo, ver
+    // video/quickMoneyDrawVideo.ts), así que esto resuelve al instante.
     const videoUrl = useLobbyModeStore.getState().pendingVideoUrl
     const ready = videoUrl ? preloadQuickMoneyVideo(videoUrl) : Promise.reject(new Error('el sorteo no tiene video'))
     ready

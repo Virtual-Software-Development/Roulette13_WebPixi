@@ -12,7 +12,7 @@ import {
 } from '../sync/lobbyTimeline'
 import { offsetFromSamples } from '../time/serverClock'
 import { seededDigits } from '../utils/seededRandom'
-import { buildQuickMoneyDraws, quickMoneyFallbackDigits } from '../sync/quickMoneyHistory'
+import { buildQuickMoneyDraws } from '../sync/quickMoneyHistory'
 import { QUICK_MONEY_VIDEO_BUDGET_MS } from '../config/quickMoneyLobbyCycle'
 
 const T0 = Date.UTC(2026, 9, 14, 15, 0, 0)
@@ -72,30 +72,23 @@ describe('seededDigits', () => {
 })
 
 describe('buildQuickMoneyDraws', () => {
-  const rounds = [
-    { drawNo: '0012', rouletteDrawAtMs: T0 },
-    { drawNo: '0011', rouletteDrawAtMs: T0 - 299_000 },
+  const drawAt = quickMoneyDrawAtMs(T0)
+  const entries = [
+    { numeroEvento: '0012', fecha: '2026-10-14', horaProgramada: new Date(drawAt).toISOString(), pick3: '123', pick4: '4567' },
+    { numeroEvento: '0011', fecha: '2026-10-14', horaProgramada: new Date(drawAt - 300_000).toISOString(), pick3: '890', pick4: '0001' },
   ]
 
-  it('lists only Quick Money draws already published, numbered by their roulette round', () => {
-    // At T0 the Quick Money draw of round 0012 (T0 - 200s) has already finished its video.
-    const draws = buildQuickMoneyDraws(rounds, [], T0)
+  it('lists the real draws with their own number and digits, once published', () => {
+    const draws = buildQuickMoneyDraws(entries, T0)
     expect(draws.map((d) => d.gameNumber)).toEqual(['0012', '0011'])
-    expect(draws[0].drawnAt).toBe(new Date(quickMoneyDrawAtMs(T0)).toISOString())
+    expect(draws[0]).toMatchObject({ drawnAt: new Date(drawAt).toISOString(), pick3Result: [1, 2, 3], pick4Result: [4, 5, 6, 7] })
 
-    // Right after round 0012's Quick Money draw, its result is not published yet.
-    const early = buildQuickMoneyDraws(rounds, [], quickMoneyDrawAtMs(T0) + 1000)
+    // Right after draw 0012, the other machines are still playing its video: not published yet.
+    const early = buildQuickMoneyDraws(entries, drawAt + 1000)
     expect(early.map((d) => d.gameNumber)).toEqual(['0011'])
   })
 
-  it('uses the shared backend job digits when one matches the draw, the seeded ones otherwise', () => {
-    const drawAt = quickMoneyDrawAtMs(T0)
-    const jobs = [
-      { id: 'a', pick3: '123', pick4: '4567', estado: 'listo' as const, drawAt: new Date(drawAt + 3000).toISOString() },
-    ]
-    const [withJob, withoutJob] = buildQuickMoneyDraws(rounds, jobs, T0)
-    expect(withJob.pick3Result).toEqual([1, 2, 3])
-    expect(withJob.pick4Result).toEqual([4, 5, 6, 7])
-    expect(withoutJob.pick3Result).toEqual(quickMoneyFallbackDigits('0011').pick3)
+  it('skips draws without a result', () => {
+    expect(buildQuickMoneyDraws([{ ...entries[0], pick3: null, pick4: null }], T0)).toEqual([])
   })
 })

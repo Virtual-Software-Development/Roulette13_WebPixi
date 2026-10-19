@@ -32,10 +32,17 @@ export const ROULETTE_FOCUS_MS = 105_000
 // menos, se salta el video y se publica el resultado directo.
 export const QUICK_MONEY_VIDEO_BUDGET_MS = 80_000
 
-// Con cuánta anticipación al sorteo de Quick Money se le pide al backend el video de prueba
-// (números aleatorios + render en sorteo-api, ver quickMoneyTestVideo.ts). El render tarda ~75s y
-// la descarga (~70 MB) el resto -- pedido explícito: 2:30.
+// Con cuánta anticipación al sorteo de Quick Money se empieza a preparar (video/quickMoneyDrawVideo.ts):
+// los números y el video del sorteo real recién se piden cuando el backend lo ejecuta (~2s antes),
+// esto solo arma la espera.
 export const QUICK_MONEY_VIDEO_REQUEST_LEAD_MS = 150_000
+
+// Cuánto se espera, pasada la hora del sorteo de Quick Money, a que termine de bajar su video (el
+// backend lo entrega recién ejecutado el sorteo). Mientras, el split queda con el countdown en 0; si
+// no llega, se muestra el panel de video no disponible con los mismos números. Un video que llega
+// tarde arranca adelantado esa diferencia (QuickMoneyVideoView), así que termina a la misma hora en
+// todas las máquinas.
+export const QUICK_MONEY_VIDEO_WAIT_MS = 8_000
 
 // Duración de la transición Roulette completo <-> split (rueda achicándose a la izquierda + paneles
 // de Quick Money entrando) -- compartida por el CSS (vía variable inline) y por el cálculo del final
