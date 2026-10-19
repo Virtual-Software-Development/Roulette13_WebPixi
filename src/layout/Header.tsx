@@ -103,7 +103,7 @@ const ADMIN_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
 function AdminHeaderMeta() {
   const { t } = useTranslation()
   const now = useNow()
-  // Usuario de la sesión: undefined mientras carga, null sin sesión (Next Results es público).
+  // Usuario de la sesión: undefined mientras carga, null si no se pudo leer.
   const [user, setUser] = useState<AdminUser | null | undefined>(undefined)
 
   useEffect(() => {

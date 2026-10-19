@@ -1,7 +1,7 @@
 import { adminFetch, readAdminJson as readJson } from './adminSession'
 
-// Endpoints de quick-money-backend para Next Results > Roulette -- públicos (sin login); si hay una
-// sesión de admin se manda su token solo para la auditoría (ver adminSession.ts).
+// Endpoints de quick-money-backend para Next Results > Roulette -- solo admin (con sesión, ver
+// adminSession.ts); el backend audita quién leyó o cambió el resultado.
 
 export interface RoulettePendingEvent {
   id: number

@@ -60,10 +60,7 @@ function isAdminView(value: string | null): value is AdminView {
   )
 }
 
-// Next Results se usa sin login (pedido explícito); el resto del panel exige una sesión de admin y,
-// sin ella, manda al Login.
-const PUBLIC_VIEWS: AdminView[] = ['admin-next-results', 'admin-next-results-quick-money']
-
+// Todas las vistas del panel exigen una sesión de admin; sin ella, manda al Login.
 type SessionStatus = 'checking' | 'signedIn' | 'signedOut'
 
 function getInitialView(): AdminView {
@@ -79,7 +76,6 @@ function getInitialView(): AdminView {
 export function AdminPanel() {
   const [view, setView] = useState<AdminView>(getInitialView)
   const [session, setSession] = useState<SessionStatus>('checking')
-  const needsSession = !PUBLIC_VIEWS.includes(view)
 
   useEffect(() => {
     let cancelled = false
@@ -92,11 +88,11 @@ export function AdminPanel() {
   }, [])
 
   useEffect(() => {
-    if (needsSession && session === 'signedOut') navigateToPreview('login')
-  }, [needsSession, session])
+    if (session === 'signedOut') navigateToPreview('login')
+  }, [session])
 
-  // Idioma del panel = Admin Panel Language de General Settings (llega en /gameInfo, que es público,
-  // así también lo sigue Next Results sin sesión). Sin respuesta queda en inglés.
+  // Idioma del panel = Admin Panel Language de General Settings (llega en /gameInfo). Sin respuesta
+  // queda en inglés.
   useEffect(() => {
     fetchGameInfo()
       .then((info) => applyAppLanguage(info.adminLanguage ?? 'en'))
@@ -117,9 +113,9 @@ export function AdminPanel() {
     }
   }
 
-  // Mientras se verifica la sesión (o se redirige al Login) no se monta ninguna página protegida, así
-  // no llegan a pedir datos al backend sin token.
-  if (needsSession && session !== 'signedIn') return null
+  // Mientras se verifica la sesión (o se redirige al Login) no se monta ninguna página, así no
+  // llegan a pedir datos al backend sin token.
+  if (session !== 'signedIn') return null
 
   return (
     <AdminLayout activeId={ACTIVE_SIDEBAR_ID_BY_VIEW[view]} onNavigate={handleNavigate}>

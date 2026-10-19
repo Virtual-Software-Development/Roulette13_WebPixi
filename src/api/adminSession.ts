@@ -1,8 +1,7 @@
 // Sesión de admin de las vistas Admin (?preview=admin-*). LoginPage la abre con POST /auth/login:
 // el backend deja el refresh token en una cookie HttpOnly (path /api, por host y no por puerto) y
 // devuelve el access token, que se guarda solo en memoria. Al recargar, POST /auth/refresh lo
-// recupera con esa cookie. Next Results usa endpoints públicos: ahí la sesión solo sirve para que
-// el backend audite quién leyó o cambió el resultado.
+// recupera con esa cookie. Todos los endpoints del Admin exigen este token.
 let accessToken: string | null = null
 let refreshInFlight: Promise<boolean> | null = null
 
@@ -123,8 +122,7 @@ export async function readAdminJson<T>(res: Response, what: string): Promise<T> 
 }
 
 // fetch a /api con el access token si lo hay; ante un 401 renueva una vez con la cookie y reintenta.
-// Con las rutas públicas de Next Results no debería haber 401 -- si lo hay (p.ej. un backend sin
-// esas rutas públicas todavía), lanza AdminAuthError y la vista lo muestra como error de carga.
+// Si sigue en 401 (sesión vencida), lanza AdminAuthError y la vista lo muestra como error de carga.
 export async function adminFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const send = () => {
     const headers = new Headers(init.headers)
