@@ -246,7 +246,7 @@ function App() {
             )
           }
           // Tabla Winning Numbers de Quick Money: la misma que ya muestran las demás máquinas.
-          void seedQuickMoneyDraws(data, serverNow())
+          void seedQuickMoneyDraws(serverNow())
 
           // Las demás máquinas muestran en el lobby los totales que pidieron BETS_LEAD_MS antes del
           // sorteo anterior: los de ESE sorteo, no los parciales del que viene. Pasado ese momento
