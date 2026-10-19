@@ -1,6 +1,7 @@
 import { useCountdown, type Countdown } from './useCountdown'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useGameConfigStore } from '../store/useGameConfigStore'
+import { useConnectionIssue } from './useConnectionIssue'
 
 export type BettingRoundPhase = 'open' | 'closingSoon' | 'closed'
 
@@ -18,9 +19,12 @@ export function useBettingRoundPhase(): { phase: BettingRoundPhase; countdown: C
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
   const betsCloseTime = useGameConfigStore((state) => state.betsCloseTime)
   const active = useDrawCycleStore((state) => state.active)
+  // Sin conexión confiable (ver ConnectionBanner) el tablero se cierra igual que durante el giro:
+  // todo lo que lee `phase` (tablero, fichas, rebet/double, confirmar/apostar) queda bloqueado.
+  const connectionIssue = useConnectionIssue('betting')
   const closeTime = betsCloseTime || nextDrawStartTime
   const countdown = useCountdown(closeTime)
   const betsClosed = betsCloseTime !== '' && countdown.remainingSeconds <= 0
-  const phase: BettingRoundPhase = active || betsClosed ? 'closed' : countdown.urgent ? 'closingSoon' : 'open'
+  const phase: BettingRoundPhase = active || betsClosed || connectionIssue ? 'closed' : countdown.urgent ? 'closingSoon' : 'open'
   return { phase, countdown }
 }

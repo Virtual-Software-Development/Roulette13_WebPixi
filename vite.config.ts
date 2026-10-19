@@ -75,6 +75,13 @@ export default defineConfig(({ mode }) => {
           // Backend routes live under /api/v1 (quick_money-backend's router.go).
           rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
         },
+        // Readiness del backend (proceso vivo Y base alcanzable), en la raíz y no bajo /api/v1 --
+        // ver src/network/backendMonitor.ts.
+        '/backend/readyz': {
+          target: env.API_URL || 'http://localhost:3000',
+          changeOrigin: true,
+          rewrite: () => '/readyz',
+        },
         // MQTT sobre WebSocket hacia EMQX (listener ws en 8083, path /mqtt) -- ver
         // src/mqtt/mqttConnection.ts.
         '/mqtt': {

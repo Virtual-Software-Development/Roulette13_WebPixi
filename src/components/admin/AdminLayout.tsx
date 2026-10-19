@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { Header } from '../../layout/Header'
 import { AdminSidebar } from './AdminSidebar'
+import { ConnectionBanner } from '../common/ConnectionBanner'
 import { fetchGameInfo } from '../../api/gameInfo'
 import { useGameConfigStore } from '../../store/useGameConfigStore'
 import { buildMediaUrlOrEmpty } from '../../utils/media'
@@ -44,6 +45,7 @@ export function AdminLayout({ activeId, onNavigate, children }: AdminLayoutProps
   return (
     <div className="admin-shell">
       <Header activeTab="admin" />
+      <ConnectionBanner context="admin" />
 
       <div className="admin-body">
         <AdminSidebar items={ADMIN_SIDEBAR_ITEMS} activeId={activeId} onNavigate={onNavigate} />

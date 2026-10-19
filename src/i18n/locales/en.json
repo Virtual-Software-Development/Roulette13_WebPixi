@@ -1528,6 +1528,10 @@
     "noInternet": {
       "title": "No internet connection",
       "description": "This terminal lost its internet connection. Check the network cable or Wi-Fi; the screen comes back on its own when the connection returns."
+    },
+    "backendOffline": {
+      "title": "Server unavailable",
+      "description": "The game server is not responding or lost its database. Retrying automatically…"
     }
   },
   "betSlipActions": {
@@ -1553,5 +1557,14 @@
   "sync": {
     "title": "Syncing",
     "subtitle": "Joining the current round…"
+  },
+  "connectionBanner": {
+    "noInternet": "No internet connection",
+    "backendOffline": "Server unavailable",
+    "mqttOffline": "Real-time connection lost",
+    "clockUnsynced": "Clock not synchronized with the server",
+    "bettingBlocked": "Betting is locked until the connection is restored. Retrying automatically…",
+    "adminStale": "Data may be out of date and changes will not be saved. Retrying automatically…",
+    "loginBlocked": "Sign-in is unavailable until the server responds. Retrying automatically…"
   }
 }
