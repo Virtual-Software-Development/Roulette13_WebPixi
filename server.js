@@ -30,6 +30,14 @@ const apiProxyHandler = createApiProxyHandler({
   prefix: '/api/',
 })
 
+// Readiness del backend (/readyz: proceso vivo Y base de datos alcanzable), fuera de /api/v1 -- ver
+// src/network/backendMonitor.ts.
+const backendProbeHandler = createApiProxyHandler({
+  target: process.env.API_URL ?? 'http://localhost:3000',
+  prefix: '/backend/',
+  forwardBase: '',
+})
+
 const mqttUpgradeHandler = createMqttUpgradeHandler({
   target: process.env.MQTT_WS_URL ?? 'ws://localhost:8083',
 })
@@ -87,7 +95,9 @@ const server = http.createServer((req, res) => {
   mediaHandler(req, res, () =>
     mediaListHandler(req, res, () =>
       terminalInfoHandler(req, res, () =>
-        internetCheckHandler(req, res, () => apiProxyHandler(req, res, () => serveStatic(req, res)))
+        internetCheckHandler(req, res, () =>
+          apiProxyHandler(req, res, () => backendProbeHandler(req, res, () => serveStatic(req, res)))
+        )
       )
     )
   )

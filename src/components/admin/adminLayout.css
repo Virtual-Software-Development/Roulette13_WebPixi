@@ -44,7 +44,7 @@
   /* Espacio para el Header real, que vive fixed por encima (top:2px + height:65px, ver
      header.css) -- mismo valor que HEADER_BAR_HEIGHT_PX usa para el canvas de Pixi
      (layout.constants.ts), + el margen de 2px + un respiro extra. */
-  padding-top: 79px;
+  padding-top: calc(79px + var(--connection-banner-height, 0px));
 }
 
 .admin-main {

@@ -1528,6 +1528,10 @@
     "noInternet": {
       "title": "Sin conexión a internet",
       "description": "Esta terminal perdió la conexión a internet. Revisa el cable de red o el Wi-Fi; la pantalla vuelve sola cuando regrese la conexión."
+    },
+    "backendOffline": {
+      "title": "Servidor no disponible",
+      "description": "El servidor del juego no responde o perdió su base de datos. Reintentando automáticamente…"
     }
   },
   "betSlipActions": {
@@ -1553,5 +1557,14 @@
   "sync": {
     "title": "Sincronizando",
     "subtitle": "Uniéndose a la ronda en curso…"
+  },
+  "connectionBanner": {
+    "noInternet": "Sin conexión a internet",
+    "backendOffline": "Servidor no disponible",
+    "mqttOffline": "Se perdió la conexión en tiempo real",
+    "clockUnsynced": "Hora no sincronizada con el servidor",
+    "bettingBlocked": "Las apuestas están bloqueadas hasta recuperar la conexión. Reintentando automáticamente…",
+    "adminStale": "Los datos pueden estar desactualizados y los cambios no se guardarán. Reintentando automáticamente…",
+    "loginBlocked": "No se puede iniciar sesión hasta que el servidor responda. Reintentando automáticamente…"
   }
 }

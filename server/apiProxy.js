@@ -1,7 +1,9 @@
 import http from 'http'
 import https from 'https'
 
-export function createApiProxyHandler({ target, prefix = '/api/' }) {
+// forwardBase: what replaces the prefix's leading segment upstream -- '/api/v1' for the API, '' for
+// the backend's root probes (/backend/readyz -> /readyz, see src/network/backendMonitor.ts).
+export function createApiProxyHandler({ target, prefix = '/api/', forwardBase = '/api/v1' }) {
   const targetUrl = new URL(target)
   const client = targetUrl.protocol === 'https:' ? https : http
 
@@ -10,7 +12,7 @@ export function createApiProxyHandler({ target, prefix = '/api/' }) {
 
     // Backend routes live under /api/v1 (quick_money-backend's router.go):
     // "/api/gameInfo" -> "/api/v1/gameInfo".
-    const forwardPath = '/api/v1' + req.url.slice(prefix.length - 1)
+    const forwardPath = forwardBase + req.url.slice(prefix.length - 1)
     const options = {
       hostname: targetUrl.hostname,
       port: targetUrl.port || (targetUrl.protocol === 'https:' ? 443 : 80),

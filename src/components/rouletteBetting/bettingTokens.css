@@ -39,6 +39,7 @@
   min-height: 0;
   /* Espacio para el Header real, fixed por encima -- mismo valor que usa admin-body
      (top:2px + height:65px del header, ver header.css). */
-  padding-top: 79px;
+  /* + la banda de ConnectionBanner cuando se muestra (0 si no). */
+  padding-top: calc(79px + var(--connection-banner-height, 0px));
   box-sizing: border-box;
 }

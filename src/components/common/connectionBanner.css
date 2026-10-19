@@ -1,0 +1,85 @@
+/* Banda de aviso bajo el Header (fixed, top:2px + height:65px, ver header.css). Fixed también,
+   para no depender del layout de cada pantalla: el body de cada una suma su alto al padding-top vía
+   --connection-banner-height (ver ConnectionBanner.tsx). z-index 3: por encima del Header (2) y
+   del contenido, por debajo de los modales (100). */
+.connection-banner {
+  position: fixed;
+  top: 67px;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 10px;
+  row-gap: 2px;
+  min-height: 38px;
+  padding: 7px 16px;
+  box-sizing: border-box;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: center;
+  color: #fff4f4;
+  background: linear-gradient(90deg, rgba(140, 18, 30, 0.96) 0%, rgba(185, 28, 42, 0.96) 50%, rgba(140, 18, 30, 0.96) 100%);
+  border-bottom: 1px solid rgba(255, 120, 130, 0.45);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: connection-banner-in 220ms ease-out;
+}
+
+/* Login: sin Header, pegada arriba. */
+.connection-banner[data-placement='top'] {
+  top: 0;
+}
+
+/* Reloj no sincronizado: la conexión está, el problema es otro -- ámbar en vez de rojo. */
+.connection-banner[data-issue='clockUnsynced'] {
+  color: #1d1305;
+  background: linear-gradient(90deg, rgba(196, 128, 30, 0.96) 0%, rgba(240, 168, 60, 0.96) 50%, rgba(196, 128, 30, 0.96) 100%);
+  border-bottom-color: rgba(255, 210, 140, 0.6);
+}
+
+.connection-banner-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  animation: connection-banner-pulse 1.6s ease-in-out infinite;
+}
+
+.connection-banner-title {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.connection-banner-text {
+  opacity: 0.92;
+}
+
+@keyframes connection-banner-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes connection-banner-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connection-banner,
+  .connection-banner-icon {
+    animation: none;
+  }
+}
