@@ -7,7 +7,7 @@ const HOME_ICON_URL = buildMediaUrl('Website_svg_icons/35_house_white.svg')
 // top-level DOM pura, mismo criterio que LoginPage.tsx/RouletteBettingView.tsx (ocupa todo el
 // viewport, sin Header/sidebar). Pixi (App.tsx) no interviene acá: está encapsulado solo en la
 // ruleta, y esta vista puede necesitarse ANTES de saber si Pixi llegó a inicializarse (ej. un
-// ?preview= inválido en main.tsx), así que depender de Pixi para mostrarla sería frágil.
+// path inválido en main.tsx), así que depender de Pixi para mostrarla sería frágil.
 //
 // Esta vista no conoce la causa del error (403/404/500/...) -- ese significado (código/título/
 // descripción/acción) lo arma quien detecta el problema (ver NotFoundView.tsx para el caso de

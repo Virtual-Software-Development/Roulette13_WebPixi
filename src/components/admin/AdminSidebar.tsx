@@ -30,7 +30,7 @@ export function AdminSidebar({ items, activeId, onNavigate }: AdminSidebarProps)
   // activeId ahora puede ser el id de un SUB-item (ej. 'rtpManagement', ver AdminPanel.tsx) --
   // auto-expande el padre correspondiente para que su submenú se vea abierto sin que el usuario
   // tenga que hacer click en RTP primero (ej. entrar directo a RTP > Management vía el botón
-  // "View RTP Dashboard" en sentido inverso, o al recargar con ?preview=admin-rtp-management).
+  // "View RTP Dashboard" en sentido inverso, o al recargar con /admin-rtp-management).
   useEffect(() => {
     const parentWithActiveChild = items.find((item) => item.children?.some((child) => child.id === activeId))
     if (parentWithActiveChild) {

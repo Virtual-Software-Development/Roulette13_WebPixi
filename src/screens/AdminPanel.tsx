@@ -11,6 +11,7 @@ import { UsersPage } from './UsersPage'
 import { SystemLogsPage } from './SystemLogsPage'
 import { hasAdminSession } from '../api/adminSession'
 import { navigateToPreview } from '../utils/navigatePreview'
+import { currentPreview, withPreviewPath } from '../appSurface'
 import { fetchGameInfo } from '../api/gameInfo'
 import { applyAppLanguage } from '../i18n/applyLanguage'
 
@@ -64,7 +65,7 @@ function isAdminView(value: string | null): value is AdminView {
 type SessionStatus = 'checking' | 'signedIn' | 'signedOut'
 
 function getInitialView(): AdminView {
-  const preview = new URLSearchParams(window.location.search).get('preview')
+  const preview = currentPreview()
   return isAdminView(preview) ? preview : 'admin'
 }
 
@@ -99,12 +100,11 @@ export function AdminPanel() {
       .catch(() => {})
   }, [])
 
-  // Mantiene `?preview=` sincronizado sin disparar un reload (history.replaceState en vez de
-  // location.href) -- así refrescar la página o copiar el link conserva la vista actual.
+  // Mantiene el path de la URL (/admin-users) sincronizado sin disparar un reload
+  // (history.replaceState en vez de location.href) -- así refrescar la página o copiar el link
+  // conserva la vista actual.
   useEffect(() => {
-    const url = new URL(window.location.href)
-    url.searchParams.set('preview', view)
-    window.history.replaceState(null, '', url)
+    window.history.replaceState(null, '', withPreviewPath(new URL(window.location.href), view))
   }, [view])
 
   const handleNavigate = (target: string) => {

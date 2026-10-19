@@ -1,4 +1,4 @@
-// Sesión de admin de las vistas Admin (?preview=admin-*). LoginPage la abre con POST /auth/login:
+// Sesión de admin de las vistas Admin (/admin-*). LoginPage la abre con POST /auth/login:
 // el backend deja el refresh token en una cookie HttpOnly (path /api, por host y no por puerto) y
 // devuelve el access token, que se guarda solo en memoria. Al recargar, POST /auth/refresh lo
 // recupera con esa cookie. Todos los endpoints del Admin exigen este token.

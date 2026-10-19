@@ -59,7 +59,20 @@ function serveStatic(req, res) {
     return res.end('Bad Request')
   }
 
+  // Las pantallas van en el path (/roulette-betting, ver src/appSurface.ts): un path sin extensión
+  // que no es un archivo de dist es una pantalla, y se responde con index.html.
+  const isScreen = path.extname(requestedPath) === ''
   fs.readFile(filePath, (err, data) => {
+    if (err && isScreen) {
+      return fs.readFile(path.join(distRoot, 'index.html'), (indexErr, index) => {
+        if (indexErr) {
+          res.statusCode = 404
+          return res.end('Not Found')
+        }
+        res.setHeader('Content-Type', STATIC_MIME['.html'])
+        res.end(index)
+      })
+    }
     if (err) {
       res.statusCode = 404
       return res.end('Not Found')
