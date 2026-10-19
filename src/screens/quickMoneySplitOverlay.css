@@ -472,3 +472,51 @@
     filter: drop-shadow(0 0 0 transparent);
   }
 }
+
+/* VIEW FULL HISTORY al pie del panel Winning Numbers: mismo aspecto que el botón de la tarjeta de
+   Roulette (GameList), a la escala de este panel. El overlay no recibe clicks (pointer-events:none);
+   el botón solo mientras el panel está en pantalla. */
+.qms-history-button {
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  /* Pegado al pie del panel: deja aire debajo de la última fila de la tabla. */
+  bottom: 14px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid #3a4653;
+  background: #0d1620;
+  color: #d6d7db;
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.qms-overlay[data-visible='true'] .qms-history-button {
+  pointer-events: auto;
+}
+
+.qms-history-button:hover,
+.qms-history-button:focus-visible {
+  background: #121e2c;
+  border-color: #5a6672;
+  outline: none;
+}
+
+.qms-history-button-icon {
+  width: 24px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: #a7a8ac;
+}

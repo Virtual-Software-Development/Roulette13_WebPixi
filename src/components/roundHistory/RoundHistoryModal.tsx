@@ -2,8 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
-import { fetchRouletteRoundHistory, type RouletteRoundHistoryEntry } from '../../api/roundHistory'
-import { useRoundHistoryStore } from '../../store/useRoundHistoryStore'
+import {
+  fetchQuickMoneyRoundHistory,
+  fetchRouletteRoundHistory,
+  type QuickMoneyRoundHistoryEntry,
+  type RouletteRoundHistoryEntry,
+} from '../../api/roundHistory'
+import { useRoundHistoryStore, type RoundHistoryGame } from '../../store/useRoundHistoryStore'
 import { getRouletteColor, toWheelPocket } from '../../utils/rouletteColors'
 import './roundHistoryModal.css'
 
@@ -13,7 +18,19 @@ type PageSize = (typeof PAGE_SIZE_OPTIONS)[number]
 const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
-type LoadState = { status: 'loading' } | { status: 'error' } | { status: 'ready'; rounds: RouletteRoundHistoryEntry[] }
+const GAMES: RoundHistoryGame[] = ['roulette', 'quickMoney']
+
+type Rounds =
+  | { game: 'roulette'; rounds: RouletteRoundHistoryEntry[] }
+  | { game: 'quickMoney'; rounds: QuickMoneyRoundHistoryEntry[] }
+
+type LoadState = { status: 'loading' } | { status: 'error' } | ({ status: 'ready' } & Rounds)
+
+function fetchRounds(game: RoundHistoryGame, signal: AbortSignal): Promise<Rounds> {
+  return game === 'roulette'
+    ? fetchRouletteRoundHistory(signal).then((rounds) => ({ game, rounds }))
+    : fetchQuickMoneyRoundHistory(signal).then((rounds) => ({ game, rounds }))
+}
 
 // Hasta 7 botones de página: 1 … actual-1 actual actual+1 … última.
 function pageButtons(current: number, total: number): (number | 'gap')[] {
@@ -37,9 +54,9 @@ function ResultPill({ raw }: { raw: number }) {
   )
 }
 
-// Pop-up "View Full History" del lobby de ruleta (puerto 4100): las últimas 100 rondas liquidadas,
-// paginadas en el cliente. Se abre desde el botón Pixi de GameList (vía useRoundHistoryStore) y se
-// monta en document.body -- mismo motivo que WheelFrameStepper: fuera del stacking context del
+// Pop-up "View Full History" del lobby (puerto 4100): las últimas rondas liquidadas del juego elegido
+// en el selector del header (Roulette o Quick Money), paginadas en el cliente. Se abre desde
+// ViewHistoryButton (vía useRoundHistoryStore) y se monta en document.body -- mismo motivo que WheelFrameStepper: fuera del stacking context del
 // lobby, así los clicks llegan al pop-up y no al canvas de Pixi. La tabla scrollea DENTRO del panel.
 export function RoundHistoryModal() {
   const isOpen = useRoundHistoryStore((state) => state.isOpen)
@@ -50,6 +67,8 @@ export function RoundHistoryModal() {
 function RoundHistoryPanel() {
   const { t } = useTranslation()
   const close = useRoundHistoryStore((state) => state.close)
+  const game = useRoundHistoryStore((state) => state.game)
+  const setGame = useRoundHistoryStore((state) => state.setGame)
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' })
   const [reloadKey, setReloadKey] = useState(0)
   const [pageSize, setPageSize] = useState<PageSize>(10)
@@ -76,15 +95,16 @@ function RoundHistoryPanel() {
   useEffect(() => {
     const controller = new AbortController()
     setLoadState({ status: 'loading' })
-    fetchRouletteRoundHistory(controller.signal)
-      .then((rounds) => setLoadState({ status: 'ready', rounds }))
+    setPage(1)
+    fetchRounds(game, controller.signal)
+      .then((data) => setLoadState({ status: 'ready', ...data }))
       .catch(() => {
         if (!controller.signal.aborted) setLoadState({ status: 'error' })
       })
     return () => controller.abort()
-  }, [reloadKey])
+  }, [reloadKey, game])
 
-  const rounds = loadState.status === 'ready' ? loadState.rounds : []
+  const rounds: readonly unknown[] = loadState.status === 'ready' ? loadState.rounds : []
   const totalPages = Math.max(1, Math.ceil(rounds.length / pageSize))
   const currentPage = Math.min(page, totalPages)
   const pageStart = (currentPage - 1) * pageSize
@@ -105,9 +125,21 @@ function RoundHistoryPanel() {
       <div ref={dialogRef} className="round-history" role="dialog" aria-modal="true" aria-labelledby="round-history-title" tabIndex={-1}>
         <div className="round-history-header">
           <div>
-            <h2 id="round-history-title" className="round-history-title">
-              {t('roundHistory.title')}
-            </h2>
+            <div className="round-history-heading">
+              <h2 id="round-history-title" className="round-history-title">
+                {t('roundHistory.title')}
+              </h2>
+              <label className="round-history-game">
+                <span className="round-history-sr-only">{t('roundHistory.gameLabel')}</span>
+                <select value={game} onChange={(e) => setGame(e.target.value as RoundHistoryGame)}>
+                  {GAMES.map((g) => (
+                    <option key={g} value={g}>
+                      {t(`roundHistory.games.${g}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <p className="round-history-subtitle">{t('roundHistory.subtitle', { count: rounds.length })}</p>
           </div>
           <button type="button" className="round-history-close" aria-label={t('roundHistory.close')} onClick={close}>
@@ -128,7 +160,10 @@ function RoundHistoryPanel() {
             </div>
           )}
           {loadState.status === 'ready' && rounds.length === 0 && <p className="round-history-message">{t('roundHistory.empty')}</p>}
-          {loadState.status === 'ready' && rounds.length > 0 && (
+          {loadState.status === 'ready' && loadState.game === 'quickMoney' && rounds.length > 0 && (
+            <QuickMoneyTable rounds={loadState.rounds.slice(pageStart, pageStart + pageSize)} />
+          )}
+          {loadState.status === 'ready' && loadState.game === 'roulette' && rounds.length > 0 && (
             <table className="round-history-table">
               <thead>
                 <tr>
@@ -142,7 +177,7 @@ function RoundHistoryPanel() {
                 </tr>
               </thead>
               <tbody>
-                {pageRounds.map((round) => {
+                {(pageRounds as RouletteRoundHistoryEntry[]).map((round) => {
                   const scheduled = new Date(round.horaProgramada)
                   const raw = round.resultadoEjecutado
                   const pocket = raw === null ? null : toWheelPocket(raw)
@@ -230,5 +265,38 @@ function RoundHistoryPanel() {
         )}
       </div>
     </div>
+  )
+}
+
+// Sorteos de Quick Money: los dígitos de Pick 3 y Pick 4 de cada uno (verde y amarillo, los colores
+// de cada juego en el lobby de Quick Money).
+function QuickMoneyTable({ rounds }: { rounds: QuickMoneyRoundHistoryEntry[] }) {
+  const { t } = useTranslation()
+  return (
+    <table className="round-history-table">
+      <thead>
+        <tr>
+          <th>{t('roundHistory.columns.round')}</th>
+          <th>{t('roundHistory.columns.date')}</th>
+          <th>{t('roundHistory.columns.time')}</th>
+          <th>{t('roundHistory.columns.pick3')}</th>
+          <th>{t('roundHistory.columns.pick4')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rounds.map((round) => {
+          const scheduled = new Date(round.horaProgramada)
+          return (
+            <tr key={`${round.numeroEvento}-${round.horaProgramada}`}>
+              <td className="round-history-round">{t('roundHistory.roundLabel', { round: round.numeroEvento })}</td>
+              <td>{DATE_FORMATTER.format(scheduled)}</td>
+              <td className="round-history-muted">{TIME_FORMATTER.format(scheduled)}</td>
+              <td>{round.pick3 ? <span className="round-history-pill" data-draw="pick3">{round.pick3}</span> : '—'}</td>
+              <td>{round.pick4 ? <span className="round-history-pill" data-draw="pick4">{round.pick4}</span> : '—'}</td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
   )
 }

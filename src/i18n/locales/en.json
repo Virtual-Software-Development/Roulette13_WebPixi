@@ -111,7 +111,9 @@
       "result": "Result",
       "color": "Color",
       "parity": "Odd / Even",
-      "range": "Low / High"
+      "range": "Low / High",
+      "pick3": "Pick 3",
+      "pick4": "Pick 4"
     },
     "colors": {
       "red": "Red",
@@ -126,7 +128,12 @@
     "showing": "Showing {{from}}–{{to}} of {{total}}",
     "pagination": "Pagination",
     "previous": "Previous page",
-    "next": "Next page"
+    "next": "Next page",
+    "gameLabel": "Game",
+    "games": {
+      "roulette": "Roulette",
+      "quickMoney": "Quick Money"
+    }
   },
   "gameList": {
     "title": "RECENT GAMES",

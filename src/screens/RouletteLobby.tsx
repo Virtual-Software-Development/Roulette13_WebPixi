@@ -10,8 +10,9 @@ import { LobbyLiveBetsPanel } from '../components/lobbyLiveBets/LobbyLiveBetsPan
 
 export function RouletteLobby() {
   const setGameConfig = useGameConfigStore((state) => state.setGameConfig)
-  // Abre el pop-up del historial (DOM, ver RoundHistoryModal.tsx, montado en App.tsx).
-  const openRoundHistory = useRoundHistoryStore((state) => state.open)
+  // Abre el pop-up del historial (DOM, ver RoundHistoryModal.tsx, montado en App.tsx) en Roulette.
+  const openHistory = useRoundHistoryStore((state) => state.open)
+  const openRoundHistory = () => openHistory('roulette')
 
   useEffect(() => {
     setGameConfig({

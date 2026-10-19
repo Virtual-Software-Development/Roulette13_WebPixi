@@ -14,3 +14,19 @@ export async function fetchRouletteRoundHistory(signal?: AbortSignal): Promise<R
   if (!res.ok) throw new Error(`roulette/last-results request failed: ${res.status}`)
   return res.json()
 }
+
+// GET /lottery/last-results (público) -- los últimos sorteos de Quick Money ya liquidados, del más
+// reciente al más viejo: los dígitos de Pick 3 y Pick 4 como texto ("079", "7067").
+export interface QuickMoneyRoundHistoryEntry {
+  numeroEvento: string
+  fecha: string
+  horaProgramada: string
+  pick3: string | null
+  pick4: string | null
+}
+
+export async function fetchQuickMoneyRoundHistory(signal?: AbortSignal): Promise<QuickMoneyRoundHistoryEntry[]> {
+  const res = await fetch('/api/lottery/last-results', { signal })
+  if (!res.ok) throw new Error(`lottery/last-results request failed: ${res.status}`)
+  return res.json()
+}
