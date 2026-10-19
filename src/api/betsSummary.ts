@@ -8,7 +8,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-async function fetchBetsSummaryOnce(drawNo?: string): Promise<BetsSummaryResponse> {
+export async function fetchBetsSummaryOnce(drawNo?: string): Promise<BetsSummaryResponse> {
   const url = drawNo ? `/api/bets?drawNo=${encodeURIComponent(drawNo)}` : '/api/bets'
   const res = await fetch(url, { headers: { Authorization: `Bearer ${env.apiKey}` } })
   if (!res.ok) throw new Error(`bets request failed: ${res.status}`)
