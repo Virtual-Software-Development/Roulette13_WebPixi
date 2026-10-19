@@ -2,6 +2,8 @@ import { Header } from '../layout/Header'
 import type { BettingMode } from '../types/bettingMode'
 import { QuickMoneyBettingWorkspace } from '../components/quickMoneyBetting/QuickMoneyBettingWorkspace'
 import { useQuickMoneyEventSync } from '../hooks/useQuickMoneyEventSync'
+import { useServerClockSync } from '../hooks/useServerClockSync'
+import { ConnectionBanner } from '../components/common/ConnectionBanner'
 import '../components/quickMoneyBetting/quickMoneyBettingTokens.css'
 
 // Pantalla top-level, mismo shape que RouletteBettingView.tsx -- reusa el Header real del
@@ -12,10 +14,12 @@ import '../components/quickMoneyBetting/quickMoneyBettingTokens.css'
 // explícito, ver Header.tsx/RouletteBettingView.tsx). activeBettingGame="quickMoney" es lo que
 // bloquea la opción Quick Money dentro de BettingGamePickerModal cuando se reabre desde acá.
 export function QuickMoneyBettingView({ mode }: { mode: BettingMode }) {
+  useServerClockSync()
   useQuickMoneyEventSync()
   return (
     <div className="quick-money-betting-shell">
       <Header activeTab="none" activeBettingGame="quickMoney" />
+      <ConnectionBanner context="betting" />
       <div className="quick-money-betting-body">
         <QuickMoneyBettingWorkspace mode={mode} />
       </div>

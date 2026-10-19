@@ -6,6 +6,7 @@ import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { parseApiDateTime } from '../utils/time'
 import { RESULT_HOLD_MS } from '../layout/layout.constants'
+import { serverNow } from '../time/serverClock'
 
 // Margen tras nextDrawStartTime antes de pedir /api/drawResult -- le da tiempo al backend a
 // confirmar el número ganador (mismo tipo de margen que RESULT_LEAD_MS en App.tsx, pero medido
@@ -77,7 +78,7 @@ export function useRoundSync() {
           const { drawNo, startTime } = data.nextDraw
           const drawMs = parseApiDateTime(startTime).getTime()
           trackedDrawMs = drawMs
-          const msUntilStart = Math.max(0, drawMs - Date.now())
+          const msUntilStart = Math.max(0, drawMs - serverNow())
 
           startTimer = setTimeout(() => {
             if (stale()) return
@@ -91,7 +92,7 @@ export function useRoundSync() {
                 if (stale()) return
                 useResultsStore.getState().addResult({
                   id: drawNo,
-                  timestamp: Date.now(),
+                  timestamp: serverNow(),
                   drawNumber: drawNo,
                   winningNumber: result,
                 })
@@ -117,7 +118,7 @@ export function useRoundSync() {
     // a pedir /gameInfo desde cero.
     function resyncIfStuck() {
       if (cancelled || trackedDrawMs === null) return
-      if (Date.now() - trackedDrawMs < STUCK_AFTER_DRAW_MS) return
+      if (serverNow() - trackedDrawMs < STUCK_AFTER_DRAW_MS) return
       console.warn('[roundSync] la ronda no avanzó después del sorteo -- resincronizando')
       clearRoundTimers()
       useDrawCycleStore.getState().setActive(false)

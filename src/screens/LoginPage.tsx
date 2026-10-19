@@ -6,6 +6,7 @@ import { navigateToPreview } from '../utils/navigatePreview'
 import { AdminLoginFailure, hasAdminSession, loginAdmin } from '../api/adminSession'
 import { fetchGameInfo } from '../api/gameInfo'
 import { applyAppLanguage } from '../i18n/applyLanguage'
+import { ConnectionBanner } from '../components/common/ConnectionBanner'
 import './loginPage.css'
 
 const REMEMBERED_USERNAME_KEY = 'login.rememberedUsername'
@@ -162,6 +163,7 @@ export function LoginPage() {
 
   return (
     <main className="login-page" style={{ '--login-bg-image': `url(${LOGIN_BACKGROUND_URL})` } as CSSProperties}>
+      <ConnectionBanner context="login" />
       <section className="login-card">
         <div className="login-brand">
           {showLogo && logoUrl && !logoFailed && (

@@ -4,6 +4,8 @@
 // varias muestras y se queda con la de menor ida y vuelta, mismo criterio que NTP/Cristian: con
 // RTT bajo, el punto medio del viaje es una buena estimación de cuándo el servidor leyó su reloj.
 
+import { useClockSyncStore } from '../store/useClockSyncStore'
+
 const SAMPLE_COUNT = 5
 const SAMPLE_TIMEOUT_MS = 2_000
 const RESYNC_INTERVAL_MS = 5 * 60_000
@@ -76,9 +78,13 @@ export async function syncServerClock(): Promise<boolean> {
     }
   }
   const offset = offsetFromSamples(samples)
-  if (offset === null) return false
+  if (offset === null) {
+    if (!synced) useClockSyncStore.setState({ status: 'failed' })
+    return false
+  }
   offsetMs = offset
   synced = true
+  useClockSyncStore.setState({ status: 'synced' })
   console.log(`[serverClock] offset ${Math.round(offset)} ms (${samples.length} muestras)`)
   return true
 }
@@ -89,6 +95,7 @@ export function applyRoughServerTime(serverTimeMs: number | undefined): void {
   if (synced || !serverTimeMs) return
   offsetMs = serverTimeMs - localNow()
   synced = true
+  useClockSyncStore.setState({ status: 'synced' })
   console.warn(`[serverClock] sin /api/time -- offset aproximado de /gameInfo: ${Math.round(offsetMs)} ms`)
 }
 

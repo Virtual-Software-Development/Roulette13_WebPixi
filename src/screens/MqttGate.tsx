@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ErrorView } from './ErrorView'
-import { useMqttStore } from '../store/useMqttStore'
-import { useInternetStore } from '../store/useInternetStore'
+import { useConnectionIssue } from '../hooks/useConnectionIssue'
 
 // Capa de "detección" para el caso sin conexión (mismo criterio que NotFoundView.tsx: ErrorView
 // solo presenta). La conexión MQTT y el estado de internet son de la máquina y viven en cualquier
@@ -17,12 +16,12 @@ import { useInternetStore } from '../store/useInternetStore'
 // resincroniza con el backend como en un arranque normal.
 export function MqttGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
-  const mqttOffline = useMqttStore((state) => state.offline)
-  const internetOffline = useInternetStore((state) => state.offline)
+  // Internet, backend (proceso o base caídos) o MQTT -- misma prioridad que la banda de las vistas
+  // de apuesta (ver useConnectionIssue).
+  const reason = useConnectionIssue('terminal')
 
-  if (!mqttOffline && !internetOffline) return children
+  if (!reason) return children
 
-  const reason = internetOffline ? 'noInternet' : 'mqttOffline'
   return (
     <ErrorView
       code={503}
