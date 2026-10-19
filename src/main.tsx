@@ -54,6 +54,8 @@ if (APP_SURFACE !== 'admin') {
   if (!IS_LAN_VIEWER) void import('./mqtt/mqttConnection.ts').then((m) => m.startMqttConnection())
   // Salida a internet de la máquina, también global (ver network/internetMonitor.ts).
   startInternetMonitor()
+  // Balance real de la máquina (lo carga el cajero), también global (ver api/machineBalance.ts).
+  void import('./api/machineBalance.ts').then((m) => m.startMachineBalanceSync())
 }
 
 // Solo los lobbies redirigen a la pantalla de error cuando la máquina pierde MQTT o internet (ver

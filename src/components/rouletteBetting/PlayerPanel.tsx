@@ -6,11 +6,12 @@ import { calculateSlipTotals } from '../../utils/rouletteBetPayout'
 import { formatMoney } from '../../utils/moneyFormat'
 import { useBettingRoundPhase } from '../../hooks/useBettingRoundPhase'
 import { placeRouletteTicket } from '../../api/rouletteTicket'
+import { refreshMachineBalance } from '../../api/machineBalance'
 import './playerPanel.css'
 
 // Place Bet sends the slip as a real ticket (POST /api/tickets, see api/rouletteTicket.ts) on the
-// round open for betting. The balance is still local only (no balance backend yet): it is debited
-// here once the backend accepts the ticket.
+// round open for betting. The backend pays it from the machine balance; once it is accepted the
+// balance shown is debited right away and then re-read (api/machineBalance.ts).
 
 export function PlayerPanel() {
   const { t } = useTranslation()
@@ -50,6 +51,7 @@ export function PlayerPanel() {
       return
     }
     setGameConfig({ balance: balance - totalStake })
+    void refreshMachineBalance()
     markPlaced()
     setSubmitting(false)
     setJustPlaced(true)
