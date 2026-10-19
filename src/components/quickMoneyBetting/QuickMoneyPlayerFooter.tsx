@@ -4,13 +4,15 @@ import { useGameConfigStore } from '../../store/useGameConfigStore'
 import { useQuickMoneyBetSlipStore } from '../../store/useQuickMoneyBetSlipStore'
 import { useQuickMoneyRoundPhase } from '../../hooks/useQuickMoneyRoundPhase'
 import { placeQuickMoneyTicket } from '../../api/quickMoneyTicket'
+import { refreshMachineBalance } from '../../api/machineBalance'
 import { calculateSlipTotals, getBetDraw } from '../../utils/quickMoneyPayout'
 import { formatMoney } from '../../utils/moneyFormat'
 import './quickMoneyPlayerFooter.css'
 
 // Place Bet envía el slip como un ticket real (POST /api/tickets, ver api/quickMoneyTicket.ts) al
-// sorteo abierto -- mismo criterio que PlayerPanel.tsx (Roulette). El balance sigue siendo solo
-// local (no hay backend de balance todavía): se debita recién cuando el backend acepta el ticket.
+// sorteo abierto -- mismo criterio que PlayerPanel.tsx (Roulette). El backend lo paga con el balance
+// de la máquina: aceptado el ticket, el balance mostrado se debita y se vuelve a leer
+// (api/machineBalance.ts).
 
 export function QuickMoneyPlayerFooter() {
   const { t } = useTranslation()
@@ -59,8 +61,9 @@ export function QuickMoneyPlayerFooter() {
         showPopup('failed')
         return
       }
+      setGameConfig({ balance: balance - totalStake })
+      void refreshMachineBalance()
     }
-    setGameConfig({ balance: balance - totalStake })
     clearAll()
     setSubmitting(false)
     setJustPlaced(true)

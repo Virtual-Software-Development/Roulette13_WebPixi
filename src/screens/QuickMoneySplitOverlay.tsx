@@ -7,6 +7,7 @@ import { useResultsStore } from '../store/useResultsStore'
 import { useLobbyModeStore, useQuickMoneySplitVisible } from '../store/useLobbyModeStore'
 import { useQuickMoneyRoundStore } from '../store/useQuickMoneyRoundStore'
 import { useQuickMoneyDrawsStore } from '../store/useQuickMoneyDrawsStore'
+import { useRoundHistoryStore } from '../store/useRoundHistoryStore'
 import { DESIGN_HEIGHT, DESIGN_WIDTH } from '../layout/layout.constants'
 import { QUICK_MONEY_SPLIT_TRANSITION_MS } from '../config/quickMoneyLobbyCycle'
 import { getRouletteColor, toWheelPocket } from '../utils/rouletteColors'
@@ -179,6 +180,7 @@ function CenterPanel() {
 function WinningNumbersPanel({ highlightLatest }: { highlightLatest: boolean }) {
   const { t } = useTranslation()
   const draws = useQuickMoneyDrawsStore((state) => state.draws)
+  const openHistory = useRoundHistoryStore((state) => state.open)
 
   return (
     <div className="qms-card qms-winning-numbers">
@@ -219,6 +221,16 @@ function WinningNumbersPanel({ highlightLatest }: { highlightLatest: boolean }) 
           )
         })}
       </div>
+      {/* Mismo botón que el de la tarjeta de Roulette (GameList), abre el historial de Quick Money. */}
+      <button type="button" className="qms-history-button" onClick={() => openHistory('quickMoney')}>
+        <svg className="qms-history-button-icon" viewBox="0 0 21 16" aria-hidden="true" focusable="false">
+          <rect x="0" y="9" width="3" height="7" />
+          <rect x="6" y="4" width="3" height="12" />
+          <rect x="12" y="7" width="3" height="9" />
+          <rect x="18" y="1" width="3" height="15" />
+        </svg>
+        {t('gameList.viewFullHistory')}
+      </button>
     </div>
   )
 }

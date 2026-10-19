@@ -24,9 +24,8 @@ function msUntil(iso: string): number {
 }
 
 // Próximo resultado de Roulette para Next Results (admin): evento pendiente + RouletteRTPSnapshot
-// + resultado definitivo. Los endpoints son públicos (sin login, ver router.go del backend): si hay
-// una sesión de admin abierta se manda igual su token, solo para que la auditoría registre quién
-// leyó o cambió el resultado.
+// + resultado definitivo. Los endpoints son solo admin (ver router.go del backend): la auditoría
+// registra quién leyó o cambió el resultado.
 export function useRouletteNextResult() {
   const [status, setStatus] = useState<RouletteNextResultStatus>('loading')
   const [data, setData] = useState<RouletteNextResultView | null>(null)
@@ -69,7 +68,7 @@ export function useRouletteNextResult() {
 
   useEffect(() => {
     mounted.current = true
-    // Recupera la sesión de admin si existe (cookie de refresh), pero carga igual sin ella.
+    // Recupera la sesión de admin (cookie de refresh) antes de pedir el resultado, que la exige.
     void restoreAdminSession().finally(() => {
       if (mounted.current) void load()
     })

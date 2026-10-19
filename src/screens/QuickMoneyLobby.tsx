@@ -10,7 +10,7 @@ import './quickMoneyLobby.css'
 
 // Pantalla top-level, mismo shape que RouletteBettingView.tsx/QuickMoneyBettingView.tsx -- reusa
 // el Header real del proyecto. Punto de entrada a Quick Money desde el tab LOTTERY del Header
-// (?preview=quick-money-lobby, ver main.tsx): muestra Pick 3/Pick 4 lado a lado con su previous
+// (/quick-money-lobby, ver main.tsx): muestra Pick 3/Pick 4 lado a lado con su previous
 // result, el countdown compartido del próximo sorteo, resultados recientes y hot/cold -- todavía
 // sin navegar a las vistas de apuesta (tarjetas inertes, pedido explícito, ver
 // QuickMoneyGameCard.tsx).

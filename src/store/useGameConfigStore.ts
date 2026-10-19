@@ -30,8 +30,7 @@ export const useGameConfigStore = create<GameConfigStore>((set) => ({
   betsCloseTime: '',
   roundIntervalMs: 0,
   showLogo: true,
-  // TEST BALANCE -- REMOVE BEFORE RELEASE: starting credit so the betting pages can be tested
-  // (there is no real balance backend yet). Put back `balance: 0,` to remove it.
-  balance: 10000,
+  // This machine's balance, read from the backend (api/machineBalance.ts); 0 until the first read.
+  balance: 0,
   setGameConfig: (config) => set(config),
 }))

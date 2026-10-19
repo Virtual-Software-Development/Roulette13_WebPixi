@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { VideoErrorPanel, type VideoErrorPanelEmphasis, type VideoErrorResult } from './VideoErrorPanel'
 import { WINNER_PANEL_EXIT_DURATION_MS, WINNER_PANEL_LEAD_SECONDS } from '../layout/layout.constants'
 
-// Preview temporal (?preview=video-error-panel) para maquetar VideoErrorPanel sin tener que
+// Preview temporal (/video-error-panel) para maquetar VideoErrorPanel sin tener que
 // provocar que el video del sorteo falle de verdad. Monta solo el panel, con una barra de controles
 // encima para probar sus estados (juego/resultado, duración del video, énfasis, salida).
 const EMPHASIS_OPTIONS: Array<VideoErrorPanelEmphasis | 'auto'> = ['auto', 'normal', 'attention', 'muted']

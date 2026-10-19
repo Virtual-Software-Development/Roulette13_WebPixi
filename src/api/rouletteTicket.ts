@@ -6,39 +6,40 @@ import { fetchCurrentEvent, postTicket, type TicketBet } from './terminalTicket'
 // terminalTicket.ts) so bets reach the backend and show up in the lobby's Live Table Bets panel.
 // Used by PlayerPanel.tsx.
 
-// Backend bet codes (quick-money-backend internal/tickets/roulette.go) for each board selection.
+// Backend bet codes (bet_type.code_name, see quick-money-backend internal/tickets/api.go) for each
+// board selection.
 // Columns and dozens are derived from their numbers so both sides always agree on which is which:
 // column "1" = 1, 4, 7 ... 34; dozen "1" = 1-12.
 export function toTicketBet(selection: BetSelection, stake: number): TicketBet {
-  const bet = (tipoApuesta: string, valor: string): TicketBet => ({ tipoApuesta, valor, montoApostado: stake })
+  const bet = (betType: string, selection: string): TicketBet => ({ betType, selection, amount: stake })
   const numbers = (pockets: readonly (number | '00')[]) => pockets.map(String).join(',')
 
   switch (selection.type) {
     case 'straightUp':
-      return bet('pleno', numbers(selection.pockets))
+      return bet('straight', numbers(selection.pockets))
     case 'split':
-      return bet('caballo', numbers(selection.pockets))
+      return bet('split', numbers(selection.pockets))
     case 'trio':
     case 'street':
-      return bet('calle', numbers(selection.pockets))
+      return bet('street', numbers(selection.pockets))
     case 'corner':
-      return bet('esquina', numbers(selection.pockets))
+      return bet('corner', numbers(selection.pockets))
     case 'sixLine':
-      return bet('linea', numbers(selection.pockets))
+      return bet('six_line', numbers(selection.pockets))
     case 'column': {
       const remainder = selection.pockets[0] % 3
-      return bet('columna', remainder === 0 ? '3' : String(remainder))
+      return bet('column', remainder === 0 ? '3' : String(remainder))
     }
     case 'dozen': {
       const first = selection.pockets[0]
-      return bet('docena', first <= 12 ? '1' : first <= 24 ? '2' : '3')
+      return bet('dozen', first <= 12 ? '1' : first <= 24 ? '2' : '3')
     }
     case 'redBlack':
-      return bet('color', selection.color === 'red' ? 'rojo' : 'negro')
+      return bet('red_black', selection.color === 'red' ? 'red' : 'black')
     case 'oddEven':
-      return bet('paridad', selection.parity === 'even' ? 'par' : 'impar')
+      return bet('even_odd', selection.parity === 'even' ? 'even' : 'odd')
     case 'highLow':
-      return bet('altura', selection.range === 'low' ? 'falta' : 'pasa')
+      return bet('low_high', selection.range === 'low' ? 'low' : 'high')
   }
 }
 

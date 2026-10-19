@@ -1,7 +1,7 @@
 import { adminFetch, readAdminJson as readJson } from './adminSession'
 
-// Endpoints de quick-money-backend para Next Results > Quick Money -- públicos (sin login), como los
-// de Roulette; si hay una sesión de admin se manda su token solo para la auditoría.
+// Endpoints de quick-money-backend para Next Results > Quick Money -- solo admin (con sesión); el
+// backend audita quién leyó o cambió el resultado.
 
 export interface QuickMoneyPendingEvent {
   id: number

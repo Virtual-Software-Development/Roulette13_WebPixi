@@ -3,12 +3,12 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './i18n'
 import { startInternetMonitor } from './network/internetMonitor.ts'
-import { APP_SURFACE, isAdminPreview, surfaceForPreview, urlForPreview } from './appSurface.ts'
+import { APP_SURFACE, currentPreview, isAdminPreview, surfaceForPreview, urlForPreview, withPreviewPath } from './appSurface.ts'
 import { IS_LAN_VIEWER } from './lanPreview.ts'
 
 // Lazy en vez de import estático -- App.tsx carga @pixi/react + todo el motor de renderizado/video/
 // física de la ruleta, que Login/Admin no necesitan para nada. Con import estático, main.tsx los
-// traía a los tres siempre juntos (mismo bundle/módulo de entrada), así que visitar ?preview=admin
+// traía a los tres siempre juntos (mismo bundle/módulo de entrada), así que visitar /admin
 // igual forzaba descargar y evaluar todo el motor Pixi antes de poder pintar el Admin Panel (ver
 // conversación: eso es lo que hacía lenta esa transición). Con lazy(), cada pantalla es su propio
 // chunk -- Admin/Login ya no arrastran Pixi.
@@ -33,8 +33,9 @@ const NotFoundView = lazy(() =>
   import('./screens/NotFoundView.tsx').then((m) => ({ default: m.NotFoundView })),
 )
 
-// Todavía no hay router en el proyecto: la pantalla de nivel superior se elige leyendo ?preview=
-// una sola vez al montar (dentro del Admin Panel, AdminPanel.tsx navega entre sus vistas en memoria).
+// Todavía no hay router en el proyecto: la pantalla de nivel superior se elige leyendo el path de la
+// URL (localhost:4200/roulette-betting, ver currentPreview en appSurface.ts) una sola vez al montar
+// (dentro del Admin Panel, AdminPanel.tsx navega entre sus vistas en memoria).
 // En dev, Admin (Login + Admin Panel), Juego (lobbies) y Betting son servidores separados -- ver
 // appSurface.ts: cada uno solo muestra sus pantallas y manda las de los otros a su puerto.
 
@@ -53,6 +54,8 @@ if (APP_SURFACE !== 'admin') {
   if (!IS_LAN_VIEWER) void import('./mqtt/mqttConnection.ts').then((m) => m.startMqttConnection())
   // Salida a internet de la máquina, también global (ver network/internetMonitor.ts).
   startInternetMonitor()
+  // Balance real de la máquina (lo carga el cajero), también global (ver api/machineBalance.ts).
+  void import('./api/machineBalance.ts').then((m) => m.startMachineBalanceSync())
 }
 
 // Solo los lobbies redirigen a la pantalla de error cuando la máquina pierde MQTT o internet (ver
@@ -61,18 +64,24 @@ function lobbyWithMqttGate(screen: ReactNode) {
   return <MqttGate>{screen}</MqttGate>
 }
 
-// Pantalla de otro servidor: redirige a su puerto conservando ?preview= (reemplaza la entrada del
+// Pantalla de otro servidor: redirige a su puerto conservando la pantalla (reemplaza la entrada del
 // historial para que "atrás" no rebote de vuelta). Devuelve el mismo fallback oscuro mientras tanto.
 function redirectToOtherServer(preview: string | null) {
   window.location.replace(urlForPreview(preview))
   return <ScreenFallback />
 }
 
+// Links viejos (localhost:4200/?preview=roulette-betting): se reescriben a la URL limpia
+// (localhost:4200/roulette-betting) sin recargar.
+if (new URLSearchParams(window.location.search).has('preview')) {
+  window.history.replaceState(null, '', withPreviewPath(new URL(window.location.href), currentPreview()))
+}
+
 function resolveScreen() {
-  const preview = new URLSearchParams(window.location.search).get('preview')
-  // Servidor Admin: sin ?preview= muestra el Login (pedido explícito).
+  const preview = currentPreview()
+  // Servidor Admin: '/' muestra el Login (pedido explícito).
   if (APP_SURFACE === 'admin' && !preview) return <LoginPage />
-  // Servidor Betting: sin ?preview= muestra el selector de juego (Choose Betting Game) como página.
+  // Servidor Betting: '/' muestra el selector de juego (Choose Betting Game) como página.
   if (APP_SURFACE === 'betting' && !preview) return <BettingHomePage />
   if (APP_SURFACE !== 'all' && surfaceForPreview(preview) !== APP_SURFACE) return redirectToOtherServer(preview)
   if (preview === 'login') return <LoginPage />
@@ -96,8 +105,8 @@ function resolveScreen() {
   // Preview temporal del panel que reemplaza al video del sorteo cuando no carga (ver
   // VideoErrorPanelPreview.tsx) -- para maquetarlo sin forzar la falla real en App.tsx.
   if (preview === 'video-error-panel') return <VideoErrorPanelPreview />
-  // Sin ?preview= es la entrada normal (pantalla principal, Roulette Lobby) -- eso sigue igual.
-  // Un ?preview= presente pero que no matchea ninguna pantalla conocida de arriba (typo, link
+  // '/' es la entrada normal (pantalla principal, Roulette Lobby) -- eso sigue igual.
+  // Un path presente pero que no matchea ninguna pantalla conocida de arriba (typo, link
   // viejo, etc.) antes caía acá también y mostraba la ruleta como si nada -- ahora muestra el 404
   // genérico en su lugar (ver NotFoundView.tsx), sin tocar ninguna de las rutas válidas de arriba.
   if (!preview) return lobbyWithMqttGate(<App />)

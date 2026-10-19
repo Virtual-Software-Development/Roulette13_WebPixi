@@ -7,6 +7,7 @@ import { formatCurrency } from '../../utils/currencyFormat'
 import { buildTicketPreview } from '../../data/quickMoneyTicketMockData'
 import { useQuickMoneyRoundPhase } from '../../hooks/useQuickMoneyRoundPhase'
 import { placeQuickMoneyTicket } from '../../api/quickMoneyTicket'
+import { refreshMachineBalance } from '../../api/machineBalance'
 import type { QuickMoneyTicket } from '../../types/quickMoneyTicket'
 import { QuickMoneyTicketPreviewModal } from './QuickMoneyTicketPreviewModal'
 import './quickMoneyCashierFooter.css'
@@ -70,6 +71,8 @@ export function QuickMoneyCashierFooter() {
       setTimeout(() => setIssueFailed(false), 3000)
       return
     }
+    // The backend paid it from the machine balance.
+    void refreshMachineBalance()
     setIssuing(false)
     setStage('building')
     setTicket(null)

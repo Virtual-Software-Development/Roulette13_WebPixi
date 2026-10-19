@@ -50,6 +50,48 @@
   color: #d6d7db;
 }
 
+/* Título + selector de juego en la misma línea. */
+.round-history-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.round-history-game select {
+  height: 34px;
+  padding: 0 34px 0 12px;
+  border-radius: 8px;
+  border: 1px solid #37414b;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23a7a8ac' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat right 12px center,
+    #0b1824;
+  appearance: none;
+  color: #f5f7fa;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+
+.round-history-game select:hover,
+.round-history-game select:focus-visible {
+  border-color: #5a6672;
+  outline: none;
+}
+
+.round-history-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .round-history-subtitle {
   margin: 6px 0 0;
   font-size: 13px;
@@ -161,6 +203,23 @@
 .round-history-pill[data-color='green'] {
   background: #1f9a3e;
   color: #ffffff;
+}
+
+/* Quick Money: dígitos de Pick 3 (verde) y Pick 4 (amarillo), los colores de cada juego. */
+.round-history-pill[data-draw] {
+  min-width: 56px;
+  background: #0b1824;
+  letter-spacing: 2px;
+}
+
+.round-history-pill[data-draw='pick3'] {
+  border: 1px solid #00e85b;
+  color: #00e85b;
+}
+
+.round-history-pill[data-draw='pick4'] {
+  border: 1px solid #ffd400;
+  color: #ffd400;
 }
 
 .round-history-message {

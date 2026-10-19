@@ -6,15 +6,15 @@ import { toQuickMoneyTicketBet } from '../api/quickMoneyTicket'
 describe('toQuickMoneyTicketBet', () => {
   it('sends the bet type and the digits in order', () => {
     expect(toQuickMoneyTicketBet({ betType: 'straight', digits: [0, 7, 2] }, 25)).toEqual({
-      tipoApuesta: 'straight',
-      valor: '072',
-      montoApostado: 25,
+      betType: 'straight',
+      selection: '072',
+      amount: 25,
     })
   })
 
   it('handles every digit count', () => {
-    expect(toQuickMoneyTicketBet({ betType: 'single', digits: [0] }, 1).valor).toBe('0')
-    expect(toQuickMoneyTicketBet({ betType: 'directo', digits: [1, 9] }, 1).valor).toBe('19')
-    expect(toQuickMoneyTicketBet({ betType: 'pale', digits: [7, 2, 0, 5] }, 1).valor).toBe('7205')
+    expect(toQuickMoneyTicketBet({ betType: 'single', digits: [0] }, 1).selection).toBe('0')
+    expect(toQuickMoneyTicketBet({ betType: 'directo', digits: [1, 9] }, 1).selection).toBe('19')
+    expect(toQuickMoneyTicketBet({ betType: 'pale', digits: [7, 2, 0, 5] }, 1).selection).toBe('7205')
   })
 })

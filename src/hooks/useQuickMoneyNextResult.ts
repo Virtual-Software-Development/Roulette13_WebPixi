@@ -57,7 +57,7 @@ export function useQuickMoneyNextResult() {
 
   useEffect(() => {
     mounted.current = true
-    // Recupera la sesión de admin si existe (cookie de refresh), pero carga igual sin ella.
+    // Recupera la sesión de admin (cookie de refresh) antes de pedir el resultado, que la exige.
     void restoreAdminSession().finally(() => {
       if (mounted.current) void load()
     })

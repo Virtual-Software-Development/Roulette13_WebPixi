@@ -3,15 +3,15 @@ import { toTicketBet } from '../api/rouletteTicket'
 import { buildRouletteBetZones } from '../utils/rouletteBetZones'
 
 // Every zone of the real betting board must map to a bet the backend accepts
-// (quick-money-backend internal/tickets/roulette.go): a known code, and for inside bets the
-// covered numbers, for outside bets the backend's group name.
-const insideCodes: Record<string, number> = { pleno: 1, caballo: 2, calle: 3, esquina: 4, linea: 6 }
+// (quick-money-backend internal/tickets/api.go): a bet_type code, and for inside bets the covered
+// numbers, for outside bets the backend's group name.
+const insideCodes: Record<string, number> = { straight: 1, split: 2, street: 3, corner: 4, six_line: 6 }
 const outsideValues: Record<string, string[]> = {
-  columna: ['1', '2', '3'],
-  docena: ['1', '2', '3'],
-  color: ['rojo', 'negro'],
-  paridad: ['par', 'impar'],
-  altura: ['falta', 'pasa'],
+  column: ['1', '2', '3'],
+  dozen: ['1', '2', '3'],
+  red_black: ['red', 'black'],
+  even_odd: ['even', 'odd'],
+  low_high: ['low', 'high'],
 }
 
 describe('toTicketBet', () => {
@@ -20,13 +20,13 @@ describe('toTicketBet', () => {
   it('maps every board zone to a backend bet', () => {
     for (const zone of zones) {
       const bet = toTicketBet(zone.selection, 5)
-      expect(bet.montoApostado).toBe(5)
-      if (bet.tipoApuesta in insideCodes) {
-        const numbers = bet.valor.split(',')
-        expect(numbers).toHaveLength(insideCodes[bet.tipoApuesta])
+      expect(bet.amount).toBe(5)
+      if (bet.betType in insideCodes) {
+        const numbers = bet.selection.split(',')
+        expect(numbers).toHaveLength(insideCodes[bet.betType])
         expect(numbers.sort()).toEqual(zone.selection.pockets.map(String).sort())
       } else {
-        expect(outsideValues[bet.tipoApuesta], `${zone.id} -> ${bet.tipoApuesta}`).toContain(bet.valor)
+        expect(outsideValues[bet.betType], `${zone.id} -> ${bet.betType}`).toContain(bet.selection)
       }
     }
   })
@@ -43,18 +43,18 @@ describe('toTicketBet', () => {
       const remainders = new Set(zone.selection.pockets.map((n) => Number(n) % 3))
       expect(remainders.size).toBe(1)
       const r = [...remainders][0]
-      expect(bet.valor).toBe(r === 0 ? '3' : String(r))
+      expect(bet.selection).toBe(r === 0 ? '3' : String(r))
     }
-    expect(outside('dozen:firstDozen').valor).toBe('1')
-    expect(outside('dozen:thirdDozen').valor).toBe('3')
-    expect(outside('redBlack:red')).toMatchObject({ tipoApuesta: 'color', valor: 'rojo' })
-    expect(outside('highLow:high')).toMatchObject({ tipoApuesta: 'altura', valor: 'pasa' })
-    expect(outside('oddEven:even')).toMatchObject({ tipoApuesta: 'paridad', valor: 'par' })
+    expect(outside('dozen:firstDozen').selection).toBe('1')
+    expect(outside('dozen:thirdDozen').selection).toBe('3')
+    expect(outside('redBlack:red')).toMatchObject({ betType: 'red_black', selection: 'red' })
+    expect(outside('highLow:high')).toMatchObject({ betType: 'low_high', selection: 'high' })
+    expect(outside('oddEven:even')).toMatchObject({ betType: 'even_odd', selection: 'even' })
   })
 
   it('sends 00 as "00"', () => {
     const zone = zones.find((z) => z.selection.type === 'straightUp' && z.selection.pockets[0] === '00')
     expect(zone).toBeDefined()
-    expect(toTicketBet(zone!.selection, 1)).toMatchObject({ tipoApuesta: 'pleno', valor: '00' })
+    expect(toTicketBet(zone!.selection, 1)).toMatchObject({ betType: 'straight', selection: '00' })
   })
 })

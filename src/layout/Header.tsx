@@ -5,7 +5,7 @@ import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useNow } from '../hooks/useNow'
 import { buildMediaUrl } from '../utils/media'
 import { navigateToPreview } from '../utils/navigatePreview'
-import { APP_SURFACE } from '../appSurface'
+import { APP_SURFACE, currentPreview } from '../appSurface'
 import { BettingGamePickerModal } from './BettingGamePickerModal'
 import { logoutAdmin } from '../api/adminSession'
 import { fetchCurrentAdminUser } from '../api/adminUsers'
@@ -22,10 +22,10 @@ const BALANCE_ICON_URL = buildMediaUrl('Website_svg_icons/41_payouts.svg')
 const USER_ICON_URL = buildMediaUrl('Website_svg_icons/16_user_white_circle.svg')
 
 // Todavía no hay router en el proyecto, así que "navegar" entre tabs se resuelve reescribiendo
-// window.location.search (mismo mecanismo ad-hoc que ya usa main.tsx para ?preview=login, ver
+// el path de la URL (mismo mecanismo ad-hoc que ya usa main.tsx para /login, ver
 // navigateToPreview en utils/navigatePreview.ts). ROULETTE y ADMIN navegan directo a su pantalla y
 // se resaltan como "activos" al llegar a su destino. El tab QUICK MONEY se SACÓ del header (pedido
-// explícito) -- el Quick Money Lobby sigue existiendo (?preview=quick-money-lobby, ver
+// explícito) -- el Quick Money Lobby sigue existiendo (/quick-money-lobby, ver
 // screens/QuickMoneyLobby.tsx), solo que no hay forma de llegar desde acá. Para volver a mostrarlo,
 // ver el tab en el git history (className app-header-tab--lottery, onClick
 // navigateToPreview('quick-money-lobby')).
@@ -56,7 +56,7 @@ function QuickMoneyTabIcon() {
 // muestra un tab por juego de apuesta -- solo una vez dentro de una vista de apuesta (en la página
 // de inicio "Choose Betting Game" no hay tabs). Cambiar de juego conserva el modo (jugador/cajero).
 function bettingPreviewFor(game: ActiveBettingGame): string {
-  const isCashier = new URLSearchParams(window.location.search).get('preview')?.endsWith('-cashier') ?? false
+  const isCashier = currentPreview()?.endsWith('-cashier') ?? false
   const base = game === 'roulette' ? 'roulette-betting' : 'quick-money-betting'
   return isCashier ? `${base}-cashier` : base
 }
@@ -103,7 +103,7 @@ const ADMIN_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
 function AdminHeaderMeta() {
   const { t } = useTranslation()
   const now = useNow()
-  // Usuario de la sesión: undefined mientras carga, null sin sesión (Next Results es público).
+  // Usuario de la sesión: undefined mientras carga, null si no se pudo leer.
   const [user, setUser] = useState<AdminUser | null | undefined>(undefined)
 
   useEffect(() => {

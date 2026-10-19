@@ -14,9 +14,9 @@ const SURFACE_PORTS: Record<ServerSurface, number> = {
   betting: __BETTING_PORT__,
 }
 
-// Valores de ?preview= de cada servidor -- el resto (incluido "sin preview") son de Juego, salvo en
-// el puerto Admin, donde "sin preview" es el Login, y en el de Betting, donde es el selector de juego
-// (ver main.tsx). 'betting' = ese selector como página.
+// Pantallas (path de la URL, p.ej. /admin-users) de cada servidor -- el resto (incluido '/') son de
+// Juego, salvo en el puerto Admin, donde '/' es el Login, y en el de Betting, donde es el selector
+// de juego (ver main.tsx). 'betting' = ese selector como página.
 export const ADMIN_PREVIEW_VALUES = [
   'admin',
   'admin-game-events',
@@ -49,16 +49,26 @@ function originForPort(port: number): string {
   return `${window.location.protocol}//${window.location.hostname}:${port}`
 }
 
-// URL de destino para un ?preview=: en el mismo servidor solo cambia ?preview= (conserva el resto de
-// la URL, como siempre); si la pantalla vive en otro servidor, apunta a su puerto.
+// Pantalla de la URL actual: el path (localhost:4200/roulette-betting -> 'roulette-betting'); '/' es
+// null. Los links viejos con ?preview= se siguen aceptando (main.tsx los pasa al path).
+export function currentPreview(): string | null {
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, '')
+  if (path) return decodeURIComponent(path)
+  return new URLSearchParams(window.location.search).get('preview')
+}
+
+// Misma URL con la pantalla en el path, sin ?preview= (conserva el resto de los query params).
+export function withPreviewPath(url: URL, preview: string | null): URL {
+  url.pathname = preview ? `/${encodeURIComponent(preview)}` : '/'
+  url.searchParams.delete('preview')
+  return url
+}
+
+// URL de destino de una pantalla: en el mismo servidor solo cambia el path (conserva el resto de la
+// URL); si la pantalla vive en otro servidor, apunta a su puerto.
 export function urlForPreview(preview: string | null): string {
   const target = surfaceForPreview(preview)
   const sameServer = APP_SURFACE === 'all' || APP_SURFACE === target
   const url = sameServer ? new URL(window.location.href) : new URL(originForPort(SURFACE_PORTS[target]) + '/')
-  if (preview) {
-    url.searchParams.set('preview', preview)
-  } else {
-    url.searchParams.delete('preview')
-  }
-  return url.toString()
+  return withPreviewPath(url, preview).toString()
 }
