@@ -27,12 +27,24 @@ const MULTIPLIER = {
 const join = (digits: readonly number[]) => digits.join('')
 const sortedKey = (digits: readonly number[]) => [...digits].sort((a, b) => a - b).join('')
 
+// Primera, segunda y tercera del sorteo (los tres premios del Directo, como en la lotería): pares de
+// dígitos sacados del Pick 3 y del Pick 4. Acepta los dígitos o el resultado como texto ('915').
+// Ejemplo: Pick 3 915 + Pick 4 4328 -> 15 / 43 / 28.
+export function getDirectoPrizes(
+  pick3: ArrayLike<number | string>,
+  pick4: ArrayLike<number | string>,
+): { first: string; second: string; third: string } {
+  return {
+    first: `${pick3[1]}${pick3[2]}`,
+    second: `${pick4[0]}${pick4[1]}`,
+    third: `${pick4[2]}${pick4[3]}`,
+  }
+}
+
 // Multiplicador que paga una apuesta para un resultado concreto (0 = no gana).
 export function getPrizeMultiplier(selection: QuickMoneyBetSelection, pick3: readonly number[], pick4: readonly number[]): number {
   const input = join(selection.digits)
-  const directFirst = `${pick3[1]}${pick3[2]}`
-  const directSecond = `${pick4[0]}${pick4[1]}`
-  const directThird = `${pick4[2]}${pick4[3]}`
+  const { first: directFirst, second: directSecond, third: directThird } = getDirectoPrizes(pick3, pick4)
 
   switch (selection.digits.length) {
     case 1:

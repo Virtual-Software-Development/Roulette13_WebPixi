@@ -33,4 +33,7 @@ export interface WinningTicketsDraw {
   // Ordenados de mayor a menor premio. null = la lista todavía no está disponible para el lobby
   // (distinto de [] = nadie ganó).
   tickets: WinningTicket[] | null
+  // false mientras siguen llegando páginas (api/drawWinners.ts): [] con false es "cargando", no "nadie
+  // ganó". Sin el campo, la lista está completa.
+  ticketsComplete?: boolean
 }

@@ -108,9 +108,20 @@
   gap: clamp(2px, 0.208vw, 6px);
 }
 
+/* Cuadro del resultado: número + atributos (solo Roulette) en el encabezado. */
 .winning-tickets-result {
-  padding-left: var(--wt-space-2xl);
-  border-left: 1px solid var(--wt-divider);
+  min-width: 0;
+  padding: var(--wt-space-md) var(--wt-space-xl);
+  background: var(--wt-row);
+  border: 1px solid var(--wt-border);
+  border-radius: var(--wt-radius-row);
+}
+
+.winning-tickets-result-body {
+  display: flex;
+  align-items: center;
+  gap: var(--wt-space-xl);
+  min-width: 0;
 }
 
 .winning-tickets-stat-label,
@@ -171,6 +182,18 @@
   font-size: clamp(20px, 1.667vw, 40px);
   font-weight: 700;
   letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Primera / segunda / tercera de Quick Money (pares sacados del Pick 3 y Pick 4), en dorado: son los
+   números con los que se cobra el Directo. */
+.winning-tickets-prize-digits {
+  margin: 0;
+  color: var(--wt-gold);
+  font-size: clamp(16px, 1.354vw, 32px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.1em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -335,7 +358,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-.winning-tickets-track .winning-tickets-row:nth-child(even) {
+/* Zebra por posición en la lista completa (data-alt): virtualizada, :nth-child cambiaría de color al
+   desmontar las filas de arriba. */
+.winning-tickets-track .winning-tickets-row[data-alt='true'] {
   background: var(--wt-row-alt);
 }
 
@@ -391,8 +416,30 @@
   overflow: hidden;
 }
 
+/* Lista virtualizada: el componente le da el alto de TODA la lista y un padding-top con el lugar de
+   las filas que no están montadas (border-box: el padding queda dentro de ese alto). */
 .winning-tickets-track {
+  box-sizing: border-box;
   will-change: transform;
+}
+
+/* Mientras siguen llegando páginas de ganadores. */
+.winning-tickets-receiving {
+  position: absolute;
+  left: 50%;
+  bottom: var(--wt-space-md);
+  transform: translateX(-50%);
+  padding: var(--wt-space-sm) var(--wt-space-xl);
+  border-radius: 999px;
+  border: 1px solid var(--wt-gold-border);
+  background: rgba(5, 10, 16, 0.85);
+  color: var(--wt-gold);
+  font-size: clamp(12px, 0.833vw, 20px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .winning-tickets-fade {
@@ -477,24 +524,30 @@
   border-bottom: 1px solid var(--wt-divider);
 }
 
-.winning-tickets-attributes,
+/* Atributos dentro del cuadro del resultado: etiqueta arriba, valor abajo, separados por una línea. */
+.winning-tickets-attributes {
+  display: flex;
+  margin: 0;
+  min-width: 0;
+}
+
+.winning-tickets-attribute {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.208vw, 6px);
+  min-width: 0;
+  padding: 0 var(--wt-space-lg);
+  border-left: 1px solid var(--wt-divider);
+}
+
 .winning-tickets-metrics {
+  flex: 1 1 auto;
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--wt-space-md);
   margin: 0;
 }
 
-.winning-tickets-attributes {
-  flex: 5 1 520px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.winning-tickets-metrics {
-  flex: 4 1 440px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.winning-tickets-attribute,
 .winning-tickets-metric {
   display: flex;
   flex-direction: column;
@@ -514,7 +567,8 @@
   align-items: center;
   gap: var(--wt-space-sm);
   margin: 0;
-  font-size: clamp(14px, 1.146vw, 28px);
+  white-space: nowrap;
+  font-size: clamp(13px, 1.042vw, 25px);
   font-weight: 700;
   line-height: 1.2;
 }
@@ -558,10 +612,6 @@
 }
 
 @media (max-width: 900px) {
-  .winning-tickets-attributes {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .winning-tickets-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
