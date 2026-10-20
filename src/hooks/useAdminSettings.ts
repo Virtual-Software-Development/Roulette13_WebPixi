@@ -37,8 +37,8 @@ export function useAdminSettings() {
   }, [load])
 
   // Lanza si el backend rechaza el cambio -- la página muestra el error.
-  const save = useCallback(async (settings: AdminSettingsData) => {
-    const next = await saveAdminSettings(settings)
+  const save = useCallback(async (settings: AdminSettingsData, confirmCreditModeChange = false) => {
+    const next = await saveAdminSettings(settings, confirmCreditModeChange)
     if (mounted.current) setSnapshot(next)
     return next
   }, [])

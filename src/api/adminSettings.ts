@@ -1,5 +1,5 @@
 import { adminFetch, readAdminJson as readJson } from './adminSession'
-import type { AdminSettingsData, NotificationEventId, NotificationEventsSettings } from '../types/adminSettings'
+import type { AdminSettingsData, CreditMode, NotificationEventId, NotificationEventsSettings } from '../types/adminSettings'
 
 // GET/PUT /admin-settings de quick-money-backend (JWT con rol admin): sin sesión adminFetch lanza
 // AdminAuthError.
@@ -17,6 +17,8 @@ interface ApiAdminSettings {
     itemsPerPage: number
     dateFormat: string
     maintenanceMode: boolean
+    // Ausente en backends anteriores al modo de crédito: vale 'MACHINE'.
+    creditMode?: CreditMode
   }
   notifications: {
     emailEnabled: boolean
@@ -70,7 +72,7 @@ function toUi(settings: ApiAdminSettings): AdminSettingsData {
     if (id) notificationEvents[id] = event.enabled
   }
   return {
-    general: { ...settings.general },
+    general: { ...settings.general, creditMode: settings.general.creditMode ?? 'MACHINE' },
     notificationChannels: { email: settings.notifications.emailEnabled },
     emailNotifications: { recipients: formatRecipients(settings.notifications.recipients) },
     notificationEvents,
@@ -100,8 +102,27 @@ export async function fetchAdminSettings(): Promise<AdminSettingsSnapshot> {
   return toSnapshot(await readJson(await adminFetch('/admin-settings'), 'Load settings'))
 }
 
-export async function saveAdminSettings(settings: AdminSettingsData): Promise<AdminSettingsSnapshot> {
-  const res = await adminFetch('/admin-settings', {
+// What switching the credit mode to `to` would do right now (GET
+// /admin-settings/credit-mode-impact): the machines whose balance would be withdrawn (to TICKET) or
+// whose credit ticket would be returned (to MACHINE), and the total. needsConfirmation: the admin
+// must confirm the switch (saveAdminSettings with confirmCreditModeChange).
+export interface CreditModeImpact {
+  from: CreditMode
+  to: CreditMode
+  machines: { machineId: number; name: string | null; macAddress: string; amount: number; creditTicket?: string }[]
+  total: number
+  needsConfirmation: boolean
+}
+
+export async function fetchCreditModeImpact(to: CreditMode): Promise<CreditModeImpact> {
+  const res = await adminFetch(`/admin-settings/credit-mode-impact?to=${to}`)
+  return readJson(res, 'Credit mode impact')
+}
+
+// confirmCreditModeChange: the admin confirmed what the credit-mode change does (see
+// fetchCreditModeImpact); without it the backend refuses a change that affects machines.
+export async function saveAdminSettings(settings: AdminSettingsData, confirmCreditModeChange = false): Promise<AdminSettingsSnapshot> {
+  const res = await adminFetch(`/admin-settings${confirmCreditModeChange ? '?confirmCreditModeChange=true' : ''}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(toApi(settings)),

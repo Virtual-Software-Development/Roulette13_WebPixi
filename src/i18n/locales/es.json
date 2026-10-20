@@ -11,6 +11,19 @@
       "roulette": "Ruleta",
       "quickMoney": "Quick Money",
       "cancel": "Cancelar"
+    },
+    "creditTicket": {
+      "headerLabel": "Ticket {{code}}",
+      "headerInsert": "Ingresar ticket",
+      "insertTitle": "Ingresá tu ticket",
+      "insertSubtitle": "Escribí o escaneá el código impreso en tu ticket de crédito.",
+      "codeLabel": "Código del ticket de crédito",
+      "insert": "Ingresar",
+      "cancel": "Cancelar",
+      "insertedTitle": "Tu ticket",
+      "insertedSubtitle": "Retirá tu ticket con Cobrar: el crédito queda en él y podés cobrarlo en caja.",
+      "cashOut": "Cobrar",
+      "close": "Cerrar"
     }
   },
   "media": {
@@ -1130,7 +1143,14 @@
             "label": "Modo de Mantenimiento",
             "description": "Restringe el acceso solo a administradores."
           },
-          "adminLanguage": "Idioma del Panel de Admin"
+          "adminLanguage": "Idioma del Panel de Admin",
+          "creditMode": {
+            "label": "Modo de crédito",
+            "machine": "Balance de la máquina (por defecto)",
+            "ticket": "Crédito por ticket",
+            "machineHint": "El cajero carga el crédito en cada máquina.",
+            "ticketHint": "El jugador lleva un ticket de crédito; las apuestas y los premios lo actualizan."
+          }
         },
         "card": {
           "title": "Configuración General",
@@ -1174,6 +1194,14 @@
       "saveError": "No se pudo guardar la configuración: {{error}}",
       "errors": {
         "login": "Iniciá sesión en el panel de admin para ver y cambiar la configuración: el backend requiere una sesión de admin."
+      },
+      "creditModeConfirm": {
+        "title": "¿Cambiar el modo de crédito?",
+        "toTicket": "Pasar a Crédito por ticket retira el balance de <hl>{{count}} máquina(s)</hl>: <hl>{{total}}</hl> en total. Cada una de esas máquinas le mostrará a su jugador un aviso con el monto que se le retiró.",
+        "toMachine": "Pasar a Balance de la máquina devuelve los tickets de crédito ingresados en <hl>{{count}} máquina(s)</hl> (<hl>{{total}}</hl> de crédito, que queda en los tickets). Cada una de esas máquinas le mostrará un aviso a su jugador.",
+        "confirmWithdraw": "Retirar y continuar",
+        "confirmReturn": "Devolver tickets y continuar",
+        "cancel": "Cancelar"
       }
     },
     "users": {
@@ -1612,5 +1640,13 @@
     "bettingBlocked": "Las apuestas están bloqueadas hasta recuperar la conexión. Reintentando automáticamente…",
     "adminStale": "Los datos pueden estar desactualizados y los cambios no se guardarán. Reintentando automáticamente…",
     "loginBlocked": "No se puede iniciar sesión hasta que el servidor responda. Reintentando automáticamente…"
+  },
+  "machineNotice": {
+    "title": "Cambió el modo de crédito",
+    "withdrawn": "Esta máquina ahora funciona con tickets de crédito. Su balance de {{amount}} fue retirado: cobralo en caja.",
+    "ticketReturned": "Esta máquina ahora funciona con su propio balance. Tu ticket de crédito {{code}} fue devuelto con {{amount}}: guardalo y cobralo en caja.",
+    "amountWithdrawn": "Monto retirado",
+    "creditOnTicket": "Crédito en tu ticket",
+    "ok": "Aceptar"
   }
 }

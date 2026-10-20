@@ -1,0 +1,111 @@
+/* CreditTicketDialog -- sobre la tarjeta de bettingGamePicker.css (mismo backdrop, tarjeta, título y
+   botón secundario); acá solo lo propio: el campo del código, el resumen del ticket y el botón
+   principal (rojo de marca, el mismo de Place Bet / el foco de la tarjeta). */
+.credit-ticket-dialog {
+  width: min(420px, 100%);
+}
+
+.credit-ticket-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 48px;
+  margin-top: 18px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 140, 170, 0.32);
+  background: rgba(3, 10, 17, 0.9);
+  color: #f5f7fa;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.credit-ticket-input:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+}
+
+.credit-ticket-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 140, 170, 0.22);
+  background: rgba(3, 10, 17, 0.6);
+}
+
+.credit-ticket-code {
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: #8ea0b5;
+}
+
+.credit-ticket-balance {
+  font-size: 26px;
+  font-weight: 700;
+  color: #f5f7fa;
+  font-variant-numeric: tabular-nums;
+}
+
+.credit-ticket-error {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #ff6b75;
+}
+
+.credit-ticket-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.credit-ticket-primary {
+  height: 40px;
+  padding: 0 22px;
+  border-radius: 8px;
+  border: 1px solid #f32635;
+  background: #f32635;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.credit-ticket-primary:hover:not(:disabled) {
+  background: #d81f2d;
+}
+
+.credit-ticket-primary:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+}
+
+.credit-ticket-primary:disabled,
+.betting-game-picker-cancel:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Header en modo TICKET: el bloque de balance se vuelve el botón que abre el diálogo. */
+.app-header-balance--button {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-header-balance--button:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 2px;
+  border-radius: 6px;
+}

@@ -30,6 +30,10 @@ const VideoErrorPanelPreview = lazy(() =>
   import('./screens/VideoErrorPanelPreview.tsx').then((m) => ({ default: m.VideoErrorPanelPreview })),
 )
 const BettingHomePage = lazy(() => import('./screens/BettingHomePage.tsx').then((m) => ({ default: m.BettingHomePage })))
+// Notices for the player when the admin changes the credit mode (see MachineNoticeDialog.tsx).
+const MachineNoticeDialog = lazy(() =>
+  import('./layout/MachineNoticeDialog.tsx').then((m) => ({ default: m.MachineNoticeDialog })),
+)
 const NotFoundView = lazy(() =>
   import('./screens/NotFoundView.tsx').then((m) => ({ default: m.NotFoundView })),
 )
@@ -129,5 +133,12 @@ function ScreenFallback() {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Suspense fallback={<ScreenFallback />}>{resolveScreen()}</Suspense>
+    {/* Machines only (not the Admin): a credit-mode change that withdrew this machine's balance or
+        returned its ticket is shown to the player on whatever screen is up. */}
+    {APP_SURFACE !== 'admin' && !isAdminPreview(currentPreview()) && (
+      <Suspense fallback={null}>
+        <MachineNoticeDialog />
+      </Suspense>
+    )}
   </StrictMode>,
 )

@@ -4,7 +4,9 @@ import './confirmDialog.css'
 
 interface ConfirmDialogProps {
   title: string
-  description: string
+  // Texto, o contenido con partes resaltadas (ej. el cambio de modo de crédito resalta las máquinas
+  // y el total, ver AdminSettingsPage.tsx).
+  description: ReactNode
   confirmLabel: string
   cancelLabel: string
   // Estilo del botón de confirmar -- true para acciones irreversibles (ej. Factory Reset), el rojo

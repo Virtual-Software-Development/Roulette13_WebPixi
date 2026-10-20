@@ -11,6 +11,19 @@
       "roulette": "Roulette",
       "quickMoney": "Quick Money",
       "cancel": "Cancel"
+    },
+    "creditTicket": {
+      "headerLabel": "Ticket {{code}}",
+      "headerInsert": "Insert ticket",
+      "insertTitle": "Insert your ticket",
+      "insertSubtitle": "Type or scan the code printed on your credit ticket.",
+      "codeLabel": "Credit ticket code",
+      "insert": "Insert",
+      "cancel": "Cancel",
+      "insertedTitle": "Your ticket",
+      "insertedSubtitle": "Cash out to take your ticket: its credit stays on it, and you can collect it at the cashier.",
+      "cashOut": "Cash out",
+      "close": "Close"
     }
   },
   "media": {
@@ -1130,7 +1143,14 @@
             "label": "Maintenance Mode",
             "description": "Restrict access to administrators only."
           },
-          "adminLanguage": "Admin Panel Language"
+          "adminLanguage": "Admin Panel Language",
+          "creditMode": {
+            "label": "Credit Mode",
+            "machine": "Machine balance (default)",
+            "ticket": "Ticket credit",
+            "machineHint": "The cashier loads credit onto each machine.",
+            "ticketHint": "The player carries a credit ticket; bets and prizes update it."
+          }
         },
         "card": {
           "title": "General Settings",
@@ -1174,6 +1194,14 @@
       "saveError": "Could not save settings: {{error}}",
       "errors": {
         "login": "Sign in to the admin panel to view and change settings: the backend requires an admin session."
+      },
+      "creditModeConfirm": {
+        "title": "Change the credit mode?",
+        "toTicket": "Switching to Ticket credit withdraws the balance of <hl>{{count}} machine(s)</hl>: <hl>{{total}}</hl> in total. Each of those machines will show its player a notice with the amount withdrawn from it.",
+        "toMachine": "Switching to Machine balance returns the credit tickets inserted in <hl>{{count}} machine(s)</hl> (<hl>{{total}}</hl> of credit, which stays on the tickets). Each of those machines will show its player a notice.",
+        "confirmWithdraw": "Withdraw and continue",
+        "confirmReturn": "Return tickets and continue",
+        "cancel": "Cancel"
       }
     },
     "users": {
@@ -1612,5 +1640,13 @@
     "bettingBlocked": "Betting is locked until the connection is restored. Retrying automatically…",
     "adminStale": "Data may be out of date and changes will not be saved. Retrying automatically…",
     "loginBlocked": "Sign-in is unavailable until the server responds. Retrying automatically…"
+  },
+  "machineNotice": {
+    "title": "Credit mode changed",
+    "withdrawn": "This machine now works with credit tickets. Its balance of {{amount}} has been withdrawn: collect it at the cashier.",
+    "ticketReturned": "This machine now works with its own balance. Your credit ticket {{code}} was returned with {{amount}} on it: keep it and collect it at the cashier.",
+    "amountWithdrawn": "Amount withdrawn",
+    "creditOnTicket": "Credit on your ticket",
+    "ok": "OK"
   }
 }
