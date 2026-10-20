@@ -85,7 +85,6 @@
     "allWinners": "All winning tickets",
     "columns": {
       "code": "Ticket",
-      "terminal": "Terminal",
       "game": "Game",
       "prize": "Prize"
     },

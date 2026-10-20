@@ -3,12 +3,13 @@
 
 export type WinningTicketGame = 'roulette' | 'pick3' | 'pick4'
 
+// Un ticket ganador tal cual lo publica el backend para el lobby: solo el identificador enmascarado
+// (utils/ticketMask.ts, enmascarado ANTES de enviarlo -- el código completo cobra el premio) y nada
+// que identifique la terminal, la sucursal o a la persona (sin máquina, hora de emisión ni secuencia).
 export interface WinningTicket {
-  // Código impreso, siempre enmascarado en pantalla (solo se ven los últimos dígitos).
-  code: string
+  // ••••••K4821F: solo los últimos 6 caracteres del código impreso.
+  maskedCode: string
   game: WinningTicketGame
-  // Terminal donde se vendió.
-  terminal: string
   // Total cobrado por el ticket (apuesta + premio de todas sus apuestas ganadoras).
   prize: number
 }

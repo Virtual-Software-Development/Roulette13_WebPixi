@@ -7,13 +7,15 @@ import { WINNING_TICKETS_DURATION_MS, WINNING_TICKETS_SCROLL_HOLD_MS } from '../
 import type { WinningTicket, WinningTicketGame, WinningTicketsDraw } from '../types/winningTickets'
 import { nextSegment, renderRange, rowAt, type ScrollSegment } from '../utils/winningTicketsScroll'
 import './winningTicketsScreen.css'
+import { maskTicketCode } from '../utils/ticketMask'
 
 export type WinningTicketsDoneReason = 'finished' | 'skipped'
 
 interface WinningTicketsScreenProps {
   draw: WinningTicketsDraw
-  // Códigos de los tickets vendidos en ESTA terminal: si alguno ganó, va en su propia tabla al lado
-  // de la lista general durante toda la pantalla.
+  // Códigos de los tickets vendidos en ESTA terminal (los conoce: los imprimió): si alguno ganó, va
+  // en su propia tabla al lado de la lista general durante toda la pantalla. Se reconocen
+  // enmascarándolos igual que el backend (maskTicketCode), sin recibir nunca un código completo.
   localTicketCodes: string[]
   // Cuánto dura la pantalla (el scroll recorre la lista completa en ese tiempo). En el lobby la fija
   // DrawSummaryHost: el hueco del ciclo que queda hasta la próxima fase, igual en todas las máquinas.
@@ -22,14 +24,14 @@ interface WinningTicketsScreenProps {
   onDone: (reason: WinningTicketsDoneReason) => void
 }
 
-type Column = 'code' | 'terminal' | 'game' | 'prize'
+type Column = 'code' | 'game' | 'prize'
 
 // Columnas de cada tabla: constantes (misma referencia en cada render) para que TicketRow memoizado
-// no se vuelva a pintar con cada tick de la cuenta regresiva. La tabla local no repite la terminal
-// (es siempre esta).
+// no se vuelva a pintar con cada tick de la cuenta regresiva. Sin terminal: la lista pública no dice
+// dónde se vendió cada ticket.
 const ALL_COLUMNS: Record<WinningTicketsDraw['game'], Column[]> = {
-  roulette: ['code', 'terminal', 'prize'],
-  quickMoney: ['code', 'terminal', 'game', 'prize'],
+  roulette: ['code', 'prize'],
+  quickMoney: ['code', 'game', 'prize'],
 }
 const LOCAL_COLUMNS: Record<WinningTicketsDraw['game'], Column[]> = {
   roulette: ['code', 'prize'],
@@ -47,18 +49,12 @@ const RANGE_OVERSCAN_ROWS = 4
 // Ancho de cada columna en el grid de filas y encabezado.
 const COLUMN_WIDTHS: Record<Column, string> = {
   code: '1.5fr',
-  terminal: '1fr',
   game: '1fr',
   prize: '1.2fr',
 }
 
 const MONEY_FORMATTER = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
 
-// El código impreso es lo que se presenta para cobrar: en una pantalla pública nunca se muestra
-// entero, ni siquiera el del ticket local.
-function maskCode(code: string): string {
-  return `•••• ${code.replace(/\D/g, '').slice(-4)}`
-}
 
 function formatClock(totalSeconds: number): string {
   return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`
@@ -211,8 +207,8 @@ interface TicketRowProps {
 
 const TicketRow = memo(function TicketRow({ ticket, local, columns, index, gameLabels }: TicketRowProps) {
   const cell: Record<Column, ReactNode> = {
-    code: maskCode(ticket.code),
-    terminal: ticket.terminal,
+    // Ya llega enmascarado del backend: se muestra tal cual.
+    code: ticket.maskedCode,
     game: gameLabels[ticket.game],
     prize: MONEY_FORMATTER.format(ticket.prize),
   }
@@ -266,8 +262,8 @@ export function WinningTicketsScreen({
   const showList = !listPending && !empty
   const totalMs = durationMs
 
-  const localCodes = new Set(localTicketCodes)
-  const localWinners = localCodes.size > 0 ? tickets.filter((ticket) => localCodes.has(ticket.code)) : NO_TICKETS
+  const localCodes = new Set(localTicketCodes.map(maskTicketCode))
+  const localWinners = localCodes.size > 0 ? tickets.filter((ticket) => localCodes.has(ticket.maskedCode)) : NO_TICKETS
   const split = localWinners.length > 0
   const allColumns = ALL_COLUMNS[draw.game]
   const localColumns = LOCAL_COLUMNS[draw.game]
@@ -463,8 +459,8 @@ export function WinningTicketsScreen({
                 </h2>
                 <ColumnHeaders columns={localColumns} />
                 <div className="winning-tickets-local-rows">
-                  {localWinners.map((ticket) => (
-                    <TicketRow key={ticket.code} ticket={ticket} local columns={localColumns} gameLabels={gameLabels} />
+                  {localWinners.map((ticket, index) => (
+                    <TicketRow key={`${ticket.maskedCode}-${index}`} ticket={ticket} local columns={localColumns} gameLabels={gameLabels} />
                   ))}
                 </div>
               </aside>
@@ -477,9 +473,10 @@ export function WinningTicketsScreen({
                 <div className="winning-tickets-track" ref={trackRef} style={trackStyle}>
                   {tickets.slice(rangeStart, rangeEnd).map((ticket, offset) => (
                     <TicketRow
-                      key={ticket.code}
+                      // Dos tickets distintos pueden compartir los últimos 6 caracteres: la posición desempata.
+                      key={`${ticket.maskedCode}-${rangeStart + offset}`}
                       ticket={ticket}
-                      local={localCodes.has(ticket.code)}
+                      local={localCodes.has(ticket.maskedCode)}
                       columns={allColumns}
                       index={rangeStart + offset}
                       gameLabels={gameLabels}

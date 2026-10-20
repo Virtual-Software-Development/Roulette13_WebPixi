@@ -53,9 +53,8 @@ describe('winners delivered by pages', () => {
     tickets: null,
   }
   const tickets: WinningTicket[] = Array.from({ length: 5_000 }, (_, index) => ({
-    code: String(index).padStart(12, '0'),
+    maskedCode: `••••••${String(index).padStart(6, '0')}`,
     game: 'roulette',
-    terminal: 'T-001',
     prize: 10,
   }))
 
