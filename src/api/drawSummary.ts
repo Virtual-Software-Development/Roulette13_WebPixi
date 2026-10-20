@@ -8,7 +8,8 @@ import type { DrawSummaryMetrics, WinningTicketsDraw } from '../types/winningTic
 // roundstats.RoundDetail) pero solo en GET /rounds/{id} del admin, que el lobby no puede llamar. Hasta
 // que exista un endpoint público (pedido en docs/backend/draw-summary.md):
 // - Roulette: total apostado y tickets participantes de /bets?drawNo= (los totales de ese sorteo);
-//   total pagado, tickets ganadores y la lista quedan pendientes.
+//   total en premios, tickets ganadores y la lista llegan después, por páginas de GET /winners
+//   (api/drawWinners.ts).
 // - Quick Money: no hay nada público de sus apuestas: todo pendiente, solo el resultado.
 // Cuando llegue el endpoint, se reemplaza el cuerpo de estas funciones y la pantalla no cambia.
 

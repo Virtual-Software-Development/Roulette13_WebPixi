@@ -376,8 +376,7 @@
   letter-spacing: 0.04em;
 }
 
-.winning-tickets-cell[data-column='terminal'],
-.winning-tickets-cell[data-column='game'] {
+.winning-tickets-cell[data-column='terminal'] {
   color: var(--wt-text-secondary);
 }
 
