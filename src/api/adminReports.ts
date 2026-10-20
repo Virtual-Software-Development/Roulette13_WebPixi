@@ -190,7 +190,7 @@ interface ApiPrizeList {
   count: number
   amount: number
   truncated: boolean
-  items: { ticket: string; game: string; machineId: number; round: string; soldAt: string; prize: number; expiresAt: string }[]
+  items: { ticket: string; game: string; round: string; soldAt: string; prize: number; expiresAt: string }[]
 }
 
 function toPrizeList(list: ApiPrizeList): ReportPrizeList {
@@ -204,7 +204,6 @@ function toPrizeList(list: ApiPrizeList): ReportPrizeList {
       .map((t) => ({
         code: t.ticket,
         game: t.game,
-        machineId: String(t.machineId),
         round: t.round,
         soldAt: toReportDate(t.soldAt),
         prize: t.prize,

@@ -23,11 +23,11 @@ export interface GameEventStatistics {
 
 export type GameEventPayoutStatus = 'paid' | 'pending' | 'expired'
 
-// Un ticket ganador -- los tickets son anónimos (no hay jugadores), el código viene enmascarado.
+// Un ticket ganador -- los tickets son anónimos (no hay jugadores), el código viene enmascarado y
+// sin la máquina que lo vendió (nada junto al ticket identifica terminal, banca ni persona).
 export interface GameEventPayoutRow {
   id: string
   ticket: string
-  machine: string
   betAmount: number
   payoutAmount: number
   status: GameEventPayoutStatus

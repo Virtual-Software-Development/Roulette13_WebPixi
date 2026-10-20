@@ -5,6 +5,7 @@ import type { QuickMoneyTicket } from '../../types/quickMoneyTicket'
 import { formatCurrency } from '../../utils/currencyFormat'
 import { getBetDrawLabel, getBetTypeLabel, formatDigits } from '../../utils/quickMoneyBetLabel'
 import { getBetDraw } from '../../utils/quickMoneyPayout'
+import { maskTicketCode } from '../../utils/ticketMask'
 import { TicketIcon } from './icons'
 import './quickMoneyTicketPreview.css'
 
@@ -55,7 +56,7 @@ export function QuickMoneyTicketPreviewModal({ ticket, issuing, onCancel, onIssu
 
         <div className="qm-ticket-preview-meta">
           <span>
-            {t('quickMoneyBettingView.cashier.ticketPreview.ticketNumber')}: <strong>{ticket.ticketNumber}</strong>
+            {t('quickMoneyBettingView.cashier.ticketPreview.ticketNumber')}: <strong>{maskTicketCode(ticket.ticketNumber)}</strong>
           </span>
           {drawEntries.map(([gameType, drawNumber]) => (
             <span key={gameType}>

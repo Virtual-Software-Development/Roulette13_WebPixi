@@ -749,7 +749,6 @@
           "expiredSubtitle": "{{count}} tickets caducaron en el período sin cobrarse",
           "noExpired": "No venció ningún premio en este período.",
           "code": "Código",
-          "saleLocation": "Banca · máquina",
           "roundOrDraw": "Ronda/Sorteo",
           "soldAt": "Venta",
           "prize": "Premio",
@@ -988,8 +987,7 @@
           "bet": "Monto Apostado",
           "payout": "Monto Pagado",
           "status": "Estado",
-          "ticket": "Ticket",
-          "machine": "Máquina"
+          "ticket": "Ticket"
         },
         "status": {
           "paid": "Pagado",

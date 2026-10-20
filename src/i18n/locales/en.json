@@ -749,7 +749,6 @@
           "expiredSubtitle": "{{count}} tickets expired in the period without being collected",
           "noExpired": "No prizes expired in this period.",
           "code": "Code",
-          "saleLocation": "Shop · machine",
           "roundOrDraw": "Round/Draw",
           "soldAt": "Sold",
           "prize": "Prize",
@@ -988,8 +987,7 @@
           "bet": "Bet Amount",
           "payout": "Payout Amount",
           "status": "Status",
-          "ticket": "Ticket",
-          "machine": "Machine"
+          "ticket": "Ticket"
         },
         "status": {
           "paid": "Paid",
