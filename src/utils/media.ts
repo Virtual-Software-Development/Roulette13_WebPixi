@@ -35,19 +35,21 @@ const DRAW_VIDEO_DIR = 'Videos'
 
 // /media-list/ no filtra por extensión: una carpeta de la librería puede tener el video
 // jugable Y su .spins.json sidecar mezclados en el mismo listado. Sin este filtro,
-// pickRandomDrawResultVideoUrl podía elegir el .json como si fuera un video.
+// se podía tomar el .json como si fuera un video.
 export async function fetchVideoFilesForNumber(result: number): Promise<string[]> {
   const files = await fetchMediaListing(`${DRAW_VIDEO_DIR}/${result}`)
   return files.filter((name) => VIDEO_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext)))
 }
 
-// Picks one of the result's clips at random (local-media/Videos/{result}/, 37 = "00"; the library
-// has 5 per number). Never falls back to another number's clip: a video showing the wrong number
-// is worse than none, so with no clip for the result this throws and App.tsx shows the round with
-// VideoErrorRound (the correct number, without the video) instead.
-export async function pickRandomDrawResultVideoUrl(result: number): Promise<string> {
-  const files = await fetchVideoFilesForNumber(result)
-  if (files.length === 0) throw new Error(`No hay videos locales para el número ${result}`)
-  const chosen = files[Math.floor(Math.random() * files.length)]
-  return buildMediaUrl(`${DRAW_VIDEO_DIR}/${result}/${chosen}`)
+// The round's video: the clip the backend chose for it (videoFile in /drawResult, see
+// quick-money-backend internal/videolib), the same on every machine -- so all of them play the same
+// video. A machine never picks one itself: without the backend's choice (or with a name that isn't a
+// plain file name) this throws, and App.tsx shows the round with VideoErrorRound (the correct
+// number, without the video) instead of a video the other machines aren't playing.
+export function drawResultVideoUrl(result: number, videoFile?: string): string {
+  if (!videoFile) throw new Error(`the backend did not choose a video for draw result ${result}`)
+  if (!/^[\w.-]+$/.test(videoFile) || videoFile.includes('..')) {
+    throw new Error(`invalid video file name from the backend: ${videoFile}`)
+  }
+  return buildMediaUrl(`${DRAW_VIDEO_DIR}/${result}/${videoFile}`)
 }

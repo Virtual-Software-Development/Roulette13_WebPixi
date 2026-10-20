@@ -17,7 +17,7 @@ import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
 import { useResultsStore } from './store/useResultsStore'
 import { useBetsSummaryStore } from './store/useBetsSummaryStore'
-import { pickRandomDrawResultVideoUrl } from './utils/media'
+import { drawResultVideoUrl } from './utils/media'
 import { parseApiDateTime } from './utils/time'
 import { toLiveTableBetsData, toResultStatsData } from './utils/betsSummaryMapping'
 import { WHEEL_VIDEO_FROZEN } from './config/wheelCalibration'
@@ -138,9 +138,10 @@ function App() {
 
           const draw: { result: number | null } = { result: null }
 
-          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result }) => {
+          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result, videoFile }) => {
             draw.result = result
-            const videoUrl = await pickRandomDrawResultVideoUrl(result)
+            // The clip the backend chose for this round -- the same on every machine.
+            const videoUrl = drawResultVideoUrl(result, videoFile)
             await loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), videoUrl)
             return videoUrl
           })
@@ -357,7 +358,7 @@ function App() {
   }, [active])
 
   // Watchdog -- ninguno de los fetches/promesas encadenados dentro de scheduleDraw (fetchDrawResult,
-  // pickRandomDrawResultVideoUrl, loadVideoSrc esperando 'loadedmetadata') tiene timeout: si
+  // drawResultVideoUrl, loadVideoSrc esperando 'loadedmetadata') tiene timeout: si
   // cualquiera de ellos se cuelga (no falla, nunca resuelve ni rechaza -- red lenta/rota, video que
   // nunca dispara su evento), showVideo() nunca corre, RouletteVideoView nunca se monta, su onEnded
   // nunca dispara handleRoundEnded, y como ese es el único punto que vuelve a llamar scheduleDraw(),
