@@ -4,6 +4,7 @@ import { RouletteVideoView } from './screens/RouletteVideoView'
 import { RouletteLobby } from './screens/RouletteLobby'
 import { LobbyBackgroundLayer } from './screens/LobbyBackgroundLayer'
 import { WinnerPanel } from './screens/WinnerPanel'
+import { DrawSummaryHost } from './screens/DrawSummaryHost'
 import { VideoErrorRound, type VideoErrorRoundInfo } from './screens/VideoErrorRound'
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { VideoPoolLayer } from './video/VideoPoolLayer'
@@ -451,6 +452,7 @@ function App() {
       )}
       <QuickMoneyLobbyCycle />
       <QuickMoneySplitOverlay />
+      <DrawSummaryHost />
       {lobbyPhase === 'quickMoneyVideo' && <QuickMoneyVideoView />}
       <Application
         // antialias: sin él los bordes de Graphics (anillos de Last 100 Spins, etc.) salían dentados

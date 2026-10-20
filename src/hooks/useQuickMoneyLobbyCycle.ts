@@ -12,21 +12,16 @@ import { fetchQuickMoneyLobbyDraw } from '../api/quickMoneyLobbyDraw'
 import { fetchCurrentEvent } from '../api/terminalTicket'
 import {
   FALLBACK_ROULETTE_ROUND_MS,
-  QUICK_MONEY_DRAW_AT_REMAINING_MS,
-  QUICK_MONEY_DRAW_LEAD_MS,
-  QUICK_MONEY_SPLIT_TRANSITION_MS,
+  QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS,
+  QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS,
   QUICK_MONEY_VIDEO_BUDGET_MS,
   QUICK_MONEY_VIDEO_REQUEST_LEAD_MS,
   QUICK_MONEY_VIDEO_WAIT_MS,
-  ROULETTE_FOCUS_MS,
 } from '../config/quickMoneyLobbyCycle'
 
 const CHECK_INTERVAL_MS = 250
-// El bloque termina cuando al round de Roulette le queda esto -- la transición de salida arranca
-// acá, así a ROULETTE_FOCUS_MS la pantalla ya es 100% Roulette.
-const BLOCK_EXIT_AT_MS = ROULETTE_FOCUS_MS + QUICK_MONEY_SPLIT_TRANSITION_MS
-// El split entra cuando al round de Roulette le queda esto (countdown de QUICK_MONEY_DRAW_LEAD_MS).
-const BLOCK_ENTER_AT_MS = QUICK_MONEY_DRAW_AT_REMAINING_MS + QUICK_MONEY_DRAW_LEAD_MS
+const BLOCK_EXIT_AT_MS = QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS
+const BLOCK_ENTER_AT_MS = QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS
 // Mínimo de bloque para entrar solo a mostrar el resultado (sin sorteo nuevo), ver más abajo.
 const RESULT_ONLY_MIN_MS = 5_000
 

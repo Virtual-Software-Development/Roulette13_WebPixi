@@ -82,7 +82,46 @@
       "pick4": "Pick 4"
     },
     "emptyTitle": "SIN TICKETS GANADORES",
-    "emptyMessage": "Ningún ticket ganó en el sorteo #{{number}}. ¡Suerte en el próximo!"
+    "emptyMessage": "Ningún ticket ganó en el sorteo #{{number}}. ¡Suerte en el próximo!",
+    "summaryTitle": "RESUMEN DEL SORTEO",
+    "listPendingTitle": "LISTA DE GANADORES PENDIENTE",
+    "listPendingMessage": "La lista de tickets ganadores todavía no está disponible en esta pantalla.",
+    "summary": {
+      "attributes": {
+        "color": "Color",
+        "dozen": "Docena",
+        "column": "Columna",
+        "parity": "Par/Impar",
+        "range": "Falta/Pasa"
+      },
+      "colors": {
+        "red": "Rojo",
+        "black": "Negro",
+        "green": "Verde"
+      },
+      "dozens": {
+        "1": "1ª (1-12)",
+        "2": "2ª (13-24)",
+        "3": "3ª (25-36)"
+      },
+      "columnValue": "Columna {{column}}",
+      "parities": {
+        "even": "Par",
+        "odd": "Impar"
+      },
+      "ranges": {
+        "low": "Falta (1-18)",
+        "high": "Pasa (19-36)"
+      },
+      "notApplicable": "—",
+      "metrics": {
+        "totalWagered": "Total apostado",
+        "totalPaid": "Total pagado",
+        "participatingTickets": "Tickets participantes",
+        "winningTickets": "Tickets ganadores"
+      },
+      "pending": "Pendiente"
+    }
   },
   "videoErrorPanel": {
     "title": "VIDEO NO DISPONIBLE",

@@ -82,7 +82,46 @@
       "pick4": "Pick 4"
     },
     "emptyTitle": "NO WINNING TICKETS",
-    "emptyMessage": "No ticket won in draw #{{number}}. Good luck in the next one!"
+    "emptyMessage": "No ticket won in draw #{{number}}. Good luck in the next one!",
+    "summaryTitle": "DRAW SUMMARY",
+    "listPendingTitle": "WINNERS LIST PENDING",
+    "listPendingMessage": "The list of winning tickets is not available on this screen yet.",
+    "summary": {
+      "attributes": {
+        "color": "Color",
+        "dozen": "Dozen",
+        "column": "Column",
+        "parity": "Even/Odd",
+        "range": "Low/High"
+      },
+      "colors": {
+        "red": "Red",
+        "black": "Black",
+        "green": "Green"
+      },
+      "dozens": {
+        "1": "1st (1-12)",
+        "2": "2nd (13-24)",
+        "3": "3rd (25-36)"
+      },
+      "columnValue": "Column {{column}}",
+      "parities": {
+        "even": "Even",
+        "odd": "Odd"
+      },
+      "ranges": {
+        "low": "Low (1-18)",
+        "high": "High (19-36)"
+      },
+      "notApplicable": "—",
+      "metrics": {
+        "totalWagered": "Total wagered",
+        "totalPaid": "Total paid",
+        "participatingTickets": "Participating tickets",
+        "winningTickets": "Winning tickets"
+      },
+      "pending": "Pending"
+    }
   },
   "videoErrorPanel": {
     "title": "VIDEO UNAVAILABLE",
