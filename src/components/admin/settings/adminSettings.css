@@ -36,7 +36,24 @@
   min-width: 0;
 }
 
+/* Mitad izquierda de la última fila de General Settings: Maintenance Mode y Credit Mode lado a
+   lado (apilados en mobile). */
+.admin-settings-inline {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  min-width: 0;
+}
+
+.admin-settings-field-hint {
+  margin-top: 6px;
+}
+
 @media (max-width: 720px) {
+  .admin-settings-inline {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .admin-settings-row {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
@@ -431,4 +448,12 @@
 .admin-settings-event-label {
   font-size: 13px;
   color: var(--admin-text-primary);
+}
+
+/* Confirmación del cambio de modo de crédito (AdminSettingsPage): las máquinas afectadas y el total,
+   resaltados en el ámbar del aviso. */
+.admin-settings-credit-highlight {
+  color: var(--admin-amber, #f5a524);
+  font-weight: 700;
+  white-space: nowrap;
 }

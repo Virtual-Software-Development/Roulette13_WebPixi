@@ -55,12 +55,22 @@ describe('admin settings API', () => {
   it('surfaces the backend error message on a failed save', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'email inválido: x' }), { status: 400 })))
     const settings = {
-      general: apiSettings.general,
+      general: { ...apiSettings.general, creditMode: 'MACHINE' as const },
       notificationChannels: { email: true },
       emailNotifications: { recipients: 'x' },
       notificationEvents: {},
     }
     await expect(saveAdminSettings(settings)).rejects.toThrow('email inválido: x')
+  })
+
+  it("reads a backend without creditMode as 'MACHINE' and sends the chosen mode back", async () => {
+    const fetchMock = mockFetch()
+    const snapshot = await fetchAdminSettings()
+    expect(snapshot.current.general.creditMode).toBe('MACHINE')
+    await saveAdminSettings({ ...snapshot.current, general: { ...snapshot.current.general, creditMode: 'TICKET' } })
+    const calls = fetchMock.mock.calls as unknown as [string, RequestInit][]
+    const sent = JSON.parse(String(calls[calls.length - 1][1].body))
+    expect(sent.general.creditMode).toBe('TICKET')
   })
 
   it('parses recipients separated by commas, semicolons or spaces', () => {

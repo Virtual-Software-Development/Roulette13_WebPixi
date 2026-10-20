@@ -59,6 +59,8 @@ const SYSTEM_LOG_ACTION_VARIANT: Record<string, StatusBadgeVariant> = {
   ROUND_FAILED: 'danger',
   BALANCE_DEPOSIT: 'positive',
   BALANCE_WITHDRAWAL: 'warning',
+  CREDIT_TICKET_ISSUED: 'positive',
+  CREDIT_TICKET_REDEEMED: 'warning',
   RTP_AUTO_CORRECTION: 'purple',
   RTP_PROFILE_EXPIRED: 'purple',
   MACHINE_OFFLINE: 'danger',

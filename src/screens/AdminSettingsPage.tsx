@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { applyAppLanguage } from '../i18n/applyLanguage'
 import type { TFunction } from 'i18next'
 import { AdminAuthError } from '../api/adminSession'
+import { fetchCreditModeImpact, type CreditModeImpact } from '../api/adminSettings'
+import { formatMoney } from '../utils/moneyFormat'
 import { ConfirmDialog } from '../components/admin/ConfirmDialog'
 import { EmailSettingsCard } from '../components/admin/settings/EmailSettingsCard'
 import { GeneralSettingsCard } from '../components/admin/settings/GeneralSettingsCard'
@@ -50,6 +52,8 @@ export function AdminSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [confirmingReset, setConfirmingReset] = useState(false)
+  // A credit-mode change that affects machines, waiting for the admin's confirmation.
+  const [creditImpact, setCreditImpact] = useState<CreditModeImpact | null>(null)
 
   useEffect(() => {
     if (feedback?.variant !== 'success') return
@@ -107,11 +111,21 @@ export function AdminSettingsPage() {
   const toggleEvent = (event: keyof NotificationEventsSettings) =>
     edit((prev) => ({ ...prev, notificationEvents: { ...prev.notificationEvents, [event]: !prev.notificationEvents[event] } }))
 
-  const handleSave = async () => {
+  // Save Changes: a credit-mode change that affects machines (balances to withdraw, tickets to
+  // return) first asks the admin to confirm, showing the total and the machines -- see creditImpact.
+  const handleSave = async (confirmCreditModeChange = false) => {
     setSaving(true)
     setFeedback(null)
     try {
-      await save(draft)
+      if (!confirmCreditModeChange && draft.general.creditMode !== saved.general.creditMode) {
+        const impact = await fetchCreditModeImpact(draft.general.creditMode)
+        if (impact.needsConfirmation) {
+          setCreditImpact(impact)
+          return
+        }
+      }
+      setCreditImpact(null)
+      await save(draft, confirmCreditModeChange)
       // El panel cambia de idioma en cuanto se guarda uno nuevo.
       applyAppLanguage(draft.general.adminLanguage)
       setEdits(null)
@@ -135,12 +149,14 @@ export function AdminSettingsPage() {
           itemsPerPage={draft.general.itemsPerPage}
           dateFormat={draft.general.dateFormat}
           maintenanceMode={draft.general.maintenanceMode}
+          creditMode={draft.general.creditMode}
           onChangeTimezone={(value) => updateGeneral({ timezone: value })}
           onChangeDefaultLanguage={(value) => updateGeneral({ defaultLanguage: value })}
           onChangeAdminLanguage={(value) => updateGeneral({ adminLanguage: value })}
           onChangeItemsPerPage={(value) => updateGeneral({ itemsPerPage: Number(value) })}
           onChangeDateFormat={(value) => updateGeneral({ dateFormat: value })}
           onToggleMaintenanceMode={() => updateGeneral({ maintenanceMode: !draft.general.maintenanceMode })}
+          onChangeCreditMode={(value) => updateGeneral({ creditMode: value })}
         />
 
         <EmailSettingsCard
@@ -175,6 +191,26 @@ export function AdminSettingsPage() {
           </button>
         </div>
       </div>
+
+      {creditImpact && (
+        <ConfirmDialog
+          warning
+          title={t('admin.settings.creditModeConfirm.title')}
+          description={
+            <Trans
+              i18nKey={creditImpact.to === 'TICKET' ? 'admin.settings.creditModeConfirm.toTicket' : 'admin.settings.creditModeConfirm.toMachine'}
+              values={{ count: creditImpact.machines.length, total: formatMoney(creditImpact.total) }}
+              components={{ hl: <strong className="admin-settings-credit-highlight" /> }}
+            />
+          }
+          cancelLabel={t('admin.settings.creditModeConfirm.cancel')}
+          confirmLabel={t(creditImpact.to === 'TICKET' ? 'admin.settings.creditModeConfirm.confirmWithdraw' : 'admin.settings.creditModeConfirm.confirmReturn')}
+          loading={saving}
+          confirmLoadingLabel={t('admin.settings.saving')}
+          onCancel={() => setCreditImpact(null)}
+          onConfirm={() => void handleSave(true)}
+        />
+      )}
 
       {confirmingReset && (
         <ConfirmDialog

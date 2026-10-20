@@ -9,7 +9,12 @@ export interface GeneralSettingsData {
   // Uno de los patrones que acepta el backend (ver DATE_FORMAT_OPTIONS en settingsOptions.ts).
   dateFormat: string
   maintenanceMode: boolean
+  // Dónde vive el crédito de los jugadores (general_settings.credit_mode): 'MACHINE' (por defecto, el
+  // balance de cada máquina) o 'TICKET' (un ticket de crédito que lleva el jugador).
+  creditMode: CreditMode
 }
+
+export type CreditMode = 'MACHINE' | 'TICKET'
 
 // Email es el único canal de notificación (Discord/Slack/Webhook eliminados).
 export type NotificationChannelId = 'email'

@@ -1123,7 +1123,14 @@
             "label": "Maintenance Mode",
             "description": "Restrict access to administrators only."
           },
-          "adminLanguage": "Admin Panel Language"
+          "adminLanguage": "Admin Panel Language",
+          "creditMode": {
+            "label": "Credit Mode",
+            "machine": "Machine balance (default)",
+            "ticket": "Ticket credit",
+            "machineHint": "The cashier loads credit onto each machine.",
+            "ticketHint": "The player carries a credit ticket; bets and prizes update it."
+          }
         },
         "card": {
           "title": "General Settings",
@@ -1167,6 +1174,14 @@
       "saveError": "Could not save settings: {{error}}",
       "errors": {
         "login": "Sign in to the admin panel to view and change settings: the backend requires an admin session."
+      },
+      "creditModeConfirm": {
+        "title": "Change the credit mode?",
+        "toTicket": "Switching to Ticket credit withdraws the balance of <hl>{{count}} machine(s)</hl>: <hl>{{total}}</hl> in total. Each of those machines will show its player a notice with the amount withdrawn from it.",
+        "toMachine": "Switching to Machine balance returns the credit tickets inserted in <hl>{{count}} machine(s)</hl> (<hl>{{total}}</hl> of credit, which stays on the tickets). Each of those machines will show its player a notice.",
+        "confirmWithdraw": "Withdraw and continue",
+        "confirmReturn": "Return tickets and continue",
+        "cancel": "Cancel"
       }
     },
     "users": {
