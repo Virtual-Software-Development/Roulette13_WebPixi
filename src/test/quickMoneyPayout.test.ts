@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getBetDraw, getMaxMultiplier, getPrizeMultiplier } from '../utils/quickMoneyPayout'
+import { getBetDraw, getDirectoPrizes, getMaxMultiplier, getPrizeMultiplier } from '../utils/quickMoneyPayout'
 import type { QuickMoneyBetSelection, QuickMoneyBetType } from '../types/quickMoneyBet'
 
 // Mismas reglas que QuickMoneyPrizeCalc.GetMultiplierFromFormatNumberBets (script C# de referencia).
@@ -77,5 +77,13 @@ describe('getMaxMultiplier / getBetDraw', () => {
     expect(getBetDraw(bet('straight', '1905'))).toBe('pick4')
     expect(getBetDraw(bet('directo', '72'))).toBe('both')
     expect(getBetDraw(bet('pale', '7219'))).toBe('both')
+  })
+})
+
+describe('primera / segunda / tercera', () => {
+  it('sale de los últimos 2 del Pick 3 y los primeros y últimos 2 del Pick 4', () => {
+    // Ejemplo de la tabla de jugadas: Numbers 915 + Win 4 4328 -> 15 / 43 / 28.
+    expect(getDirectoPrizes('915', '4328')).toEqual({ first: '15', second: '43', third: '28' })
+    expect(getDirectoPrizes(PICK3, PICK4)).toEqual({ first: '72', second: '19', third: '05' })
   })
 })
