@@ -1,11 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getRouletteColor } from '../utils/rouletteColors'
-import {
-  WINNING_TICKETS_DURATION_MS,
-  WINNING_TICKETS_EMPTY_DURATION_MS,
-  WINNING_TICKETS_SCROLL_HOLD_MS,
-} from '../layout/layout.constants'
+import { getRouletteNumberAttributes } from '../utils/rouletteNumberAttributes'
+import { WINNING_TICKETS_DURATION_MS, WINNING_TICKETS_SCROLL_HOLD_MS } from '../layout/layout.constants'
 import type { WinningTicket, WinningTicketsDraw } from '../types/winningTickets'
 import './winningTicketsScreen.css'
 
@@ -16,10 +13,9 @@ interface WinningTicketsScreenProps {
   // Códigos de los tickets vendidos en ESTA terminal: si alguno ganó, va en su propia tabla al lado
   // de la lista general durante toda la pantalla.
   localTicketCodes: string[]
-  // Cuánto dura la pantalla con ganadores (el scroll recorre la lista completa en ese tiempo) y sin
-  // ganadores.
+  // Cuánto dura la pantalla (el scroll recorre la lista completa en ese tiempo). En el lobby la fija
+  // DrawSummaryHost: el hueco del ciclo que queda hasta la próxima fase, igual en todas las máquinas.
   durationMs?: number
-  emptyDurationMs?: number
   // Se llama UNA vez: al cumplirse la duración o al saltar.
   onDone: (reason: WinningTicketsDoneReason) => void
 }
@@ -93,6 +89,63 @@ function DrawResult({ draw }: { draw: WinningTicketsDraw }) {
   )
 }
 
+const COUNT_FORMATTER = new Intl.NumberFormat('en-US')
+// Misma referencia en cada render (la lista pendiente no debe rearmar el scroll cada segundo).
+const NO_TICKETS: WinningTicket[] = []
+
+// Atributos del número ganador (solo Roulette). 0 y 00 no pertenecen a ningún grupo exterior: "—".
+function NumberAttributes({ result }: { result: string }) {
+  const { t } = useTranslation()
+  const attributes = getRouletteNumberAttributes(result === '00' ? '00' : Number(result))
+  const notApplicable = t('winningTickets.summary.notApplicable')
+  const items: Array<{ key: string; value: string; color?: string }> = [
+    { key: 'color', value: t(`winningTickets.summary.colors.${attributes.color}`), color: attributes.color },
+    { key: 'dozen', value: attributes.dozen ? t(`winningTickets.summary.dozens.${attributes.dozen}`) : notApplicable },
+    { key: 'column', value: attributes.column ? t('winningTickets.summary.columnValue', { column: attributes.column }) : notApplicable },
+    { key: 'parity', value: attributes.parity ? t(`winningTickets.summary.parities.${attributes.parity}`) : notApplicable },
+    { key: 'range', value: attributes.range ? t(`winningTickets.summary.ranges.${attributes.range}`) : notApplicable },
+  ]
+  return (
+    <dl className="winning-tickets-attributes">
+      {items.map((item) => (
+        <div key={item.key} className="winning-tickets-attribute">
+          <dt className="winning-tickets-stat-label">{t(`winningTickets.summary.attributes.${item.key}`)}</dt>
+          <dd className="winning-tickets-attribute-value" data-color={item.color}>
+            {item.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+// Métricas agregadas del sorteo. Total pagado y tickets ganadores salen de la lista si el backend no
+// las manda pero la lista sí está; sin ninguna de las dos, "Pendiente".
+function SummaryMetrics({ draw }: { draw: WinningTicketsDraw }) {
+  const { t } = useTranslation()
+  const { metrics, tickets } = draw
+  const totalPaid = metrics.totalPaid ?? (tickets ? tickets.reduce((sum, ticket) => sum + ticket.prize, 0) : null)
+  const winningTickets = metrics.winningTickets ?? (tickets ? tickets.length : null)
+  const cards: Array<{ key: string; value: string | null; money?: boolean }> = [
+    { key: 'totalWagered', value: metrics.totalWagered === null ? null : MONEY_FORMATTER.format(metrics.totalWagered), money: true },
+    { key: 'totalPaid', value: totalPaid === null ? null : MONEY_FORMATTER.format(totalPaid), money: true },
+    { key: 'participatingTickets', value: metrics.participatingTickets === null ? null : COUNT_FORMATTER.format(metrics.participatingTickets) },
+    { key: 'winningTickets', value: winningTickets === null ? null : COUNT_FORMATTER.format(winningTickets) },
+  ]
+  return (
+    <div className="winning-tickets-metrics">
+      {cards.map((card) => (
+        <div key={card.key} className="winning-tickets-metric" data-pending={card.value === null}>
+          <span className="winning-tickets-stat-label">{t(`winningTickets.summary.metrics.${card.key}`)}</span>
+          <span className={`winning-tickets-stat-value${card.money && card.value !== null ? ' winning-tickets-stat-value--money' : ''}`}>
+            {card.value ?? t('winningTickets.summary.pending')}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function ColumnHeaders({ columns }: { columns: Column[] }) {
   const { t } = useTranslation()
   return (
@@ -125,11 +178,12 @@ function TicketRow({ ticket, local, columns }: { ticket: WinningTicket; local: b
   )
 }
 
-// Pantalla completa del lobby que recorre TODOS los tickets ganadores del sorteo: la lista se
-// desplaza sola de principio a fin en `durationMs` (con una pausa al empezar y otra al terminar) y un
-// botón permite salir antes. Si un ticket de esta terminal ganó, va en una tabla propia a la
-// izquierda, fija; si no, la lista general ocupa todo el ancho. Sin ganadores muestra un estado vacío
-// más corto.
+// Pantalla completa del lobby después de cada sorteo: arriba el resumen (número ganador con sus
+// atributos -- color, docena, columna, par/impar, falta/pasa -- y las métricas de apuestas y premios),
+// abajo TODOS los tickets ganadores. La lista se desplaza sola de principio a fin en `durationMs` (con
+// una pausa al empezar y otra al terminar) y un botón permite salir antes. Si un ticket de esta
+// terminal ganó, va en una tabla propia a la izquierda, fija; si no, la lista general ocupa todo el
+// ancho. Sin ganadores, o con la lista todavía no disponible para el lobby, el resumen se muestra igual.
 //
 // El desplazamiento es una animación de transform (Web Animations API), no scrollTop por frame: la
 // mueve el compositor, sin layout ni JS por frame -- importante en el hardware del kiosco (rinde como
@@ -138,13 +192,14 @@ export function WinningTicketsScreen({
   draw,
   localTicketCodes,
   durationMs = WINNING_TICKETS_DURATION_MS,
-  emptyDurationMs = WINNING_TICKETS_EMPTY_DURATION_MS,
   onDone,
 }: WinningTicketsScreenProps) {
   const { t } = useTranslation()
-  const tickets = draw.tickets
-  const empty = tickets.length === 0
-  const totalMs = empty ? emptyDurationMs : durationMs
+  // null = la lista no está disponible para el lobby (todavía no hay endpoint público): no es "sin ganadores".
+  const listPending = draw.tickets === null
+  const tickets = draw.tickets ?? NO_TICKETS
+  const empty = !listPending && tickets.length === 0
+  const totalMs = durationMs
 
   const localCodes = new Set(localTicketCodes)
   const localWinners = tickets.filter((ticket) => localCodes.has(ticket.code))
@@ -153,7 +208,6 @@ export function WinningTicketsScreen({
   const allColumns: Column[] = showGame ? ['code', 'terminal', 'game', 'prize'] : ['code', 'terminal', 'prize']
   // La terminal de los tickets locales es siempre esta: no se repite.
   const localColumns: Column[] = showGame ? ['code', 'game', 'prize'] : ['code', 'prize']
-  const totalPrize = tickets.reduce((sum, ticket) => sum + ticket.prize, 0)
 
   const startRef = useRef(performance.now())
   const doneRef = useRef(false)
@@ -237,12 +291,12 @@ export function WinningTicketsScreen({
 
   return (
     <div className="winning-tickets-screen">
-      <section className="winning-tickets-panel" data-empty={empty}>
+      <section className="winning-tickets-panel" data-empty={empty || listPending}>
         <header className="winning-tickets-header">
           <div className="winning-tickets-heading">
             <TrophyIcon />
             <div>
-              <h1 className="winning-tickets-title">{t('winningTickets.title')}</h1>
+              <h1 className="winning-tickets-title">{t('winningTickets.summaryTitle')}</h1>
               <p className="winning-tickets-subtitle">
                 {t(`winningTickets.gameNames.${draw.game}`)} · {t('winningTickets.draw', { number: draw.drawNumber })}
               </p>
@@ -253,19 +307,6 @@ export function WinningTicketsScreen({
             <span className="winning-tickets-stat-label">{t('winningTickets.result')}</span>
             <DrawResult draw={draw} />
           </div>
-
-          {!empty && (
-            <div className="winning-tickets-stats">
-              <div className="winning-tickets-stat">
-                <span className="winning-tickets-stat-value">{tickets.length}</span>
-                <span className="winning-tickets-stat-label">{t('winningTickets.winners', { count: tickets.length })}</span>
-              </div>
-              <div className="winning-tickets-stat">
-                <span className="winning-tickets-stat-value winning-tickets-stat-value--money">{MONEY_FORMATTER.format(totalPrize)}</span>
-                <span className="winning-tickets-stat-label">{t('winningTickets.totalPaid')}</span>
-              </div>
-            </div>
-          )}
 
           <div className="winning-tickets-controls">
             <div className="winning-tickets-countdown">
@@ -281,7 +322,18 @@ export function WinningTicketsScreen({
           </div>
         </header>
 
-        {empty ? (
+        <section className="winning-tickets-summary" aria-label={t('winningTickets.summaryTitle')}>
+          {draw.game === 'roulette' && draw.result.roulette && <NumberAttributes result={draw.result.roulette} />}
+          <SummaryMetrics draw={draw} />
+        </section>
+
+        {listPending ? (
+          <div className="winning-tickets-empty winning-tickets-empty--pending">
+            <TrophyIcon />
+            <h2 className="winning-tickets-empty-title">{t('winningTickets.listPendingTitle')}</h2>
+            <p className="winning-tickets-empty-message">{t('winningTickets.listPendingMessage')}</p>
+          </div>
+        ) : empty ? (
           <div className="winning-tickets-empty">
             <TrophyIcon />
             <h2 className="winning-tickets-empty-title">{t('winningTickets.emptyTitle')}</h2>

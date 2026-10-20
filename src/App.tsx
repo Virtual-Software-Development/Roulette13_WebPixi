@@ -4,10 +4,18 @@ import { RouletteVideoView } from './screens/RouletteVideoView'
 import { RouletteLobby } from './screens/RouletteLobby'
 import { LobbyBackgroundLayer } from './screens/LobbyBackgroundLayer'
 import { WinnerPanel } from './screens/WinnerPanel'
+import { DrawSummaryHost } from './screens/DrawSummaryHost'
 import { VideoErrorRound, type VideoErrorRoundInfo } from './screens/VideoErrorRound'
 import { ResponsiveStage } from './layout/ResponsiveStage'
 import { VideoPoolLayer } from './video/VideoPoolLayer'
-import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from './video/videoElements'
+import {
+  DRAW_VIDEO_SLOT_ID,
+  getVideoSlot,
+  loadVideoSrc,
+  preloadDrawVideoBlob,
+  releaseDrawVideoBlob,
+  resetVideoSlot,
+} from './video/videoElements'
 import { fetchGameInfo } from './api/gameInfo'
 import { applyGameInfo } from './api/applyGameInfo'
 import { fetchDrawResult } from './api/drawResult'
@@ -17,7 +25,7 @@ import { useGameConfigStore } from './store/useGameConfigStore'
 import { useDrawCycleStore } from './store/useDrawCycleStore'
 import { useResultsStore } from './store/useResultsStore'
 import { useBetsSummaryStore } from './store/useBetsSummaryStore'
-import { pickRandomDrawResultVideoUrl } from './utils/media'
+import { pickDrawResultVideoUrl } from './utils/media'
 import { parseApiDateTime } from './utils/time'
 import { toLiveTableBetsData, toResultStatsData } from './utils/betsSummaryMapping'
 import { WHEEL_VIDEO_FROZEN } from './config/wheelCalibration'
@@ -137,12 +145,20 @@ function App() {
           if (isCancelled()) return
 
           const draw: { result: number | null } = { result: null }
+          // Corta la descarga del clip si no llega a tiempo: sin esto seguía en segundo plano y
+          // terminaba cargando el slot en plena ronda de VideoErrorRound.
+          const download = new AbortController()
 
-          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result }) => {
+          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result, video }) => {
             draw.result = result
-            const videoUrl = await pickRandomDrawResultVideoUrl(result)
-            await loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), videoUrl)
-            return videoUrl
+            // Mismo clip en todas las máquinas (ver pickDrawResultVideoUrl): la variante que elige el
+            // backend, o si no viene, la identidad del sorteo, igual para todas.
+            const videoUrl = await pickDrawResultVideoUrl(result, video ?? null, `${drawStartMs}-${drawNo}`)
+            // Entero a memoria antes de darlo por listo (ver preloadDrawVideoBlob).
+            const blobUrl = await preloadDrawVideoBlob(videoUrl, download.signal)
+            await loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), blobUrl)
+            console.info(`[drawVideo] ${drawNo}: clip ${decodeURIComponent(videoUrl)} listo ${Math.round(serverNow() - drawStartMs)}ms respecto del sorteo`)
+            return blobUrl
           })
 
           videoReadyPromise = withDeadline(videoLoaded, drawStartMs + VIDEO_LOAD_GRACE_MS).then(
@@ -155,9 +171,11 @@ function App() {
             },
             (err): DrawPreparation => {
               console.error('El video del sorteo no cargó -- se muestra el panel de próxima ronda en su lugar', err)
+              download.abort()
               if (isCancelled()) return { kind: 'error', result: null }
               // Corta la descarga si quedó colgada a mitad de camino.
               resetVideoSlot(getVideoSlot(DRAW_VIDEO_SLOT_ID))
+              releaseDrawVideoBlob()
               // El resultado es real aunque el video no haya cargado -- se registra igual, en el
               // instante en que el video habría terminado (ver VideoErrorRound). Si drawResult
               // nunca llegó, no hay número que registrar.
@@ -395,6 +413,23 @@ function App() {
     setVideoErrorRound(null)
   }, [])
 
+  // El video arrancó pero no se puede mostrar bien (sin cuadros pintados aunque suene, error de
+  // decodificación, trabado, o llegó demasiado tarde para alcanzar a las demás -- ver
+  // video/drawVideoMonitor.ts): se cambia en caliente a VideoErrorRound, que sigue la MISMA línea de
+  // tiempo absoluta, así esta máquina revela el número y vuelve al lobby junto con las demás en vez
+  // de quedarse con un video invisible o atrasado. revealAtMs: el instante en que el clip (el mismo
+  // en todas las máquinas) revela el número.
+  const handlePlaybackFailed = useCallback((revealAtMs: number | null) => {
+    const { drawStartMs, pendingResult } = useDrawCycleStore.getState()
+    if (drawStartMs === null) return
+    resetVideoSlot(getVideoSlot(DRAW_VIDEO_SLOT_ID))
+    releaseDrawVideoBlob()
+    // VideoErrorRound no mueve la rueda del lobby: queda en su lugar como en el camino de error normal.
+    useDrawCycleStore.getState().setVideoSlideProgress(0)
+    setVideoMounted(false)
+    setVideoErrorRound({ drawStartMs, result: pendingResult?.result ?? null, revealAtMs: revealAtMs ?? undefined })
+  }, [])
+
   // Se llama recién cuando el video ya terminó de bajar de vuelta a su lugar
   // de partida (después del hold sobre el resultado) — recién ahí es seguro
   // desmontarlo.
@@ -417,6 +452,7 @@ function App() {
       )}
       <QuickMoneyLobbyCycle />
       <QuickMoneySplitOverlay />
+      <DrawSummaryHost />
       {lobbyPhase === 'quickMoneyVideo' && <QuickMoneyVideoView />}
       <Application
         // antialias: sin él los bordes de Graphics (anillos de Last 100 Spins, etc.) salían dentados
@@ -430,7 +466,13 @@ function App() {
       >
         <ResponsiveStage>
           <RouletteLobby />
-          {videoMounted && <RouletteVideoView onEnded={handleRoundEnded} onFullyExited={handleFullyExited} />}
+          {videoMounted && (
+            <RouletteVideoView
+              onEnded={handleRoundEnded}
+              onFullyExited={handleFullyExited}
+              onPlaybackFailed={handlePlaybackFailed}
+            />
+          )}
         </ResponsiveStage>
       </Application>
       <LiveTableBetsOverlay data={liveTableBetsData} />

@@ -4,6 +4,8 @@ import {
   WINNER_PANEL_EXIT_DURATION_MS,
 } from '../layout/layout.constants'
 import {
+  QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS,
+  QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS,
   QUICK_MONEY_DRAW_AT_REMAINING_MS,
   QUICK_MONEY_VIDEO_DURATION_MS,
   QUICK_MONEY_VIDEO_FADE_MS,
@@ -72,3 +74,41 @@ export function quickMoneyDrawAtMs(rouletteDrawAtMs: number): number {
 export const QUICK_MONEY_VIDEO_END_OFFSET_MS = QUICK_MONEY_VIDEO_DURATION_MS
 // Resultado publicado en la tabla (después del fade out).
 export const QUICK_MONEY_RESULT_OFFSET_MS = QUICK_MONEY_VIDEO_END_OFFSET_MS + QUICK_MONEY_VIDEO_FADE_MS
+
+// --- Resumen del sorteo (WinningTicketsScreen, lo monta DrawSummaryHost) ---
+// Se muestra en los huecos del ciclo que ya existen, a la misma hora absoluta en todas las máquinas:
+// - Roulette: desde que el lobby vuelve tras su sorteo hasta justo antes de que entre el bloque de
+//   Quick Money (~43 s en un round de 5:00).
+// - Quick Money: desde que se publica su resultado hasta justo antes de que salga el bloque (~20 s en
+//   un round de 5:00 -- para más, ver docs/backend/draw-summary.md).
+// Se cierra DRAW_SUMMARY_EXIT_MARGIN_MS antes de la fase siguiente para que su transición se vea, y si
+// el hueco queda por debajo de DRAW_SUMMARY_MIN_MS no se muestra (round más corto, o la máquina llegó
+// al final del hueco).
+export const DRAW_SUMMARY_EXIT_MARGIN_MS = 1_500
+export const DRAW_SUMMARY_MIN_MS = 8_000
+
+export interface DrawSummaryWindow {
+  startMs: number
+  endMs: number
+}
+
+function summaryWindow(startMs: number, endMs: number): DrawSummaryWindow | null {
+  return endMs - startMs >= DRAW_SUMMARY_MIN_MS ? { startMs, endMs } : null
+}
+
+// lastDrawStartMs: T0 del sorteo de Roulette que se resume; nextDrawStartMs: T0 del siguiente.
+export function rouletteSummaryWindow(lastDrawStartMs: number, nextDrawStartMs: number): DrawSummaryWindow | null {
+  return summaryWindow(
+    lastDrawStartMs + LOBBY_RETURN_OFFSET_MS,
+    nextDrawStartMs - QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS - DRAW_SUMMARY_EXIT_MARGIN_MS,
+  )
+}
+
+// quickMoneyDrawMs: hora del sorteo de Quick Money que se resume (el del round que termina con el
+// sorteo de Roulette nextDrawStartMs).
+export function quickMoneySummaryWindow(quickMoneyDrawMs: number, nextDrawStartMs: number): DrawSummaryWindow | null {
+  return summaryWindow(
+    quickMoneyDrawMs + QUICK_MONEY_RESULT_OFFSET_MS,
+    nextDrawStartMs - QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS - DRAW_SUMMARY_EXIT_MARGIN_MS,
+  )
+}

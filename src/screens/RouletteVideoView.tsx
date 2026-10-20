@@ -1,20 +1,31 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { commitPendingResult } from '../store/commitPendingResult'
 import { useAnimatedProgress } from '../hooks/useAnimatedProgress'
 import { RESULT_HOLD_MS, VIDEO_WHEEL_TRANSITION_DURATION_MS, WINNER_PANEL_LEAD_SECONDS } from '../layout/layout.constants'
 import { easeInOutCubic } from '../utils/easing'
-import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, resetVideoSlot } from '../video/videoElements'
+import { DRAW_VIDEO_SLOT_ID, getVideoSlot, loadVideoSrc, releaseDrawVideoBlob, resetVideoSlot } from '../video/videoElements'
+import { startDrawVideoPlayback } from '../video/drawVideoMonitor'
 import { onVideoNearEnd } from '../utils/videoSeek'
 import { serverNow } from '../time/serverClock'
-import { RESULT_HOLD_END_OFFSET_MS } from '../sync/lobbyTimeline'
+import { PLAY_START_OFFSET_MS, RESULT_HOLD_END_OFFSET_MS } from '../sync/lobbyTimeline'
 
 // Escala del <video>, anclada arriba-al-centro (ver `transform-origin: top center` en
 // videoPool.css) -- 1 = sin escalar. Tiene que combinarse en el MISMO string de `transform` que
 // translateY más abajo: asignar video.style.transform por separado para el scale lo pisaría por
 // completo (son la misma propiedad inline), no se puede setear una vez desde CSS y otra desde acá.
 export const VIDEO_SCALE = 0.90
+
+// Respaldos a hora absoluta (ver el efecto que los agenda): margen tras el instante en que el clip
+// debería revelar el número / terminar, antes de forzarlo sin esperar al video.
+const REVEAL_FALLBACK_GRACE_MS = 400
+const END_FALLBACK_GRACE_MS = 800
+
+// Hora absoluta en que arranca el clip (igual en todas las máquinas), o null sin T0 conocido.
+function playStartAtFor(drawStartMs: number | null): number | null {
+  return drawStartMs === null ? null : drawStartMs + PLAY_START_OFFSET_MS
+}
 
 interface RouletteVideoViewProps {
   // Se llama recién cuando el video termina de bajar de vuelta a su posición
@@ -24,6 +35,9 @@ interface RouletteVideoViewProps {
   // freeze-hold/slide-down -- justo cuando este componente se oculta (handedOff), sin
   // esperar a que termine esa animación.
   onEnded?: () => void
+  // El video arrancó pero no se puede mostrar bien (ver video/drawVideoMonitor.ts): App lo cambia por
+  // VideoErrorRound. revealAtMs: cuándo revela el número este clip en las demás máquinas.
+  onPlaybackFailed?: (revealAtMs: number | null) => void
 }
 
 // El video real vive en el pool de <video> del DOM (VideoPoolLayer, montado como hermano de
@@ -34,13 +48,15 @@ interface RouletteVideoViewProps {
 // Este componente sigue montado dentro del árbol de Pixi únicamente para poder usar
 // useAnimatedProgress (depende del ticker de Pixi) como reloj de la animación de entrada/salida
 // -- no pinta nada en el canvas, devuelve null.
-export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewProps) {
+export function RouletteVideoView({ onFullyExited, onEnded, onPlaybackFailed }: RouletteVideoViewProps) {
   const videoUrlFromStore = useGameConfigStore((state) => state.videoUrl)
   const [ready, setReady] = useState(false)
   // true desde el evento 'ended' en adelante — este componente deja de pintarse (opacity:0,
   // revelando el fondo de LobbyBackgroundLayer detrás), aunque el hold/slide-down internos
   // sigan corriendo (siguen siendo necesarios para disparar onFullyExited).
   const [handedOff, setHandedOff] = useState(false)
+  // Para los callbacks del monitor: una vez entregado (o revelado) el resultado ya no se abandona el video.
+  const handedOffRef = useRef(false)
   const active = useDrawCycleStore((state) => state.active)
   // progress 0 = oculto abajo de la pantalla, 1 = en su posición final mostrándose.
   // Sube cuando active pasa a true, y baja cuando vuelve a false — el mismo cálculo
@@ -70,9 +86,12 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
       if (!cancelled) setReady(true)
     })
 
+    // Sin resetVideoSlot acá: en desarrollo StrictMode corre esta limpieza al montar, y quitarle el
+    // src al slot tiraba el clip que App.tsx acababa de precargar -- se volvía a cargar justo al
+    // arrancar la ronda y esta máquina quedaba atrasada. El slot se libera al terminar la ronda
+    // (fullyExited, abajo) o al abandonarla (App.handlePlaybackFailed).
     return () => {
       cancelled = true
-      resetVideoSlot(video)
     }
   }, [videoUrlFromStore])
 
@@ -127,6 +146,7 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
     if (!ready) return
     const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
     return onVideoNearEnd(video, () => {
+      handedOffRef.current = true
       setHandedOff(true)
       onEnded?.()
     })
@@ -146,26 +166,67 @@ export function RouletteVideoView({ onFullyExited, onEnded }: RouletteVideoViewP
     }, WINNER_PANEL_LEAD_SECONDS)
   }, [ready])
 
-  // Recién arranca a reproducirse una vez que termina de subir a su posición final.
+  // Respaldos a hora absoluta: el panel Winner y el final de la ronda salen a la hora en que los
+  // muestra el clip (el mismo en todas las máquinas) aunque este video vaya atrasado o no dispare
+  // sus eventos -- así ninguna máquina revela el número ni vuelve al lobby tarde. Normalmente los
+  // eventos del propio video llegan antes y estos timers no hacen nada (setWinnerPanelNumber con el
+  // mismo número / 'ended' ya disparado).
+  useEffect(() => {
+    if (!ready) return
+    const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
+    const playStartAt = playStartAtFor(useDrawCycleStore.getState().drawStartMs)
+    if (playStartAt === null || !Number.isFinite(video.duration)) return
+
+    const at = (timestampMs: number, fn: () => void) => setTimeout(fn, Math.max(0, timestampMs - serverNow()))
+    const revealAt = playStartAt + (video.duration - WINNER_PANEL_LEAD_SECONDS) * 1000
+    const endAt = playStartAt + video.duration * 1000
+    const timers = [
+      at(revealAt + REVEAL_FALLBACK_GRACE_MS, () => {
+        const { pendingResult, winnerPanelNumber } = useDrawCycleStore.getState()
+        if (pendingResult && winnerPanelNumber === null) {
+          console.warn('[drawVideo] el video no llegó a revelar el número a tiempo -- panel Winner por hora del servidor')
+          useDrawCycleStore.getState().setWinnerPanelNumber(pendingResult.result)
+        }
+      }),
+      at(endAt + END_FALLBACK_GRACE_MS, () => {
+        if (handedOffRef.current || video.ended) return
+        console.warn('[drawVideo] el video no terminó a tiempo -- se cierra por hora del servidor')
+        // Mismo camino que el final real: los listeners de 'ended' (handleEnded y onVideoNearEnd)
+        // registran el resultado, agendan el hold y entregan al lobby.
+        video.pause()
+        video.dispatchEvent(new Event('ended'))
+      }),
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [ready])
+
+  // Arranca una vez que terminó de subir, a la hora absoluta del clip (saltando lo que haga falta si
+  // esta máquina llegó tarde) y vigila la reproducción -- ver video/drawVideoMonitor.ts.
   useEffect(() => {
     if (!ready || !arrived) return
 
     const video = getVideoSlot(DRAW_VIDEO_SLOT_ID)
-    // El kiosco corre sin interacción de usuario, así que el navegador puede bloquear el
-    // autoplay con sonido — si play() es rechazado por esa política, reintenta mudo para que
-    // el video se siga mostrando (ver flag --autoplay-policy=no-user-gesture-required en el
-    // lanzador del kiosco para que el audio realmente suene en producción).
-    video.play().catch(() => {
-      video.muted = true
-      void video.play()
+    const playStartAt = playStartAtFor(useDrawCycleStore.getState().drawStartMs) ?? serverNow()
+    return startDrawVideoPlayback(video, {
+      playStartAt,
+      revealLeadSeconds: WINNER_PANEL_LEAD_SECONDS,
+      onFail: (reason) => {
+        if (handedOffRef.current) return
+        console.warn(`[drawVideo] no se puede mostrar el video (${reason}) -- panel de video no disponible`)
+        const revealAt = Number.isFinite(video.duration)
+          ? playStartAt + (video.duration - WINNER_PANEL_LEAD_SECONDS) * 1000
+          : null
+        onPlaybackFailed?.(revealAt)
+      },
     })
-  }, [ready, arrived])
+  }, [ready, arrived, onPlaybackFailed])
 
   // Avisa recién cuando terminó de bajar de vuelta, para que App desmonte este
   // componente y programe el siguiente sorteo.
   useEffect(() => {
     if (!fullyExited) return
     resetVideoSlot(getVideoSlot(DRAW_VIDEO_SLOT_ID))
+    releaseDrawVideoBlob()
     onFullyExited?.()
   }, [fullyExited, onFullyExited])
 
