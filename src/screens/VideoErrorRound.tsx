@@ -20,6 +20,10 @@ export interface VideoErrorRoundInfo {
   // sección RESULT). Se guarda acá y no se lee de pendingResult porque commitPendingResult lo
   // limpia al terminar el countdown, con el panel todavía en pantalla durante el hold.
   result: number | null
+  // Instante (ms) en que el clip de las demás máquinas revela el número -- solo se conoce cuando el
+  // video llegó a cargar y falló durante la reproducción (App.handlePlaybackFailed), porque el clip
+  // es el mismo en todas. Sin él, el valor fijo de abajo.
+  revealAtMs?: number
 }
 
 interface VideoErrorRoundProps {
@@ -48,7 +52,7 @@ export function VideoErrorRound({ round, onEnded, onFinished }: VideoErrorRoundP
   // cuando al video le quedan WINNER_PANEL_LEAD_SECONDS (onVideoNearEnd). Los videos no traen un
   // momento de revelación propio (ni el .webm ni /media-list ni el backend lo informan), así que es
   // el mismo valor configurado que usa el video real.
-  const revealAt = Math.max(playStartAt, endedAt - WINNER_PANEL_LEAD_SECONDS * 1000)
+  const revealAt = round.revealAtMs ?? Math.max(playStartAt, endedAt - WINNER_PANEL_LEAD_SECONDS * 1000)
 
   // Depende solo de los números de la línea de tiempo, no de `round` entero: re-agendar acá podría
   // volver a disparar onEnded (que agenda el próximo sorteo) si ese momento ya pasó.

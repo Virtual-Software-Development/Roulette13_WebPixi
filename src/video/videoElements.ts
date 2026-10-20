@@ -48,6 +48,28 @@ export function loadVideoSrc(video: HTMLVideoElement, url: string): Promise<void
   })
 }
 
+// Clip del sorteo de Roulette descargado ENTERO a memoria antes de reproducirlo (blob: URL). Con
+// solo 'loadedmetadata' (lo que espera loadVideoSrc) el video se daba por listo sin datos para
+// reproducir, y en un kiosco con disco/CPU lentos arrancaba y se trababa -- cada traba lo atrasaba
+// respecto de las demás máquinas. Un solo blob vivo: el anterior se libera al crear el siguiente o
+// con releaseDrawVideoBlob (al terminar o abandonar la ronda).
+let drawVideoBlobUrl: string | null = null
+
+export async function preloadDrawVideoBlob(url: string, signal?: AbortSignal): Promise<string> {
+  const res = await fetch(url, { signal })
+  if (!res.ok) throw new Error(`preloadDrawVideoBlob: ${url} respondió ${res.status}`)
+  const blob = await res.blob()
+  signal?.throwIfAborted()
+  releaseDrawVideoBlob()
+  drawVideoBlobUrl = URL.createObjectURL(blob)
+  return drawVideoBlobUrl
+}
+
+export function releaseDrawVideoBlob(): void {
+  if (drawVideoBlobUrl) URL.revokeObjectURL(drawVideoBlobUrl)
+  drawVideoBlobUrl = null
+}
+
 // Precarga del video de Quick Money en su slot -- se llama al abrir el lobby y al entrar cada split
 // (ver useQuickMoneyLobbyCycle), así cuando el countdown llega a 0 el video ya está listo y arranca
 // sin espera. Deduplica la carga en curso: loadVideoSrc solo evita recargar si YA terminó

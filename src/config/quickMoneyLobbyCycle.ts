@@ -49,6 +49,12 @@ export const QUICK_MONEY_VIDEO_WAIT_MS = 8_000
 // del bloque: la salida arranca esto antes de ROULETTE_FOCUS_MS, así al llegar ahí ya se ve solo
 // Roulette.
 export const QUICK_MONEY_SPLIT_TRANSITION_MS = 1200
+// El bloque de Quick Money entra cuando al round de Roulette le queda esto (countdown de
+// QUICK_MONEY_DRAW_LEAD_MS) y sale cuando le queda esto otro -- la transición de salida arranca ahí,
+// así a ROULETTE_FOCUS_MS la pantalla ya es 100% Roulette. Los usan useQuickMoneyLobbyCycle y las
+// ventanas del resumen del sorteo (sync/lobbyTimeline.ts).
+export const QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS = QUICK_MONEY_DRAW_AT_REMAINING_MS + QUICK_MONEY_DRAW_LEAD_MS
+export const QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS = ROULETTE_FOCUS_MS + QUICK_MONEY_SPLIT_TRANSITION_MS
 export const QUICK_MONEY_VIDEO_FADE_MS = 400
 
 // Duración de un round de Roulette si todavía no llegó /gameInfo (roundInterval) -- solo para

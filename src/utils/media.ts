@@ -35,21 +35,41 @@ const DRAW_VIDEO_DIR = 'Videos'
 
 // /media-list/ no filtra por extensión: una carpeta de la librería puede tener el video
 // jugable Y su .spins.json sidecar mezclados en el mismo listado. Sin este filtro,
-// se podía tomar el .json como si fuera un video.
+// pickRandomDrawResultVideoUrl podía elegir el .json como si fuera un video.
 export async function fetchVideoFilesForNumber(result: number): Promise<string[]> {
   const files = await fetchMediaListing(`${DRAW_VIDEO_DIR}/${result}`)
   return files.filter((name) => VIDEO_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext)))
 }
 
-// The round's video: the clip the backend chose for it (videoFile in /drawResult, see
-// quick-money-backend internal/videolib), the same on every machine -- so all of them play the same
-// video. A machine never picks one itself: without the backend's choice (or with a name that isn't a
-// plain file name) this throws, and App.tsx shows the round with VideoErrorRound (the correct
-// number, without the video) instead of a video the other machines aren't playing.
-export function drawResultVideoUrl(result: number, videoFile?: string): string {
-  if (!videoFile) throw new Error(`the backend did not choose a video for draw result ${result}`)
-  if (!/^[\w.-]+$/.test(videoFile) || videoFile.includes('..')) {
-    throw new Error(`invalid video file name from the backend: ${videoFile}`)
+// FNV-1a de 32 bits: mismo string -> mismo número en cualquier máquina y navegador.
+function hashString(value: string): number {
+  let hash = 0x811c9dc5
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i)
+    hash = Math.imul(hash, 0x01000193)
   }
-  return buildMediaUrl(`${DRAW_VIDEO_DIR}/${result}/${videoFile}`)
+  return hash >>> 0
+}
+
+// Picks one of the result's clips (local-media/Videos/{result}/, 37 = "00"; the library has 5 per
+// number) the same way on every machine instead of at random: every lobby plays the SAME clip, so
+// they all spin, land and reveal the number at the same instant (the clips last 15.2-20.7s; a random
+// pick per machine made the winner panel appear up to ~5.5s apart). The choice is /drawResult's
+// `video` (1-based variant the backend derives from the event, events.VideoVariant) over the listing
+// sorted by name -- so the server's readdir order doesn't matter; without a usable variant, a hash of
+// `seed` (the draw's identity). Never falls back to another number's clip: a video showing the wrong
+// number is worse than none, so with no clip for the result this throws and App.tsx shows the round
+// with VideoErrorRound (the correct number, without the video) instead.
+// `videoFile` (/drawResult's videoFile, the exact clip the backend chose -- quick-money-backend
+// internal/videolib) wins when this machine has that file; otherwise the variant/seed choice above.
+export async function pickDrawResultVideoUrl(result: number, variant: number | null, seed: string, videoFile?: string): Promise<string> {
+  const files = await fetchVideoFilesForNumber(result)
+  if (files.length === 0) throw new Error(`No hay videos locales para el número ${result}`)
+  const sorted = [...files].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+  const index =
+    variant !== null && Number.isInteger(variant) && variant >= 1 && variant <= sorted.length
+      ? variant - 1
+      : hashString(seed) % sorted.length
+  const chosen = videoFile && sorted.includes(videoFile) ? videoFile : sorted[index]
+  return buildMediaUrl(`${DRAW_VIDEO_DIR}/${result}/${chosen}`)
 }
