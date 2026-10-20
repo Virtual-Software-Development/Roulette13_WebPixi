@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { nextSegment, renderRange, rowAt } from '../utils/winningTicketsScroll'
-import { generateMockWinners, mockWinnersSource, streamWinners } from '../api/drawWinners'
-import type { WinningTicketsDraw } from '../types/winningTickets'
+import { streamWinners, type WinnersSource } from '../api/drawWinners'
+import type { WinningTicket, WinningTicketsDraw } from '../types/winningTickets'
 
 const HOLD = 4_000
 const TOTAL = 42_000
@@ -44,33 +44,49 @@ describe('winning tickets auto-scroll', () => {
   })
 })
 
-describe('mock winners (outside bet winning across the fleet)', () => {
-  const draw: Pick<WinningTicketsDraw, 'game' | 'drawNumber'> = { game: 'roulette', drawNumber: '0092' }
+describe('winners delivered by pages', () => {
+  const base: WinningTicketsDraw = {
+    game: 'roulette',
+    drawNumber: '0092',
+    result: { roulette: '7' },
+    metrics: { totalWagered: null, totalPaid: null, participatingTickets: null, winningTickets: null },
+    tickets: null,
+  }
+  const tickets: WinningTicket[] = Array.from({ length: 5_000 }, (_, index) => ({
+    code: String(index).padStart(12, '0'),
+    game: 'roulette',
+    terminal: 'T-001',
+    prize: 10,
+  }))
 
-  it('generates the requested amount, unique codes, sorted by prize, same list on every machine', () => {
-    const tickets = generateMockWinners(draw, 5_000)
-    expect(tickets).toHaveLength(5_000)
-    expect(new Set(tickets.map((ticket) => ticket.code)).size).toBe(5_000)
-    for (let index = 1; index < tickets.length; index++) expect(tickets[index - 1].prize).toBeGreaterThanOrEqual(tickets[index].prize)
-    expect(generateMockWinners(draw, 5_000)).toEqual(tickets)
-  })
-
-  it('streams every ticket by pages, opening at once with an empty loading list', async () => {
-    const base: WinningTicketsDraw = {
-      ...draw,
-      result: { roulette: '7' },
-      metrics: { totalWagered: null, totalPaid: null, participatingTickets: null, winningTickets: null },
-      tickets: null,
+  // Páginas de 500; con failAfter, la fuente se corta después de esa cantidad de páginas.
+  function pagedSource(failAfter?: number): WinnersSource {
+    return async function* () {
+      for (let page = 0; page * 500 < tickets.length; page++) {
+        if (page === failAfter) throw new Error('network')
+        yield { tickets: tickets.slice(page * 500, page * 500 + 500), total: tickets.length, totalPaid: 50_000 }
+      }
     }
-    const source = mockWinnersSource(base, { total: 5_000, pageSize: 500, firstPageDelayMs: 0, pageDelayMs: 0 })
+  }
+
+  it('opens at once with an empty loading list and appends every page in order', async () => {
     const updates: WinningTicketsDraw[] = []
-    await streamWinners(base, source, new AbortController().signal, (updated) => updates.push(updated))
+    await streamWinners(base, pagedSource(), new AbortController().signal, (updated) => updates.push(updated))
     expect(updates[0].tickets).toEqual([])
     expect(updates[0].ticketsComplete).toBe(false)
     expect(updates).toHaveLength(11)
     const last = updates.at(-1)!
-    expect(last.tickets).toHaveLength(5_000)
+    expect(last.tickets).toEqual(tickets)
     expect(last.ticketsComplete).toBe(true)
     expect(last.metrics.winningTickets).toBe(5_000)
+    expect(last.metrics.totalPaid).toBe(50_000)
+  })
+
+  it('keeps what arrived when the source fails midway', async () => {
+    const updates: WinningTicketsDraw[] = []
+    await streamWinners(base, pagedSource(3), new AbortController().signal, (updated) => updates.push(updated))
+    const last = updates.at(-1)!
+    expect(last.tickets).toHaveLength(1_500)
+    expect(last.ticketsComplete).toBe(true)
   })
 })
