@@ -9,6 +9,8 @@ export interface MqttCredentials {
   mqttServerPort: number
   mqttTimeout: number
   mqttIdClient: string
+  // machine.id de esta terminal: marca como locales los tickets ganadores vendidos en ella.
+  machineId: number
 }
 
 // MAC de esta computadora. La lee el servidor Node que sirve la app (corre en la misma terminal),

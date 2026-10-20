@@ -66,6 +66,7 @@ async function connect() {
     retryLater()
     return
   }
+  useMqttStore.setState({ machineId: creds.machineId ?? null })
 
   const current = mqtt.connect(brokerUrl(), {
     username: creds.mqttUserName,
