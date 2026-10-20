@@ -99,6 +99,8 @@
     "summaryTitle": "RESUMEN DEL SORTEO",
     "listPendingTitle": "LISTA DE GANADORES PENDIENTE",
     "listPendingMessage": "La lista de tickets ganadores todavía no está disponible en esta pantalla.",
+    "receiving": "Recibiendo ganadores…",
+    "receivingCount": "Recibiendo ganadores… {{received}} de {{total}}",
     "summary": {
       "attributes": {
         "color": "Color",
@@ -125,6 +127,11 @@
       "ranges": {
         "low": "Falta (1-18)",
         "high": "Pasa (19-36)"
+      },
+      "prizes": {
+        "first": "Primera",
+        "second": "Segunda",
+        "third": "Tercera"
       },
       "notApplicable": "—",
       "metrics": {

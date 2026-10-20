@@ -99,6 +99,8 @@
     "summaryTitle": "DRAW SUMMARY",
     "listPendingTitle": "WINNERS LIST PENDING",
     "listPendingMessage": "The list of winning tickets is not available on this screen yet.",
+    "receiving": "Receiving winners…",
+    "receivingCount": "Receiving winners… {{received}} of {{total}}",
     "summary": {
       "attributes": {
         "color": "Color",
@@ -125,6 +127,11 @@
       "ranges": {
         "low": "Low (1-18)",
         "high": "High (19-36)"
+      },
+      "prizes": {
+        "first": "First",
+        "second": "Second",
+        "third": "Third"
       },
       "notApplicable": "—",
       "metrics": {

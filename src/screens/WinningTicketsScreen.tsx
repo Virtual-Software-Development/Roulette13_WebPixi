@@ -1,9 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getRouletteColor } from '../utils/rouletteColors'
 import { getRouletteNumberAttributes } from '../utils/rouletteNumberAttributes'
+import { getDirectoPrizes } from '../utils/quickMoneyPayout'
 import { WINNING_TICKETS_DURATION_MS, WINNING_TICKETS_SCROLL_HOLD_MS } from '../layout/layout.constants'
-import type { WinningTicket, WinningTicketsDraw } from '../types/winningTickets'
+import type { WinningTicket, WinningTicketGame, WinningTicketsDraw } from '../types/winningTickets'
+import { nextSegment, renderRange, rowAt, type ScrollSegment } from '../utils/winningTicketsScroll'
 import './winningTicketsScreen.css'
 
 export type WinningTicketsDoneReason = 'finished' | 'skipped'
@@ -21,6 +23,26 @@ interface WinningTicketsScreenProps {
 }
 
 type Column = 'code' | 'terminal' | 'game' | 'prize'
+
+// Columnas de cada tabla: constantes (misma referencia en cada render) para que TicketRow memoizado
+// no se vuelva a pintar con cada tick de la cuenta regresiva. La tabla local no repite la terminal
+// (es siempre esta).
+const ALL_COLUMNS: Record<WinningTicketsDraw['game'], Column[]> = {
+  roulette: ['code', 'terminal', 'prize'],
+  quickMoney: ['code', 'terminal', 'game', 'prize'],
+}
+const LOCAL_COLUMNS: Record<WinningTicketsDraw['game'], Column[]> = {
+  roulette: ['code', 'prize'],
+  quickMoney: ['code', 'game', 'prize'],
+}
+
+// Lista virtualizada: solo están en el DOM las filas visibles más las que van a entrar en los próximos
+// RANGE_LOOKAHEAD_MS (el scroll lo mueve el compositor; React tiene que llegar antes). Con miles de
+// ganadores, pintar todas las filas trababa el kiosco (rinde como un CPU 4x más lento).
+const INITIAL_RENDERED_ROWS = 30
+const RANGE_UPDATE_MS = 100
+const RANGE_LOOKAHEAD_MS = 400
+const RANGE_OVERSCAN_ROWS = 4
 
 // Ancho de cada columna en el grid de filas y encabezado.
 const COLUMN_WIDTHS: Record<Column, string> = {
@@ -75,17 +97,32 @@ function DrawResult({ draw }: { draw: WinningTicketsDraw }) {
       </span>
     )
   }
+  const { pick3, pick4 } = draw.result
+  // Primera / segunda / tercera (ver getDirectoPrizes): solo con los dos resultados completos.
+  const prizes = pick3?.length === 3 && pick4?.length === 4 ? getDirectoPrizes(pick3, pick4) : null
   return (
-    <span className="winning-tickets-result-picks">
-      {(['pick3', 'pick4'] as const).map((modalidad) =>
-        draw.result[modalidad] ? (
-          <span key={modalidad} className="winning-tickets-result-pick">
-            <span className="winning-tickets-result-pick-label">{t(`winningTickets.games.${modalidad}`)}</span>
-            <span className="winning-tickets-result-pick-digits">{draw.result[modalidad]}</span>
-          </span>
-        ) : null,
+    <>
+      <span className="winning-tickets-result-picks">
+        {(['pick3', 'pick4'] as const).map((modalidad) =>
+          draw.result[modalidad] ? (
+            <span key={modalidad} className="winning-tickets-result-pick">
+              <span className="winning-tickets-result-pick-label">{t(`winningTickets.games.${modalidad}`)}</span>
+              <span className="winning-tickets-result-pick-digits">{draw.result[modalidad]}</span>
+            </span>
+          ) : null,
+        )}
+      </span>
+      {prizes && (
+        <dl className="winning-tickets-attributes winning-tickets-prizes">
+          {(['first', 'second', 'third'] as const).map((place) => (
+            <div key={place} className="winning-tickets-attribute">
+              <dt className="winning-tickets-stat-label">{t(`winningTickets.summary.prizes.${place}`)}</dt>
+              <dd className="winning-tickets-prize-digits">{prizes[place]}</dd>
+            </div>
+          ))}
+        </dl>
       )}
-    </span>
+    </>
   )
 }
 
@@ -120,10 +157,11 @@ function NumberAttributes({ result }: { result: string }) {
 }
 
 // Métricas agregadas del sorteo. Total pagado y tickets ganadores salen de la lista si el backend no
-// las manda pero la lista sí está; sin ninguna de las dos, "Pendiente".
+// las manda pero la lista sí está completa; sin ninguna de las dos, "Pendiente".
 function SummaryMetrics({ draw }: { draw: WinningTicketsDraw }) {
   const { t } = useTranslation()
-  const { metrics, tickets } = draw
+  const { metrics } = draw
+  const tickets = draw.ticketsComplete === false ? null : draw.tickets
   const totalPaid = metrics.totalPaid ?? (tickets ? tickets.reduce((sum, ticket) => sum + ticket.prize, 0) : null)
   const winningTickets = metrics.winningTickets ?? (tickets ? tickets.length : null)
   const cards: Array<{ key: string; value: string | null; money?: boolean }> = [
@@ -159,16 +197,33 @@ function ColumnHeaders({ columns }: { columns: Column[] }) {
   )
 }
 
-function TicketRow({ ticket, local, columns }: { ticket: WinningTicket; local: boolean; columns: Column[] }) {
-  const { t } = useTranslation()
+interface TicketRowProps {
+  ticket: WinningTicket
+  local: boolean
+  columns: Column[]
+  // Posición en la lista completa (la general): da el zebra, que con la lista virtualizada ya no puede
+  // salir de :nth-child.
+  index?: number
+  // Nombres de los juegos ya traducidos: sin useTranslation por fila, que con miles de ganadores es
+  // costo en cada fila que se monta.
+  gameLabels: Record<WinningTicketGame, string>
+}
+
+const TicketRow = memo(function TicketRow({ ticket, local, columns, index, gameLabels }: TicketRowProps) {
   const cell: Record<Column, ReactNode> = {
     code: maskCode(ticket.code),
     terminal: ticket.terminal,
-    game: t(`winningTickets.games.${ticket.game}`),
+    game: gameLabels[ticket.game],
     prize: MONEY_FORMATTER.format(ticket.prize),
   }
   return (
-    <div className="winning-tickets-row" data-local={local} style={gridStyle(columns)}>
+    <div
+      className="winning-tickets-row"
+      data-local={local}
+      data-index={index}
+      data-alt={index !== undefined && index % 2 === 1}
+      style={gridStyle(columns)}
+    >
       {columns.map((column) => (
         <span key={column} className="winning-tickets-cell" data-column={column}>
           {cell[column]}
@@ -176,18 +231,24 @@ function TicketRow({ ticket, local, columns }: { ticket: WinningTicket; local: b
       ))}
     </div>
   )
-}
+})
 
-// Pantalla completa del lobby después de cada sorteo: arriba el resumen (número ganador con sus
-// atributos -- color, docena, columna, par/impar, falta/pasa -- y las métricas de apuestas y premios),
+// Pantalla completa del lobby después de cada sorteo: arriba el número ganador con sus atributos
+// (color, docena, columna, par/impar, falta/pasa) en un cuadro del encabezado y, debajo, las
+// métricas de apuestas y premios a todo el ancho,
 // abajo TODOS los tickets ganadores. La lista se desplaza sola de principio a fin en `durationMs` (con
 // una pausa al empezar y otra al terminar) y un botón permite salir antes. Si un ticket de esta
 // terminal ganó, va en una tabla propia a la izquierda, fija; si no, la lista general ocupa todo el
 // ancho. Sin ganadores, o con la lista todavía no disponible para el lobby, el resumen se muestra igual.
 //
+// La lista puede llegar por páginas (api/drawWinners.ts) y tener miles de filas: se abre con la
+// primera página, las siguientes se agregan al final y el recorrido sigue desde donde está, más
+// rápido, para llegar igual al último ganador antes de cerrar. Solo las filas cercanas a la vista
+// están en el DOM.
+//
 // El desplazamiento es una animación de transform (Web Animations API), no scrollTop por frame: la
 // mueve el compositor, sin layout ni JS por frame -- importante en el hardware del kiosco (rinde como
-// un CPU 4x más lento que el de desarrollo).
+// un CPU 4x más lento que el de desarrollo). El único JS periódico es elegir qué filas montar.
 export function WinningTicketsScreen({
   draw,
   localTicketCodes,
@@ -198,16 +259,26 @@ export function WinningTicketsScreen({
   // null = la lista no está disponible para el lobby (todavía no hay endpoint público): no es "sin ganadores".
   const listPending = draw.tickets === null
   const tickets = draw.tickets ?? NO_TICKETS
-  const empty = !listPending && tickets.length === 0
+  const count = tickets.length
+  // Siguen llegando páginas: [] todavía no es "sin ganadores".
+  const loading = !listPending && draw.ticketsComplete === false
+  const empty = !listPending && !loading && count === 0
+  const showList = !listPending && !empty
   const totalMs = durationMs
 
   const localCodes = new Set(localTicketCodes)
-  const localWinners = tickets.filter((ticket) => localCodes.has(ticket.code))
+  const localWinners = localCodes.size > 0 ? tickets.filter((ticket) => localCodes.has(ticket.code)) : NO_TICKETS
   const split = localWinners.length > 0
-  const showGame = draw.game === 'quickMoney'
-  const allColumns: Column[] = showGame ? ['code', 'terminal', 'game', 'prize'] : ['code', 'terminal', 'prize']
-  // La terminal de los tickets locales es siempre esta: no se repite.
-  const localColumns: Column[] = showGame ? ['code', 'game', 'prize'] : ['code', 'prize']
+  const allColumns = ALL_COLUMNS[draw.game]
+  const localColumns = LOCAL_COLUMNS[draw.game]
+  const gameLabels = useMemo<Record<WinningTicketGame, string>>(
+    () => ({
+      roulette: t('winningTickets.games.roulette'),
+      pick3: t('winningTickets.games.pick3'),
+      pick4: t('winningTickets.games.pick4'),
+    }),
+    [t],
+  )
 
   const startRef = useRef(performance.now())
   const doneRef = useRef(false)
@@ -257,37 +328,76 @@ export function WinningTicketsScreen({
     return () => animation.cancel()
   }, [totalMs])
 
-  // Auto-scroll: recorre (alto de la lista - alto visible) en el tiempo que queda entre las dos
-  // pausas. Si el tamaño cambia (resize), se rearma en el mismo punto del recorrido.
+  // --- Lista general: virtualizada + auto-scroll ---
   const viewportRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
+  // Paso entre filas (alto + separación) y alto visible, en px. null hasta medir la primera fila.
+  const [rowLayout, setRowLayout] = useState<{ pitch: number; viewportHeight: number } | null>(null)
+  const segmentRef = useRef<ScrollSegment | null>(null)
+  const [range, setRange] = useState<[number, number]>([0, INITIAL_RENDERED_ROWS])
+  const hasRows = count > 0
+
+  // Medición: con la primera fila montada y en cada resize del viewport.
   useLayoutEffect(() => {
     const viewport = viewportRef.current
     const track = trackRef.current
-    if (!viewport || !track) return
-    let animation: Animation | null = null
-    const build = () => {
-      animation?.cancel()
-      animation = null
-      const overflow = track.scrollHeight - viewport.clientHeight
-      if (overflow <= 0) return
-      const hold = Math.min(WINNING_TICKETS_SCROLL_HOLD_MS, totalMs / 4)
-      animation = track.animate([{ transform: 'translate3d(0, 0, 0)' }, { transform: `translate3d(0, ${-overflow}px, 0)` }], {
-        duration: Math.max(totalMs - 2 * hold, 1),
-        delay: hold,
-        easing: 'linear',
-        fill: 'forwards',
-      })
-      animation.currentTime = performance.now() - startRef.current
+    if (!showList || !hasRows || !viewport || !track) return
+    const measure = () => {
+      const row = track.firstElementChild as HTMLElement | null
+      if (!row) return
+      const pitch = row.offsetHeight + parseFloat(getComputedStyle(row).marginBottom || '0')
+      const viewportHeight = viewport.clientHeight
+      if (pitch <= 0) return
+      setRowLayout((prev) => (prev && prev.pitch === pitch && prev.viewportHeight === viewportHeight ? prev : { pitch, viewportHeight }))
     }
-    build()
-    const observer = new ResizeObserver(build)
+    measure()
+    const observer = new ResizeObserver(measure)
     observer.observe(viewport)
-    return () => {
-      observer.disconnect()
-      animation?.cancel()
+    return () => observer.disconnect()
+  }, [showList, hasRows, split])
+
+  // Auto-scroll: un tramo nuevo cada vez que cambia el largo de la lista (llegó una página) o el
+  // tamaño. Sigue desde la fila actual -- sin salto -- y llega a la última al empezar la pausa final.
+  useLayoutEffect(() => {
+    const track = trackRef.current
+    if (!track || !rowLayout) return
+    const { pitch, viewportHeight } = rowLayout
+    const elapsed = performance.now() - startRef.current
+    const hold = Math.min(WINNING_TICKETS_SCROLL_HOLD_MS, totalMs / 4)
+    const segment = nextSegment(segmentRef.current, elapsed, count - viewportHeight / pitch, hold, totalMs)
+    segmentRef.current = segment
+    if (!segment) return
+    const animation = track.animate(
+      [
+        { transform: `translate3d(0, ${-segment.fromRow * pitch}px, 0)` },
+        { transform: `translate3d(0, ${-segment.toRow * pitch}px, 0)` },
+      ],
+      { duration: segment.endMs - segment.startMs, delay: segment.startMs, easing: 'linear', fill: 'both' },
+    )
+    animation.currentTime = elapsed
+    return () => animation.cancel()
+  }, [rowLayout, count, totalMs])
+
+  // Qué filas montar: las visibles y las que van a entrar en los próximos RANGE_LOOKAHEAD_MS. Solo
+  // re-renderiza cuando el rango cambia.
+  useEffect(() => {
+    if (!rowLayout) return
+    const visibleRows = rowLayout.viewportHeight / rowLayout.pitch
+    const update = () => {
+      const elapsed = performance.now() - startRef.current
+      const segment = segmentRef.current
+      const next = renderRange(rowAt(segment, elapsed), rowAt(segment, elapsed + RANGE_LOOKAHEAD_MS), visibleRows, count, RANGE_OVERSCAN_ROWS)
+      setRange((prev) => (prev[0] === next[0] && prev[1] === next[1] ? prev : next))
     }
-  }, [totalMs, tickets, split])
+    update()
+    const timer = setInterval(update, RANGE_UPDATE_MS)
+    return () => clearInterval(timer)
+  }, [rowLayout, count])
+
+  const [rangeStart, rangeEnd] = rowLayout ? range : [0, Math.min(count, INITIAL_RENDERED_ROWS)]
+  const trackStyle: CSSProperties | undefined = rowLayout
+    ? { height: count * rowLayout.pitch, paddingTop: rangeStart * rowLayout.pitch }
+    : undefined
 
   return (
     <div className="winning-tickets-screen">
@@ -303,9 +413,14 @@ export function WinningTicketsScreen({
             </div>
           </div>
 
+          {/* Cuadro del resultado: el número y sus atributos juntos, así la fila del resumen queda
+              entera para los totales (con montos grandes se cortaban). */}
           <div className="winning-tickets-result">
             <span className="winning-tickets-stat-label">{t('winningTickets.result')}</span>
-            <DrawResult draw={draw} />
+            <div className="winning-tickets-result-body">
+              <DrawResult draw={draw} />
+              {draw.game === 'roulette' && draw.result.roulette && <NumberAttributes result={draw.result.roulette} />}
+            </div>
           </div>
 
           <div className="winning-tickets-controls">
@@ -323,7 +438,6 @@ export function WinningTicketsScreen({
         </header>
 
         <section className="winning-tickets-summary" aria-label={t('winningTickets.summaryTitle')}>
-          {draw.game === 'roulette' && draw.result.roulette && <NumberAttributes result={draw.result.roulette} />}
           <SummaryMetrics draw={draw} />
         </section>
 
@@ -350,7 +464,7 @@ export function WinningTicketsScreen({
                 <ColumnHeaders columns={localColumns} />
                 <div className="winning-tickets-local-rows">
                   {localWinners.map((ticket) => (
-                    <TicketRow key={ticket.code} ticket={ticket} local columns={localColumns} />
+                    <TicketRow key={ticket.code} ticket={ticket} local columns={localColumns} gameLabels={gameLabels} />
                   ))}
                 </div>
               </aside>
@@ -360,15 +474,32 @@ export function WinningTicketsScreen({
               {split && <h2 className="winning-tickets-table-title">{t('winningTickets.allWinners')}</h2>}
               <ColumnHeaders columns={allColumns} />
               <div className="winning-tickets-viewport" ref={viewportRef}>
-                <div className="winning-tickets-track" ref={trackRef}>
-                  {tickets.map((ticket) => (
-                    <TicketRow key={ticket.code} ticket={ticket} local={localCodes.has(ticket.code)} columns={allColumns} />
+                <div className="winning-tickets-track" ref={trackRef} style={trackStyle}>
+                  {tickets.slice(rangeStart, rangeEnd).map((ticket, offset) => (
+                    <TicketRow
+                      key={ticket.code}
+                      ticket={ticket}
+                      local={localCodes.has(ticket.code)}
+                      columns={allColumns}
+                      index={rangeStart + offset}
+                      gameLabels={gameLabels}
+                    />
                   ))}
                 </div>
                 {/* Degradés fijos arriba/abajo (capas propias, no mask-image: un mask sobre el
                     contenedor se repinta en cada frame del scroll). */}
                 <div className="winning-tickets-fade winning-tickets-fade--top" aria-hidden="true" />
                 <div className="winning-tickets-fade winning-tickets-fade--bottom" aria-hidden="true" />
+                {loading && (
+                  <div className="winning-tickets-receiving" role="status">
+                    {draw.metrics.winningTickets === null
+                      ? t('winningTickets.receiving')
+                      : t('winningTickets.receivingCount', {
+                          received: COUNT_FORMATTER.format(count),
+                          total: COUNT_FORMATTER.format(draw.metrics.winningTickets),
+                        })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

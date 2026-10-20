@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { WinningTicketsScreen } from './WinningTicketsScreen'
 import { fetchQuickMoneyDrawSummary, fetchRouletteDrawSummary } from '../api/drawSummary'
+import { streamWinners, winnersSourceFor } from '../api/drawWinners'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
@@ -75,10 +76,21 @@ interface Shown {
 // quickMoneySummaryWindow en sync/lobbyTimeline.ts). Abre y cierra a la hora del servidor, así que
 // todas las máquinas la muestran juntas; una que arranca a mitad del hueco ve lo que queda. "Saltar"
 // la cierra solo en esta máquina, y no vuelve a abrirse para ese sorteo.
+// La lista de ganadores, si hay de dónde leerla (api/drawWinners.ts), llega por páginas DESPUÉS de
+// abrir: la pantalla no espera a la lista para mostrarse.
 export function DrawSummaryHost() {
   const [shown, setShown] = useState<Shown | null>(null)
   const shownKeyRef = useRef<string | null>(null)
   const closedKeysRef = useRef(new Set<string>())
+  // Corta la descarga de páginas de la pantalla que se cierra.
+  const winnersAbortRef = useRef<AbortController | null>(null)
+
+  function close() {
+    winnersAbortRef.current?.abort()
+    winnersAbortRef.current = null
+    shownKeyRef.current = null
+    setShown(null)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -88,10 +100,7 @@ export function DrawSummaryHost() {
       const now = serverNow()
       const candidate = currentCandidate(now)
 
-      if (shownKeyRef.current && candidate?.key !== shownKeyRef.current) {
-        shownKeyRef.current = null
-        setShown(null)
-      }
+      if (shownKeyRef.current && candidate?.key !== shownKeyRef.current) close()
       if (!candidate || candidate.key === shownKeyRef.current) return
       if (closedKeysRef.current.has(candidate.key) || loadingKey === candidate.key) return
 
@@ -102,13 +111,29 @@ export function DrawSummaryHost() {
         const remainingMs = candidate.window.endMs - serverNow()
         if (remainingMs <= 0) return
         shownKeyRef.current = candidate.key
-        setShown({ key: candidate.key, draw, durationMs: remainingMs })
+        const source = winnersSourceFor(draw)
+        if (!source) {
+          setShown({ key: candidate.key, draw, durationMs: remainingMs })
+          return
+        }
+        const controller = new AbortController()
+        winnersAbortRef.current = controller
+        let first = true
+        void streamWinners(draw, source, controller.signal, (updated) => {
+          if (first) {
+            first = false
+            setShown({ key: candidate.key, draw: updated, durationMs: remainingMs })
+          } else {
+            setShown((prev) => (prev?.key === candidate.key ? { ...prev, draw: updated } : prev))
+          }
+        })
       })
     }, CHECK_INTERVAL_MS)
 
     return () => {
       cancelled = true
       clearInterval(interval)
+      winnersAbortRef.current?.abort()
     }
   }, [])
 
@@ -122,8 +147,7 @@ export function DrawSummaryHost() {
       durationMs={shown.durationMs}
       onDone={() => {
         closedKeysRef.current.add(shown.key)
-        shownKeyRef.current = null
-        setShown(null)
+        close()
       }}
     />
   )
