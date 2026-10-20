@@ -99,7 +99,7 @@ describe('winners from GET /api/winners', () => {
     tickets: null,
   }
   const backendTickets = Array.from({ length: 450 }, (_, index) => ({
-    maskedCode: `••••••AA${String(index).padStart(4, '0')}`,
+    ticketCode: `••••••AA${String(index).padStart(4, '0')}`,
     local: index % 3 === 1,
     prizeAmount: 1_000 - index,
   }))

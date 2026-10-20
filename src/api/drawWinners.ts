@@ -29,7 +29,7 @@ const RETRY_DELAY_MS = 1000
 interface WinnersResponse {
   total: number
   totalPrize: number
-  tickets: { maskedCode: string; local: boolean; prizeAmount: number }[]
+  tickets: { ticketCode: string; local: boolean; prizeAmount: number }[]
 }
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {
@@ -72,7 +72,7 @@ export function winnersSourceFor(draw: WinningTicketsDraw): WinnersSource | null
     for (;;) {
       const page = await fetchWinnersPage(game, draw.drawNumber, offset, signal)
       const tickets: WinningTicket[] = page.tickets.map((ticket) => ({
-        code: ticket.maskedCode,
+        code: ticket.ticketCode,
         local: ticket.local,
         prize: ticket.prizeAmount,
       }))
