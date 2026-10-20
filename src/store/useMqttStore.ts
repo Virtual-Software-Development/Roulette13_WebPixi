@@ -12,6 +12,8 @@ interface MqttState {
   offline: boolean
   // MAC de esta computadora con la que se pidieron las credenciales (null hasta leerla).
   physicalAddress: string | null
+  // machine.id de esta terminal, de las credenciales MQTT (null hasta recibirlas).
+  machineId: number | null
 }
 
 // Estado MQTT de la MÁQUINA, no de una vista: una sola conexión para toda la app, abierta en
@@ -21,4 +23,5 @@ export const useMqttStore = create<MqttState>(() => ({
   status: 'connecting',
   offline: false,
   physicalAddress: null,
+  machineId: null,
 }))

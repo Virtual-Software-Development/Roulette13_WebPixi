@@ -85,13 +85,8 @@
     "allWinners": "All winning tickets",
     "columns": {
       "code": "Ticket",
-      "game": "Game",
+      "terminal": "Terminal",
       "prize": "Prize"
-    },
-    "games": {
-      "roulette": "Roulette",
-      "pick3": "Pick 3",
-      "pick4": "Pick 4"
     },
     "emptyTitle": "NO WINNING TICKETS",
     "emptyMessage": "No ticket won in draw #{{number}}. Good luck in the next one!",

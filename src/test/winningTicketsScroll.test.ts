@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextSegment, renderRange, rowAt } from '../utils/winningTicketsScroll'
-import { streamWinners, type WinnersSource } from '../api/drawWinners'
+import { streamWinners, winnersSourceFor, type WinnersSource } from '../api/drawWinners'
 import type { WinningTicket, WinningTicketsDraw } from '../types/winningTickets'
 
 const HOLD = 4_000
@@ -53,8 +53,9 @@ describe('winners delivered by pages', () => {
     tickets: null,
   }
   const tickets: WinningTicket[] = Array.from({ length: 5_000 }, (_, index) => ({
-    maskedCode: `••••••${String(index).padStart(6, '0')}`,
-    game: 'roulette',
+    code: String(index).padStart(12, '0'),
+    machineId: 1,
+    terminal: 'T-001',
     prize: 10,
   }))
 
@@ -86,6 +87,72 @@ describe('winners delivered by pages', () => {
     await streamWinners(base, pagedSource(3), new AbortController().signal, (updated) => updates.push(updated))
     const last = updates.at(-1)!
     expect(last.tickets).toHaveLength(1_500)
+    expect(last.ticketsComplete).toBe(true)
+  })
+})
+
+describe('winners from GET /api/winners', () => {
+  const draw: WinningTicketsDraw = {
+    game: 'quickMoney',
+    drawNumber: '0042',
+    result: {},
+    metrics: { totalWagered: null, totalPaid: null, participatingTickets: null, winningTickets: null },
+    tickets: null,
+  }
+  const backendTickets = Array.from({ length: 450 }, (_, index) => ({
+    ticketCode: `••••${String(index).padStart(4, '0')}`,
+    idMachine: index % 3,
+    terminal: `Caja ${index % 3}`,
+    prizeAmount: 1_000 - index,
+  }))
+
+  function json(body: unknown, status = 200): Response {
+    return new Response(JSON.stringify(body), { status })
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
+  it('asks for every page in order until the total and maps the backend fields', async () => {
+    const urls: string[] = []
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      urls.push(url)
+      const params = new URL(url, 'http://lobby').searchParams
+      const offset = Number(params.get('offset'))
+      const limit = Number(params.get('limit'))
+      return json({ total: 450, totalPrize: 123.45, tickets: backendTickets.slice(offset, offset + limit) })
+    }))
+
+    const updates: WinningTicketsDraw[] = []
+    await streamWinners(draw, winnersSourceFor(draw)!, new AbortController().signal, (updated) => updates.push(updated))
+
+    expect(urls.map((url) => new URL(url, 'http://lobby').searchParams.get('offset'))).toEqual(['0', '200', '400'])
+    expect(new URL(urls[0], 'http://lobby').searchParams.get('game')).toBe('lottery')
+    const last = updates.at(-1)!
+    expect(last.tickets).toHaveLength(450)
+    expect(last.tickets![1]).toEqual({ code: '••••0001', machineId: 1, terminal: 'Caja 1', prize: 999 })
+    expect(last.ticketsComplete).toBe(true)
+    expect(last.metrics.totalPaid).toBe(123.45)
+  })
+
+  it('retries while the round is not settled yet (409)', async () => {
+    vi.useFakeTimers()
+    let calls = 0
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      calls++
+      return calls < 3 ? json({ error: 'not settled' }, 409) : json({ total: 0, totalPrize: 0, tickets: [] })
+    }))
+
+    const updates: WinningTicketsDraw[] = []
+    const done = streamWinners(draw, winnersSourceFor(draw)!, new AbortController().signal, (updated) => updates.push(updated))
+    await vi.advanceTimersByTimeAsync(3_000)
+    await done
+
+    expect(calls).toBe(3)
+    const last = updates.at(-1)!
+    expect(last.tickets).toEqual([])
     expect(last.ticketsComplete).toBe(true)
   })
 })

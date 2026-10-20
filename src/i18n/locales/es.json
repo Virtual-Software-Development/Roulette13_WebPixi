@@ -85,13 +85,8 @@
     "allWinners": "Todos los tickets ganadores",
     "columns": {
       "code": "Ticket",
-      "game": "Juego",
+      "terminal": "Terminal",
       "prize": "Premio"
-    },
-    "games": {
-      "roulette": "Ruleta",
-      "pick3": "Pick 3",
-      "pick4": "Pick 4"
     },
     "emptyTitle": "SIN TICKETS GANADORES",
     "emptyMessage": "Ningún ticket ganó en el sorteo #{{number}}. ¡Suerte en el próximo!",

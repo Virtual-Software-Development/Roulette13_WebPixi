@@ -7,6 +7,7 @@ import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { useLobbyModeStore } from '../store/useLobbyModeStore'
 import { useQuickMoneyDrawsStore } from '../store/useQuickMoneyDrawsStore'
+import { useMqttStore } from '../store/useMqttStore'
 import { serverNow } from '../time/serverClock'
 import { parseApiDateTime } from '../utils/time'
 import { toWheelPocket } from '../utils/rouletteColors'
@@ -80,6 +81,7 @@ interface Shown {
 // abrir: la pantalla no espera a la lista para mostrarse.
 export function DrawSummaryHost() {
   const [shown, setShown] = useState<Shown | null>(null)
+  const machineId = useMqttStore((state) => state.machineId)
   const shownKeyRef = useRef<string | null>(null)
   const closedKeysRef = useRef(new Set<string>())
   // Corta la descarga de páginas de la pantalla que se cierra.
@@ -142,8 +144,7 @@ export function DrawSummaryHost() {
     <WinningTicketsScreen
       key={shown.key}
       draw={shown.draw}
-      // Todavía no hay forma de saber qué tickets se vendieron en esta terminal (sin endpoint): ninguno.
-      localTicketCodes={[]}
+      localMachineId={machineId}
       durationMs={shown.durationMs}
       onDone={() => {
         closedKeysRef.current.add(shown.key)
