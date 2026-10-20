@@ -11,6 +11,19 @@
       "roulette": "Ruleta",
       "quickMoney": "Quick Money",
       "cancel": "Cancelar"
+    },
+    "creditTicket": {
+      "headerLabel": "Ticket {{code}}",
+      "headerInsert": "Ingresar ticket",
+      "insertTitle": "Ingresá tu ticket",
+      "insertSubtitle": "Escribí o escaneá el código impreso en tu ticket de crédito.",
+      "codeLabel": "Código del ticket de crédito",
+      "insert": "Ingresar",
+      "cancel": "Cancelar",
+      "insertedTitle": "Tu ticket",
+      "insertedSubtitle": "Retirá tu ticket con Cobrar: el crédito queda en él y podés cobrarlo en caja.",
+      "cashOut": "Cobrar",
+      "close": "Cerrar"
     }
   },
   "media": {
@@ -1620,5 +1633,13 @@
     "bettingBlocked": "Las apuestas están bloqueadas hasta recuperar la conexión. Reintentando automáticamente…",
     "adminStale": "Los datos pueden estar desactualizados y los cambios no se guardarán. Reintentando automáticamente…",
     "loginBlocked": "No se puede iniciar sesión hasta que el servidor responda. Reintentando automáticamente…"
+  },
+  "machineNotice": {
+    "title": "Cambió el modo de crédito",
+    "withdrawn": "Esta máquina ahora funciona con tickets de crédito. Su balance de {{amount}} fue retirado: cobralo en caja.",
+    "ticketReturned": "Esta máquina ahora funciona con su propio balance. Tu ticket de crédito {{code}} fue devuelto con {{amount}}: guardalo y cobralo en caja.",
+    "amountWithdrawn": "Monto retirado",
+    "creditOnTicket": "Crédito en tu ticket",
+    "ok": "Aceptar"
   }
 }

@@ -7,6 +7,8 @@ import { buildMediaUrl } from '../utils/media'
 import { navigateToPreview } from '../utils/navigatePreview'
 import { APP_SURFACE, currentPreview } from '../appSurface'
 import { BettingGamePickerModal } from './BettingGamePickerModal'
+import { CreditTicketDialog } from './CreditTicketDialog'
+import { useCreditStore } from '../store/useCreditStore'
 import { logoutAdmin } from '../api/adminSession'
 import { fetchCurrentAdminUser } from '../api/adminUsers'
 import type { AdminUser } from '../types/adminUsers'
@@ -180,6 +182,12 @@ export function Header({ activeTab = 'roulette', activeBettingGame }: HeaderProp
   const lobbyInfoVisible = useDrawCycleStore((state) => state.lobbyInfoVisible)
   const [logoFailed, setLogoFailed] = useState(false)
   const [isBettingPickerOpen, setIsBettingPickerOpen] = useState(false)
+  // TICKET credit mode (General Settings): the balance is the inserted credit ticket's credit, and
+  // the balance block opens CreditTicketDialog to insert or cash out the ticket. MACHINE mode: as
+  // always, just the balance.
+  const creditMode = useCreditStore((state) => state.creditMode)
+  const creditTicket = useCreditStore((state) => state.creditTicket)
+  const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false)
 
   // Vuelve a intentar el logo cada vez que cambia la URL (ej: llega una nueva desde /gameInfo) en
   // vez de quedar pegado en el estado de fallo de la URL anterior.
@@ -300,17 +308,33 @@ export function Header({ activeTab = 'roulette', activeBettingGame }: HeaderProp
           ) : (
             <>
               <div className="app-header-divider" />
-              <div className="app-header-balance">
-                <CoinsIcon />
-                <div className="app-header-balance-text">
-                  <span className="app-header-balance-label">{t('header.balanceLabel')}</span>
-                  <span className="app-header-balance-value">$ {formattedBalance}</span>
+              {creditMode === 'TICKET' ? (
+                <button type="button" className="app-header-balance app-header-balance--button" onClick={() => setIsCreditDialogOpen(true)}>
+                  <CoinsIcon />
+                  <div className="app-header-balance-text">
+                    <span className="app-header-balance-label">
+                      {creditTicket
+                        ? t('header.creditTicket.headerLabel', { code: creditTicket.maskedCode })
+                        : t('header.creditTicket.headerInsert')}
+                    </span>
+                    <span className="app-header-balance-value">$ {formattedBalance}</span>
+                  </div>
+                </button>
+              ) : (
+                <div className="app-header-balance">
+                  <CoinsIcon />
+                  <div className="app-header-balance-text">
+                    <span className="app-header-balance-label">{t('header.balanceLabel')}</span>
+                    <span className="app-header-balance-value">$ {formattedBalance}</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
       </header>
+
+      {isCreditDialogOpen && <CreditTicketDialog onClose={() => setIsCreditDialogOpen(false)} />}
 
       {isBettingPickerOpen && (
         <BettingGamePickerModal activeGame={activeBettingGame} onClose={() => setIsBettingPickerOpen(false)} />
