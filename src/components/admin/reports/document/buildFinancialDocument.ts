@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next'
-import type { ReportMachine, ReportMachinesData, ReportPrizeTicket, ReportUnpaidPrizes } from '../../../../types/adminReports'
+import type { ReportMachinesData, ReportPrizeTicket, ReportUnpaidPrizes } from '../../../../types/adminReports'
 import { formatCount, formatDate, formatDayMonth } from '../../../../utils/reportFormat'
 import { SERIES_COLORS, gameLabel, type BuildContext, type DocumentBody } from './documentHelpers'
 import { addFinancial, bancasOf, cashNetOf, emptyFinancial, financialByGame, financialByMachine, totalsByDay, type FinancialRow } from './reportData'
@@ -52,7 +52,6 @@ export function buildFinancialDocument(ctx: BuildContext): DocumentBody {
   const pendingCount = game === 'all' ? unpaid.pending.count : pending.length
   const expiredCount = game === 'all' ? unpaid.expired.count : expired.length
   const totalRow = moneyRow('total', t('admin.reports.views.common.total'), '', total)
-  const machineById = new Map(machinesData.machines.map((m) => [m.id, m]))
 
   // Por banca, con subtotal por consorcio; cada banca trae sus máquinas como filas hijas.
   const bancas = bancasOf(machinesData.machines)
@@ -73,10 +72,6 @@ export function buildFinancialDocument(ctx: BuildContext): DocumentBody {
   const closeDate = unpaid.cutoff
   const daysLeft = (ticket: ReportPrizeTicket) => Math.max(0, Math.ceil((ticket.expiresAt.getTime() - closeDate.getTime()) / MS_PER_DAY))
   const expiringSoon = pending.filter((p) => daysLeft(p) <= EXPIRING_SOON_DAYS).length
-  const location = (ticket: ReportPrizeTicket) => {
-    const machine: ReportMachine | undefined = machineById.get(ticket.machineId)
-    return machine ? `${machine.banca.name} · ${machine.name}` : ticket.machineId
-  }
 
   const totals = moneyValues(total)
   const stats: DocStat[] = MONEY_KEYS.map((key) => ({ key, label: t(`admin.reports.views.kpi.${key}`), value: totals[key], format: 'currency' }))
@@ -125,13 +120,12 @@ export function buildFinancialDocument(ctx: BuildContext): DocumentBody {
   const ticketColumns = (withSold: boolean) => [
     column('code', t('admin.reports.views.financial.code'), 'text'),
     column('game', t('admin.reports.views.columns.game'), 'text'),
-    column('location', t('admin.reports.views.financial.saleLocation'), 'text'),
     column('round', t('admin.reports.views.financial.roundOrDraw'), 'text'),
     ...(withSold ? [column('sold', t('admin.reports.views.financial.soldAt'), 'dateTime')] : []),
     column('prize', t('admin.reports.views.financial.prize'), 'currency'),
     column('expires', t('admin.reports.views.financial.expiresAt'), 'date', 'right'),
   ]
-  const ticketCells = (r: ReportPrizeTicket) => ({ code: r.code, game: gameLabel(t, r.game), location: location(r), round: r.round, sold: r.soldAt, prize: r.prize, expires: r.expiresAt })
+  const ticketCells = (r: ReportPrizeTicket) => ({ code: r.code, game: gameLabel(t, r.game), round: r.round, sold: r.soldAt, prize: r.prize, expires: r.expiresAt })
 
   blocks.push(
     {

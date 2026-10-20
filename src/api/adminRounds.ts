@@ -65,7 +65,7 @@ interface ApiRoundDetail extends ApiRound {
     createdAt: string
   }[]
   log: { id: number; createdAt: string; action: string; description: string }[]
-  winners: { ticket: string; machine: string; wagered: number; paid: number; status: string }[]
+  winners: { ticket: string; wagered: number; paid: number; status: string }[]
 }
 
 const STATUS_FROM_API: Record<ApiRoundStatus, GameEventStatus> = {
@@ -152,7 +152,6 @@ export async function fetchRound(id: string, signal?: AbortSignal): Promise<Game
     payouts: round.winners.map((w, index) => ({
       id: `${index}-${w.ticket}`,
       ticket: w.ticket,
-      machine: w.machine,
       betAmount: w.wagered,
       payoutAmount: w.paid,
       status: payoutStatusOf(w.status),

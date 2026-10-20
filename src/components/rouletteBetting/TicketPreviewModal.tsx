@@ -4,6 +4,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { BettingTicket } from '../../types/bettingTicket'
 import { formatMoney } from '../../utils/moneyFormat'
 import { getBetSelectionDescription, getBetTypeLabel } from '../../utils/rouletteBetLabel'
+import { maskTicketCode } from '../../utils/ticketMask'
 import { TicketIcon } from './icons'
 import './ticketPreview.css'
 
@@ -55,7 +56,7 @@ export function TicketPreviewModal({ ticket, issuing, onCancel, onIssue }: Ticke
 
         <div className="ticket-preview-meta">
           <span>
-            {t('bettingView.cashier.ticketPreview.ticketNumber')}: <strong>{ticket.ticketNumber}</strong>
+            {t('bettingView.cashier.ticketPreview.ticketNumber')}: <strong>{maskTicketCode(ticket.ticketNumber)}</strong>
           </span>
           <span>
             {t('bettingView.cashier.ticketPreview.drawNumber')}: <strong>{ticket.drawNumber || '—'}</strong>

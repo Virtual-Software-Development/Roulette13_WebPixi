@@ -29,7 +29,6 @@ export function GameEventPayoutsTab({ payouts, totalWinningTickets }: GameEventP
           <thead>
             <tr>
               <th>{t('admin.gameEvents.payouts.table.ticket')}</th>
-              <th>{t('admin.gameEvents.payouts.table.machine')}</th>
               <th>{t('admin.gameEvents.payouts.table.bet')}</th>
               <th>{t('admin.gameEvents.payouts.table.payout')}</th>
               <th>{t('admin.gameEvents.payouts.table.status')}</th>
@@ -39,7 +38,6 @@ export function GameEventPayoutsTab({ payouts, totalWinningTickets }: GameEventP
             {payouts.map((row) => (
               <tr key={row.id}>
                 <td className="admin-game-events-payouts-player">{row.ticket}</td>
-                <td>{row.machine}</td>
                 <td className="admin-game-events-payouts-amount">{formatCurrency(row.betAmount)}</td>
                 <td className="admin-game-events-payouts-amount">{formatCurrency(row.payoutAmount)}</td>
                 <td>

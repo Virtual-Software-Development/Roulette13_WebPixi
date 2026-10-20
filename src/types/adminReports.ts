@@ -239,10 +239,9 @@ export interface ReportMachinesData {
 }
 
 export interface ReportPrizeTicket {
-  // Enmascarado (el código completo alcanza para cobrar).
+  // Enmascarado (el código completo alcanza para cobrar) y sin la máquina que lo vendió.
   code: string
   game: ReportGame
-  machineId: string
   round: string
   soldAt: Date
   prize: number

@@ -109,7 +109,7 @@ export async function fetchAdminSettings(): Promise<AdminSettingsSnapshot> {
 export interface CreditModeImpact {
   from: CreditMode
   to: CreditMode
-  machines: { machineId: number; name: string | null; macAddress: string; amount: number; creditTicket?: string }[]
+  machines: { machineId: number; name: string | null; macAddress: string; amount: number }[]
   total: number
   needsConfirmation: boolean
 }

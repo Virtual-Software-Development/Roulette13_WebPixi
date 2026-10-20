@@ -115,7 +115,6 @@ export function fixtureUnpaidPrizes(period: ReportPeriod): ReportUnpaidPrizes {
   const ticket = (code: string, game: ReportGame, days: number) => ({
     code,
     game,
-    machineId: '1',
     round: game === 'roulette' ? 'RLT-20261010-0007' : 'QM-20261010-0003',
     soldAt: new Date(2026, 9, 10, 9, 56),
     prize: 360,
@@ -123,8 +122,8 @@ export function fixtureUnpaidPrizes(period: ReportPeriod): ReportUnpaidPrizes {
   })
   return {
     cutoff: addDays(period.end, 1),
-    pending: { count: 2, amount: 720, items: [ticket('••••0001', 'roulette', 3), ticket('••••0002', 'quickMoney', 20)], truncated: false },
-    expired: { count: 1, amount: 360, items: [ticket('••••0003', 'roulette', -2)], truncated: false },
+    pending: { count: 2, amount: 720, items: [ticket('••••••CA0001', 'roulette', 3), ticket('••••••CA0002', 'quickMoney', 20)], truncated: false },
+    expired: { count: 1, amount: 360, items: [ticket('••••••CA0003', 'roulette', -2)], truncated: false },
   }
 }
 
