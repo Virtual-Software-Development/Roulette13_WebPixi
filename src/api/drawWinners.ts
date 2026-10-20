@@ -7,7 +7,8 @@ import { env } from '../config/env'
 // instante, sin esperar a bajar la lista entera.
 //
 // Las páginas salen de GET /api/winners del backend (quick-money-backend: lobbyapi/winners.go), ya
-// ordenadas de mayor a menor premio y con el código enmascarado.
+// ordenadas de mayor a menor premio y con el código enmascarado. Sin la terminal de cada ticket: con
+// el X-Terminal-Token de esta máquina el backend marca `local` los vendidos acá.
 
 export interface WinnersPage {
   // Tickets de esta página, en el mismo orden global (mayor a menor premio): se agregan al final.
@@ -28,7 +29,7 @@ const RETRY_DELAY_MS = 1000
 interface WinnersResponse {
   total: number
   totalPrize: number
-  tickets: { ticketCode: string; idMachine: number; terminal: string; prizeAmount: number }[]
+  tickets: { maskedCode: string; local: boolean; prizeAmount: number }[]
 }
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {
@@ -47,7 +48,9 @@ async function fetchWinnersPage(game: string, drawNumber: string, offset: number
   for (let attempt = 0; attempt <= PAGE_RETRIES; attempt++) {
     if (attempt > 0) await sleep(RETRY_DELAY_MS, signal)
     try {
-      const res = await fetch(`/api/winners?${query}`, { signal, headers: { Authorization: `Bearer ${env.apiKey}` } })
+      const headers: Record<string, string> = { Authorization: `Bearer ${env.apiKey}` }
+      if (env.terminalToken) headers['X-Terminal-Token'] = env.terminalToken
+      const res = await fetch(`/api/winners?${query}`, { signal, headers })
       if (res.ok) return await res.json()
       lastError = new Error(`winners request failed: ${res.status}`)
       // 400/404 no se arreglan reintentando.
@@ -69,9 +72,8 @@ export function winnersSourceFor(draw: WinningTicketsDraw): WinnersSource | null
     for (;;) {
       const page = await fetchWinnersPage(game, draw.drawNumber, offset, signal)
       const tickets: WinningTicket[] = page.tickets.map((ticket) => ({
-        code: ticket.ticketCode,
-        machineId: ticket.idMachine,
-        terminal: ticket.terminal,
+        code: ticket.maskedCode,
+        local: ticket.local,
         prize: ticket.prizeAmount,
       }))
       yield { tickets, total: page.total, totalPaid: page.totalPrize }

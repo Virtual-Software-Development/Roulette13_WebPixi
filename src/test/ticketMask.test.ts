@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { maskTicketCode } from '../utils/ticketMask'
 
-// Same cases as the backend's internal/ticketmask: both sides must mask a code identically, so a
-// machine recognises its own ticket in the masked winners list.
+// Same cases as the backend's internal/ticketmask: both sides must mask a code identically.
 describe('maskTicketCode', () => {
   it('shows only the last 6 letters/digits, upper case, after 6 bullets', () => {
     expect(maskTicketCode('TMVGU2X26YNA4')).toBe('••••••26YNA4')

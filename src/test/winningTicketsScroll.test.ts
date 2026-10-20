@@ -54,8 +54,7 @@ describe('winners delivered by pages', () => {
   }
   const tickets: WinningTicket[] = Array.from({ length: 5_000 }, (_, index) => ({
     code: String(index).padStart(12, '0'),
-    machineId: 1,
-    terminal: 'T-001',
+    local: false,
     prize: 10,
   }))
 
@@ -100,9 +99,8 @@ describe('winners from GET /api/winners', () => {
     tickets: null,
   }
   const backendTickets = Array.from({ length: 450 }, (_, index) => ({
-    ticketCode: `••••${String(index).padStart(4, '0')}`,
-    idMachine: index % 3,
-    terminal: `Caja ${index % 3}`,
+    maskedCode: `••••••AA${String(index).padStart(4, '0')}`,
+    local: index % 3 === 1,
     prizeAmount: 1_000 - index,
   }))
 
@@ -132,7 +130,7 @@ describe('winners from GET /api/winners', () => {
     expect(new URL(urls[0], 'http://lobby').searchParams.get('game')).toBe('lottery')
     const last = updates.at(-1)!
     expect(last.tickets).toHaveLength(450)
-    expect(last.tickets![1]).toEqual({ code: '••••0001', machineId: 1, terminal: 'Caja 1', prize: 999 })
+    expect(last.tickets![1]).toEqual({ code: '••••••AA0001', local: true, prize: 999 })
     expect(last.ticketsComplete).toBe(true)
     expect(last.metrics.totalPaid).toBe(123.45)
   })

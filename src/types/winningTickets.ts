@@ -1,13 +1,12 @@
 // Resumen y tickets ganadores de un sorteo, para la pantalla que se muestra en el lobby después de
 // cada sorteo (WinningTicketsScreen, la monta DrawSummaryHost). Los datos los arma api/drawSummary.ts.
 
+// Nada identifica la terminal, la banca ni a una persona: la lista es pública.
 export interface WinningTicket {
-  // Código impreso, ya enmascarado por el backend (••••1234): la lista es pública.
+  // Código impreso, ya enmascarado por el backend (••••••AB1234: solo los últimos 6 caracteres).
   code: string
-  // machine.id de la terminal donde se vendió: la que coincide con la propia lo marca como local.
-  machineId: number
-  // Nombre de esa terminal.
-  terminal: string
+  // Se vendió en ESTA terminal (el backend lo sabe por su X-Terminal-Token; no dice cuál es la de los demás).
+  local: boolean
   // Premio del ticket: suma de bet.prize_amount de sus apuestas ganadoras (sin la apuesta).
   prize: number
 }
