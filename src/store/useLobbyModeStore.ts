@@ -18,6 +18,11 @@ interface LobbyModeState {
   // QuickMoneyVideoView. null = el sorteo no tiene video.
   pendingVideoUrl: string | null
   setPendingVideoUrl: (pendingVideoUrl: string | null) => void
+  // Hora programada del sorteo de Quick Money en pantalla (ancla de QuickMoneyVideoView). Hace falta
+  // aparte de pendingDraw: si los números del sorteo todavía no llegaron, la fase de video igual
+  // arranca (con el panel de video no disponible) a la misma hora que en las demás máquinas.
+  pendingDrawAtMs: number | null
+  setPendingDrawAtMs: (pendingDrawAtMs: number | null) => void
 }
 
 export const useLobbyModeStore = create<LobbyModeState>((set) => ({
@@ -27,6 +32,8 @@ export const useLobbyModeStore = create<LobbyModeState>((set) => ({
   setPendingDraw: (pendingDraw) => set({ pendingDraw }),
   pendingVideoUrl: null,
   setPendingVideoUrl: (pendingVideoUrl) => set({ pendingVideoUrl }),
+  pendingDrawAtMs: null,
+  setPendingDrawAtMs: (pendingDrawAtMs) => set({ pendingDrawAtMs }),
 }))
 
 export function isQuickMoneySplitPhase(phase: LobbyPhase): boolean {

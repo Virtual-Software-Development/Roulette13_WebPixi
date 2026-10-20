@@ -6,8 +6,10 @@ import { QUICK_MONEY_VIDEO_FADE_MS } from '../config/quickMoneyLobbyCycle'
 import { QUICK_MONEY_VIDEO_END_OFFSET_MS } from '../sync/lobbyTimeline'
 import { serverNow } from '../time/serverClock'
 import { VideoErrorPanel, type VideoErrorResult } from './VideoErrorPanel'
+import type { QuickMoneyLobbyDraw } from '../data/quickMoneyLobbyMockData'
 
 interface VideoFallback {
+  // null mientras los números del sorteo no llegaron (ver result más abajo).
   result: VideoErrorResult | null
   // En Quick Money la revelación ES el final del video: el camino normal publica el resultado
   // (publishPendingDraw) recién después de 'ended', y no hay un momento de revelación anterior
@@ -35,15 +37,22 @@ interface VideoFallback {
 // video (ver useQuickMoneyLobbyCycle).
 const SEEK_MIN_LAG_S = 0.25
 
+function toFallbackResult(pendingDraw: QuickMoneyLobbyDraw | null): VideoErrorResult | null {
+  return pendingDraw ? { game: 'quickMoney', pick3: pendingDraw.pick3Result, pick4: pendingDraw.pick4Result } : null
+}
+
 export function QuickMoneyVideoView() {
   const [fallback, setFallback] = useState<VideoFallback | null>(null)
   const [exiting, setExiting] = useState(false)
+  // Los números pueden llegar con el panel ya en pantalla (el backend ejecutó tarde el sorteo, ver
+  // useQuickMoneyLobbyCycle): el panel los revela a su hora.
+  const lateResult = toFallbackResult(useLobbyModeStore((state) => state.pendingDraw))
 
   useEffect(() => {
     const video = getVideoSlot(QUICK_MONEY_VIDEO_SLOT_ID)
-    const drawnAt = useLobbyModeStore.getState().pendingDraw?.drawnAt
+    const { pendingDraw: drawAtStart, pendingDrawAtMs } = useLobbyModeStore.getState()
     // Hora programada del sorteo: el clip arranca ahí (con su fade in) en todas las máquinas.
-    const drawAtMs = drawnAt ? new Date(drawnAt).getTime() : serverNow()
+    const drawAtMs = drawAtStart ? new Date(drawAtStart.drawnAt).getTime() : (pendingDrawAtMs ?? serverNow())
     let cancelled = false
     let finished = false
     const timers: ReturnType<typeof setTimeout>[] = []
@@ -69,7 +78,7 @@ export function QuickMoneyVideoView() {
       setFallback({
         // Capturado acá: publishPendingDraw limpia pendingDraw recién al final, pero el panel no
         // depende de ese momento.
-        result: pendingDraw ? { game: 'quickMoney', pick3: pendingDraw.pick3Result, pick4: pendingDraw.pick4Result } : null,
+        result: toFallbackResult(pendingDraw),
         endedAtIso: new Date(endedAt).toISOString(),
       })
       at(endedAt, complete)
@@ -123,7 +132,7 @@ export function QuickMoneyVideoView() {
   if (!fallback) return null
   return (
     <VideoErrorPanel
-      result={fallback.result}
+      result={fallback.result ?? lateResult}
       revealAtIso={fallback.endedAtIso}
       continueAtIso={fallback.endedAtIso}
       exiting={exiting}

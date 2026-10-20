@@ -243,7 +243,7 @@ function App() {
       winnerPanelExiting: false,
       lobbyInfoVisible: true,
     })
-    useLobbyModeStore.setState({ phase: 'roulette', pendingDraw: null, pendingVideoUrl: null })
+    useLobbyModeStore.setState({ phase: 'roulette', pendingDraw: null, pendingVideoUrl: null, pendingDrawAtMs: null })
     useLobbySyncStore.getState().reset()
 
     void syncServerClock()

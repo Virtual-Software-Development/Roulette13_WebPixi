@@ -3,7 +3,7 @@ import { useLobbyModeStore } from '../store/useLobbyModeStore'
 import { preloadQuickMoneyVideo } from './videoElements'
 import { serverNow } from '../time/serverClock'
 import { DRAW_EXECUTION_LEAD_MS } from '../sync/lobbyTimeline'
-import { QUICK_MONEY_VIDEO_WAIT_MS } from '../config/quickMoneyLobbyCycle'
+import { QUICK_MONEY_VIDEO_DURATION_MS, QUICK_MONEY_VIDEO_WAIT_MS } from '../config/quickMoneyLobbyCycle'
 
 // Prepara el próximo sorteo de Quick Money del lobby compartido con el sorteo REAL del backend
 // (api/quickMoneyLobbyDraw.ts): el mismo round, los mismos números y el mismo video en todas las
@@ -13,9 +13,11 @@ import { QUICK_MONEY_VIDEO_WAIT_MS } from '../config/quickMoneyLobbyCycle'
 // renderizó con el resultado bloqueado y solo entrega después del sorteo.
 
 const POLL_INTERVAL_MS = 1_000
-// Hasta cuándo, pasada la hora del sorteo, se siguen esperando sus números: después de eso no hay
-// sorteo que mostrar (backend caído, round fallido o fuera del slot del lobby).
-const NUMBERS_WAIT_MS = 30_000
+// Hasta cuándo, pasada la hora del sorteo, se siguen esperando sus números: hasta la hora en que el
+// video los habría revelado. Mientras, el lobby muestra el panel de video no disponible (ver
+// useQuickMoneyLobbyCycle), que los revela si llegan a tiempo; después no hay sorteo que mostrar
+// (backend caído, round fallido o fuera del slot del lobby).
+const NUMBERS_WAIT_MS = QUICK_MONEY_VIDEO_DURATION_MS
 // Mismo margen que el backend (events.LobbyDrawTolerance): la hora del sorteo siguiente es una
 // estimación del lobby.
 const SAME_DRAW_TOLERANCE_MS = 60_000

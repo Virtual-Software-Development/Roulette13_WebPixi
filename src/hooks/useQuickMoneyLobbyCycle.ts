@@ -25,6 +25,10 @@ const BLOCK_ENTER_AT_MS = QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS
 // Mínimo de bloque para entrar solo a mostrar el resultado (sin sorteo nuevo), ver más abajo.
 const RESULT_ONLY_MIN_MS = 5_000
 
+// Sorteo cuya fase de video arrancó sin sus números (llegaban tarde): se siguen esperando y, si
+// llegan, el panel de video no disponible los revela a la misma hora que el video en las demás.
+let lateDrawAtMs: number | null = null
+
 function toIso(ms: number): string {
   return new Date(ms).toISOString()
 }
@@ -147,8 +151,27 @@ export function useQuickMoneyLobbyCycle() {
       // Fin del bloque: vuelve a Roulette pase lo que pase (si el video siguiera, se corta y el
       // resultado se publica igual).
       if (blockRemainingMs <= 0) {
+        lateDrawAtMs = null
         publishPendingDraw(rouletteDrawAtMs)
         lobby.setPhase('roulette')
+        return
+      }
+
+      // Panel de video no disponible sin números: llegan tarde (el backend ejecutó tarde el sorteo).
+      if (lobby.phase === 'quickMoneyVideo' && !lobby.pendingDraw && lateDrawAtMs !== null) {
+        const late = takePreparedDraw(lateDrawAtMs, false)
+        if (late.status === 'ready') {
+          lobby.setPendingDraw({
+            gameNumber: late.draw.drawNumber,
+            drawnAt: toIso(lateDrawAtMs),
+            pick3Result: late.draw.pick3,
+            pick4Result: late.draw.pick4,
+          })
+          useQuickMoneyRoundStore.setState({ drawNumber: nextDrawNumber(late.draw.drawNumber) })
+          lateDrawAtMs = null
+        } else if (late.status === 'unavailable') {
+          lateDrawAtMs = null
+        }
         return
       }
 
@@ -160,14 +183,26 @@ export function useQuickMoneyLobbyCycle() {
 
       // Llegó la hora del sorteo de Quick Money: el resultado del sorteo real del backend, pendiente
       // hasta que termine su video. Hasta que llegan sus números (y, unos segundos, su video) el split
-      // queda con el countdown en 0.
-      const taken = takePreparedDraw(drawAtMs, now < drawAtMs + QUICK_MONEY_VIDEO_WAIT_MS)
-      if (taken.status === 'waiting') return
-      if (taken.status === 'unavailable') {
-        // Sin sorteo real no hay resultado que mostrar: se sigue al próximo, con el último resultado.
-        console.warn('[quickMoneyLobbyCycle] el backend no tiene un sorteo de Quick Money a esta hora')
+      // queda con el countdown en 0, como mucho QUICK_MONEY_VIDEO_WAIT_MS.
+      const mayWait = now < drawAtMs + QUICK_MONEY_VIDEO_WAIT_MS
+      const taken = takePreparedDraw(drawAtMs, mayWait)
+      if (taken.status === 'waiting' && mayWait) return
+      if (taken.status !== 'ready') {
+        // Sin números todavía (o sin sorteo real): igual que Roulette, el panel de video no disponible
+        // con su countdown, a la misma hora que el video en las demás máquinas. Si los números llegan
+        // antes de que el video los hubiera revelado, el panel los revela (ver lateDrawAtMs); si no,
+        // solo cuenta CONTINUING IN.
+        console.warn('[quickMoneyLobbyCycle] sin el resultado del backend a la hora del sorteo -- panel de video no disponible')
+        lateDrawAtMs = taken.status === 'waiting' ? drawAtMs : null
         useQuickMoneyRoundStore.setState({ nextDrawTime: toIso(drawAtMs + roundIntervalMs()), drawNumber: nextDrawNumber(drawNumber) })
-        lobby.setPhase('quickMoneyResult')
+        if (blockRemainingMs >= QUICK_MONEY_VIDEO_BUDGET_MS) {
+          lobby.setPendingDrawAtMs(drawAtMs)
+          lobby.setPendingVideoUrl(null)
+          lobby.setPhase('quickMoneyVideo')
+        } else {
+          lateDrawAtMs = null
+          lobby.setPhase('quickMoneyResult')
+        }
         return
       }
       const { draw } = taken
@@ -186,6 +221,7 @@ export function useQuickMoneyLobbyCycle() {
       // el bloque, resultado directo.
       if (blockRemainingMs >= QUICK_MONEY_VIDEO_BUDGET_MS) {
         if (!draw.videoUrl) console.warn('[quickMoneyLobbyCycle] el video no llegó a tiempo -- se muestra el panel de video no disponible')
+        lobby.setPendingDrawAtMs(drawAtMs)
         lobby.setPendingVideoUrl(draw.videoUrl)
         lobby.setPhase('quickMoneyVideo')
       } else {
