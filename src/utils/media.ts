@@ -60,7 +60,9 @@ function hashString(value: string): number {
 // `seed` (the draw's identity). Never falls back to another number's clip: a video showing the wrong
 // number is worse than none, so with no clip for the result this throws and App.tsx shows the round
 // with VideoErrorRound (the correct number, without the video) instead.
-export async function pickDrawResultVideoUrl(result: number, variant: number | null, seed: string): Promise<string> {
+// `videoFile` (/drawResult's videoFile, the exact clip the backend chose -- quick-money-backend
+// internal/videolib) wins when this machine has that file; otherwise the variant/seed choice above.
+export async function pickDrawResultVideoUrl(result: number, variant: number | null, seed: string, videoFile?: string): Promise<string> {
   const files = await fetchVideoFilesForNumber(result)
   if (files.length === 0) throw new Error(`No hay videos locales para el número ${result}`)
   const sorted = [...files].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
@@ -68,6 +70,6 @@ export async function pickDrawResultVideoUrl(result: number, variant: number | n
     variant !== null && Number.isInteger(variant) && variant >= 1 && variant <= sorted.length
       ? variant - 1
       : hashString(seed) % sorted.length
-  const chosen = sorted[index]
+  const chosen = videoFile && sorted.includes(videoFile) ? videoFile : sorted[index]
   return buildMediaUrl(`${DRAW_VIDEO_DIR}/${result}/${chosen}`)
 }

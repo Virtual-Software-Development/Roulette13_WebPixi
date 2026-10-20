@@ -49,6 +49,21 @@ describe('pickDrawResultVideoUrl', () => {
     expect(decodeURIComponent(await pickDrawResultVideoUrl(17, 9, 'x'))).toMatch(/^\/media\/Videos\/17\/r17_[a-e]\.mp4$/)
   })
 
+  it("plays the exact clip the backend chose (videoFile) when this machine has it", async () => {
+    mockMediaList()
+    LIBRARY['Videos/17'] = ['r17_d.mp4', 'r17_b.mp4', 'r17_e.mp4', 'r17_a.mp4', 'r17_c.mp4', 'r17_a.spins.json']
+    // videoFile wins over the variant, whatever the listing order.
+    expect(decodeURIComponent(await pickDrawResultVideoUrl(17, 1, 'x', 'r17_c.mp4'))).toBe('/media/Videos/17/r17_c.mp4')
+  })
+
+  it("falls back to the variant when this machine doesn't have the backend's clip", async () => {
+    mockMediaList()
+    LIBRARY['Videos/17'] = ['r17_a.mp4', 'r17_b.mp4', 'r17_c.mp4', 'r17_d.mp4', 'r17_e.mp4']
+    expect(decodeURIComponent(await pickDrawResultVideoUrl(17, 2, 'x', 'r17_z.mp4'))).toBe('/media/Videos/17/r17_b.mp4')
+    // A name that isn't one of the number's clips is never used.
+    expect(decodeURIComponent(await pickDrawResultVideoUrl(17, 2, 'x', '../12/r12_a.mp4'))).toBe('/media/Videos/17/r17_b.mp4')
+  })
+
   it('uses the "00" folder (37) for 00', async () => {
     mockMediaList()
     expect(decodeURIComponent(await pickDrawResultVideoUrl(37, null, 'any'))).toBe('/media/Videos/37/r37_a.mp4')

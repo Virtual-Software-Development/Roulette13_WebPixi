@@ -149,11 +149,11 @@ function App() {
           // terminaba cargando el slot en plena ronda de VideoErrorRound.
           const download = new AbortController()
 
-          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result, video }) => {
+          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result, video, videoFile }) => {
             draw.result = result
             // Mismo clip en todas las máquinas (ver pickDrawResultVideoUrl): la variante que elige el
             // backend, o si no viene, la identidad del sorteo, igual para todas.
-            const videoUrl = await pickDrawResultVideoUrl(result, video ?? null, `${drawStartMs}-${drawNo}`)
+            const videoUrl = await pickDrawResultVideoUrl(result, video ?? null, `${drawStartMs}-${drawNo}`, videoFile)
             // Entero a memoria antes de darlo por listo (ver preloadDrawVideoBlob).
             const blobUrl = await preloadDrawVideoBlob(videoUrl, download.signal)
             await loadVideoSrc(getVideoSlot(DRAW_VIDEO_SLOT_ID), blobUrl)
