@@ -189,7 +189,10 @@ export function RouletteVideoView({ onFullyExited, onEnded, onPlaybackFailed }: 
         }
       }),
       at(endAt + END_FALLBACK_GRACE_MS, () => {
-        if (handedOffRef.current || video.ended) return
+        // Solo mira 'ended', no el hand-off: un video que se traba en su último cuadro ya entregó al
+        // lobby (onVideoNearEnd) pero nunca dispara 'ended', y sin este empujón el hold no se agendaba
+        // y el panel Winner quedaba en pantalla para siempre.
+        if (video.ended) return
         console.warn('[drawVideo] el video no terminó a tiempo -- se cierra por hora del servidor')
         // Mismo camino que el final real: los listeners de 'ended' (handleEnded y onVideoNearEnd)
         // registran el resultado, agendan el hold y entregan al lobby.

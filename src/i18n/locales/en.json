@@ -73,6 +73,10 @@
       "roulette": "Roulette",
       "quickMoney": "Quick Money"
     },
+    "games": {
+      "pick3": "Pick 3",
+      "pick4": "Pick 4"
+    },
     "draw": "Draw #{{number}}",
     "result": "Result",
     "winners_one": "Winning ticket",
@@ -1332,7 +1336,13 @@
       "changeUntil": "Changes allowed until {{time}}",
       "changeClosed": "Changes closed for this round",
       "noPendingEvent": "No pending roulette round right now.",
-      "loadError": "Could not load the next result: {{error}}"
+      "loadError": "Could not load the next result: {{error}}",
+      "bandWarningCurrent": "Current RTP {{rtp}} is outside the RTP band {{band}}. Results are not blocked: the RTP corrects itself over time.",
+      "bandWarningSelected": "Number {{number}} leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}. You can still apply it.",
+      "bandWarningConfirm": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}.",
+      "bandStabilizing": "RTP still stabilizing: measured over {{rounds}} of {{size}} rounds ({{percent}}% of the correction window). Being outside the RTP band {{band}} (now {{rtp}}) is expected until the window fills. Results are not blocked.",
+      "bandSelectedStabilizing": "Number {{number}} leaves the projected RTP at {{rtp}}, outside the RTP band {{band}} — expected while the RTP is still stabilizing.",
+      "bandConfirmStabilizing": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}. The RTP is still stabilizing."
     },
     "rtp": {
       "title": "RTP Dashboard",

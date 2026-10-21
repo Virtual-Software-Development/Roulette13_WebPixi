@@ -70,6 +70,13 @@ export function rootApiUrl() {
   return process.env.API_URL || readEnvFile(path.join(REPO_ROOT, '.env')).API_URL || `http://localhost:${apiPort()}`
 }
 
+// True when /api points at another machine (e.g. API_URL=http://10.0.0.49:3000): dev:all then
+// leaves the local Go backend, Postgres and EMQX alone.
+export function isRemoteApi() {
+  const { hostname } = new URL(rootApiUrl())
+  return !['localhost', '127.0.0.1', '[::1]', '::1'].includes(hostname)
+}
+
 // The admin app proxies /api and /media through the root app (which owns local-media and the
 // /api -> /api/v1 rewrite), unless admin/.env says otherwise.
 export function adminApiUrl() {

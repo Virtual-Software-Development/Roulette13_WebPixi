@@ -1022,8 +1022,9 @@
   filter: saturate(0.6) brightness(0.85);
 }
 
-/* Fuera de banda: el RTP que dejaría saca al juego de la banda del perfil -- bloqueada y rayada.
-   El globo del hover (::after, arriba) sigue apareciendo: CSS :hover aplica aunque esté disabled. */
+/* Fuera de banda: el RTP que dejaría saca al juego de la banda del perfil -- rayada como aviso, pero
+   se puede elegir (el RTP se corrige solo con el tiempo). El globo del hover (::after, arriba) dice
+   la banda y el RTP resultante. */
 .admin-next-results-number-cell[data-out-of-band='true']::before {
   content: '';
   position: absolute;
@@ -1084,6 +1085,69 @@
 
 .admin-next-results-notice[data-variant='error'] {
   color: #f87171;
+}
+
+/* Aviso de RTP fuera de banda: no bloquea nada, así que tiene que verse -- ámbar fuerte, ícono,
+   borde izquierdo grueso y un pulso suave del borde mientras está en pantalla. */
+.admin-next-results-band-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 191, 36, 0.6);
+  border-left: 5px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.16);
+  color: #fcd34d;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  animation: admin-next-results-band-pulse 1.8s ease-in-out infinite;
+}
+
+.admin-next-results-band-warning::before {
+  content: '⚠';
+  flex: none;
+  font-size: 20px;
+  line-height: 1;
+  color: #f59e0b;
+}
+
+.admin-next-results-confirm-row--dialog + .admin-next-results-band-warning {
+  margin: 14px 0 0;
+}
+
+/* RTP todavía estabilizándose (ventana de corrección sin llenar): mismo lugar, pero informativo --
+   azul, sin pulso -- porque estar fuera de banda es lo esperable. */
+.admin-next-results-band-warning[data-variant='info'] {
+  border-color: rgba(96, 165, 250, 0.5);
+  border-left-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  color: #bfdbfe;
+  font-weight: 600;
+  animation: none;
+}
+
+.admin-next-results-band-warning[data-variant='info']::before {
+  content: 'ⓘ';
+  color: #60a5fa;
+}
+
+@keyframes admin-next-results-band-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-next-results-band-warning {
+    animation: none;
+  }
 }
 
 .admin-next-results-confirm-rtp {

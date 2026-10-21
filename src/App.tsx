@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Application } from '@pixi/react'
 import { RouletteVideoView } from './screens/RouletteVideoView'
 import { RouletteLobby } from './screens/RouletteLobby'
@@ -42,6 +42,8 @@ import { useLobbyModeStore } from './store/useLobbyModeStore'
 import { useLobbySyncStore } from './store/useLobbySyncStore'
 import { applyRoughServerTime, serverNow, startServerClockResync, syncServerClock } from './time/serverClock'
 import { joinDrawInProgress } from './sync/joinDrawInProgress'
+import { LOBBY_RETURN_OFFSET_MS, VIDEO_WINDOW_END_OFFSET_MS } from './sync/lobbyTimeline'
+import { commitPendingResult } from './store/commitPendingResult'
 import { seedQuickMoneyDraws } from './sync/quickMoneyHistory'
 import { SyncOverlay } from './screens/SyncOverlay'
 import type { GameInfoResponse } from './types/gameInfo'
@@ -65,6 +67,9 @@ const BETS_POLL_MS = 3000
 const VIDEO_LOAD_GRACE_MS = 3000
 // Tope de espera de las apuestas del lobby al arrancar, antes de sacar "Sincronizando…" igual.
 const BOOT_BETS_TIMEOUT_MS = 4000
+// Margen sobre la hora en que todas las máquinas vuelven al lobby (LOBBY_RETURN_OFFSET_MS) antes de
+// que el failsafe de ronda cierre a la fuerza una ronda que no volvió sola (ver más abajo).
+const ROUND_FAILSAFE_GRACE_MS = 3000
 
 type DrawPreparation = { kind: 'video' } | { kind: 'error'; result: number | null }
 
@@ -93,6 +98,13 @@ function App() {
   const [videoMounted, setVideoMounted] = useState(false)
   // No-null = la ronda en curso se muestra con VideoErrorRound porque el video no cargó.
   const [videoErrorRound, setVideoErrorRound] = useState<VideoErrorRoundInfo | null>(null)
+  // Para el failsafe de ronda (más abajo), que lee el estado actual desde un timer.
+  const videoMountedRef = useRef(false)
+  const videoErrorRoundRef = useRef<VideoErrorRoundInfo | null>(null)
+  videoMountedRef.current = videoMounted
+  videoErrorRoundRef.current = videoErrorRound
+  // drawStartMs de la última ronda que ya agendó el sorteo siguiente (handleRoundEnded).
+  const roundEndedForRef = useRef<number | null>(null)
 
   // Agenda el próximo sorteo: pide /gameInfo, y programa dos timers según
   // nextDraw.startTime — uno para pedir /drawResult 500ms antes (y precargar
@@ -149,7 +161,13 @@ function App() {
           // terminaba cargando el slot en plena ronda de VideoErrorRound.
           const download = new AbortController()
 
-          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result, video, videoFile }) => {
+          // El backend genera el resultado unos instantes antes de la hora del sorteo, y a veces más
+          // tarde (bloqueo compartido con Quick Money, o el backend reiniciándose). Se sigue pidiendo
+          // hasta que termina la ventana del video: si llega tarde para el video, igual se muestra en
+          // el panel de video no disponible (más abajo) y entra al historial con la ronda.
+          const resultFetched = fetchDrawResult(drawNo, { until: drawStartMs + VIDEO_WINDOW_END_OFFSET_MS })
+
+          const videoLoaded = resultFetched.then(async ({ result, video, videoFile }) => {
             draw.result = result
             // Mismo clip en todas las máquinas (ver pickDrawResultVideoUrl): la variante que elige el
             // backend, o si no viene, la identidad del sorteo, igual para todas.
@@ -181,6 +199,21 @@ function App() {
               // nunca llegó, no hay número que registrar.
               if (draw.result !== null) {
                 useDrawCycleStore.getState().setPendingResult({ drawNo, result: draw.result })
+              } else {
+                // Resultado todavía sin llegar: la ronda arranca igual con el panel (sin número) y,
+                // si el resultado llega antes del final de la ventana del video, el panel lo revela.
+                resultFetched
+                  .then(({ result }) => {
+                    if (isCancelled() || serverNow() >= drawStartMs + VIDEO_WINDOW_END_OFFSET_MS) return
+                    console.info(`[drawResult] ${drawNo}: llegó tarde para el video, se muestra en el panel`)
+                    useDrawCycleStore.getState().setPendingResult({ drawNo, result })
+                    setVideoErrorRound((round) =>
+                      round && round.drawStartMs === drawStartMs && round.result === null ? { ...round, result } : round,
+                    )
+                  })
+                  .catch(() => {
+                    // Nunca llegó: la ronda termina sin número, como las demás que no lo recibieron.
+                  })
               }
               return { kind: 'error', result: draw.result }
             }
@@ -405,8 +438,59 @@ function App() {
   // actualizados (nextDraw/drawNumber) para cuando termine de regresar la
   // animación en vez de mostrar el dato viejo un instante y luego saltar.
   const handleRoundEnded = useCallback(() => {
+    roundEndedForRef.current = useDrawCycleStore.getState().drawStartMs
     scheduleDraw(() => false, false)
   }, [scheduleDraw])
+
+  // Failsafe de ronda: la secuencia del lobby sigue la línea de tiempo del servidor, pase lo que pase
+  // con el resultado o el video. El camino normal depende de eventos -- el 'ended' del video agenda
+  // el hold, el ticker de Pixi baja la rueda y recién eso (onFullyExited) saca el panel Winner -- y si
+  // uno no llega (video trabado en el último cuadro, ticker detenido, resultado o backend ausentes)
+  // la pantalla quedaba congelada para siempre: el watchdog de más abajo no mira mientras hay una
+  // ronda montada. A la hora en que todas las máquinas ya volvieron al lobby (LOBBY_RETURN_OFFSET_MS,
+  // más un margen) se cierra a la fuerza lo que haya quedado y se agenda el sorteo siguiente si la
+  // ronda no llegó a hacerlo.
+  const roundDrawStartMs = useDrawCycleStore((state) => state.drawStartMs)
+  useEffect(() => {
+    if (roundDrawStartMs === null) return
+    const failsafeAt = roundDrawStartMs + LOBBY_RETURN_OFFSET_MS + ROUND_FAILSAFE_GRACE_MS
+    const timer = setTimeout(() => {
+      const cycle = useDrawCycleStore.getState()
+      if (cycle.drawStartMs !== roundDrawStartMs) return
+      const stuck =
+        cycle.active ||
+        cycle.winnerPanelNumber !== null ||
+        !cycle.lobbyInfoVisible ||
+        videoMountedRef.current ||
+        videoErrorRoundRef.current !== null
+      if (!stuck) return
+      console.warn('[round] la ronda no volvió al lobby a la hora del servidor -- se cierra', {
+        drawStartMs: new Date(roundDrawStartMs).toISOString(),
+        active: cycle.active,
+        winnerPanel: cycle.winnerPanelNumber,
+        videoMounted: videoMountedRef.current,
+        videoErrorRound: videoErrorRoundRef.current !== null,
+      })
+      if (cycle.pendingResult) commitPendingResult()
+      resetVideoSlot(getVideoSlot(DRAW_VIDEO_SLOT_ID))
+      releaseDrawVideoBlob()
+      setVideoMounted(false)
+      setVideoErrorRound(null)
+      useDrawCycleStore.setState({
+        active: false,
+        videoArrived: false,
+        videoSlideProgress: 0,
+        winnerPanelNumber: null,
+        winnerPanelExiting: false,
+        lobbyInfoVisible: true,
+      })
+      if (roundEndedForRef.current !== roundDrawStartMs) {
+        roundEndedForRef.current = roundDrawStartMs
+        scheduleDraw(() => false, false)
+      }
+    }, Math.max(0, failsafeAt - serverNow()))
+    return () => clearTimeout(timer)
+  }, [roundDrawStartMs, scheduleDraw])
 
   // Fin de una ronda mostrada con VideoErrorRound -- el panel ya salió y el lobby volvió.
   const handleVideoErrorRoundFinished = useCallback(() => {
