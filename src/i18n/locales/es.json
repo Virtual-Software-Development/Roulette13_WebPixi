@@ -1329,7 +1329,7 @@
       "rtpResulting": "RTP resultante",
       "rtpBand": "Banda de RTP",
       "outOfBand": "Fuera de banda ({{band}})",
-      "decidedAtFreeze": "Se decide a las {{time}} (apuestas cierran {{close}})",
+      "decidedAtFreeze": "Se decide a las {{time}}",
       "sourceLive": "En vivo — apuestas hasta ahora",
       "sourceFrozen": "Apuestas finales",
       "manualTag": "Manual",
@@ -1338,11 +1338,10 @@
       "noPendingEvent": "No hay una ronda de ruleta pendiente ahora.",
       "loadError": "No se pudo cargar el próximo resultado: {{error}}",
       "bandWarningCurrent": "El RTP actual ({{rtp}}) está fuera de la banda de RTP {{band}}. Los resultados no se bloquean: el RTP se corrige solo con el tiempo.",
-      "bandWarningSelected": "El número {{number}} deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}. Podés aplicarlo igual.",
       "bandWarningConfirm": "Este resultado deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}.",
-      "bandStabilizing": "El RTP todavía se está estabilizando: medido sobre {{rounds}} de {{size}} rondas ({{percent}}% de la ventana de corrección). Estar fuera de la banda de RTP {{band}} (ahora {{rtp}}) es esperable hasta que se llene la ventana. Los resultados no se bloquean.",
-      "bandSelectedStabilizing": "El número {{number}} deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}: es esperable mientras el RTP se estabiliza.",
-      "bandConfirmStabilizing": "Este resultado deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}. El RTP todavía se está estabilizando."
+      "bandStabilizing": "El RTP todavía se está estabilizando: {{rounds}} de {{size}} rondas medidas ({{percent}}%). Estar fuera de la banda {{band}} (ahora {{rtp}}) es esperable; los resultados no se bloquean.",
+      "bandConfirmStabilizing": "Este resultado deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}. El RTP todavía se está estabilizando.",
+      "betsCloseAt": "(apuestas cierran {{close}})"
     },
     "rtp": {
       "title": "RTP Dashboard",

@@ -23,3 +23,25 @@
 .admin-next-results-grid[data-single='true'] {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* Roulette tiene que entrar sin scrollbar: menos aire alrededor del panel que en el resto de las
+   páginas del Admin (el padding inferior de 40 px y el espacio bajo el título). */
+.admin-main:has(> .admin-next-results-grid[data-section='roulette']) {
+  padding-bottom: 14px;
+  gap: 14px;
+}
+
+/* ...y el panel llena el alto que queda hasta el fondo de la ventana: la tabla de números se reparte
+   el espacio libre (nextResults.css), en vez de dejar un hueco vacío debajo. */
+.admin-main:has(> .admin-next-results-grid[data-section='roulette']) > .admin-next-results-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: stretch;
+  /* Una fila que puede achicarse por debajo del contenido natural del panel: así la tabla de
+     números baja hasta su mínimo (42 px por fila) antes de que aparezca un scrollbar. */
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.admin-main:has(> .admin-next-results-grid[data-section='roulette']) .admin-next-results-panel {
+  min-height: 0;
+}
