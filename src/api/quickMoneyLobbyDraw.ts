@@ -23,9 +23,3 @@ export async function fetchQuickMoneyLobbyDraw(drawAtMs: number): Promise<QuickM
   if (!res.ok) throw new Error(`lottery/lobby-draw request failed: ${await errorMessage(res)}`)
   return res.json()
 }
-
-// Video del sorteo (renderizado por el backend con su resultado ya bloqueado): solo se puede bajar
-// después de ejecutado el sorteo -- antes responde 409, y 404 mientras no esté listo.
-export function quickMoneyLobbyDrawVideoUrl(id: number): string {
-  return `/api/lottery/lobby-draw/${encodeURIComponent(id)}/video`
-}

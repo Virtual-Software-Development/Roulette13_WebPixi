@@ -105,7 +105,7 @@ function ResultValue({ result }: { result: VideoErrorResult }) {
 }
 
 // Panel que reemplaza al video de resultado cuando éste no llega a cargar a tiempo (Roulette:
-// VideoErrorRound; Quick Money: QuickMoneyVideoView). La ronda NO falló: el panel comunica que solo
+// VideoErrorRound; Quick Money: QuickMoneyPiecesView). La ronda NO falló: el panel comunica que solo
 // falta el video y respeta los tiempos del video original, derivados del reloj (sin timers propios):
 //   1. antes de revealAtIso   -- "RESULT IN" + countdown, el resultado todavía oculto
 //   2. revealAtIso..continueAtIso -- RESULT + resultado real, y "CONTINUING IN" por lo que falte
@@ -134,7 +134,7 @@ export function VideoErrorPanel({
   // Sin resultado no hay revelación que esperar: el panel pasa directo a CONTINUING IN.
   const revealed = result === null || revealCountdown.remainingSeconds === 0
   // CONTINUING IN solo si después de la revelación todavía queda video (en Quick Money la revelación
-  // es el final del video, ver QuickMoneyVideoView) -- si no, no se muestra nunca.
+  // es el final del video, ver QuickMoneyPiecesView) -- si no, no se muestra nunca.
   const hasTimeAfterReveal = result === null || Date.parse(continueAtIso) > Date.parse(revealAtIso)
   const activeCountdown = revealed ? continueCountdown : revealCountdown
   const resolvedEmphasis = emphasis ?? (activeCountdown.urgent ? 'attention' : 'normal')

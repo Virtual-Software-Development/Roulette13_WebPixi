@@ -33,16 +33,22 @@ export const ROULETTE_FOCUS_MS = 105_000
 export const QUICK_MONEY_VIDEO_BUDGET_MS = 80_000
 
 // Con cuánta anticipación al sorteo de Quick Money se empieza a preparar (video/quickMoneyDrawVideo.ts):
-// los números y el video del sorteo real recién se piden cuando el backend lo ejecuta (~2s antes),
-// esto solo arma la espera.
+// los números del sorteo real recién se piden cuando el backend lo ejecuta (~2s antes), esto solo
+// arma la espera (y verifica que estén las piezas del video en local-media).
 export const QUICK_MONEY_VIDEO_REQUEST_LEAD_MS = 150_000
 
-// Cuánto se espera, pasada la hora del sorteo de Quick Money, a que termine de bajar su video (el
-// backend lo entrega recién ejecutado el sorteo). Mientras, el split queda con el countdown en 0; si
-// no llega, se muestra el panel de video no disponible con los mismos números. Un video que llega
-// tarde arranca adelantado esa diferencia (QuickMoneyVideoView), así que termina a la misma hora en
-// todas las máquinas.
-export const QUICK_MONEY_VIDEO_WAIT_MS = 8_000
+// Cuánto se espera, pasada la hora del sorteo de Quick Money, a que lleguen sus números (normalmente
+// llegan ~2s antes). Mientras, el split queda con el countdown en 0; si no llegan, se muestra el panel
+// de video no disponible, que los revela si llegan antes del final. El video arranca adelantado lo
+// que se esperó (QuickMoneyPiecesView), así que termina a la misma hora en todas las máquinas.
+export const QUICK_MONEY_NUMBERS_WAIT_MS = 8_000
+
+// Si la fase de video empieza más de esto después de la hora del sorteo (máquina que se encendió o
+// recargó a mitad del video, o números que llegaron tarde), no se arranca el video a mitad: se muestra
+// el panel de video no disponible con los números, que los revela y sale a la misma hora que el video
+// en las demás (pedido explícito -- entrar a mitad es lo que más se presta a errores). Por debajo, el
+// video arranca adelantado esa diferencia (lo normal: unos cientos de ms).
+export const QUICK_MONEY_VIDEO_LATE_JOIN_MS = 3_000
 
 // Duración de la transición Roulette completo <-> split (rueda achicándose a la izquierda + paneles
 // de Quick Money entrando) -- compartida por el CSS (vía variable inline) y por el cálculo del final
@@ -61,8 +67,8 @@ export const QUICK_MONEY_VIDEO_FADE_MS = 400
 // estimar el sorteo de Quick Money del round SIGUIENTE (pedido del video y countdown "Next Draw").
 export const FALLBACK_ROULETTE_ROUND_MS = 300_000
 
-// Duración del video de Quick Money -- siempre la misma (sorteo-api renderiza la misma plantilla:
-// 72.62s medido con ffprobe sobre los renders). Toda la secuencia del video se agenda contra esto y
+// Duración del video de Quick Money -- siempre la misma: las piezas de local-media/QuickMoney suman
+// 1743 frames a 24 fps = 72.62s (ver video/quickMoneyPieces/plan.ts). Toda la secuencia del video se agenda contra esto y
 // no contra su 'ended', para que todas las máquinas pasen a quickMoneyResult a la vez (ver
 // sync/lobbyTimeline.ts) -- eso también cubre un video que nunca termina (red rota, decode colgado).
 // Es además lo que cuenta VideoErrorPanel cuando el video no está. Tiene que entrar en

@@ -36,7 +36,7 @@ import { RESULT_STATS_MOCK_DATA } from './data/resultStatsMockData'
 import { LeftStatsSidebarOverlay } from './components/leftStatsSidebar/LeftStatsSidebarOverlay'
 import { RoundHistoryModal } from './components/roundHistory/RoundHistoryModal'
 import { QuickMoneySplitOverlay } from './screens/QuickMoneySplitOverlay'
-import { QuickMoneyVideoView } from './screens/QuickMoneyVideoView'
+import { QuickMoneyPiecesView } from './screens/QuickMoneyPiecesView'
 import { QuickMoneyLobbyCycle } from './hooks/useQuickMoneyLobbyCycle'
 import { useLobbyModeStore } from './store/useLobbyModeStore'
 import { useLobbySyncStore } from './store/useLobbySyncStore'
@@ -278,7 +278,7 @@ function App() {
       winnerPanelExiting: false,
       lobbyInfoVisible: true,
     })
-    useLobbyModeStore.setState({ phase: 'roulette', pendingDraw: null, pendingVideoUrl: null, pendingDrawAtMs: null })
+    useLobbyModeStore.setState({ phase: 'roulette', pendingDraw: null, pendingDrawAtMs: null })
     useLobbySyncStore.getState().reset()
 
     void syncServerClock()
@@ -556,7 +556,7 @@ function App() {
       <QuickMoneyLobbyCycle />
       <QuickMoneySplitOverlay />
       <DrawSummaryHost />
-      {lobbyPhase === 'quickMoneyVideo' && <QuickMoneyVideoView />}
+      {lobbyPhase === 'quickMoneyVideo' && <QuickMoneyPiecesView />}
       <Application
         // antialias: sin él los bordes de Graphics (anillos de Last 100 Spins, etc.) salían dentados
         // ("granulados") -- pedido explícito.

@@ -1,0 +1,61 @@
+/* Video de Quick Money por piezas (QuickMoneyPiecesView): pantalla completa, por encima del canvas
+   de Pixi y del split de Quick Money (mismo z-index que el video de Roulette, ver videoPool.css),
+   fade de opacidad de 400ms (QUICK_MONEY_VIDEO_FADE_MS) y sin capturar el mouse. */
+.qm-pieces {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+  z-index: 5;
+}
+.qm-pieces--visible {
+  opacity: 1;
+}
+
+/* El lienzo de 1920x1080 en el que se ubica todo en %: el equivalente a object-fit:contain del
+   <video> único -- lo más grande que entre en la ventana sin deformarse, centrado. */
+.qm-pieces-stage {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Un tramo = una capa entera. Los precargados no se dibujan hasta que arrancan (tapados igual
+   costaba componerlos en cada refresco). */
+.qm-pieces-segment {
+  position: absolute;
+  inset: 0;
+}
+.qm-pieces-segment--waiting {
+  visibility: hidden;
+}
+.qm-pieces-segment video,
+.qm-pieces-segment img {
+  position: absolute;
+  display: block;
+}
+.qm-pieces-main {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+/* Invisibles hasta que pintan movimiento: mientras, la zona la cubre el plate (jaula mostrando 0). */
+.qm-pieces-tile {
+  object-fit: fill;
+  opacity: 0;
+}
+.qm-pieces-tile--visible {
+  opacity: 1;
+}
+.qm-pieces-image--ball {
+  transform: translate(-50%, -50%);
+}
+.qm-pieces-image--label {
+  transform: translate(-100%, -50%);
+}

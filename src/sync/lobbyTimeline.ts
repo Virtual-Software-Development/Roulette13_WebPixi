@@ -68,7 +68,7 @@ export function quickMoneyDrawAtMs(rouletteDrawAtMs: number): number {
   return rouletteDrawAtMs - QUICK_MONEY_DRAW_AT_REMAINING_MS
 }
 
-// Offsets desde el sorteo de Quick Money (QD): el clip arranca en QD (QuickMoneyVideoView lo alinea)
+// Offsets desde el sorteo de Quick Money (QD): el clip arranca en QD (QuickMoneyPiecesView lo alinea)
 // y termina mostrando él mismo los números, así que el fade out y el paso a quickMoneyResult arrancan
 // apenas termina, sin hold (pedido explícito).
 export const QUICK_MONEY_VIDEO_END_OFFSET_MS = QUICK_MONEY_VIDEO_DURATION_MS

@@ -14,9 +14,9 @@ import {
   FALLBACK_ROULETTE_ROUND_MS,
   QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS,
   QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS,
+  QUICK_MONEY_NUMBERS_WAIT_MS,
   QUICK_MONEY_VIDEO_BUDGET_MS,
   QUICK_MONEY_VIDEO_REQUEST_LEAD_MS,
-  QUICK_MONEY_VIDEO_WAIT_MS,
 } from '../config/quickMoneyLobbyCycle'
 
 const CHECK_INTERVAL_MS = 250
@@ -53,13 +53,12 @@ async function syncDrawNumber(drawAtMs: number) {
 
 // Publica el sorteo pendiente en la tabla y deja el countdown apuntando al sorteo de Quick Money del
 // round siguiente (estimado con roundInterval; se corrige al entrar ese bloque). También lo usa
-// QuickMoneyVideoView al terminar su video.
+// QuickMoneyPiecesView al terminar su video.
 export function publishPendingDraw(rouletteDrawAtMs: number = currentRouletteDrawAtMs()) {
-  const { pendingDraw, setPendingDraw, setPendingVideoUrl } = useLobbyModeStore.getState()
+  const { pendingDraw, setPendingDraw } = useLobbyModeStore.getState()
   if (!pendingDraw) return
   useQuickMoneyDrawsStore.getState().addDraw(pendingDraw)
   setPendingDraw(null)
-  setPendingVideoUrl(null)
   useQuickMoneyRoundStore.setState({
     nextDrawTime: toIso(quickMoneyDrawAtMs(rouletteDrawAtMs) + roundIntervalMs()),
   })
@@ -71,13 +70,15 @@ export function publishPendingDraw(rouletteDrawAtMs: number = currentRouletteDra
 // devuelve null (QuickMoneyLobbyCycle) para que los cambios de fase no re-rendericen App entero.
 //
 // Cada sorteo de Quick Money del lobby es el round REAL de Quick Money que el backend agenda en ese
-// slot (events.LobbyQuickMoneyLead): su número, sus números y su video salen del backend
+// slot (events.LobbyQuickMoneyLead): su número y sus números salen del backend
 // (video/quickMoneyDrawVideo.ts), así que es el mismo sorteo en todas las máquinas, incluso si un admin
-// cambió el resultado. Nunca se inventan números locales: sin sorteo real, no se muestra sorteo. quickMoneyVideo -> quickMoneyResult lo dispara
-// QuickMoneyVideoView a una hora absoluta; este hook solo lo corta si el bloque se queda sin tiempo.
-// Una máquina que llega tarde al video (arrancó a mitad de él, o no alcanzó a descargarlo) muestra el
-// panel de video no disponible con los mismos números, que revela y sale cuando el video termina en
-// las demás (pedido explícito, en vez de esperar con "Sincronizando…").
+// cambió el resultado; el video lo arma cada máquina con las piezas de local-media
+// (QuickMoneyPiecesView). Nunca se inventan números locales: sin sorteo real, no se muestra sorteo.
+// quickMoneyVideo -> quickMoneyResult lo dispara QuickMoneyPiecesView a una hora absoluta; este hook
+// solo lo corta si el bloque se queda sin tiempo. Una máquina que llega tarde al video (arrancó a
+// mitad de él) no entra a mitad: muestra el panel de video no disponible con los mismos números, que
+// revela y sale cuando el video termina en las demás (pedido explícito, ver
+// QUICK_MONEY_VIDEO_LATE_JOIN_MS).
 export function useQuickMoneyLobbyCycle() {
   useEffect(() => {
     // Un bloque por round: se identifica el round por su hora de sorteo (cambia recién cuando App
@@ -115,8 +116,8 @@ export function useQuickMoneyLobbyCycle() {
           useQuickMoneyRoundStore.setState({ nextDrawTime: toIso(thisRoundDrawAtMs + roundIntervalMs()) })
           if (now < publishAt) {
             // Las demás están mostrando su video: no se salta al medio, se muestra el panel de video
-            // no disponible (QuickMoneyVideoView sin video) con los números del sorteo real, anclado a
-            // la misma hora del sorteo.
+            // no disponible (QuickMoneyPiecesView, ver QUICK_MONEY_VIDEO_LATE_JOIN_MS) con los números
+            // del sorteo real, anclado a la misma hora del sorteo.
             void fetchQuickMoneyLobbyDraw(thisRoundDrawAtMs)
               .catch(() => null)
               .then((draw) => {
@@ -130,7 +131,6 @@ export function useQuickMoneyLobbyCycle() {
                 pick3Result: Array.from(draw.pick3, Number),
                 pick4Result: Array.from(draw.pick4, Number),
               })
-              current.setPendingVideoUrl(null)
               current.setPhase('quickMoneyVideo')
             })
             return
@@ -159,7 +159,7 @@ export function useQuickMoneyLobbyCycle() {
 
       // Panel de video no disponible sin números: llegan tarde (el backend ejecutó tarde el sorteo).
       if (lobby.phase === 'quickMoneyVideo' && !lobby.pendingDraw && lateDrawAtMs !== null) {
-        const late = takePreparedDraw(lateDrawAtMs, false)
+        const late = takePreparedDraw(lateDrawAtMs)
         if (late.status === 'ready') {
           lobby.setPendingDraw({
             gameNumber: late.draw.drawNumber,
@@ -182,10 +182,10 @@ export function useQuickMoneyLobbyCycle() {
       if (lobby.pendingDraw || drawAtMs > now) return
 
       // Llegó la hora del sorteo de Quick Money: el resultado del sorteo real del backend, pendiente
-      // hasta que termine su video. Hasta que llegan sus números (y, unos segundos, su video) el split
-      // queda con el countdown en 0, como mucho QUICK_MONEY_VIDEO_WAIT_MS.
-      const mayWait = now < drawAtMs + QUICK_MONEY_VIDEO_WAIT_MS
-      const taken = takePreparedDraw(drawAtMs, mayWait)
+      // hasta que termine su video. Hasta que llegan sus números el split queda con el countdown en
+      // 0, como mucho QUICK_MONEY_NUMBERS_WAIT_MS (normalmente ya llegaron ~2s antes).
+      const mayWait = now < drawAtMs + QUICK_MONEY_NUMBERS_WAIT_MS
+      const taken = takePreparedDraw(drawAtMs)
       if (taken.status === 'waiting' && mayWait) return
       if (taken.status !== 'ready') {
         // Sin números todavía (o sin sorteo real): igual que Roulette, el panel de video no disponible
@@ -197,7 +197,6 @@ export function useQuickMoneyLobbyCycle() {
         useQuickMoneyRoundStore.setState({ nextDrawTime: toIso(drawAtMs + roundIntervalMs()), drawNumber: nextDrawNumber(drawNumber) })
         if (blockRemainingMs >= QUICK_MONEY_VIDEO_BUDGET_MS) {
           lobby.setPendingDrawAtMs(drawAtMs)
-          lobby.setPendingVideoUrl(null)
           lobby.setPhase('quickMoneyVideo')
         } else {
           lateDrawAtMs = null
@@ -208,7 +207,7 @@ export function useQuickMoneyLobbyCycle() {
       const { draw } = taken
       lobby.setPendingDraw({
         gameNumber: draw.drawNumber,
-        // La hora programada, no `now`: es el ancla del video (QuickMoneyVideoView) y la hora que
+        // La hora programada, no `now`: es el ancla del video (QuickMoneyPiecesView) y la hora que
         // muestra la tabla, igual en todas las máquinas.
         drawnAt: toIso(drawAtMs),
         pick3Result: draw.pick3,
@@ -216,13 +215,11 @@ export function useQuickMoneyLobbyCycle() {
       })
       useQuickMoneyRoundStore.setState({ nextDrawTime: toIso(drawAtMs + roundIntervalMs()), drawNumber: nextDrawNumber(draw.drawNumber) })
 
-      // Entra a la fase de video aunque el video no haya llegado a tiempo: QuickMoneyVideoView muestra
-      // entonces VideoErrorPanel con el resultado durante lo que habría durado el video. Sin tiempo en
-      // el bloque, resultado directo.
+      // Fase de video: QuickMoneyPiecesView lo arma con las piezas de local-media (si faltan, muestra
+      // VideoErrorPanel con el resultado durante lo que habría durado el video). Sin tiempo en el
+      // bloque, resultado directo.
       if (blockRemainingMs >= QUICK_MONEY_VIDEO_BUDGET_MS) {
-        if (!draw.videoUrl) console.warn('[quickMoneyLobbyCycle] el video no llegó a tiempo -- se muestra el panel de video no disponible')
         lobby.setPendingDrawAtMs(drawAtMs)
-        lobby.setPendingVideoUrl(draw.videoUrl)
         lobby.setPhase('quickMoneyVideo')
       } else {
         publishPendingDraw(rouletteDrawAtMs)
