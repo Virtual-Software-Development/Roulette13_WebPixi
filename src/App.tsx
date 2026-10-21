@@ -47,6 +47,9 @@ import { commitPendingResult } from './store/commitPendingResult'
 import { seedQuickMoneyDraws } from './sync/quickMoneyHistory'
 import { SyncOverlay } from './screens/SyncOverlay'
 import type { GameInfoResponse } from './types/gameInfo'
+import type { BetsSummaryResponse } from './types/betsSummary'
+import { ROULETTE_BETS_TOPIC, onMqttMessage } from './mqtt/topics'
+import { IS_LAN_VIEWER } from './lanPreview'
 
 // Cuánto antes de la hora del sorteo se pide /drawResult y se precarga el clip. El backend ejecuta el
 // sorteo ~2s antes (resultRevealLead), así que el resultado ya existe -- con más margen de precarga,
@@ -56,10 +59,9 @@ const RESULT_LEAD_MS = 1800
 // timer que ya agenda resultTimer/startTimer (scheduleDraw, basado en nextDraw.startTime), no uno
 // nuevo independiente.
 const BETS_LEAD_MS = 10_000
-// Además, mientras la ronda está abierta el lobby vuelve a pedir /api/bets cada pocos segundos, para
-// que el panel LIVE BETS muestre las apuestas a medida que entran (el backend ya devuelve los totales
-// en vivo de la ronda pendiente, calculados de los tickets).
-const BETS_POLL_MS = 3000
+// Las apuestas en vivo llegan por MQTT (ver el efecto de ROULETTE_BETS_TOPIC más abajo). Solo el
+// espectador de dev:lan, que no tiene MQTT, sigue pidiendo /api/bets cada pocos segundos.
+const LAN_VIEWER_BETS_POLL_MS = 3000
 // Margen, contado desde la hora programada del sorteo, para que el video termine de cargar. Pasado
 // esto (o antes, si la carga falla del todo) la ronda se muestra con VideoErrorRound en lugar del
 // video. Corto a propósito: mientras se espera, esta máquina sigue en el lobby y las demás ya
@@ -362,39 +364,56 @@ function App() {
     }
   }, [active])
 
-  // Polling de /api/bets (ver BETS_POLL_MS). Solo escribe en el store si la respuesta cambió: así
-  // las celdas del panel solo pulsan cuando de verdad entra una apuesta, y no vuelve a encender los
-  // highlights que clearHighlights() apagó al terminar el video si los totales siguen iguales.
+  // Apuestas en vivo de la ronda abierta, sumadas en toda la flota: el backend las publica por MQTT
+  // (ROULETTE_BETS_TOPIC) cada vez que se guarda un ticket y al abrir cada ronda -- ninguna máquina
+  // vuelve a pedir /api/bets cada pocos segundos. Solo escribe en el store si los totales cambiaron:
+  // así las celdas del panel solo pulsan cuando de verdad entra una apuesta, y no vuelve a encender
+  // los highlights que clearHighlights() apagó al terminar el video si llega de nuevo el mismo
+  // resumen (el mensaje es retenido: se recibe otra vez en cada reconexión).
   useEffect(() => {
     let stopped = false
-    let inFlight = false
     let lastSnapshot = ''
-    const poll = () => {
-      if (inFlight) return
-      inFlight = true
-      fetchBetsSummaryOnce()
-        .then((data) => {
-          if (stopped) return
-          const snapshot = JSON.stringify(data)
-          if (snapshot === lastSnapshot) return
-          lastSnapshot = snapshot
-          useBetsSummaryStore.getState().setBetsSummary({
-            liveTableBetsData: toLiveTableBetsData(data),
-            resultStatsData: toResultStatsData(data),
-          })
-        })
-        .catch(() => {
-          // Silencioso: el próximo tick vuelve a intentar.
-        })
-        .finally(() => {
-          inFlight = false
-        })
+    const apply = (data: BetsSummaryResponse) => {
+      if (stopped) return
+      const snapshot = JSON.stringify(data)
+      if (snapshot === lastSnapshot) return
+      lastSnapshot = snapshot
+      useBetsSummaryStore.getState().setBetsSummary({
+        liveTableBetsData: toLiveTableBetsData(data),
+        resultStatsData: toResultStatsData(data),
+      })
     }
-    poll()
-    const intervalId = setInterval(poll, BETS_POLL_MS)
+
+    // Espectador de dev:lan: no tiene conexión MQTT (lanPreview.ts), así que sigue preguntando.
+    if (IS_LAN_VIEWER) {
+      let inFlight = false
+      const poll = () => {
+        if (inFlight) return
+        inFlight = true
+        fetchBetsSummaryOnce()
+          .then(apply)
+          .catch(() => {
+            // Silencioso: el próximo tick vuelve a intentar.
+          })
+          .finally(() => {
+            inFlight = false
+          })
+      }
+      poll()
+      const intervalId = setInterval(poll, LAN_VIEWER_BETS_POLL_MS)
+      return () => {
+        stopped = true
+        clearInterval(intervalId)
+      }
+    }
+
+    const unsubscribe = onMqttMessage(ROULETTE_BETS_TOPIC, (message) => {
+      const data = message as Partial<BetsSummaryResponse> | null
+      if (data?.msgType === 'betsSummary' && data.numbers) apply(data as BetsSummaryResponse)
+    })
     return () => {
       stopped = true
-      clearInterval(intervalId)
+      unsubscribe()
     }
   }, [])
 

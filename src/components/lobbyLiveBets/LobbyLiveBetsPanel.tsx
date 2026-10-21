@@ -32,7 +32,7 @@ extend({ Container, Graphics, Text })
 // sostenido -- se probó con glow y quedaba más ruidoso que útil para este panel. Los datos vienen de
 // useBetsSummaryStore -- los mismos totales reales de /api/bets que ya alimentan
 // LiveTableBetsPanel/ResultStatsPanel/LeftStatsSidebar -- nada de datos simulados/random acá. App.tsx
-// consulta /api/bets cada pocos segundos mientras la ronda está abierta (BETS_POLL_MS), así que los
+// recibe por MQTT los totales de toda la flota cada vez que se guarda un ticket mientras la ronda está abierta (ROULETTE_BETS_TOPIC), así que los
 // totales van subiendo a medida que entran tickets (animación incremental + pulso en la celda).
 //
 // Layout: mesa real de 3 filas x 12 columnas (columna 0/00 a la izquierda, apuesta de columna
