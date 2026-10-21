@@ -4,7 +4,7 @@ import { useDrawCycleStore } from './useDrawCycleStore'
 
 // Fase del lobby principal compartido Roulette + Quick Money -- ver config/quickMoneyLobbyCycle.ts
 // para la secuencia completa y los tiempos. La escribe únicamente useQuickMoneyLobbyCycle (y
-// QuickMoneyVideoView al terminar su video).
+// QuickMoneyPiecesView al terminar su video).
 export type LobbyPhase = 'roulette' | 'quickMoneySplit' | 'quickMoneyVideo' | 'quickMoneyResult'
 
 interface LobbyModeState {
@@ -14,11 +14,7 @@ interface LobbyModeState {
   // recién cuando termina su video (igual que Roulette, que no muestra el resultado antes).
   pendingDraw: QuickMoneyLobbyDraw | null
   setPendingDraw: (pendingDraw: QuickMoneyLobbyDraw | null) => void
-  // Blob del video (ya precargado en el slot) del sorteo pendiente -- lo reproduce
-  // QuickMoneyVideoView. null = el sorteo no tiene video.
-  pendingVideoUrl: string | null
-  setPendingVideoUrl: (pendingVideoUrl: string | null) => void
-  // Hora programada del sorteo de Quick Money en pantalla (ancla de QuickMoneyVideoView). Hace falta
+  // Hora programada del sorteo de Quick Money en pantalla (ancla de QuickMoneyPiecesView). Hace falta
   // aparte de pendingDraw: si los números del sorteo todavía no llegaron, la fase de video igual
   // arranca (con el panel de video no disponible) a la misma hora que en las demás máquinas.
   pendingDrawAtMs: number | null
@@ -30,8 +26,6 @@ export const useLobbyModeStore = create<LobbyModeState>((set) => ({
   setPhase: (phase) => set({ phase }),
   pendingDraw: null,
   setPendingDraw: (pendingDraw) => set({ pendingDraw }),
-  pendingVideoUrl: null,
-  setPendingVideoUrl: (pendingVideoUrl) => set({ pendingVideoUrl }),
   pendingDrawAtMs: null,
   setPendingDrawAtMs: (pendingDrawAtMs) => set({ pendingDrawAtMs }),
 }))

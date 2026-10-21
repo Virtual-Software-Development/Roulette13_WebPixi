@@ -13,6 +13,7 @@
     "encode-alpha-video": "node scripts/encode-alpha-video.mjs",
     "roulette-video-status": "node scripts/roulette-video-status.mjs",
     "roulette-video-intake": "node scripts/roulette-video-intake.mjs",
+    "quick-money-pieces": "node scripts/quick-money-pieces.mjs",
     "test:watch": "vitest",
     "predev:all": "node scripts/ensure-deps.mjs && node scripts/check-ports.mjs --free",
     "dev:all": "concurrently --kill-others-on-fail -n BACKEND,ADMIN,GAME,BETTING -c yellow,magenta,blue,green \"npm run dev:backend\" \"npm run dev:admin\" \"npm run dev:game\" \"npm run dev:betting\"",
