@@ -91,15 +91,28 @@ export function RouletteNextResultPanel() {
   const pendingSlot = data?.numeroPendiente ?? snapshot?.numeroElegido ?? null
   const pendingPocket = pendingSlot != null ? toPocket(pendingSlot) : null
   const rtpFor = (pocket: WheelPocket | null) => (pocket == null || !rtpBySlot ? null : rtpBySlot[String(pocket)])
-  // Fuera de banda = el RTP que dejaría ese número sale de [min, max] del perfil vigente. El backend
-  // rechaza esa sustitución igual; acá se bloquea la celda para no ofrecerla. El resultado actual
-  // nunca se bloquea: elegirlo no cambia nada.
+  // Fuera de banda = el RTP (actual, o el que dejaría ese número) sale de [min, max] del perfil
+  // vigente. No bloquea nada -- el RTP se corrige solo con el tiempo (corrección por deriva) --: se
+  // avisa bien a la vista (banners de abajo, celdas rayadas y el diálogo de confirmación).
   const band = data?.banda ?? null
-  const isOutOfBand = (pocket: WheelPocket | null) => {
-    const rtp = rtpFor(pocket)
-    return band != null && rtp != null && (rtp < band.min || rtp > band.max)
-  }
-  const isBlocked = (pocket: WheelPocket | null) => pocket !== pendingPocket && isOutOfBand(pocket)
+  const isOutOfBandValue = (rtp: number | null | undefined) =>
+    band != null && rtp != null && (rtp < band.min || rtp > band.max)
+  const isOutOfBand = (pocket: WheelPocket | null) => isOutOfBandValue(rtpFor(pocket))
+  const currentRtp = snapshot?.rtpActual ?? null
+  const currentOutOfBand = isOutOfBandValue(currentRtp)
+  // Ventana de corrección todavía sin llenar: el RTP medido se está estabilizando (con pocas rondas
+  // una sola apuesta grande lo saca muy lejos de la banda), así que estar fuera de banda es esperable
+  // -- los avisos pasan a ser informativos y las celdas no se rayan.
+  const correctionWindow = data?.ventana ?? null
+  const stabilizing = correctionWindow?.estabilizando ?? false
+  const bandWarningVariant = stabilizing ? 'info' : 'warning'
+  const windowProgress = correctionWindow
+    ? {
+        rounds: correctionWindow.rondas.toLocaleString('en-US'),
+        size: correctionWindow.tamano.toLocaleString('en-US'),
+        percent: correctionWindow.tamano > 0 ? ((correctionWindow.rondas / correctionWindow.tamano) * 100).toFixed(1) : '0',
+      }
+    : null
 
   ensureClockTicking()
   const now = useClockStore((state) => state.now)
@@ -125,9 +138,8 @@ export function RouletteNextResultPanel() {
 
   const hasChanges = selectedNumber != null && selectedNumber !== pendingPocket
   const actionsDisabled = !hasChanges || status === 'updating' || !changeOpen
-  // Una selección que quedó fuera de banda al refrescar (en vivo las apuestas cambian) se puede
-  // resetear pero no mandar.
-  const updateDisabled = actionsDisabled || isBlocked(selectedNumber)
+  // El número elegido deja el RTP proyectado fuera de banda: se puede aplicar igual, con aviso.
+  const selectedOutOfBand = hasChanges && isOutOfBand(selectedNumber)
 
   async function handleConfirmUpdate() {
     if (!data || selectedNumber == null) return
@@ -157,7 +169,7 @@ export function RouletteNextResultPanel() {
 
   function renderCell(n: WheelPocket) {
     const bet = betsByNumber ? (betsByNumber[String(n)] ?? 0) : null
-    const outOfBand = isOutOfBand(n)
+    const outOfBand = isOutOfBand(n) && !stabilizing
     const rtpLabel = `${t('admin.nextResults.rtpResulting')}: ${formatRtp(rtpFor(n))}`
     return (
       <button
@@ -177,7 +189,7 @@ export function RouletteNextResultPanel() {
               : rtpLabel
             : undefined
         }
-        disabled={!changeOpen || isBlocked(n)}
+        disabled={!changeOpen}
         onClick={() => setSelectedNumber(n)}
       >
         <span className="admin-next-results-cell-number">{n}</span>
@@ -333,6 +345,14 @@ export function RouletteNextResultPanel() {
           )}
         </h3>
 
+        {currentOutOfBand && band && (
+          <div className="admin-next-results-band-warning" data-variant={bandWarningVariant} role={stabilizing ? 'status' : 'alert'}>
+            {stabilizing && windowProgress
+              ? t('admin.nextResults.bandStabilizing', { rtp: formatRtp(currentRtp), band: formatBand(band), ...windowProgress })
+              : t('admin.nextResults.bandWarningCurrent', { rtp: formatRtp(currentRtp), band: formatBand(band) })}
+          </div>
+        )}
+
         {loadStatus === 'noEvent' && <p className="admin-next-results-notice">{t('admin.nextResults.noPendingEvent')}</p>}
         {loadStatus === 'error' && (
           <p className="admin-next-results-notice" data-variant="error">
@@ -377,12 +397,22 @@ export function RouletteNextResultPanel() {
           </div>
         </div>
 
+        {selectedOutOfBand && band && (
+          <div className="admin-next-results-band-warning" data-variant={bandWarningVariant} role={stabilizing ? 'status' : 'alert'}>
+            {t(stabilizing ? 'admin.nextResults.bandSelectedStabilizing' : 'admin.nextResults.bandWarningSelected', {
+              number: selectedNumber,
+              rtp: formatRtp(rtpFor(selectedNumber)),
+              band: formatBand(band),
+            })}
+          </div>
+        )}
+
         <div className="admin-next-results-actions">
           <button
             type="button"
             className="admin-next-results-btn-update"
             data-accent="red"
-            disabled={updateDisabled}
+            disabled={actionsDisabled}
             onClick={() => setStatus('confirming')}
           >
             {status === 'updating' ? (
@@ -435,6 +465,14 @@ export function RouletteNextResultPanel() {
                 <span className="admin-next-results-confirm-rtp">{formatRtp(rtpFor(selectedNumber))}</span>
               </div>
             </div>
+            {selectedOutOfBand && band && (
+              <div className="admin-next-results-band-warning" data-variant={bandWarningVariant} role={stabilizing ? 'status' : 'alert'}>
+                {t(stabilizing ? 'admin.nextResults.bandConfirmStabilizing' : 'admin.nextResults.bandWarningConfirm', {
+                  rtp: formatRtp(rtpFor(selectedNumber)),
+                  band: formatBand(band),
+                })}
+              </div>
+            )}
           </ConfirmDialog>
         )}
       </div>

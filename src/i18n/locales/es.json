@@ -1332,7 +1332,13 @@
       "changeUntil": "Se puede cambiar hasta las {{time}}",
       "changeClosed": "Ya no se puede cambiar en esta ronda",
       "noPendingEvent": "No hay una ronda de ruleta pendiente ahora.",
-      "loadError": "No se pudo cargar el próximo resultado: {{error}}"
+      "loadError": "No se pudo cargar el próximo resultado: {{error}}",
+      "bandWarningCurrent": "El RTP actual ({{rtp}}) está fuera de la banda de RTP {{band}}. Los resultados no se bloquean: el RTP se corrige solo con el tiempo.",
+      "bandWarningSelected": "El número {{number}} deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}. Podés aplicarlo igual.",
+      "bandWarningConfirm": "Este resultado deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}.",
+      "bandStabilizing": "El RTP todavía se está estabilizando: medido sobre {{rounds}} de {{size}} rondas ({{percent}}% de la ventana de corrección). Estar fuera de la banda de RTP {{band}} (ahora {{rtp}}) es esperable hasta que se llene la ventana. Los resultados no se bloquean.",
+      "bandSelectedStabilizing": "El número {{number}} deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}: es esperable mientras el RTP se estabiliza.",
+      "bandConfirmStabilizing": "Este resultado deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}. El RTP todavía se está estabilizando."
     },
     "rtp": {
       "title": "RTP Dashboard",
