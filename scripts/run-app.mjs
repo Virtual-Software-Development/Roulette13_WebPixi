@@ -14,10 +14,13 @@
 
 import path from 'node:path'
 import { spawn } from 'node:child_process'
-import { REPO_ROOT, apiPort, rootApiUrl, waitForPort } from './lib/devEnv.mjs'
+import { REPO_ROOT, rootApiUrl, waitForPort } from './lib/devEnv.mjs'
 
-if (!(await waitForPort('localhost', apiPort(), { timeoutMs: 30_000 }))) {
-  console.warn(`\n[run-app] Backend on :${apiPort()} did not come up within 30s -- starting the app anyway.`)
+// Waits on wherever /api actually points, so a remote API_URL isn't gated on a local backend.
+const apiTarget = new URL(rootApiUrl())
+const apiTargetPort = apiTarget.port || (apiTarget.protocol === 'https:' ? '443' : '80')
+if (!(await waitForPort(apiTarget.hostname, apiTargetPort, { timeoutMs: 30_000 }))) {
+  console.warn(`\n[run-app] Backend on ${apiTarget.host} did not come up within 30s -- starting the app anyway.`)
   console.warn('[run-app] /api calls will fail until it is reachable.\n')
 }
 

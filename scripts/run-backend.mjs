@@ -17,7 +17,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
-import { BACKEND_DIR, BACKEND_ENV_FILE, REPO_ROOT, hasBackend, loadBackendConfig, waitForPort } from './lib/devEnv.mjs'
+import { BACKEND_DIR, BACKEND_ENV_FILE, REPO_ROOT, hasBackend, isRemoteApi, loadBackendConfig, rootApiUrl, waitForPort } from './lib/devEnv.mjs'
 import { startLocalPostgres } from './lib/postgres.mjs'
 import { startLocalEmqx } from './lib/emqx.mjs'
 
@@ -27,6 +27,10 @@ const isWindows = process.platform === 'win32'
 const log = (message) => console.log(`[run-backend] ${message}`)
 const warn = (message) => console.warn(`[run-backend] ${message}`)
 
+if (isRemoteApi()) {
+  log(`API_URL points at a remote backend (${rootApiUrl()}) -- not starting the local one.`)
+  process.exit(0)
+}
 if (!hasBackend()) {
   warn(`No Go backend found at ${BACKEND_DIR} (no go.mod there).`)
   warn('Skipping it -- the frontends will still start, but /api requests will 502 until a backend is running.')

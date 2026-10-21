@@ -73,6 +73,10 @@
       "roulette": "Roulette",
       "quickMoney": "Quick Money"
     },
+    "games": {
+      "pick3": "Pick 3",
+      "pick4": "Pick 4"
+    },
     "draw": "Draw #{{number}}",
     "result": "Result",
     "winners_one": "Winning ticket",
