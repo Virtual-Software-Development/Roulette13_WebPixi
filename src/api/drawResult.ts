@@ -1,5 +1,6 @@
 import type { DrawResultResponse } from '../types/drawResult'
 import { env } from '../config/env'
+import { serverNow } from '../time/serverClock'
 
 // The backend executes the event resultRevealLead (2s) before hora_programada, well before this
 // call fires 500ms before it -- normally a safe 1.5s margin. But roulette and lottery share a
@@ -19,15 +20,33 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function fetchDrawResult(drawNo: string): Promise<DrawResultResponse> {
-  let res = await fetchDrawResultOnce(drawNo)
+export interface FetchDrawResultOptions {
+  // Server time (ms) to keep asking until, instead of NOT_YET_EXECUTED_MAX_ATTEMPTS: a result the
+  // backend generates late (or a backend that is restarting -- the request fails outright) still
+  // reaches the round as long as it arrives before this instant.
+  until?: number
+}
 
-  for (let attempt = 1; res.status === 409 && attempt < NOT_YET_EXECUTED_MAX_ATTEMPTS; attempt++) {
+export async function fetchDrawResult(drawNo: string, options: FetchDrawResultOptions = {}): Promise<DrawResultResponse> {
+  const { until } = options
+  const keepTrying = (attempt: number) =>
+    until === undefined ? attempt < NOT_YET_EXECUTED_MAX_ATTEMPTS : serverNow() + NOT_YET_EXECUTED_RETRY_DELAY_MS < until
+
+  let res: Response | null = null
+  for (let attempt = 1; ; attempt++) {
+    try {
+      res = await fetchDrawResultOnce(drawNo)
+    } catch (err) {
+      // Backend unreachable: only worth retrying when there is a deadline to retry until.
+      if (until === undefined || !keepTrying(attempt)) throw err
+      res = null
+    }
+    if (res && res.status !== 409) break
+    if (!keepTrying(attempt)) break
     await sleep(NOT_YET_EXECUTED_RETRY_DELAY_MS)
-    res = await fetchDrawResultOnce(drawNo)
   }
 
-  if (!res.ok) throw new Error(`drawResult request failed: ${res.status}`)
+  if (!res || !res.ok) throw new Error(`drawResult request failed: ${res ? res.status : 'unreachable'}`)
   const data: DrawResultResponse = await res.json()
   console.log('[drawResult]', data)
   return data

@@ -42,6 +42,7 @@ import { useLobbyModeStore } from './store/useLobbyModeStore'
 import { useLobbySyncStore } from './store/useLobbySyncStore'
 import { applyRoughServerTime, serverNow, startServerClockResync, syncServerClock } from './time/serverClock'
 import { joinDrawInProgress } from './sync/joinDrawInProgress'
+import { VIDEO_WINDOW_END_OFFSET_MS } from './sync/lobbyTimeline'
 import { seedQuickMoneyDraws } from './sync/quickMoneyHistory'
 import { SyncOverlay } from './screens/SyncOverlay'
 import type { GameInfoResponse } from './types/gameInfo'
@@ -149,7 +150,13 @@ function App() {
           // terminaba cargando el slot en plena ronda de VideoErrorRound.
           const download = new AbortController()
 
-          const videoLoaded = fetchDrawResult(drawNo).then(async ({ result, video, videoFile }) => {
+          // El backend genera el resultado unos instantes antes de la hora del sorteo, y a veces más
+          // tarde (bloqueo compartido con Quick Money, o el backend reiniciándose). Se sigue pidiendo
+          // hasta que termina la ventana del video: si llega tarde para el video, igual se muestra en
+          // el panel de video no disponible (más abajo) y entra al historial con la ronda.
+          const resultFetched = fetchDrawResult(drawNo, { until: drawStartMs + VIDEO_WINDOW_END_OFFSET_MS })
+
+          const videoLoaded = resultFetched.then(async ({ result, video, videoFile }) => {
             draw.result = result
             // Mismo clip en todas las máquinas (ver pickDrawResultVideoUrl): la variante que elige el
             // backend, o si no viene, la identidad del sorteo, igual para todas.
@@ -181,6 +188,21 @@ function App() {
               // nunca llegó, no hay número que registrar.
               if (draw.result !== null) {
                 useDrawCycleStore.getState().setPendingResult({ drawNo, result: draw.result })
+              } else {
+                // Resultado todavía sin llegar: la ronda arranca igual con el panel (sin número) y,
+                // si el resultado llega antes del final de la ventana del video, el panel lo revela.
+                resultFetched
+                  .then(({ result }) => {
+                    if (isCancelled() || serverNow() >= drawStartMs + VIDEO_WINDOW_END_OFFSET_MS) return
+                    console.info(`[drawResult] ${drawNo}: llegó tarde para el video, se muestra en el panel`)
+                    useDrawCycleStore.getState().setPendingResult({ drawNo, result })
+                    setVideoErrorRound((round) =>
+                      round && round.drawStartMs === drawStartMs && round.result === null ? { ...round, result } : round,
+                    )
+                  })
+                  .catch(() => {
+                    // Nunca llegó: la ronda termina sin número, como las demás que no lo recibieron.
+                  })
               }
               return { kind: 'error', result: draw.result }
             }
