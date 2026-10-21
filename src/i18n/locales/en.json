@@ -1338,10 +1338,8 @@
       "noPendingEvent": "No pending roulette round right now.",
       "loadError": "Could not load the next result: {{error}}",
       "bandWarningCurrent": "Current RTP {{rtp}} is outside the RTP band {{band}}. Results are not blocked: the RTP corrects itself over time.",
-      "bandWarningSelected": "Number {{number}} leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}. You can still apply it.",
       "bandWarningConfirm": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}.",
       "bandStabilizing": "RTP still stabilizing: {{rounds}} of {{size}} rounds measured ({{percent}}%). Being outside the band {{band}} (now {{rtp}}) is expected; results are not blocked.",
-      "bandSelectedStabilizing": "Number {{number}} leaves the projected RTP at {{rtp}}, outside the RTP band {{band}} — expected while the RTP is still stabilizing.",
       "bandConfirmStabilizing": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}. The RTP is still stabilizing.",
       "betsCloseAt": "(bets close {{close}})"
     },

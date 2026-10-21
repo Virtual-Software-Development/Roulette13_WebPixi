@@ -169,7 +169,8 @@ export function RouletteNextResultPanel() {
 
   function renderCell(n: WheelPocket) {
     const bet = betsByNumber ? (betsByNumber[String(n)] ?? 0) : null
-    const outOfBand = isOutOfBand(n) && !stabilizing
+    // Solo para el globo del hover (fuera de banda no se raya ni se bloquea: ver nextResults.css).
+    const outOfBand = isOutOfBand(n)
     const rtpLabel = `${t('admin.nextResults.rtpResulting')}: ${formatRtp(rtpFor(n))}`
     return (
       <button
@@ -396,16 +397,6 @@ export function RouletteNextResultPanel() {
             <span className="admin-next-results-detail-value">{formatRtp(rtpFor(selectedNumber))}</span>
           </div>
         </div>
-
-        {selectedOutOfBand && band && (
-          <div className="admin-next-results-band-warning" data-variant={bandWarningVariant} role={stabilizing ? 'status' : 'alert'}>
-            {t(stabilizing ? 'admin.nextResults.bandSelectedStabilizing' : 'admin.nextResults.bandWarningSelected', {
-              number: selectedNumber,
-              rtp: formatRtp(rtpFor(selectedNumber)),
-              band: formatBand(band),
-            })}
-          </div>
-        )}
 
         <div className="admin-next-results-actions">
           <button
