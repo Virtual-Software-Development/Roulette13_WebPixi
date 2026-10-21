@@ -60,7 +60,7 @@ export function toLiveTableBetsData(response: BetsSummaryResponse): LiveTableBet
 
 export function toResultStatsData(response: BetsSummaryResponse): ResultStatsData {
   return {
-    activeBets: response.playersCount,
+    activeBets: response.ticketsCount,
     totalPot: response.totalBetAmount,
   }
 }
