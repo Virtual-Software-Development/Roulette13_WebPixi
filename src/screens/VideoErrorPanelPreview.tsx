@@ -20,7 +20,7 @@ function isoInSeconds(seconds: number): string {
 }
 
 // Mismos instantes que usan VideoErrorRound (Roulette: revela WINNER_PANEL_LEAD_SECONDS antes del
-// final) y QuickMoneyVideoView (revela al final).
+// final) y QuickMoneyPiecesView (revela al final).
 function buildTimeline(mode: ResultMode, durationSeconds: number) {
   const revealLeadSeconds = mode === 'quickMoney' ? 0 : WINNER_PANEL_LEAD_SECONDS
   return {

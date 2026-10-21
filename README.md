@@ -28,6 +28,24 @@ Requirements:
 All ports and URLs come from `scripts/lib/devEnv.mjs`, which reads the backend's own `.env` --
 change `HTTP_PORT`/`DB_*` there, not here. Without a backend checkout the two frontends still start.
 
+### Quick Money draw video (local pieces)
+
+The lobby builds the Quick Money draw video in the browser from pre-cut pieces in
+`local-media/QuickMoney/` (`src/screens/QuickMoneyPiecesView.tsx`, `src/video/quickMoneyPieces/`).
+From the backend it only needs the draw's digits (`/api/lottery/lobby-draw`). No video is rendered or
+downloaded per draw, so the backend's sorteo-api prerender is not needed (`SORTEO_API_ENABLED=false`).
+
+The pieces (~2.2 GB, of which 1.9 GB are the 1000 Pick 3 transitions) are generated once in
+`QuickMoney_Video_Generator` (`prep_render.py`, then `prep_player.py`) and copied with:
+
+```
+npm run quick-money-pieces            # copies ../QuickMoney_Video_Generator/web/player -> local-media/QuickMoney
+npm run quick-money-pieces -- --check # only checks that every piece is there
+```
+
+If a piece is missing, that draw shows the "video unavailable" panel with the right digits. A missing
+transition is the exception: the video is still shown, and goes straight from 3 to 4 cages.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:
