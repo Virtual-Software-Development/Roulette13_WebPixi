@@ -1329,7 +1329,7 @@
       "rtpResulting": "Resulting RTP",
       "rtpBand": "RTP band",
       "outOfBand": "Out of band ({{band}})",
-      "decidedAtFreeze": "Decided at {{time}} (bets close {{close}})",
+      "decidedAtFreeze": "Decided at {{time}}",
       "sourceLive": "Live — bets so far",
       "sourceFrozen": "Final bets",
       "manualTag": "Manual",
@@ -1340,9 +1340,10 @@
       "bandWarningCurrent": "Current RTP {{rtp}} is outside the RTP band {{band}}. Results are not blocked: the RTP corrects itself over time.",
       "bandWarningSelected": "Number {{number}} leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}. You can still apply it.",
       "bandWarningConfirm": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}.",
-      "bandStabilizing": "RTP still stabilizing: measured over {{rounds}} of {{size}} rounds ({{percent}}% of the correction window). Being outside the RTP band {{band}} (now {{rtp}}) is expected until the window fills. Results are not blocked.",
+      "bandStabilizing": "RTP still stabilizing: {{rounds}} of {{size}} rounds measured ({{percent}}%). Being outside the band {{band}} (now {{rtp}}) is expected; results are not blocked.",
       "bandSelectedStabilizing": "Number {{number}} leaves the projected RTP at {{rtp}}, outside the RTP band {{band}} — expected while the RTP is still stabilizing.",
-      "bandConfirmStabilizing": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}. The RTP is still stabilizing."
+      "bandConfirmStabilizing": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}. The RTP is still stabilizing.",
+      "betsCloseAt": "(bets close {{close}})"
     },
     "rtp": {
       "title": "RTP Dashboard",

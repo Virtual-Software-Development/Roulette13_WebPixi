@@ -21,10 +21,10 @@ const ROULETTE_ICON_URL = buildMediaUrl('Website_svg_icons/46_logo_option_2.svg'
 const CLOCK_ICON_URL = buildMediaUrl('Website_svg_icons/30_clock_white.svg')
 const REFRESH_ICON_URL = buildMediaUrl('Website_svg_icons/39_refresh_white_clean.svg')
 
+// Sin año: la próxima ronda es siempre en minutos, y así la fecha entra en una línea en la card.
 const SCHEDULED_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
-  year: 'numeric',
   hour: 'numeric',
   minute: '2-digit',
 })
@@ -265,10 +265,10 @@ export function RouletteNextResultPanel() {
                 data && (
                   <div className="admin-next-results-detail">
                     <span className="admin-next-results-detail-value">
-                      {t('admin.nextResults.decidedAtFreeze', {
-                        time: formatClock(data.event.horaCongelacion),
-                        close: formatClock(data.event.horaCierreApuestas),
-                      })}
+                      {t('admin.nextResults.decidedAtFreeze', { time: formatClock(data.event.horaCongelacion) })}
+                    </span>
+                    <span className="admin-next-results-bets-close">
+                      {t('admin.nextResults.betsCloseAt', { close: formatClock(data.event.horaCierreApuestas) })}
                     </span>
                   </div>
                 )
