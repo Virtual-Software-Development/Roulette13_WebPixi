@@ -7,6 +7,14 @@
 // las publica (retenidas) cada vez que se guarda un ticket y al abrir cada ronda (internal/betsfeed).
 export const ROULETTE_BETS_TOPIC = 'qm/v1/games/roulette/bets'
 
+// Estado del backend ({ready}, retenido): lo publica cada 10 s, y si el proceso muere EMQX publica
+// ready=false en su lugar (último deseo de su conexión). Ver network/backendMonitor.ts.
+export const BACKEND_STATUS_TOPIC = 'qm/v1/backend/status'
+
+// Estado de cada sorteo de Quick Money (event.state, retenido): el backend lo publica en cada cambio
+// de estado (abierto, cerrado, en curso, liquidado).
+export const LOTTERY_EVENT_TOPIC = 'qm/v1/games/lottery/event'
+
 // Saldo de una máquina (el mismo cuerpo que GET /api/machine/balance, retenido): el backend lo
 // publica cada vez que cambia (internal/machinefeed). Una terminal solo puede leer el de su máquina.
 export function machineBalanceTopic(machineId: number): string {
