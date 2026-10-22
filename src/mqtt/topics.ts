@@ -7,6 +7,12 @@
 // las publica (retenidas) cada vez que se guarda un ticket y al abrir cada ronda (internal/betsfeed).
 export const ROULETTE_BETS_TOPIC = 'qm/v1/games/roulette/bets'
 
+// Saldo de una máquina (el mismo cuerpo que GET /api/machine/balance, retenido): el backend lo
+// publica cada vez que cambia (internal/machinefeed). Una terminal solo puede leer el de su máquina.
+export function machineBalanceTopic(machineId: number): string {
+  return `qm/v1/machines/${machineId}/balance`
+}
+
 type Handler = (message: unknown) => void
 
 const handlers = new Map<string, Set<Handler>>()
