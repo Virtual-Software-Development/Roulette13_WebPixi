@@ -13,6 +13,7 @@ import { drawRoundedPanel } from '../../utils/roundedPanel'
 import { formatCurrency } from '../../utils/currencyFormat'
 import { buildMediaUrl } from '../../utils/media'
 import type { ResultStatsData } from '../../types/resultStats'
+import { useBetsSummaryStore } from '../../store/useBetsSummaryStore'
 
 extend({ Container, Graphics, Sprite, Text })
 
@@ -142,7 +143,9 @@ export function ResultStatsPanel({ data }: { data: ResultStatsData }) {
   const videoArrived = useDrawCycleStore((state) => state.videoArrived)
   // Espera a videoArrived para entrar (ver useDrawCycleStore.videoArrived y el mismo criterio en
   // LiveTableBetsPanel) -- la salida sigue atada solo a `active`.
-  const entering = active && videoArrived
+  // Totales viejos (conexión caída, ver useBetsSummaryStore.stale): el panel sale con su fade normal.
+  const stale = useBetsSummaryStore((state) => state.stale)
+  const entering = active && videoArrived && !stale
 
   const rawProgress = useAnimatedProgress(entering ? 1 : 0, entering ? ENTER_DURATION_MS : EXIT_DURATION_MS, { startAtTarget: true })
   const eased = entering ? easeOutCubic(rawProgress) : easeInCubic(rawProgress)

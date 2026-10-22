@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useGameConfigStore } from '../../store/useGameConfigStore'
 import { useQuickMoneyBetSlipStore } from '../../store/useQuickMoneyBetSlipStore'
+import { useQuickMoneyRoundStore } from '../../store/useQuickMoneyRoundStore'
 import { useQuickMoneyRoundPhase } from '../../hooks/useQuickMoneyRoundPhase'
 import { placeQuickMoneyTicket } from '../../api/quickMoneyTicket'
 import { refreshMachineBalance } from '../../api/machineBalance'
@@ -19,7 +20,8 @@ export function QuickMoneyPlayerFooter() {
   const balance = useGameConfigStore((state) => state.balance)
   const setGameConfig = useGameConfigStore((state) => state.setGameConfig)
   const entries = useQuickMoneyBetSlipStore((state) => state.entries)
-  const clearAll = useQuickMoneyBetSlipStore((state) => state.clearAll)
+  const markPlaced = useQuickMoneyBetSlipStore((state) => state.markPlaced)
+  const drawNumber = useQuickMoneyRoundStore((state) => state.drawNumber)
   const [submitting, setSubmitting] = useState(false)
   const [justPlaced, setJustPlaced] = useState(false)
   const [popup, setPopup] = useState<'insufficient' | 'failed' | null>(null)
@@ -64,7 +66,7 @@ export function QuickMoneyPlayerFooter() {
       setGameConfig({ balance: balance - totalStake })
       void refreshMachineBalance()
     }
-    clearAll()
+    markPlaced(drawNumber)
     setSubmitting(false)
     setJustPlaced(true)
     setTimeout(() => setJustPlaced(false), 2500)

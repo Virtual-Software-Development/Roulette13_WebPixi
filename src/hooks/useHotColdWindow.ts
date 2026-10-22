@@ -32,6 +32,8 @@ export interface HotColdWindow extends HotColdNumbers {
 // pantalla.
 export function useHotColdWindow(): HotColdWindow {
   const rawResults = useResultsStore((state) => state.rawResults)
+  // Con los resultados viejos (conexión caída, ver useResultsStore.rawResultsStale) no se muestran.
+  const stale = useResultsStore((state) => state.rawResultsStale)
   // A diferencia de `active` (que ya pasa a false apenas termina el hold, antes de que la rueda
   // termine de bajar de vuelta y de que el panel Winner se escale a 0), esto sigue en false hasta
   // que la info del lobby ya volvió a aparecer -- ver useDrawCycleStore.
@@ -53,7 +55,7 @@ export function useHotColdWindow(): HotColdWindow {
     return () => clearTimeout(timer)
   }, [lobbyInfoVisible])
 
-  const shouldShow = lobbyInfoVisible && delayElapsed && remainingSeconds > VISIBLE_MIN_REMAINING_SECONDS
+  const shouldShow = lobbyInfoVisible && delayElapsed && !stale && remainingSeconds > VISIBLE_MIN_REMAINING_SECONDS
   const { hot, cold, hotEntries, coldEntries, totalSpins } = useMemo(
     () => computeHotColdNumbers(rawResults, HOT_COLD_ENTRY_LIMIT),
     [rawResults],

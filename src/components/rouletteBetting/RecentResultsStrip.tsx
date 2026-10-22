@@ -14,7 +14,10 @@ export function RecentResultsStrip() {
   const { t } = useTranslation()
   const history = useResultsStore((state) => state.history)
   const currentWinner = useResultsStore((state) => state.currentWinner)
-  const results = (currentWinner ? [currentWinner, ...history] : history).slice(0, MAX_RECENT_RESULTS)
+  // Lista vieja (conexión caída, ver useResultsStore.stale): queda vacía hasta que useRoundSync
+  // vuelva a pedir /gameInfo al reconectar.
+  const stale = useResultsStore((state) => state.stale)
+  const results = stale ? [] : (currentWinner ? [currentWinner, ...history] : history).slice(0, MAX_RECENT_RESULTS)
 
   return (
     <div className="recent-results-strip">

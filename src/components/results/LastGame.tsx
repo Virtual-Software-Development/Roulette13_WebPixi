@@ -58,6 +58,8 @@ const COUNTDOWN_STYLE_URGENT = new TextStyle({
 export function LastGame() {
   const { t } = useTranslation()
   const currentWinner = useResultsStore((state) => state.currentWinner)
+  // Último resultado viejo (conexión caída, ver useResultsStore.stale): mismo caso que sin resultado.
+  const stale = useResultsStore((state) => state.stale)
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
   const countdown = useCountdown(nextDrawStartTime)
   const roundIntervalMs = useGameConfigStore((state) => state.roundIntervalMs)
@@ -104,7 +106,7 @@ export function LastGame() {
     [tableWidth],
   )
 
-  if (!currentWinner) return null
+  if (!currentWinner || stale) return null
 
   const countdownStyle = countdown.urgent ? COUNTDOWN_STYLE_URGENT : COUNTDOWN_STYLE_NORMAL
 

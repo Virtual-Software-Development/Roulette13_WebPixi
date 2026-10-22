@@ -46,7 +46,7 @@ export function CashierPanel() {
     setIssuing(false)
     setStage('building')
     setTicket(null)
-    markPlaced()
+    markPlaced(drawNumber)
     setJustIssued(true)
     setTimeout(() => setJustIssued(false), 2500)
   }

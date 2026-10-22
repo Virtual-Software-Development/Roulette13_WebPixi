@@ -9,6 +9,11 @@ import type { ResultStatsData } from '../types/resultStats'
 interface BetsSummaryState {
   liveTableBetsData: LiveTableBetsData | null
   resultStatsData: ResultStatsData | null
+  // Los totales son de toda la flota: con la conexión caída dejan de ser confiables (puede haber
+  // apuestas nuevas que no llegaron, o la ronda ya cambió), así que los paneles se ocultan hasta
+  // que llegue un resumen nuevo. Lo marca staleGlobalData.ts al perder la conexión.
+  stale: boolean
+  markStale: () => void
   setBetsSummary: (data: { liveTableBetsData: LiveTableBetsData; resultStatsData: ResultStatsData }) => void
   // Apaga highlighted/showChipStack de todos los números SIN borrar los totales -- pedido
   // explícito: "cuando se oculte apagas el highlight y apagas la moneda también". Se llama cuando
@@ -20,7 +25,9 @@ interface BetsSummaryState {
 export const useBetsSummaryStore = create<BetsSummaryState>((set, get) => ({
   liveTableBetsData: null,
   resultStatsData: null,
-  setBetsSummary: ({ liveTableBetsData, resultStatsData }) => set({ liveTableBetsData, resultStatsData }),
+  stale: false,
+  markStale: () => set({ stale: true }),
+  setBetsSummary: ({ liveTableBetsData, resultStatsData }) => set({ liveTableBetsData, resultStatsData, stale: false }),
   clearHighlights: () => {
     const current = get().liveTableBetsData
     if (!current) return

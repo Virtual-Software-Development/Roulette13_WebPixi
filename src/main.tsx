@@ -4,6 +4,7 @@ import './index.css'
 import './i18n'
 import { startInternetMonitor } from './network/internetMonitor.ts'
 import { startBackendMonitor } from './network/backendMonitor.ts'
+import { startStaleGlobalDataWatch } from './store/staleGlobalData.ts'
 import { APP_SURFACE, currentPreview, isAdminPreview, surfaceForPreview, urlForPreview, withPreviewPath } from './appSurface.ts'
 import { IS_LAN_VIEWER } from './lanPreview.ts'
 
@@ -65,6 +66,9 @@ if (APP_SURFACE !== 'admin') {
   startInternetMonitor()
   // Balance real de la máquina (lo carga el cajero), también global (ver api/machineBalance.ts).
   void import('./api/machineBalance.ts').then((m) => m.startMachineBalanceSync())
+  // Modo degradado: totales y resultados se ocultan mientras no hay conexión (ver
+  // store/staleGlobalData.ts).
+  startStaleGlobalDataWatch()
 }
 // Backend listo (proceso + base), en todos los servidores -- también el Admin, que muestra la banda
 // de sin conexión (ver network/backendMonitor.ts y components/common/ConnectionBanner.tsx).

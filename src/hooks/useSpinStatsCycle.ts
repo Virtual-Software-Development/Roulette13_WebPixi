@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useRoulettePanelsVisible } from '../store/useLobbyModeStore'
 import { useGameConfigStore } from '../store/useGameConfigStore'
+import { useResultsStore } from '../store/useResultsStore'
 import { ensureClockTicking, useClockStore } from '../store/useClockStore'
 import { parseApiDateTime } from '../utils/time'
 import { VISIBLE_MIN_REMAINING_SECONDS } from './useHotColdWindow'
@@ -102,7 +103,9 @@ export function useSpinStatsCycle(): SpinStatsCycle {
   // Sale de escena junto con el resto de los paneles del lobby (al arrancar el sorteo y durante el
   // bloque de Quick Money, ver useRoulettePanelsVisible) -- ya no se oculta por su cuenta antes.
   const panelsVisible = useRoulettePanelsVisible()
-  const shouldShow = panelsVisible && remainingSeconds <= VISIBLE_MAX_REMAINING_SECONDS
+  // Tampoco con los últimos resultados viejos (conexión caída, ver useResultsStore.rawResultsStale).
+  const stale = useResultsStore((state) => state.rawResultsStale)
+  const shouldShow = panelsVisible && !stale && remainingSeconds <= VISIBLE_MAX_REMAINING_SECONDS
   // Los últimos FREEZE_AT_REMAINING_SECONDS el ciclo queda congelado donde estaba: sin categoría
   // activa (se apagan los highlights de donas y rueda) y con el mismo set de donas (sin cross-fade).
   const frozen = remainingSeconds <= FREEZE_AT_REMAINING_SECONDS

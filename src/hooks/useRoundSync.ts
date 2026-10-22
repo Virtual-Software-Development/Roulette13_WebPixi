@@ -6,7 +6,8 @@ import { useResultsStore } from '../store/useResultsStore'
 import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { parseApiDateTime } from '../utils/time'
 import { RESULT_HOLD_MS } from '../layout/layout.constants'
-import { serverNow } from '../time/serverClock'
+import { serverNow, syncServerClock } from '../time/serverClock'
+import { onConnectionRestored } from './useConnectionIssue'
 
 // Margen tras nextDrawStartTime antes de pedir /api/drawResult -- le da tiempo al backend a
 // confirmar el número ganador (mismo tipo de margen que RESULT_LEAD_MS en App.tsx, pero medido
@@ -79,6 +80,9 @@ export function useRoundSync() {
           const drawMs = parseApiDateTime(startTime).getTime()
           trackedDrawMs = drawMs
           const msUntilStart = Math.max(0, drawMs - serverNow())
+          // Ronda que todavía no arrancó: el tablero va abierto. En el ciclo normal ya lo está; tras
+          // una reconexión puede venir de una ronda que terminó durante el corte.
+          if (msUntilStart > 0) useDrawCycleStore.getState().setActive(false)
 
           startTimer = setTimeout(() => {
             if (stale()) return
@@ -129,12 +133,29 @@ export function useRoundSync() {
       if (document.visibilityState === 'visible') resyncIfStuck()
     }
 
+    // Volvió la conexión: durante el corte se pudieron perder el cambio de ronda, el /drawResult y
+    // el desvío del reloj. Se re-mide el reloj primero (los timers de la ronda se calculan con
+    // serverNow()) y se vuelve a pedir /gameInfo desde cero, re-hidratando también el historial de
+    // resultados -- acá sí conviene pisarlo, porque lo que haya en pantalla puede tener huecos.
+    // `active` no se toca: si la ronda sigue en curso el tablero queda cerrado sin parpadear, y si
+    // ya terminó lo reabre scheduleGameInfoPoll.
+    function resyncAfterReconnect() {
+      console.info('[roundSync] conexión recuperada -- resincronizando ronda, reloj y resultados')
+      void syncServerClock().finally(() => {
+        if (cancelled) return
+        clearRoundTimers()
+        scheduleGameInfoPoll(true)
+      })
+    }
+
     scheduleGameInfoPoll(true)
     const watchdog = setInterval(resyncIfStuck, WATCHDOG_INTERVAL_MS)
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    const stopRestored = onConnectionRestored('terminal', resyncAfterReconnect)
 
     return () => {
       cancelled = true
+      stopRestored()
       clearInterval(watchdog)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       clearRoundTimers()

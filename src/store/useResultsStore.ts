@@ -15,6 +15,14 @@ interface ResultsState {
   // vez del string usado en WheelPocket acá (ver types/wheel.ts). Quien consuma este array para
   // mapear a casillas reales va a necesitar traducir 37 -> '00' explícitamente.
   rawResults: number[]
+  // Con la conexión caída los resultados dejan de ser confiables (se pudieron perder sorteos), así
+  // que las listas se ocultan hasta que lleguen frescos: `stale` (history/currentWinner) lo limpia
+  // hydrateHistory (/gameInfo), `rawResultsStale` lo limpia setRawResults (/api/results). Lo marca
+  // staleGlobalData.ts al perder la conexión. addResult NO limpia `stale`: un resultado nuevo encima
+  // de una lista con huecos sigue siendo una lista con huecos.
+  stale: boolean
+  rawResultsStale: boolean
+  markStale: () => void
   addResult: (result: Omit<RouletteResult, 'timeColor'>) => void
   hydrateHistory: (results: Omit<RouletteResult, 'timeColor'>[]) => void
   setMaxResults: (n: number) => void
@@ -28,6 +36,10 @@ export const useResultsStore = create<ResultsState>((set) => ({
   maxResults: 10,
   lastTimeColor: null,
   rawResults: [],
+  stale: false,
+  rawResultsStale: false,
+
+  markStale: () => set({ stale: true, rawResultsStale: true }),
 
   addResult: (result) =>
     set((state) => {
@@ -44,7 +56,7 @@ export const useResultsStore = create<ResultsState>((set) => ({
 
   hydrateHistory: (results) =>
     set((state) => {
-      if (results.length === 0) return { currentWinner: null, history: [] }
+      if (results.length === 0) return { currentWinner: null, history: [], stale: false }
 
       let color = state.lastTimeColor ? getOppositeTimeColor(state.lastTimeColor) : pickRandomTimeColor()
       const withColors = results.map((r) => {
@@ -54,12 +66,12 @@ export const useResultsStore = create<ResultsState>((set) => ({
       })
       const [currentWinner, ...history] = withColors
 
-      return { currentWinner, history, lastTimeColor: currentWinner.timeColor }
+      return { currentWinner, history, lastTimeColor: currentWinner.timeColor, stale: false }
     }),
 
   setMaxResults: (n) => set({ maxResults: n }),
 
-  setRawResults: (results) => set({ rawResults: results }),
+  setRawResults: (results) => set({ rawResults: results, rawResultsStale: false }),
 
   // lastTimeColor no se resetea: la alternancia debe seguir su curso aunque se limpien los resultados.
   clearResults: () => set({ currentWinner: null, history: [] }),

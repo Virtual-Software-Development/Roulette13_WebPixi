@@ -20,6 +20,7 @@ import { formatCompactMoney } from '../../utils/moneyFormat'
 import { buildMediaUrl } from '../../utils/media'
 import type { WheelPocket } from '../../types/wheel'
 import type { LiveTableBetsData, NumberBetTotal } from '../../types/liveTableBets'
+import { useBetsSummaryStore } from '../../store/useBetsSummaryStore'
 
 extend({ Container, Graphics, Sprite, Text })
 
@@ -676,13 +677,15 @@ export function LiveTableBetsPanel({ data }: { data: LiveTableBetsData }) {
   const { visibleRight, visibleTop, visibleBottom } = useViewport()
   const active = useDrawCycleStore((state) => state.active)
   const videoArrived = useDrawCycleStore((state) => state.videoArrived)
+  // Totales viejos (conexión caída, ver useBetsSummaryStore.stale): el panel sale con su fade normal.
+  const stale = useBetsSummaryStore((state) => state.stale)
 
   // Espera a que el video termine de subir del todo antes de entrar (ver
   // useDrawCycleStore.videoArrived) -- si no, este panel (highlight/glow incluido) termina su
   // propio fade-in (550ms) bastante antes de que el video termine el suyo (900ms, deliberadamente
   // más lento), mismo `active` no dice nada sobre eso. La SALIDA no espera nada: `active` en false
   // ya alcanza para bajar a 0 en el mismo instante que antes.
-  const progress = useAnimatedProgress(active && videoArrived ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
+  const progress = useAnimatedProgress(active && videoArrived && !stale ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
   const eased = easeInOutCubic(progress)
 
   const betsByPocket = useMemo(() => {
