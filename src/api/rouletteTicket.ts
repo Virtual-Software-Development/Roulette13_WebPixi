@@ -24,6 +24,8 @@ export function toTicketBet(selection: BetSelection, stake: number): TicketBet {
       return bet('street', numbers(selection.pockets))
     case 'corner':
       return bet('corner', numbers(selection.pockets))
+    case 'basket':
+      return bet('basket', numbers(selection.pockets))
     case 'sixLine':
       return bet('six_line', numbers(selection.pockets))
     case 'column': {

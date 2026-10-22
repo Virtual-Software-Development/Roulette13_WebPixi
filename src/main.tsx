@@ -30,6 +30,10 @@ const VideoErrorPanelPreview = lazy(() =>
   import('./screens/VideoErrorPanelPreview.tsx').then((m) => ({ default: m.VideoErrorPanelPreview })),
 )
 const BettingHomePage = lazy(() => import('./screens/BettingHomePage.tsx').then((m) => ({ default: m.BettingHomePage })))
+// One betting window at a time on the machine (see SingleBettingScreen.tsx).
+const SingleBettingScreen = lazy(() =>
+  import('./layout/SingleBettingScreen.tsx').then((m) => ({ default: m.SingleBettingScreen })),
+)
 // Notices for the player when the admin changes the credit mode (see MachineNoticeDialog.tsx).
 const MachineNoticeDialog = lazy(() =>
   import('./layout/MachineNoticeDialog.tsx').then((m) => ({ default: m.MachineNoticeDialog })),
@@ -72,6 +76,11 @@ function lobbyWithMqttGate(screen: ReactNode) {
   return <MqttGate>{screen}</MqttGate>
 }
 
+// Las pantallas que mandan tickets: una sola ventana a la vez (ver SingleBettingScreen.tsx).
+function singleBettingScreen(screen: ReactNode) {
+  return <SingleBettingScreen>{screen}</SingleBettingScreen>
+}
+
 // Pantalla de otro servidor: redirige a su puerto conservando la pantalla (reemplaza la entrada del
 // historial para que "atrás" no rebote de vuelta). Devuelve el mismo fallback oscuro mientras tanto.
 function redirectToOtherServer(preview: string | null) {
@@ -99,8 +108,8 @@ function resolveScreen() {
   // sub-vistas de Admin sin botón dedicado (ej. admin-rtp-management): no existe hoy ningún gate
   // de rol real que distinga cajero de jugador (ver LoginPage.tsx, auth todavía stub).
   if (preview === 'betting') return <BettingHomePage />
-  if (preview === 'roulette-betting') return <RouletteBettingView mode="player" />
-  if (preview === 'roulette-betting-cashier') return <RouletteBettingView mode="cashier" />
+  if (preview === 'roulette-betting') return singleBettingScreen(<RouletteBettingView mode="player" />)
+  if (preview === 'roulette-betting-cashier') return singleBettingScreen(<RouletteBettingView mode="cashier" />)
   // Tab 'lottery' del Header (ver Header.tsx) lleva acá -- punto de entrada a Quick Money, desde
   // donde el usuario ve Pick 3/Pick 4 antes de entrar a apostar. Las vistas de apuesta de abajo
   // (quick-money-betting[-cashier]) siguen existiendo tal cual, solo que ya no son el destino
@@ -108,8 +117,8 @@ function resolveScreen() {
   if (preview === 'quick-money-lobby') return lobbyWithMqttGate(<QuickMoneyLobby />)
   // Cashier Mode queda por ahora solo accesible por URL directa -- mismo criterio ad-hoc que
   // Roulette Betting.
-  if (preview === 'quick-money-betting') return <QuickMoneyBettingView mode="player" />
-  if (preview === 'quick-money-betting-cashier') return <QuickMoneyBettingView mode="cashier" />
+  if (preview === 'quick-money-betting') return singleBettingScreen(<QuickMoneyBettingView mode="player" />)
+  if (preview === 'quick-money-betting-cashier') return singleBettingScreen(<QuickMoneyBettingView mode="cashier" />)
   // Preview temporal del panel que reemplaza al video del sorteo cuando no carga (ver
   // VideoErrorPanelPreview.tsx) -- para maquetarlo sin forzar la falla real en App.tsx.
   if (preview === 'video-error-panel') return <VideoErrorPanelPreview />

@@ -9,7 +9,7 @@ import type {
 } from '../types/adminDashboard'
 
 // Mock TEMPORAL para el AdminDashboard -- no existe todavía un endpoint/store de estadísticas
-// administrativas (lo más cercano hoy es /api/bets, que solo expone playersCount/totalBetAmount,
+// administrativas (lo más cercano hoy es /api/bets, que solo expone ticketsCount/totalBetAmount,
 // ver useBetsSummaryStore). Reemplazar este archivo por el fetch/store real no requiere tocar
 // ningún componente: todos reciben estos datos por props.
 

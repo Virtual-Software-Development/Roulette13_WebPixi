@@ -7,6 +7,10 @@
 import { useClockSyncStore } from '../store/useClockSyncStore'
 
 const SAMPLE_COUNT = 5
+// Con una ida y vuelta así el error del offset es como mucho la mitad (10 ms), muy por debajo de lo
+// que se corrige (useRotorServerSync: 100 ms): más muestras no lo mejoran. En la LAN de las
+// terminales suele bastar la primera.
+const GOOD_ENOUGH_RTT_MS = 20
 const SAMPLE_TIMEOUT_MS = 2_000
 const RESYNC_INTERVAL_MS = 5 * 60_000
 
@@ -67,12 +71,15 @@ async function takeSample(): Promise<ClockSample> {
 }
 
 // Mide el offset (muestras en serie, no en paralelo: en paralelo se encolan y todas salen con RTT
-// inflado). Devuelve true si quedó sincronizado con al menos una muestra.
+// inflado; hasta SAMPLE_COUNT, o menos si una ya es lo bastante precisa). Devuelve true si quedó
+// sincronizado con al menos una muestra.
 export async function syncServerClock(): Promise<boolean> {
   const samples: ClockSample[] = []
   for (let i = 0; i < SAMPLE_COUNT; i++) {
     try {
-      samples.push(await takeSample())
+      const sample = await takeSample()
+      samples.push(sample)
+      if (sample.receivedAt - sample.sentAt <= GOOD_ENOUGH_RTT_MS) break
     } catch (err) {
       console.warn('[serverClock] muestra fallida', err)
     }

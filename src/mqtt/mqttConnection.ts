@@ -2,6 +2,7 @@ import mqtt, { type MqttClient } from 'mqtt'
 import { env } from '../config/env'
 import { fetchMqttCredentials, fetchPhysicalAddress } from '../api/mqttCredentials'
 import { useMqttStore } from '../store/useMqttStore'
+import { attachMqttSubscriber, dispatchMqttMessage } from './topics'
 
 // Margen antes de dar la conexión por caída -- tanto en el arranque (MAC + credenciales + primer
 // CONNECT) como tras perderla. Evita reaccionar a un corte de 1-2 s (reconexión normal de mqtt.js).
@@ -82,6 +83,18 @@ async function connect() {
     graceTimer = undefined
     useMqttStore.setState({ status: 'connected', offline: false })
     console.info(`[mqtt] connected as ${creds.mqttIdClient}`)
+    // Tópicos que registraron las pantallas (topics.ts), y los que registren desde ahora. En cada
+    // (re)conexión: los retenidos llegan de nuevo, así la pantalla queda al día enseguida.
+    const subscribe = (topic: string) => {
+      current.subscribe(topic, { qos: 1 }, (err) => {
+        if (err) console.warn(`[mqtt] could not subscribe to ${topic}:`, err.message)
+      })
+    }
+    for (const topic of attachMqttSubscriber(subscribe)) subscribe(topic)
+  })
+  current.on('message', (topic, payload) => {
+    if (client !== current) return
+    dispatchMqttMessage(topic, payload.toString())
   })
   current.on('close', () => {
     if (client !== current) return

@@ -1,25 +1,35 @@
 import { env } from '../config/env'
 import { useGameConfigStore } from '../store/useGameConfigStore'
 import { useCreditStore, type CreditMode, type InsertedCreditTicket, type MachineNotice } from '../store/useCreditStore'
+import { useMqttStore } from '../store/useMqttStore'
+import { machineBalanceTopic, onMqttMessage } from '../mqtt/topics'
 import { errorMessage } from './terminalTicket'
 
 // Balance of this PC's machine (GET /api/machine/balance, X-Terminal-Token): the credit the cashier
 // loads through the external cashier app (quick-money-backend /cashier, see its README). Every
-// ticket placed here is paid from it on the backend, so the store's balance is only a copy: it is
-// re-read every few seconds (a deposit or withdrawal at the cashier shows up on its own) and right
-// after each ticket. In TICKET credit mode (General Settings) the balance is the credit of the
-// ticket inserted in this machine (0 with none), and the player inserts and cashes out that ticket
-// here (insertCreditTicket / cashOutCreditTicket).
+// ticket placed here is paid from it on the backend, so the store's balance is only a copy: the
+// backend pushes it over MQTT whenever it changes (a deposit or withdrawal at the cashier, a ticket,
+// a prize on the credit ticket...), and it is also re-read after each action here, on focus and,
+// as a safety net for a lost connection, every minute. In TICKET credit mode (General Settings) the
+// balance is the credit of the ticket inserted in this machine (0 with none), and the player
+// inserts and cashes out that ticket here (insertCreditTicket / cashOutCreditTicket).
 
-const POLL_MS = 3_000
+// Only a safety net: the changes arrive over MQTT.
+const POLL_MS = 60_000
 
 interface MachineBalanceResponse {
+  // The machine (machine.id); missing on older backends.
+  machineId?: number
   balance: number
   // Missing on backends older than the credit modes: MACHINE.
   creditMode?: CreditMode
   creditTicket?: InsertedCreditTicket | null
   notices?: MachineNotice[]
 }
+
+// The machine GET /api/machine/balance answers for (this PC's terminal token): a push for any other
+// machine is ignored.
+let tokenMachineId: number | null = null
 
 function applyCredit(body: MachineBalanceResponse): void {
   useGameConfigStore.getState().setGameConfig({ balance: body.balance })
@@ -32,9 +42,10 @@ export async function refreshMachineBalance(): Promise<void> {
     const res = await fetch('/api/machine/balance', { headers: { 'X-Terminal-Token': env.terminalToken } })
     if (!res.ok) throw new Error(await errorMessage(res))
     const body: MachineBalanceResponse = await res.json()
+    if (typeof body.machineId === 'number') tokenMachineId = body.machineId
     applyCredit(body)
   } catch (err) {
-    // The last known balance stays; the next poll tries again.
+    // The last known balance stays; the next push or poll updates it.
     console.warn('[balance] could not read the machine balance:', err instanceof Error ? err.message : err)
   }
 }
@@ -52,6 +63,38 @@ export function startMachineBalanceSync(): void {
   void refreshMachineBalance()
   window.setInterval(() => void refreshMachineBalance(), POLL_MS)
   window.addEventListener('focus', () => void refreshMachineBalance())
+  listenForBalancePushes()
+}
+
+// The backend's pushes (retained: the current balance arrives as soon as it subscribes). The topic
+// needs the machine id, which comes with the MQTT credentials.
+function listenForBalancePushes(): void {
+  let unsubscribe: (() => void) | null = null
+  let topicMachineId: number | null = null
+  const follow = (machineId: number | null) => {
+    if (machineId === topicMachineId) return
+    unsubscribe?.()
+    unsubscribe = null
+    topicMachineId = machineId
+    if (machineId == null) return
+    unsubscribe = onMqttMessage(machineBalanceTopic(machineId), applyPushedCredit)
+  }
+  follow(useMqttStore.getState().machineId)
+  useMqttStore.subscribe((state) => follow(state.machineId))
+}
+
+// A balance pushed over MQTT: the same body as GET /api/machine/balance.
+export function applyPushedCredit(message: unknown): void {
+  if (!message || typeof message !== 'object' || typeof (message as MachineBalanceResponse).balance !== 'number') {
+    console.warn('[balance] ignored a malformed balance push')
+    return
+  }
+  const body = message as MachineBalanceResponse
+  if (tokenMachineId != null && body.machineId !== tokenMachineId) {
+    console.warn(`[balance] ignored a push for machine ${body.machineId}: this PC's token is machine ${tokenMachineId}`)
+    return
+  }
+  applyCredit(body)
 }
 
 // TICKET credit mode: inserts the credit ticket with code (typed or scanned) in this machine. Throws

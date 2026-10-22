@@ -20,7 +20,7 @@ export async function fetchRouletteDrawSummary(drawNumber: string, result: strin
   try {
     const bets = await fetchBetsSummaryOnce(drawNumber)
     metrics.totalWagered = bets.totalBetAmount
-    metrics.participatingTickets = bets.playersCount
+    metrics.participatingTickets = bets.ticketsCount
   } catch (err) {
     // Sin esto la pantalla igual se muestra, con el resultado y las métricas pendientes.
     console.warn(`[drawSummary] no se pudieron leer las apuestas del sorteo ${drawNumber}`, err)
