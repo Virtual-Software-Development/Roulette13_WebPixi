@@ -164,3 +164,22 @@
 .qm-betslip-totals-value--accent {
   color: var(--qm-green);
 }
+
+/* Apuestas ya realizadas en la ronda actual: solo lectura (sin botón de quitar) y atenuadas, para
+   que no se confundan con lo que todavía falta confirmar. */
+.qm-betslip-placed-title {
+  margin: 10px 6px 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--qm-border);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--qm-text-secondary);
+}
+.qm-betslip-row--placed {
+  opacity: 0.75;
+}
+.qm-betslip-row--placed:hover {
+  background: none;
+}

@@ -1,17 +1,25 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useBetSlipStore } from '../../store/useBetSlipStore'
+import { useGameConfigStore } from '../../store/useGameConfigStore'
 import { calculateBetPayout, calculateMaxPotentialWin, calculateSlipTotals } from '../../utils/rouletteBetPayout'
 import { getBetSelectionDescription, getBetTypeLabel } from '../../utils/rouletteBetLabel'
 import { formatMoney } from '../../utils/moneyFormat'
+import type { BetSlipEntry } from '../../types/betSlip'
 import { RemoveIcon } from './icons'
 import './betSlip.css'
+
+const NO_ENTRIES: BetSlipEntry[] = []
 
 export function SelectedBetsList() {
   const { t } = useTranslation()
   const entries = useBetSlipStore((state) => state.entries)
   const removeBet = useBetSlipStore((state) => state.removeBet)
   const clearAll = useBetSlipStore((state) => state.clearAll)
+  const drawNumber = useGameConfigStore((state) => state.drawNumber)
+  // Lo ya realizado en ESTA ronda: lo local que el jugador necesita ver aunque se caiga la
+  // conexión. Deja de mostrarse solo cuando useRoundSync pasa a la ronda siguiente.
+  const placed = useBetSlipStore((state) => (state.placedRound === drawNumber ? state.placed : NO_ENTRIES))
 
   const totals = useMemo(() => calculateSlipTotals(entries), [entries])
   // Máximo realmente cobrable con UN solo resultado de giro (no la suma de "si ganara todo", que
@@ -30,7 +38,7 @@ export function SelectedBetsList() {
         )}
       </div>
 
-      {entries.length > 0 && (
+      {(entries.length > 0 || placed.length > 0) && (
         <div className="bet-slip-columns">
           <span>{t('bettingView.selectedBets.columnBet')}</span>
           <span>{t('bettingView.selectedBets.columnSelection')}</span>
@@ -41,7 +49,7 @@ export function SelectedBetsList() {
       )}
 
       <div className="bet-slip-rows">
-        {entries.length === 0 && <p className="bet-slip-empty">{t('bettingView.selectedBets.empty')}</p>}
+        {entries.length === 0 && placed.length === 0 && <p className="bet-slip-empty">{t('bettingView.selectedBets.empty')}</p>}
         {entries.map((entry) => {
           const payout = calculateBetPayout(entry.betType, entry.stake)
           return (
@@ -61,6 +69,20 @@ export function SelectedBetsList() {
             </div>
           )
         })}
+        {placed.length > 0 && (
+          <>
+            <p className="bet-slip-placed-title">{t('bettingView.selectedBets.placedThisRound', { round: drawNumber })}</p>
+            {placed.map((entry) => (
+              <div key={entry.zoneId} className="bet-slip-row bet-slip-row--placed">
+                <span className="bet-slip-row-type">{getBetTypeLabel(entry.betType, t)}</span>
+                <span className="bet-slip-row-selection">{getBetSelectionDescription(entry.selection, t)}</span>
+                <span className="bet-slip-row-amount">{formatMoney(entry.stake)}</span>
+                <span className="bet-slip-row-payout">{formatMoney(calculateBetPayout(entry.betType, entry.stake).totalReturn)}</span>
+                <span aria-hidden="true" />
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       <div className="bet-slip-totals">

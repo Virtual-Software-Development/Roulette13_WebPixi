@@ -4,8 +4,8 @@
 .qm-pieces {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
+  background: #000;
   opacity: 0;
   transition: opacity 400ms ease;
   pointer-events: none;
@@ -15,11 +15,16 @@
   opacity: 1;
 }
 
-/* El lienzo de 1920x1080 en el que se ubica todo en %: el equivalente a object-fit:contain del
-   <video> único -- lo más grande que entre en la ventana sin deformarse, centrado. */
+/* El lienzo de 1920x1080 en el que se ubica todo en %: el equivalente a object-fit:cover -- cubre
+   toda la ventana sin deformarse, centrado, y recorta lo que sobra (mismo cover-scale que el resto
+   del lobby, ver ResponsiveStage). Con contain, una ventana que no es 16:9 (el navegador sin
+   pantalla completa) dejaba franjas negras a los costados o arriba y abajo. */
 .qm-pieces-stage {
-  position: relative;
-  width: min(100vw, calc(100vh * 16 / 9));
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100vw, calc(100vh * 16 / 9));
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #000;

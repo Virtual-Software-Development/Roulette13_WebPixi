@@ -288,6 +288,7 @@
       "removeAria": "Remove {{selection}} bet",
       "totalStake": "Current Bet",
       "potentialWin": "Potential Win",
+      "placedThisRound": "Placed this round (#{{round}})",
       "betLabel": {
         "straightUp": "Straight Up",
         "split": "Split",
@@ -389,7 +390,8 @@
       "empty": "No bets added yet",
       "removeAria": "Remove {{digits}} bet",
       "totalBet": "Total Bet",
-      "potentialWin": "Potential Win"
+      "potentialWin": "Potential Win",
+      "placedThisRound": "Placed this draw (#{{round}})"
     },
     "countdown": {
       "label": "Next {{game}} Draw",

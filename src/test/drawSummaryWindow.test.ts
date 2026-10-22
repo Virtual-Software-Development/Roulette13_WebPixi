@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   DRAW_SUMMARY_EXIT_MARGIN_MS,
-  LOBBY_RETURN_OFFSET_MS,
-  QUICK_MONEY_RESULT_OFFSET_MS,
+  QUICK_MONEY_VIDEO_END_OFFSET_MS,
+  RESULT_HOLD_END_OFFSET_MS,
   quickMoneyDrawAtMs,
   quickMoneySummaryWindow,
   rouletteSummaryWindow,
@@ -12,18 +12,18 @@ import { QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS, QUICK_MONEY_BLOCK_EXIT_AT_REMA
 const ROUND_MS = 300_000
 
 describe('draw summary windows (round of 5:00)', () => {
-  it('Roulette: from the lobby return until just before the Quick Money block enters', () => {
+  it('Roulette: from the end of the Winner hold (before the lobby returns) until just before the Quick Money block enters', () => {
     const window = rouletteSummaryWindow(0, ROUND_MS)!
-    expect(window.startMs).toBe(LOBBY_RETURN_OFFSET_MS)
+    expect(window.startMs).toBe(RESULT_HOLD_END_OFFSET_MS)
     expect(window.endMs).toBe(ROUND_MS - QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS - DRAW_SUMMARY_EXIT_MARGIN_MS)
     // ~42 s: entra completo en el hueco "Roulette a pantalla completa" de 0:25 a 1:10.
     expect(window.endMs - window.startMs).toBeGreaterThan(40_000)
   })
 
-  it('Quick Money: from its result until just before the block exits', () => {
+  it('Quick Money: from the end of its video (before the split returns) until just before the block exits', () => {
     const qmDraw = quickMoneyDrawAtMs(ROUND_MS)
     const window = quickMoneySummaryWindow(qmDraw, ROUND_MS)!
-    expect(window.startMs).toBe(qmDraw + QUICK_MONEY_RESULT_OFFSET_MS)
+    expect(window.startMs).toBe(qmDraw + QUICK_MONEY_VIDEO_END_OFFSET_MS)
     expect(window.endMs).toBe(ROUND_MS - QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS - DRAW_SUMMARY_EXIT_MARGIN_MS)
     expect(window.endMs - window.startMs).toBeGreaterThan(15_000)
   })

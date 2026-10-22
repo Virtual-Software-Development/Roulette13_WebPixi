@@ -166,3 +166,22 @@
 .bet-slip-totals-value--accent {
   color: var(--betting-green);
 }
+
+/* Apuestas ya realizadas en la ronda actual: solo lectura (sin botón de quitar) y atenuadas, para
+   que no se confundan con lo que todavía falta confirmar. */
+.bet-slip-placed-title {
+  margin: 10px 6px 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--betting-border);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--betting-text-secondary);
+}
+.bet-slip-row--placed {
+  opacity: 0.75;
+}
+.bet-slip-row--placed:hover {
+  background: none;
+}

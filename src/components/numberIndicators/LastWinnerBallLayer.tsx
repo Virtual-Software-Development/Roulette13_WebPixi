@@ -89,6 +89,8 @@ interface LastWinnerBallLayerProps {
 // mostrándose.
 export function LastWinnerBallLayer({ wheelType = ACTIVE_WHEEL_TYPE }: LastWinnerBallLayerProps) {
   const winningNumber = useResultsStore((state) => state.currentWinner?.winningNumber)
+  // Último resultado viejo (conexión caída, ver useResultsStore.stale): la bolita no se muestra.
+  const stale = useResultsStore((state) => state.stale)
   const active = useDrawCycleStore((state) => state.active)
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
   const { remainingSeconds } = useCountdown(nextDrawStartTime)
@@ -98,7 +100,7 @@ export function LastWinnerBallLayer({ wheelType = ACTIVE_WHEEL_TYPE }: LastWinne
   const canvasWidth = mode === 'video' && videoGeometry ? videoGeometry.canvasWidth : WHEEL_CANVAS_WIDTH
   const canvasHeight = mode === 'video' && videoGeometry ? videoGeometry.canvasHeight : WHEEL_CANVAS_HEIGHT
 
-  if (active || winningNumber === undefined) return null
+  if (active || stale || winningNumber === undefined) return null
 
   const pocket = toBallPocket(winningNumber)
   // La marca de la base solo está medida en modo imagen (ver comentario de BALL_DOCK_ANGLE_DEG) --

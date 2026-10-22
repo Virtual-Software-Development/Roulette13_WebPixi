@@ -19,7 +19,7 @@ export function QuickMoneyCashierFooter() {
   const { t } = useTranslation()
   const drawNumber = useQuickMoneyRoundStore((state) => state.drawNumber)
   const entries = useQuickMoneyBetSlipStore((state) => state.entries)
-  const clearAll = useQuickMoneyBetSlipStore((state) => state.clearAll)
+  const markPlaced = useQuickMoneyBetSlipStore((state) => state.markPlaced)
   const [stage, setStage] = useState<'building' | 'preview'>('building')
   const [ticket, setTicket] = useState<QuickMoneyTicket | null>(null)
   const [issuing, setIssuing] = useState(false)
@@ -76,7 +76,7 @@ export function QuickMoneyCashierFooter() {
     setIssuing(false)
     setStage('building')
     setTicket(null)
-    clearAll()
+    markPlaced(drawNumber)
     setJustIssued(true)
     setTimeout(() => setJustIssued(false), 2500)
   }

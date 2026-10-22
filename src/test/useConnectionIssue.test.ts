@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
-import { useConnectionIssue } from '../hooks/useConnectionIssue'
+import { onConnectionRestored, useConnectionIssue } from '../hooks/useConnectionIssue'
 import { useBackendStore } from '../store/useBackendStore'
 import { useClockSyncStore } from '../store/useClockSyncStore'
 import { useInternetStore } from '../store/useInternetStore'
@@ -57,5 +57,54 @@ describe('useConnectionIssue', () => {
 
     act(() => useBackendStore.setState({ offline: true }))
     expect(result.current).toBe('backendOffline')
+  })
+})
+
+describe('onConnectionRestored', () => {
+  beforeEach(() => {
+    useInternetStore.setState({ offline: false })
+    useBackendStore.setState({ offline: false })
+    useMqttStore.setState({ offline: false })
+    useClockSyncStore.setState({ status: 'synced' })
+  })
+
+  it('fires once when the last issue clears, not while another one remains', () => {
+    const restored = vi.fn()
+    const stop = onConnectionRestored('terminal', restored)
+
+    useMqttStore.setState({ offline: true })
+    useBackendStore.setState({ offline: true })
+    useMqttStore.setState({ offline: false })
+    expect(restored).not.toHaveBeenCalled()
+
+    useBackendStore.setState({ offline: false })
+    expect(restored).toHaveBeenCalledTimes(1)
+
+    // Healthy updates (e.g. another store field changing) do not count as a reconnection.
+    useMqttStore.setState({ offline: false })
+    expect(restored).toHaveBeenCalledTimes(1)
+    stop()
+  })
+
+  it('fires when the screen boots offline and then connects', () => {
+    useInternetStore.setState({ offline: true })
+    const restored = vi.fn()
+    const stop = onConnectionRestored('terminal', restored)
+    useInternetStore.setState({ offline: false })
+    expect(restored).toHaveBeenCalledTimes(1)
+    stop()
+  })
+
+  it('ignores what its scope does not watch, and stops listening', () => {
+    const restored = vi.fn()
+    const stop = onConnectionRestored('terminal', restored)
+    useClockSyncStore.setState({ status: 'failed' })
+    useClockSyncStore.setState({ status: 'synced' })
+    expect(restored).not.toHaveBeenCalled()
+
+    stop()
+    useMqttStore.setState({ offline: true })
+    useMqttStore.setState({ offline: false })
+    expect(restored).not.toHaveBeenCalled()
   })
 })

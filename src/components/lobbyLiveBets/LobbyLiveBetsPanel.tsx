@@ -411,11 +411,13 @@ export function LobbyLiveBetsPanel() {
   const { visibleLeft, visibleRight, visibleBottom } = useViewport()
   // Además sale de escena durante el bloque de Quick Money del lobby compartido.
   const lobbyInfoVisible = useRoulettePanelsVisible()
+  // Y mientras los totales son viejos (conexión caída, ver useBetsSummaryStore.stale).
+  const stale = useBetsSummaryStore((state) => state.stale)
 
   const liveTableBetsData = useBetsSummaryStore((state) => state.liveTableBetsData)
   const { numbers, groups } = useMemo(() => toLobbyBets(liveTableBetsData), [liveTableBetsData])
 
-  const progress = useAnimatedProgress(lobbyInfoVisible ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
+  const progress = useAnimatedProgress(lobbyInfoVisible && !stale ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
   const eased = easeInOutCubic(progress)
 
   const gridTop = PANEL_PADDING + HEADER_HEIGHT + HEADER_GAP

@@ -72,8 +72,18 @@ async function takeSample(): Promise<ClockSample> {
 
 // Mide el offset (muestras en serie, no en paralelo: en paralelo se encolan y todas salen con RTT
 // inflado; hasta SAMPLE_COUNT, o menos si una ya es lo bastante precisa). Devuelve true si quedó
-// sincronizado con al menos una muestra.
-export async function syncServerClock(): Promise<boolean> {
+// sincronizado con al menos una muestra. Una llamada mientras otra sigue midiendo comparte esa
+// medición (al reconectar la piden a la vez useServerClockSync y useRoundSync).
+let inFlight: Promise<boolean> | null = null
+
+export function syncServerClock(): Promise<boolean> {
+  inFlight ??= measureOffset().finally(() => {
+    inFlight = null
+  })
+  return inFlight
+}
+
+async function measureOffset(): Promise<boolean> {
   const samples: ClockSample[] = []
   for (let i = 0; i < SAMPLE_COUNT; i++) {
     try {
