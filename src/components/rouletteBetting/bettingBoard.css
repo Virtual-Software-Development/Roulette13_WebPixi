@@ -110,13 +110,15 @@
    Split/Trio/Street/Corner/Six Line -- franjas angostas sobre el borde compartido, invisibles
    hasta el hover (para no ensuciar el tablero) pero con hitbox real (ver geometría en
    rouletteBetZones.ts). Trio es la apuesta de 3 números propia de la esquina 0/00 (0-1-2, 00-2-3,
-   0-00-2) -- mismo lenguaje visual que Corner (punto pequeño, z-index alto), no es "una calle".
+   0-00-2) y Basket la de 5 (0-00-1-2-3, en la esquina de abajo de 0/00) -- mismo lenguaje visual
+   que Corner (punto pequeño, z-index alto), no son "una calle".
    El feedback principal de estas zonas NO es la franja en sí -- son los NÚMEROS que cubre (ver
    bet-zone--cross-highlighted más arriba, disparado desde BettingBoard.tsx). Acá solo queda un
    punto pequeño y discreto marcando "acá se apoyaría la ficha", sin competir visualmente con el
    highlight real sobre los números. */
 .bet-zone--split,
 .bet-zone--trio,
+.bet-zone--basket,
 .bet-zone--street,
 .bet-zone--corner,
 .bet-zone--sixLine {
@@ -133,13 +135,15 @@
   z-index: 3;
 }
 .bet-zone--corner,
-.bet-zone--trio {
+.bet-zone--trio,
+.bet-zone--basket {
   z-index: 4;
   border-radius: 50%;
 }
 
 .bet-zone--split::after,
 .bet-zone--trio::after,
+.bet-zone--basket::after,
 .bet-zone--street::after,
 .bet-zone--corner::after,
 .bet-zone--sixLine::after {
@@ -163,6 +167,8 @@
 .bet-zone--split:not(:disabled):focus-visible::after,
 .bet-zone--trio:not(:disabled):hover::after,
 .bet-zone--trio:not(:disabled):focus-visible::after,
+.bet-zone--basket:not(:disabled):hover::after,
+.bet-zone--basket:not(:disabled):focus-visible::after,
 .bet-zone--street:not(:disabled):hover::after,
 .bet-zone--street:not(:disabled):focus-visible::after,
 .bet-zone--sixLine:not(:disabled):hover::after,

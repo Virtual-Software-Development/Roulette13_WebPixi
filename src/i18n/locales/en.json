@@ -299,7 +299,8 @@
         "dozen": "Dozen",
         "redBlack": "Red/Black",
         "oddEven": "Odd/Even",
-        "highLow": "High/Low"
+        "highLow": "High/Low",
+        "basket": "Basket"
       }
     },
     "countdown": {

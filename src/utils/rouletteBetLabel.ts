@@ -21,6 +21,7 @@ export function getBetSelectionDescription(selection: BetSelection, t: Translate
       return String(selection.pockets[0])
     case 'split':
     case 'trio':
+    case 'basket':
     case 'street':
     case 'corner':
     case 'sixLine':

@@ -162,13 +162,15 @@ function zone(betType: BetType, selection: BetSelection, gridArea: BetGridArea, 
 
 // -----------------------------------------------------------------------------------------------
 // Genera TODAS las zonas de apuesta válidas del paño para el tipo de rueda dado -- straight up,
-// split, trio, street, corner, six line, column, dozen, red/black, odd/even, high/low. Nada se lista a
+// split, trio, basket, street, corner, six line, column, dozen, red/black, odd/even, high/low. Nada se lista a
 // mano: todo sale de recorrer el grid matemático una sola vez, reusando getColumnGroupPockets/
 // getDozenGroupPockets/getRouletteColor/getRouletteParity/getRouletteRange (mismas utilidades que
 // ya usa el resto del proyecto, sin duplicar la definición de qué números componen cada apuesta).
 //
 // Apuestas de la zona 0/00: split 0-00, los splits de 0/00 contra sus vecinos en la primera calle
-// (0-1, 0-2, 00-2, 00-3) y los tríos de 3 números propios de esa esquina (0-1-2, 00-2-3, 0-00-2).
+// (0-1, 0-2, 00-2, 00-3), los tríos de 3 números propios de esa esquina (0-1-2, 00-2-3, 0-00-2) y
+// el basket (0-00-1-2-3), que en la mesa americana se apoya donde la columna 0/00 se junta con la
+// primera calle sobre el borde de abajo del paño -- el mismo borde donde se apoyan las calles.
 // Standard de mesa americana -- 0 limita con 1 y 2 (via la mitad inferior de la columna cero, que
 // toca la fila de "1" entera y la mitad de abajo de la fila de "2"), 00 limita con 2 y 3 (mismo
 // razonamiento, mitad de arriba). Todo esto se deriva de las mismas rowGroupStart/numberColStart
@@ -232,6 +234,17 @@ function buildZeroAreaZones(half: number): BetZone[] {
       'trio',
       { type: 'trio', pockets: [0, '00', 2] },
       { colStart: boundaryCol.from, colEnd: boundaryCol.to, rowStart: half - TRIO_SPAN / 2, rowEnd: half + TRIO_SPAN / 2 },
+      'inside',
+    ),
+    zone(
+      'basket',
+      { type: 'basket', pockets: [0, '00', 1, 2, 3] },
+      {
+        colStart: boundaryCol.from,
+        colEnd: boundaryCol.to,
+        rowStart: NUMBER_GRID_ROW_END - BOUNDARY_SPAN / 2,
+        rowEnd: NUMBER_GRID_ROW_END + BOUNDARY_SPAN / 2,
+      },
       'inside',
     ),
   ]

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { toTicketBet } from '../api/rouletteTicket'
 import { buildRouletteBetZones } from '../utils/rouletteBetZones'
+import { calculateBetPayout } from '../utils/rouletteBetPayout'
 
 // Every zone of the real betting board must map to a bet the backend accepts
 // (quick-money-backend internal/tickets/api.go): a bet_type code, and for inside bets the covered
 // numbers, for outside bets the backend's group name.
-const insideCodes: Record<string, number> = { straight: 1, split: 2, street: 3, corner: 4, six_line: 6 }
+const insideCodes: Record<string, number> = { straight: 1, split: 2, street: 3, corner: 4, basket: 5, six_line: 6 }
 const outsideValues: Record<string, string[]> = {
   column: ['1', '2', '3'],
   dozen: ['1', '2', '3'],
@@ -50,6 +51,14 @@ describe('toTicketBet', () => {
     expect(outside('redBlack:red')).toMatchObject({ betType: 'red_black', selection: 'red' })
     expect(outside('highLow:high')).toMatchObject({ betType: 'low_high', selection: 'high' })
     expect(outside('oddEven:even')).toMatchObject({ betType: 'even_odd', selection: 'even' })
+  })
+
+  it('has the basket (0, 00, 1, 2, 3) on the American board only, paid 6:1', () => {
+    const baskets = zones.filter((z) => z.selection.type === 'basket')
+    expect(baskets).toHaveLength(1)
+    expect(toTicketBet(baskets[0].selection, 2)).toEqual({ betType: 'basket', selection: '0,00,1,2,3', amount: 2 })
+    expect(calculateBetPayout('basket', 2)).toEqual({ totalReturn: 14, profit: 12 })
+    expect(buildRouletteBetZones('european').some((z) => z.selection.type === 'basket')).toBe(false)
   })
 
   it('sends 00 as "00"', () => {

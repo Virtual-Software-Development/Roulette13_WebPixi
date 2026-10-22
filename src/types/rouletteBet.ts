@@ -1,7 +1,7 @@
 import type { WheelPocket } from './wheel'
 import type { ColumnGroup, DozenGroup } from './numberIndicator'
 
-export type InsideBetType = 'straightUp' | 'split' | 'street' | 'corner' | 'sixLine' | 'trio'
+export type InsideBetType = 'straightUp' | 'split' | 'street' | 'corner' | 'sixLine' | 'trio' | 'basket'
 export type OutsideBetType = 'column' | 'dozen' | 'redBlack' | 'oddEven' | 'highLow'
 export type BetType = InsideBetType | OutsideBetType
 
@@ -23,6 +23,9 @@ export type BetSelection =
   // getColumnGroupPockets) y pueden incluir '00'.
   | { type: 'trio'; pockets: [WheelPocket, WheelPocket, WheelPocket] }
   | { type: 'street'; pockets: [number, number, number] }
+  // Basket (top line) de la mesa americana: 0, 00, 1, 2 y 3 -- pago 6:1 (backend: bet_type
+  // "basket"). Solo existe con 00 (ver buildZeroAreaZones en rouletteBetZones.ts).
+  | { type: 'basket'; pockets: [0, '00', 1, 2, 3] }
   | { type: 'corner'; pockets: [number, number, number, number] }
   | { type: 'sixLine'; pockets: [number, number, number, number, number, number] }
   | { type: 'column'; group: ColumnGroup; pockets: number[] }

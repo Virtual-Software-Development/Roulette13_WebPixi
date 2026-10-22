@@ -11,6 +11,7 @@ export const BET_TYPE_PAYOUT_MULTIPLIER: Record<BetType, number> = {
   straightUp: 35,
   split: 17,
   trio: 11,
+  basket: 6,
   street: 11,
   corner: 8,
   sixLine: 5,
@@ -67,7 +68,7 @@ export function calculateMaxPotentialWin(entries: BetSlipEntry[]): number {
 function payoutIfPocketHits(entries: BetSlipEntry[], pocket: WheelPocket): number {
   return entries.reduce((sum, entry) => {
     // pockets es number[] en la mayoría de las variantes de BetSelection (nunca incluyen '00' en
-    // runtime salvo straightUp/split/trio, que sí son WheelPocket[]) -- el cast es seguro, solo
+    // runtime salvo straightUp/split/trio/basket, que sí son WheelPocket[]) -- el cast es seguro, solo
     // homogeniza el tipo para poder comparar contra un WheelPocket cualquiera acá.
     const pockets = entry.selection.pockets as readonly WheelPocket[]
     if (!pockets.includes(pocket)) return sum
