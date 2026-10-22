@@ -1648,5 +1648,10 @@
     "amountWithdrawn": "Monto retirado",
     "creditOnTicket": "Crédito en tu ticket",
     "ok": "Aceptar"
+  },
+  "bettingElsewhere": {
+    "title": "Las apuestas están abiertas en otra ventana",
+    "message": "Esta máquina solo puede apostar desde una ventana a la vez. Tocá Usar aquí para apostar desde esta ventana; la otra se va a detener.",
+    "useHere": "Usar aquí"
   }
 }

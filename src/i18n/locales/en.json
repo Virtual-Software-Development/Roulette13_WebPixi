@@ -1648,5 +1648,10 @@
     "amountWithdrawn": "Amount withdrawn",
     "creditOnTicket": "Credit on your ticket",
     "ok": "OK"
+  },
+  "bettingElsewhere": {
+    "title": "Betting is open in another window",
+    "message": "This machine can only bet from one window at a time. Tap Use here to bet from this window; the other one will stop.",
+    "useHere": "Use here"
   }
 }
