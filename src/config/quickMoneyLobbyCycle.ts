@@ -56,3 +56,18 @@ export const QUICK_MONEY_VIDEO_FADE_MS = 400
 // Es además lo que cuenta VideoErrorPanel cuando el video no está. Tiene que entrar en
 // QUICK_MONEY_VIDEO_BUDGET_MS (fade + esto + hold).
 export const QUICK_MONEY_VIDEO_DURATION_MS = 72_700
+
+// Panel derecho del split (QuickMoneySplitOverlay): rota entre Winning Numbers (hoy + ayer) y Fast
+// Payments, con estas duraciones (pedido explícito). Anclado al reloj del servidor, así todas las
+// máquinas muestran el mismo panel a la vez.
+export const RESULTS_PANEL_WINNING_MS = 15_000
+export const RESULTS_PANEL_PAYTABLE_MS = 10_000
+// Crossfade entre los dos paneles -- lo usa el CSS vía variable inline.
+export const RESULTS_PANEL_FADE_MS = 500
+
+export type ResultsPanelView = 'winning' | 'paytable'
+
+export function resultsPanelViewAt(nowMs: number): ResultsPanelView {
+  const cycleMs = RESULTS_PANEL_WINNING_MS + RESULTS_PANEL_PAYTABLE_MS
+  return ((nowMs % cycleMs) + cycleMs) % cycleMs < RESULTS_PANEL_WINNING_MS ? 'winning' : 'paytable'
+}

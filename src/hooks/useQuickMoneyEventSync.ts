@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { fetchCurrentEvent } from '../api/terminalTicket'
 import { LOTTERY_EVENT_TOPIC, onMqttMessage } from '../mqtt/topics'
 import { useQuickMoneyRoundStore } from '../store/useQuickMoneyRoundStore'
+import { onConnectionRestored } from './useConnectionIssue'
 
 // The backend announces every change of a Quick Money draw over MQTT (LOTTERY_EVENT_TOPIC): the ones
 // that change which draw is open make the page re-read it (shouldResync). The poll is only a safety
@@ -51,8 +52,12 @@ export function useQuickMoneyEventSync() {
     })
     const interval = setInterval(() => void sync(), POLL_MS)
     document.addEventListener('visibilitychange', onVisibilityChange)
+    // Back online: the draw may have closed or changed during the outage, so re-read it right away
+    // instead of waiting for the poll.
+    const stopRestored = onConnectionRestored('terminal', () => void sync())
     return () => {
       cancelled = true
+      stopRestored()
       unsubscribe()
       clearInterval(interval)
       document.removeEventListener('visibilitychange', onVisibilityChange)

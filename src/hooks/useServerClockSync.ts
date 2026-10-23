@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { startServerClockResync, syncServerClock } from '../time/serverClock'
 import { useClockSyncStore } from '../store/useClockSyncStore'
+import { onConnectionRestored } from './useConnectionIssue'
 
 // Mientras no hubo ninguna medición buena se reintenta seguido: hasta entonces la pantalla corre con
 // el reloj del kiosco (ver useConnectionIssue: las apuestas quedan bloqueadas), y esperar al
@@ -26,10 +27,14 @@ export function useServerClockSync(): void {
       })
     }
     attempt()
+    // Al volver la conexión se re-mide ya: durante el corte el re-sync de 5 min pudo fallar, y el
+    // countdown y el cierre de apuestas dependen de este offset.
+    const stopRestored = onConnectionRestored('terminal', () => void syncServerClock())
 
     return () => {
       cancelled = true
       clearTimeout(retryTimer)
+      stopRestored()
     }
   }, [])
 }

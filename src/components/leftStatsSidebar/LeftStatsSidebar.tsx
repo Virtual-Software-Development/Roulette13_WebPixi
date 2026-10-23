@@ -21,6 +21,8 @@ import { InfoIcon } from '../common/InfoIcon'
 import type { HotColdEntry } from '../../utils/hotColdNumbers'
 import type { WheelPocket } from '../../types/wheel'
 import type { LiveTableBetsData } from '../../types/liveTableBets'
+import { useBetsSummaryStore } from '../../store/useBetsSummaryStore'
+import { useResultsStore } from '../../store/useResultsStore'
 
 extend({ Container, Graphics, Sprite, Text })
 
@@ -495,10 +497,15 @@ export function LeftStatsSidebar({ data }: { data: LiveTableBetsData }) {
   // solo se ignora su `shouldShow` (esa es la ventana de tiempo DEL LOBBY; la visibilidad de este
   // sidebar es la del video de resultado, `active`, ver más abajo).
   const { hotEntries, coldEntries } = useHotColdWindow()
+  // Totales o resultados viejos (conexión caída, ver `stale` en useBetsSummaryStore/useResultsStore):
+  // el sidebar sale con su fade normal.
+  const betsStale = useBetsSummaryStore((state) => state.stale)
+  const hotColdStale = useResultsStore((state) => state.rawResultsStale)
+  const stale = betsStale || hotColdStale
 
   // Espera a videoArrived para entrar (ver useDrawCycleStore.videoArrived y el mismo criterio en
   // LiveTableBetsPanel) -- la salida sigue atada solo a `active`.
-  const progress = useAnimatedProgress(active && videoArrived ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
+  const progress = useAnimatedProgress(active && videoArrived && !stale ? 1 : 0, TRANSITION_DURATION_MS, { startAtTarget: true })
   const eased = easeInOutCubic(progress)
 
   // Top 10 Most Bet Numbers -- ordena la MISMA `data` que ya recibe LiveTableBetsPanel (misma prop,

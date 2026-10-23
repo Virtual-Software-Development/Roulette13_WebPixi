@@ -73,6 +73,8 @@ export function GameList({ onViewHistory }: GameListProps) {
   const currentWinner = useResultsStore((state) => state.currentWinner)
   const history = useResultsStore((state) => state.history)
   const maxResults = useResultsStore((state) => state.maxResults)
+  // Lista vieja (conexión caída, ver useResultsStore.stale): sin filas hasta que llegue fresca.
+  const stale = useResultsStore((state) => state.stale)
   const [buttonHovered, setButtonHovered] = useState(false)
 
   // El ancho real del label solo se conoce tras el layout de Pixi (fontFamily/weight no dan un
@@ -93,7 +95,7 @@ export function GameList({ onViewHistory }: GameListProps) {
   // actual de más). El tope total de GameRow (contando la actual) debe ser maxResults.
   // historyMax de /gameInfo llega hoy en 100 (confirmado contra el backend real) -- eso desborda el
   // panel, así que además se acota a MAX_VISIBLE_ROWS, el tope visual de esta lista.
-  const rows = (currentWinner ? [currentWinner, ...history] : history).slice(0, Math.min(maxResults, MAX_VISIBLE_ROWS))
+  const rows = stale ? [] : (currentWinner ? [currentWinner, ...history] : history).slice(0, Math.min(maxResults, MAX_VISIBLE_ROWS))
   const rowsHeight = rows.length * ROW_HEIGHT
 
   const buttonY = ROWS_START_Y + rowsHeight + ROWS_TO_BUTTON_GAP

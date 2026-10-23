@@ -288,6 +288,7 @@
       "removeAria": "Quitar apuesta {{selection}}",
       "totalStake": "Apuesta Actual",
       "potentialWin": "Ganancia Potencial",
+      "placedThisRound": "Realizadas en esta ronda (#{{round}})",
       "betLabel": {
         "straightUp": "Pleno",
         "split": "Caballo",
@@ -389,7 +390,8 @@
       "empty": "Todavía no hay apuestas agregadas",
       "removeAria": "Quitar apuesta {{digits}}",
       "totalBet": "Apuesta Total",
-      "potentialWin": "Ganancia Potencial"
+      "potentialWin": "Ganancia Potencial",
+      "placedThisRound": "Realizadas en este sorteo (#{{round}})"
     },
     "countdown": {
       "label": "Próximo Sorteo {{game}}",
@@ -427,7 +429,11 @@
     "lastWinning": "Último resultado",
     "winningNumbers": "Números ganadores",
     "columnTime": "Hora",
-    "columnGame": "Juego"
+    "columnGame": "Juego",
+    "yesterdayResults": "Resultados de ayer",
+    "noDrawsToday": "Aún no hay sorteos hoy",
+    "noDrawsYesterday": "No hubo sorteos ayer",
+    "fastPayments": "Pagos Rápidos"
   },
   "quickMoneyLobby": {
     "previousResult": "Resultado Anterior",

@@ -16,6 +16,7 @@ import './playerPanel.css'
 export function PlayerPanel() {
   const { t } = useTranslation()
   const balance = useGameConfigStore((state) => state.balance)
+  const drawNumber = useGameConfigStore((state) => state.drawNumber)
   const setGameConfig = useGameConfigStore((state) => state.setGameConfig)
   const entries = useBetSlipStore((state) => state.entries)
   const markPlaced = useBetSlipStore((state) => state.markPlaced)
@@ -52,7 +53,7 @@ export function PlayerPanel() {
     }
     setGameConfig({ balance: balance - totalStake })
     void refreshMachineBalance()
-    markPlaced()
+    markPlaced(drawNumber)
     setSubmitting(false)
     setJustPlaced(true)
     setTimeout(() => setJustPlaced(false), 2500)

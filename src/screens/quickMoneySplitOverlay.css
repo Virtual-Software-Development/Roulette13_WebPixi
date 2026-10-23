@@ -332,11 +332,86 @@
   justify-content: center;
 }
 
-/* --- Winning Numbers --- */
+/* --- Panel derecho: Winning Numbers (hoy + ayer) <-> Fast Payments --- */
 .qms-winning-numbers {
   left: 1170px;
   width: 720px;
+}
+
+/* Las dos vistas apiladas en la misma tarjeta; crossfade de opacidad (compositor) al rotar. */
+.qms-results-view {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
   padding: 34px 26px 24px;
+  opacity: 0;
+  transition: opacity var(--qms-results-fade-ms) ease;
+}
+.qms-results-view[data-active='true'] {
+  opacity: 1;
+}
+
+/* Cada mitad: título + encabezado + 5 filas compactas. Alto fijo del cuerpo (5 filas + el margen de
+   la fila más reciente), así el mensaje "sin sorteos" no corre la mitad de abajo. */
+.qms-day-results + .qms-day-results {
+  margin-top: 24px;
+}
+.qms-table--compact {
+  margin-top: 14px;
+}
+.qms-table--compact .qms-table-head {
+  height: 46px;
+}
+.qms-table--compact .qms-table-row:not(.qms-table-head) {
+  height: 66px;
+}
+.qms-table-body {
+  height: 338px;
+  display: flex;
+  flex-direction: column;
+}
+.qms-table-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--qms-text-muted);
+}
+
+/* Fast Payments: nombre | pago, filas alternadas como el encabezado de Winning Numbers. */
+.qms-paytable {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.qms-paytable-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  height: 138px;
+  border-radius: 12px;
+  border: 1px solid var(--qms-divider);
+}
+.qms-paytable-row:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.035);
+}
+.qms-paytable-name,
+.qms-paytable-amount {
+  text-align: center;
+}
+.qms-paytable-name {
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--qms-text-muted);
+}
+.qms-paytable-amount {
+  font-size: 46px;
+  font-weight: 700;
+  color: var(--qms-text);
 }
 
 .qms-table {
@@ -505,6 +580,10 @@
 
 .qms-overlay[data-visible='true'] .qms-history-button {
   pointer-events: auto;
+}
+/* Botón de la vista que no se ve (Fast Payments en pantalla): no clickeable. */
+.qms-overlay[data-visible='true'] .qms-results-view[data-active='false'] .qms-history-button {
+  pointer-events: none;
 }
 
 .qms-history-button:hover,

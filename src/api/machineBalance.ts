@@ -4,6 +4,7 @@ import { useCreditStore, type CreditMode, type InsertedCreditTicket, type Machin
 import { useMqttStore } from '../store/useMqttStore'
 import { machineBalanceTopic, onMqttMessage } from '../mqtt/topics'
 import { errorMessage } from './terminalTicket'
+import { onConnectionRestored } from '../hooks/useConnectionIssue'
 
 // Balance of this PC's machine (GET /api/machine/balance, X-Terminal-Token): the credit the cashier
 // loads through the external cashier app (quick-money-backend /cashier, see its README). Every
@@ -63,6 +64,9 @@ export function startMachineBalanceSync(): void {
   void refreshMachineBalance()
   window.setInterval(() => void refreshMachineBalance(), POLL_MS)
   window.addEventListener('focus', () => void refreshMachineBalance())
+  // Back online: a deposit, withdrawal or prize may have changed it during the outage. The retained
+  // push usually brings it too, but it does not when only the backend was down (MQTT stayed up).
+  onConnectionRestored('terminal', () => void refreshMachineBalance())
   listenForBalancePushes()
 }
 

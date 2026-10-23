@@ -6,6 +6,7 @@ import { useDrawCycleStore } from '../store/useDrawCycleStore'
 import { serverNow } from '../time/serverClock'
 import { QUICK_MONEY_RESULT_OFFSET_MS, quickMoneyBlockEnterMs, quickMoneyBlockExitMs } from '../sync/lobbyTimeline'
 import { startQuickMoneyScheduleSync, useQuickMoneyScheduleStore } from '../sync/quickMoneySchedule'
+import { onQuickMoneyDrawPublished } from '../sync/quickMoneyResultTables'
 import { prepareQuickMoneyDraw, takePreparedDraw } from '../video/quickMoneyDrawVideo'
 import { fetchQuickMoneyLobbyDraw } from '../api/quickMoneyLobbyDraw'
 import { QUICK_MONEY_NUMBERS_WAIT_MS, QUICK_MONEY_VIDEO_BUDGET_MS, QUICK_MONEY_VIDEO_REQUEST_LEAD_MS } from '../config/quickMoneyLobbyCycle'
@@ -39,6 +40,7 @@ export function publishPendingDraw() {
   const { pendingDraw, setPendingDraw } = useLobbyModeStore.getState()
   if (!pendingDraw) return
   useQuickMoneyDrawsStore.getState().addDraw(pendingDraw)
+  onQuickMoneyDrawPublished(pendingDraw)
   setPendingDraw(null)
 }
 
