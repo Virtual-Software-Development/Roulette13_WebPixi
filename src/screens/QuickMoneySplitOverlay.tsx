@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useWindowViewport } from '../hooks/useViewport'
 import { useCountdown } from '../hooks/useCountdown'
@@ -7,9 +7,17 @@ import { useResultsStore } from '../store/useResultsStore'
 import { useLobbyModeStore, useQuickMoneySplitVisible } from '../store/useLobbyModeStore'
 import { useQuickMoneyRoundStore } from '../store/useQuickMoneyRoundStore'
 import { useQuickMoneyDrawsStore } from '../store/useQuickMoneyDrawsStore'
+import { useQuickMoneyResultTablesStore, type DrawsTable } from '../store/useQuickMoneyResultTablesStore'
 import { useRoundHistoryStore } from '../store/useRoundHistoryStore'
 import { DESIGN_HEIGHT, DESIGN_WIDTH } from '../layout/layout.constants'
-import { QUICK_MONEY_SPLIT_TRANSITION_MS } from '../config/quickMoneyLobbyCycle'
+import {
+  QUICK_MONEY_SPLIT_TRANSITION_MS,
+  RESULTS_PANEL_FADE_MS,
+  resultsPanelViewAt,
+  type ResultsPanelView,
+} from '../config/quickMoneyLobbyCycle'
+import { startQuickMoneyResultTables } from '../sync/quickMoneyResultTables'
+import { serverNow } from '../time/serverClock'
 import { getRouletteColor, toWheelPocket } from '../utils/rouletteColors'
 import { buildMediaUrl } from '../utils/media'
 import type { QuickMoneyGameType } from '../types/quickMoneyBet'
@@ -17,7 +25,6 @@ import './quickMoneySplitOverlay.css'
 
 const QUICK_MONEY_LOGO_URL = buildMediaUrl('Website_svg_icons/43_quick-money-logo.svg')
 const ROULETTE_RECENT_LIMIT = 5
-const WINNING_NUMBERS_ROWS = 10
 const ROW_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' })
 const GAME_TYPES: QuickMoneyGameType[] = ['pick3', 'pick4']
 // Últimos segundos del countdown de Quick Money: además del rojo (useCountdown.urgent, <=10s) el
@@ -176,16 +183,33 @@ function CenterPanel() {
   )
 }
 
-// Histórico. Grilla de divs (no <table>) para poder redondear y enmarcar la fila más reciente.
-function WinningNumbersPanel({ highlightLatest }: { highlightLatest: boolean }) {
+// Filas de cada mitad de Winning Numbers (hoy / ayer): con el horario de Quick Money (5 sorteos por
+// día) entra el día completo.
+const DAY_TABLE_ROWS = 5
+const AMOUNT_FORMATTER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
+
+// Una mitad de Winning Numbers. Grilla de divs (no <table>) para poder redondear y enmarcar la fila
+// más reciente. Sin sorteos (o si el backend falló, mientras reintenta) muestra emptyText.
+function DayResultsTable({
+  title,
+  table,
+  emptyText,
+  highlightLatest,
+  popLatest,
+}: {
+  title: string
+  table: DrawsTable
+  emptyText: string
+  highlightLatest: boolean
+  popLatest: boolean
+}) {
   const { t } = useTranslation()
-  const draws = useQuickMoneyDrawsStore((state) => state.draws)
-  const openHistory = useRoundHistoryStore((state) => state.open)
+  const draws = table.draws.slice(0, DAY_TABLE_ROWS)
 
   return (
-    <div className="qms-card qms-winning-numbers">
-      <PanelTitle>{t('quickMoneySplit.winningNumbers')}</PanelTitle>
-      <div className="qms-table" role="table">
+    <div className="qms-day-results">
+      <PanelTitle>{title}</PanelTitle>
+      <div className="qms-table qms-table--compact" role="table">
         <div className="qms-table-row qms-table-head" role="row">
           <span role="columnheader">{t('quickMoneySplit.columnTime')}</span>
           <span role="columnheader">{t('quickMoneySplit.columnGame')}</span>
@@ -195,34 +219,64 @@ function WinningNumbersPanel({ highlightLatest }: { highlightLatest: boolean }) 
             </span>
           ))}
         </div>
-        {draws.slice(0, WINNING_NUMBERS_ROWS).map((draw, index) => {
-          // La fila más reciente siempre se distingue (marco rojo tenue, fichas blancas);
-          // recién llegada (fase quickMoneyResult) además hace el pop.
-          const isLatest = index === 0
-          return (
-            <div key={draw.gameNumber} className="qms-table-row" role="row" data-latest={isLatest}>
-              <span className="qms-table-time" role="cell">
-                {ROW_TIME_FORMATTER.format(new Date(draw.drawnAt))}
-              </span>
-              <span className="qms-table-game" role="cell">
-                #{draw.gameNumber}
-              </span>
-              {GAME_TYPES.map((gameType) => (
-                <span key={gameType} role="cell">
-                  <Tiles
-                    digits={resultFor(draw, gameType)}
-                    size="sm"
-                    variant={isLatest ? 'current' : 'history'}
-                    pop={highlightLatest && isLatest}
-                  />
+        <div className="qms-table-body">
+          {draws.length === 0 && table.status !== 'loading' && <p className="qms-table-empty">{emptyText}</p>}
+          {draws.map((draw, index) => {
+            // La fila más reciente de hoy se distingue (marco rojo tenue, fichas blancas); recién
+            // llegada (fase quickMoneyResult) además hace el pop.
+            const isLatest = highlightLatest && index === 0
+            return (
+              <div key={draw.gameNumber} className="qms-table-row" role="row" data-latest={isLatest}>
+                <span className="qms-table-time" role="cell">
+                  {ROW_TIME_FORMATTER.format(new Date(draw.drawnAt))}
                 </span>
-              ))}
-            </div>
-          )
-        })}
+                <span className="qms-table-game" role="cell">
+                  #{draw.gameNumber}
+                </span>
+                {GAME_TYPES.map((gameType) => (
+                  <span key={gameType} role="cell">
+                    <Tiles
+                      digits={resultFor(draw, gameType)}
+                      size="sm"
+                      variant={isLatest ? 'current' : 'history'}
+                      pop={popLatest && isLatest}
+                    />
+                  </span>
+                ))}
+              </div>
+            )
+          })}
+        </div>
       </div>
+    </div>
+  )
+}
+
+// Winning Numbers: los sorteos de hoy arriba, los de ayer abajo.
+function WinningNumbersView({ active, popLatest }: { active: boolean; popLatest: boolean }) {
+  const { t } = useTranslation()
+  const today = useQuickMoneyResultTablesStore((state) => state.today)
+  const yesterday = useQuickMoneyResultTablesStore((state) => state.yesterday)
+  const openHistory = useRoundHistoryStore((state) => state.open)
+
+  return (
+    <div className="qms-results-view" data-active={active} aria-hidden={!active}>
+      <DayResultsTable
+        title={t('quickMoneySplit.winningNumbers')}
+        table={today}
+        emptyText={t('quickMoneySplit.noDrawsToday')}
+        highlightLatest
+        popLatest={popLatest}
+      />
+      <DayResultsTable
+        title={t('quickMoneySplit.yesterdayResults')}
+        table={yesterday}
+        emptyText={t('quickMoneySplit.noDrawsYesterday')}
+        highlightLatest={false}
+        popLatest={false}
+      />
       {/* Mismo botón que el de la tarjeta de Roulette (GameList), abre el historial de Quick Money. */}
-      <button type="button" className="qms-history-button" onClick={() => openHistory('quickMoney')}>
+      <button type="button" className="qms-history-button" onClick={() => openHistory('quickMoney')} tabIndex={active ? 0 : -1}>
         <svg className="qms-history-button-icon" viewBox="0 0 21 16" aria-hidden="true" focusable="false">
           <rect x="0" y="9" width="3" height="7" />
           <rect x="6" y="4" width="3" height="12" />
@@ -231,6 +285,60 @@ function WinningNumbersPanel({ highlightLatest }: { highlightLatest: boolean }) 
         </svg>
         {t('gameList.viewFullHistory')}
       </button>
+    </div>
+  )
+}
+
+// Fast Payments: nombre de la apuesta y lo que paga (de las reglas de pago activas del backend).
+function FastPaymentsView({ active }: { active: boolean }) {
+  const { t } = useTranslation()
+  const rows = useQuickMoneyResultTablesStore((state) => state.paytable.rows)
+
+  return (
+    <div className="qms-results-view" data-active={active} aria-hidden={!active}>
+      <PanelTitle>{t('quickMoneySplit.fastPayments')}</PanelTitle>
+      <div className="qms-paytable" role="table">
+        {rows.map((row) => (
+          <div key={row.nombre} className="qms-paytable-row" role="row">
+            <span className="qms-paytable-name" role="cell">
+              {row.nombre}
+            </span>
+            <span className="qms-paytable-amount" role="cell">
+              ${AMOUNT_FORMATTER.format(row.pago)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Panel derecho: rota Winning Numbers <-> Fast Payments con el reloj del servidor (ver
+// resultsPanelViewAt). Con un resultado recién llegado (fase quickMoneyResult) queda en Winning
+// Numbers para que se vea su pop. Solo hace polling mientras el split está visible.
+function useResultsPanelView(visible: boolean, forceWinning: boolean): ResultsPanelView {
+  const [view, setView] = useState<ResultsPanelView>(() => resultsPanelViewAt(serverNow()))
+
+  useEffect(() => {
+    if (!visible) return
+    const tick = () => setView(resultsPanelViewAt(serverNow()))
+    tick()
+    const timer = setInterval(tick, 250)
+    return () => clearInterval(timer)
+  }, [visible])
+
+  return forceWinning ? 'winning' : view
+}
+
+function ResultsPanel({ visible, newResult }: { visible: boolean; newResult: boolean }) {
+  const view = useResultsPanelView(visible, newResult)
+
+  useEffect(() => startQuickMoneyResultTables(), [])
+
+  return (
+    <div className="qms-card qms-winning-numbers">
+      <WinningNumbersView active={view === 'winning'} popLatest={newResult} />
+      <FastPaymentsView active={view === 'paytable'} />
     </div>
   )
 }
@@ -254,11 +362,14 @@ function SplitStage({ children }: { children: ReactNode }) {
   )
 }
 
-const TRANSITION_STYLE = { ['--qms-transition-ms' as string]: `${QUICK_MONEY_SPLIT_TRANSITION_MS}ms` } as CSSProperties
+const TRANSITION_STYLE = {
+  ['--qms-transition-ms' as string]: `${QUICK_MONEY_SPLIT_TRANSITION_MS}ms`,
+  ['--qms-results-fade-ms' as string]: `${RESULTS_PANEL_FADE_MS}ms`,
+} as CSSProperties
 
 // Mitad Quick Money del lobby compartido (fases quickMoneySplit/quickMoneyResult, ver
 // config/quickMoneyLobbyCycle.ts): tres paneles -- Roulette (la rueda achicada de
-// LobbyBackgroundLayer + su countdown/resultados), Quick Money actual e histórico. DOM puro, fuera de
+// LobbyBackgroundLayer + su countdown/resultados), Quick Money actual y resultados/pagos. DOM puro, fuera de
 // Pixi. Oculto mientras hay una ronda de Roulette en pantalla (los videos de sorteo tienen alfa real
 // y dejarían ver esto por detrás).
 export function QuickMoneySplitOverlay() {
@@ -270,7 +381,7 @@ export function QuickMoneySplitOverlay() {
       <SplitStage>
         <RoulettePanelContent />
         <CenterPanel />
-        <WinningNumbersPanel highlightLatest={phase === 'quickMoneyResult'} />
+        <ResultsPanel visible={visible} newResult={phase === 'quickMoneyResult'} />
       </SplitStage>
     </div>
   )

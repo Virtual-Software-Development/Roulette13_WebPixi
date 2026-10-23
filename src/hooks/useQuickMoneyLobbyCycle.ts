@@ -7,6 +7,7 @@ import { useGameConfigStore } from '../store/useGameConfigStore'
 import { parseApiDateTime } from '../utils/time'
 import { serverNow } from '../time/serverClock'
 import { QUICK_MONEY_RESULT_OFFSET_MS, quickMoneyDrawAtMs } from '../sync/lobbyTimeline'
+import { onQuickMoneyDrawPublished } from '../sync/quickMoneyResultTables'
 import { prepareQuickMoneyDraw, takePreparedDraw } from '../video/quickMoneyDrawVideo'
 import { fetchQuickMoneyLobbyDraw } from '../api/quickMoneyLobbyDraw'
 import { fetchCurrentEvent } from '../api/terminalTicket'
@@ -58,6 +59,7 @@ export function publishPendingDraw(rouletteDrawAtMs: number = currentRouletteDra
   const { pendingDraw, setPendingDraw } = useLobbyModeStore.getState()
   if (!pendingDraw) return
   useQuickMoneyDrawsStore.getState().addDraw(pendingDraw)
+  onQuickMoneyDrawPublished(pendingDraw)
   setPendingDraw(null)
   useQuickMoneyRoundStore.setState({
     nextDrawTime: toIso(quickMoneyDrawAtMs(rouletteDrawAtMs) + roundIntervalMs()),
