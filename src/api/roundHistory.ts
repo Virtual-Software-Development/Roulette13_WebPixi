@@ -30,3 +30,26 @@ export async function fetchQuickMoneyRoundHistory(signal?: AbortSignal): Promise
   if (!res.ok) throw new Error(`lottery/last-results request failed: ${res.status}`)
   return res.json()
 }
+
+// GET /lottery/results/today y /lottery/results/previous-day (públicos) -- todos los sorteos de
+// Quick Money ya liquidados de hoy / de ayer (fecha del servidor, la del round_code), del más
+// reciente al más viejo. Misma forma que /lottery/last-results. Alimentan las dos mitades del panel
+// Winning Numbers del lobby (sync/quickMoneyResultTables.ts).
+export async function fetchQuickMoneyResultsOfDay(day: 'today' | 'previous-day'): Promise<QuickMoneyRoundHistoryEntry[]> {
+  const res = await fetch(`/api/lottery/results/${day}`)
+  if (!res.ok) throw new Error(`lottery/results/${day} request failed: ${res.status}`)
+  return res.json()
+}
+
+// GET /lottery/paytable (público) -- la tabla Fast Payments del lobby: nombre de la fila ("1st",
+// "Pale", "Pick 3"...) y lo que paga por unidad apostada, de las reglas de pago activas.
+export interface QuickMoneyPaytableRow {
+  nombre: string
+  pago: number
+}
+
+export async function fetchQuickMoneyPaytable(): Promise<QuickMoneyPaytableRow[]> {
+  const res = await fetch('/api/lottery/paytable')
+  if (!res.ok) throw new Error(`lottery/paytable request failed: ${res.status}`)
+  return res.json()
+}

@@ -8,7 +8,8 @@ import { seededDigits } from '../utils/seededRandom'
 // (useQuickMoneyLobbyCycle). Hasta el primer /gameInfo muestra el mock de quickMoneyLobbyMockData.ts.
 // Se reemplaza por datos reales cuando se conecte /api/lottery/last-results.
 //
-// QUICK_MONEY_MAX_DRAWS = filas de la tabla Winning Numbers (QuickMoneySplitOverlay, WINNING_NUMBERS_ROWS).
+// Lo leen Last Winning (QuickMoneySplitOverlay) y el resumen del sorteo (DrawSummaryHost); la tabla
+// Winning Numbers ya no sale de acá sino de useQuickMoneyResultTablesStore (sorteos de hoy y de ayer).
 export const QUICK_MONEY_MAX_DRAWS = 10
 
 const DEFAULT_STEP_MS = 5 * 60_000

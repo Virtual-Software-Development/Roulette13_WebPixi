@@ -429,7 +429,11 @@
     "lastWinning": "Last Winning",
     "winningNumbers": "Winning Numbers",
     "columnTime": "Time",
-    "columnGame": "Game"
+    "columnGame": "Game",
+    "yesterdayResults": "Yesterday's Results",
+    "noDrawsToday": "No draws yet today",
+    "noDrawsYesterday": "No draws yesterday",
+    "fastPayments": "Fast Payments"
   },
   "quickMoneyLobby": {
     "previousResult": "Previous Result",
