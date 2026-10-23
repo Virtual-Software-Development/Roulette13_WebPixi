@@ -6,7 +6,6 @@ import {
   ROULETTE_VIDEO_RESERVED_MS,
   VIDEO_WINDOW_END_OFFSET_MS,
   QUICK_MONEY_RESULT_OFFSET_MS,
-  quickMoneyDrawAtMs,
   rotorPhaseMs,
   rouletteDrawPhaseAt,
 } from '../sync/lobbyTimeline'
@@ -72,7 +71,7 @@ describe('seededDigits', () => {
 })
 
 describe('buildQuickMoneyDraws', () => {
-  const drawAt = quickMoneyDrawAtMs(T0)
+  const drawAt = T0 - 200_000
   const entries = [
     { numeroEvento: '0012', fecha: '2026-10-14', horaProgramada: new Date(drawAt).toISOString(), pick3: '123', pick4: '4567' },
     { numeroEvento: '0011', fecha: '2026-10-14', horaProgramada: new Date(drawAt - 300_000).toISOString(), pick3: '890', pick4: '0001' },

@@ -10,13 +10,11 @@ import { useQuickMoneyDrawsStore } from '../store/useQuickMoneyDrawsStore'
 import { serverNow } from '../time/serverClock'
 import { parseApiDateTime } from '../utils/time'
 import { toWheelPocket } from '../utils/rouletteColors'
-import { quickMoneyDrawAtMs, quickMoneySummaryWindow, rouletteSummaryWindow, type DrawSummaryWindow } from '../sync/lobbyTimeline'
+import { quickMoneyBlockExitMs, quickMoneySummaryWindow, rouletteSummaryWindow, type DrawSummaryWindow } from '../sync/lobbyTimeline'
+import { useQuickMoneyScheduleStore } from '../sync/quickMoneySchedule'
 import type { WinningTicketsDraw } from '../types/winningTickets'
 
 const CHECK_INTERVAL_MS = 250
-// Un sorteo de Quick Money de la tabla se toma como el de este round solo si su hora cae cerca del
-// slot esperado (la tabla arranca con sorteos de relleno de otras horas, ver useQuickMoneyDrawsStore).
-const QUICK_MONEY_SLOT_TOLERANCE_MS = 60_000
 
 interface Candidate {
   // Identifica el sorteo: una vez mostrado (o saltado) no se vuelve a abrir.
@@ -28,17 +26,16 @@ interface Candidate {
 // Qué sorteo toca resumir ahora mismo, o null. Lee los stores con getState() (sin suscribirse) desde
 // el polling, igual que useQuickMoneyLobbyCycle, para no re-renderizar en cada cambio de estado.
 function currentCandidate(now: number): Candidate | null {
-  const nextDrawStartTime = useGameConfigStore.getState().nextDrawStartTime
-  if (!nextDrawStartTime) return null
-  const nextDrawMs = parseApiDateTime(nextDrawStartTime).getTime()
   const phase = useLobbyModeStore.getState().phase
   const { active, lobbyInfoVisible } = useDrawCycleStore.getState()
   if (active) return null
 
   if (phase === 'roulette' && lobbyInfoVisible) {
+    const nextDrawStartTime = useGameConfigStore.getState().nextDrawStartTime
     const winner = useResultsStore.getState().currentWinner
-    if (!winner) return null
-    const window = rouletteSummaryWindow(winner.timestamp, nextDrawMs)
+    if (!nextDrawStartTime || !winner) return null
+    const nextDrawMs = parseApiDateTime(nextDrawStartTime).getTime()
+    const window = rouletteSummaryWindow(winner.timestamp, nextDrawMs, useQuickMoneyScheduleStore.getState().nextDrawAtMs)
     if (!window || now < window.startMs || now >= window.endMs) return null
     const pocket = toWheelPocket(winner.winningNumber)
     return {
@@ -52,8 +49,10 @@ function currentCandidate(now: number): Candidate | null {
     const draw = useQuickMoneyDrawsStore.getState().draws[0]
     if (!draw) return null
     const drawMs = new Date(draw.drawnAt).getTime()
-    if (Math.abs(drawMs - quickMoneyDrawAtMs(nextDrawMs)) > QUICK_MONEY_SLOT_TOLERANCE_MS) return null
-    const window = quickMoneySummaryWindow(drawMs, nextDrawMs)
+    // Solo el sorteo del bloque en curso (la tabla arranca con sorteos de otras horas, ver
+    // useQuickMoneyDrawsStore).
+    if (drawMs > now || quickMoneyBlockExitMs(drawMs) <= now) return null
+    const window = quickMoneySummaryWindow(drawMs)
     if (!window || now < window.startMs || now >= window.endMs) return null
     return {
       key: `quickMoney-${drawMs}-${draw.gameNumber}`,
