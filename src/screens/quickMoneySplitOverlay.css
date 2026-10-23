@@ -267,6 +267,10 @@
   line-height: 1;
   transition: text-shadow 300ms ease;
 }
+/* Con horas (H:MM:SS, horario nuevo con horas entre sorteos): más chico para entrar en el panel. */
+.qms-next-draw-countdown[data-long='true'] {
+  font-size: 92px;
+}
 /* <=10s: rojo + un mínimo de brillo extra. */
 .qms-next-draw-countdown[data-urgent='true'] {
   color: var(--qms-red);

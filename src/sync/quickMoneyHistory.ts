@@ -30,12 +30,22 @@ export function buildQuickMoneyDraws(entries: QuickMoneyRoundHistoryEntry[], now
   return draws
 }
 
+// Hora del último sorteo ya jugado según el arranque (publicado o no): en modo 'rotation' es como
+// una máquina que arranca durante el video o el resultado de ese sorteo sabe que le toca mostrarlo
+// (useLobbyRotationCycle). null = ninguno o todavía sin leer.
+let latestSettledDrawAtMs: number | null = null
+
+export function latestSettledQuickMoneyDrawAtMs(): number | null {
+  return latestSettledDrawAtMs
+}
+
 // Al arrancar el lobby.
 export async function seedQuickMoneyDraws(nowMs: number): Promise<void> {
   const entries = await fetchQuickMoneyRoundHistory().catch((err) => {
     console.error('[quickMoneyHistory] no se pudo leer el historial de Quick Money', err)
     return []
   })
+  if (entries[0]) latestSettledDrawAtMs = new Date(entries[0].horaProgramada).getTime()
   const draws = buildQuickMoneyDraws(entries, nowMs)
   if (draws.length > 0) useQuickMoneyDrawsStore.getState().setDraws(draws)
 }

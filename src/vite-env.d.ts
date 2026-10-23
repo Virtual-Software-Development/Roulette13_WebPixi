@@ -11,6 +11,8 @@ declare const __LAN_PREVIEW__: boolean
 interface ImportMetaEnv {
   readonly VITE_API_KEY: string
   readonly VITE_MQTT_URL?: string
+  // 'rotation' = lobby con rotación de vistas y antesalas (ver config/lobbyMode.ts).
+  readonly VITE_LOBBY_MODE?: string
 }
 
 interface ImportMeta {

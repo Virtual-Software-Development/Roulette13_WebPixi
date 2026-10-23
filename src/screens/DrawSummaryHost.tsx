@@ -18,6 +18,8 @@ import {
   type DrawSummaryWindow,
 } from '../sync/lobbyTimeline'
 import { useQuickMoneyScheduleStore } from '../sync/quickMoneySchedule'
+import { rotationQuickMoneySummaryWindow, rotationRouletteSummaryWindow } from '../sync/lobbyRotation'
+import { LOBBY_MODE } from '../config/lobbyMode'
 import type { WinningTicketsDraw } from '../types/winningTickets'
 
 const CHECK_INTERVAL_MS = 250
@@ -51,8 +53,13 @@ function currentCandidate(now: number): Candidate | null {
     const winner = useResultsStore.getState().currentWinner
     if (!nextDrawStartTime || !winner) return null
     const nextDrawMs = parseApiDateTime(nextDrawStartTime).getTime()
-    if (roundIntervalMs > 0 && nextDrawMs - winner.timestamp > roundIntervalMs + ROULETTE_SLOT_TOLERANCE_MS) return null
-    const window = rouletteSummaryWindow(winner.timestamp, nextDrawMs, useQuickMoneyScheduleStore.getState().nextDrawAtMs)
+    // En modo 'rotation' la ventana cuelga del propio sorteo (sync/lobbyRotation.ts), así que no
+    // hace falta mirar si es el del round.
+    if (LOBBY_MODE === 'round' && roundIntervalMs > 0 && nextDrawMs - winner.timestamp > roundIntervalMs + ROULETTE_SLOT_TOLERANCE_MS) return null
+    const window =
+      LOBBY_MODE === 'rotation'
+        ? rotationRouletteSummaryWindow(winner.timestamp)
+        : rouletteSummaryWindow(winner.timestamp, nextDrawMs, useQuickMoneyScheduleStore.getState().nextDrawAtMs)
     if (!inPrefetchOrWindow(now, window)) return null
     const pocket = toWheelPocket(winner.winningNumber)
     return {
@@ -70,9 +77,9 @@ function currentCandidate(now: number): Candidate | null {
     if (!draw) return null
     const drawMs = new Date(draw.drawnAt).getTime()
     // Solo el sorteo del bloque en curso (la tabla arranca con sorteos de otras horas, ver
-    // useQuickMoneyDrawsStore).
-    if (drawMs > now || quickMoneyBlockExitMs(drawMs) <= now) return null
-    const window = quickMoneySummaryWindow(drawMs)
+    // useQuickMoneyDrawsStore). En modo 'rotation' lo acota su propia ventana.
+    if (LOBBY_MODE === 'round' && (drawMs > now || quickMoneyBlockExitMs(drawMs) <= now)) return null
+    const window = LOBBY_MODE === 'rotation' ? rotationQuickMoneySummaryWindow(drawMs) : quickMoneySummaryWindow(drawMs)
     if (!inPrefetchOrWindow(now, window)) return null
     return {
       key: `quickMoney-${drawMs}-${draw.gameNumber}`,

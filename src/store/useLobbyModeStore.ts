@@ -4,8 +4,9 @@ import { useDrawCycleStore } from './useDrawCycleStore'
 
 // Fase del lobby principal compartido Roulette + Quick Money -- ver config/quickMoneyLobbyCycle.ts
 // para la secuencia completa y los tiempos. La escribe únicamente useQuickMoneyLobbyCycle (y
-// QuickMoneyPiecesView al terminar su video).
-export type LobbyPhase = 'roulette' | 'quickMoneySplit' | 'quickMoneyVideo' | 'quickMoneyResult'
+// QuickMoneyPiecesView al terminar su video). En modo 'rotation' (config/lobbyMode.ts) la escribe
+// useLobbyRotationCycle, que suma 'jackpot' (vista provisoria, JackpotOverlay).
+export type LobbyPhase = 'roulette' | 'quickMoneySplit' | 'quickMoneyVideo' | 'quickMoneyResult' | 'jackpot'
 
 interface LobbyModeState {
   phase: LobbyPhase
@@ -19,6 +20,10 @@ interface LobbyModeState {
   // arranca (con el panel de video no disponible) a la misma hora que en las demás máquinas.
   pendingDrawAtMs: number | null
   setPendingDrawAtMs: (pendingDrawAtMs: number | null) => void
+  // Solo en modo 'rotation': el juego que tiene fija la vista (su antesala o lo que sigue a su
+  // sorteo, ver sync/lobbyRotation.ts) -- sus countdowns cuentan hasta el cierre de apuestas.
+  forced: 'roulette' | 'quickMoney' | null
+  setForced: (forced: 'roulette' | 'quickMoney' | null) => void
 }
 
 export const useLobbyModeStore = create<LobbyModeState>((set) => ({
@@ -28,10 +33,12 @@ export const useLobbyModeStore = create<LobbyModeState>((set) => ({
   setPendingDraw: (pendingDraw) => set({ pendingDraw }),
   pendingDrawAtMs: null,
   setPendingDrawAtMs: (pendingDrawAtMs) => set({ pendingDrawAtMs }),
+  forced: null,
+  setForced: (forced) => set({ forced }),
 }))
 
 export function isQuickMoneySplitPhase(phase: LobbyPhase): boolean {
-  return phase !== 'roulette'
+  return phase !== 'roulette' && phase !== 'jackpot'
 }
 
 // ¿Se ve el split de Quick Money? Fuente única para QuickMoneySplitOverlay (paneles y texto, encima

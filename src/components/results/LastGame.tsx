@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next'
 import { useResultsStore } from '../../store/useResultsStore'
 import { useGameConfigStore } from '../../store/useGameConfigStore'
 import { useCountdown } from '../../hooks/useCountdown'
+import { useLobbyModeStore } from '../../store/useLobbyModeStore'
+import { ROULETTE_ANTEROOM_MS } from '../../config/lobbyMode'
 import { DESIGN_WIDTH, TABLE_WIDTH_RATIO } from '../../layout/layout.constants'
 import { drawRoundedPanel } from '../../utils/roundedPanel'
 import { RouletteCountdownIndicator } from './RouletteCountdownIndicator'
@@ -61,21 +63,30 @@ export function LastGame() {
   // Último resultado viejo (conexión caída, ver useResultsStore.stale): mismo caso que sin resultado.
   const stale = useResultsStore((state) => state.stale)
   const nextDrawStartTime = useGameConfigStore((state) => state.nextDrawStartTime)
-  const countdown = useCountdown(nextDrawStartTime)
+  const drawCountdown = useCountdown(nextDrawStartTime)
   const roundIntervalMs = useGameConfigStore((state) => state.roundIntervalMs)
+  // Antesala (lobby en modo 'rotation', vista fija por Roulette antes del giro): cuenta hasta el
+  // cierre de apuestas; cerradas, hasta el giro.
+  const betsCloseTime = useGameConfigStore((state) => state.betsCloseTime)
+  const closeCountdown = useCountdown(betsCloseTime)
+  const forced = useLobbyModeStore((state) => state.forced === 'roulette')
+  const anteroom = forced && betsCloseTime !== '' && drawCountdown.remainingSeconds * 1000 <= ROULETTE_ANTEROOM_MS
+  const betsOpen = anteroom && closeCountdown.remainingSeconds > 0
+  const countdown = betsOpen ? closeCountdown : drawCountdown
+  const countdownLabel = betsOpen ? t('lastGame.betsCloseIn') : anteroom ? t('lastGame.betsClosedSpinIn') : t('lastGame.nextRoundIn')
 
   // El indicador se va "llenando" (progress = 1 - remaining/total) a medida que se acerca la próxima
   // ronda. El total es la duración de ronda del backend (/gameInfo roundInterval), igual en todas las
   // máquinas -- antes se infería como el mayor remainingSeconds visto desde que se montó, así que una
   // máquina que arrancaba a mitad de ronda mostraba otro llenado hasta la ronda siguiente. Mientras no
   // llega /gameInfo, el mismo criterio de antes.
-  const cycleTotalRef = useRef(countdown.remainingSeconds || 1)
-  if (countdown.remainingSeconds > cycleTotalRef.current) {
-    cycleTotalRef.current = countdown.remainingSeconds
+  const cycleTotalRef = useRef(drawCountdown.remainingSeconds || 1)
+  if (drawCountdown.remainingSeconds > cycleTotalRef.current) {
+    cycleTotalRef.current = drawCountdown.remainingSeconds
   }
   const cycleTotalSeconds = roundIntervalMs > 0 ? roundIntervalMs / 1000 : cycleTotalRef.current
   const countdownProgress =
-    cycleTotalSeconds > 0 ? Math.min(1, Math.max(0, 1 - countdown.remainingSeconds / cycleTotalSeconds)) : 0
+    cycleTotalSeconds > 0 ? Math.min(1, Math.max(0, 1 - drawCountdown.remainingSeconds / cycleTotalSeconds)) : 0
 
   const tableWidth = DESIGN_WIDTH * TABLE_WIDTH_RATIO
   const tableX = (DESIGN_WIDTH - tableWidth) / 2
@@ -118,7 +129,7 @@ export function LastGame() {
       <pixiText text={t('lastGame.currentGame')} style={LABEL_STYLE} x={PANEL_PADDING} y={PANEL_PADDING} />
       <pixiText text={currentWinner.drawNumber} style={GAME_NUMBER_STYLE} x={PANEL_PADDING} y={PANEL_PADDING + 24} />
 
-      <pixiText text={t('lastGame.nextRoundIn')} style={LABEL_STYLE} x={PANEL_PADDING} y={132} />
+      <pixiText text={countdownLabel} style={LABEL_STYLE} x={PANEL_PADDING} y={132} />
       <pixiText text={countdown.display} style={countdownStyle} x={PANEL_PADDING} y={156} />
 
       <pixiContainer x={tableWidth - PANEL_PADDING - INDICATOR_SIZE} y={10}>
