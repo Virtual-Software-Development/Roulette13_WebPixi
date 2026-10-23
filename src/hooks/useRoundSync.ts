@@ -8,6 +8,7 @@ import { parseApiDateTime } from '../utils/time'
 import { RESULT_HOLD_MS } from '../layout/layout.constants'
 import { serverNow, syncServerClock } from '../time/serverClock'
 import { onConnectionRestored } from './useConnectionIssue'
+import { ROULETTE_EVENT_TOPIC, onMqttMessage } from '../mqtt/topics'
 
 // Margen tras nextDrawStartTime antes de pedir /api/drawResult -- le da tiempo al backend a
 // confirmar el número ganador (mismo tipo de margen que RESULT_LEAD_MS en App.tsx, pero medido
@@ -25,6 +26,11 @@ const NEXT_ROUND_DELAY_MS = 1500
 // cero. Un cambio de ronda normal tarda ~6s después del sorteo, así que 20s no interfiere.
 const WATCHDOG_INTERVAL_MS = 5000
 const STUCK_AFTER_DRAW_MS = 20_000
+// Rounds are hours apart: between draws the next one can change (an admin changed the schedule) and
+// long timers can drift (the PC suspended). Re-read /gameInfo when the backend announces a roulette
+// round at another time, and every RESYNC_MS -- never during a round or right before one.
+const RESYNC_MS = 5 * 60_000
+const IMMINENT_MS = 60_000
 
 // Mantiene sincronizados nextDrawStartTime/drawNumber (useGameConfigStore), el historial de
 // resultados (useResultsStore) y el estado "hay una ronda en curso" (useDrawCycleStore.active) --
@@ -148,8 +154,23 @@ export function useRoundSync() {
       })
     }
 
+    // The next round, re-read while nothing is happening (see RESYNC_MS).
+    function resyncIfIdle() {
+      if (cancelled || trackedDrawMs === null || useDrawCycleStore.getState().active) return
+      if (trackedDrawMs - serverNow() < IMMINENT_MS) return
+      clearRoundTimers()
+      scheduleGameInfoPoll(false)
+    }
+
     scheduleGameInfoPoll(true)
     const watchdog = setInterval(resyncIfStuck, WATCHDOG_INTERVAL_MS)
+    const resync = setInterval(resyncIfIdle, RESYNC_MS)
+    const unsubscribe = onMqttMessage(ROULETTE_EVENT_TOPIC, (message) => {
+      const m = message as { estado?: string; horaProgramada?: string } | null
+      if (!m?.horaProgramada || (m.estado !== 'sugerido' && m.estado !== 'programado')) return
+      if (trackedDrawMs !== null && new Date(m.horaProgramada).getTime() === trackedDrawMs) return
+      resyncIfIdle()
+    })
     document.addEventListener('visibilitychange', handleVisibilityChange)
     const stopRestored = onConnectionRestored('terminal', resyncAfterReconnect)
 
@@ -157,6 +178,8 @@ export function useRoundSync() {
       cancelled = true
       stopRestored()
       clearInterval(watchdog)
+      clearInterval(resync)
+      unsubscribe()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       clearRoundTimers()
       // Este hook es el único que pone `active` en true en esta pantalla (no hay video/App.tsx

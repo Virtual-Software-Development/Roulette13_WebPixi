@@ -1,10 +1,9 @@
 import { errorMessage } from './terminalTicket'
 
 // GET /lottery/lobby-draw (quick-money-backend, público) -- el sorteo REAL de Quick Money que el
-// lobby muestra a una hora de sorteo. El backend agenda cada round de Quick Money justo en el slot del
-// lobby (QUICK_MONEY_DRAW_AT_REMAINING_MS antes del sorteo de Roulette), así que todas las máquinas
-// piden el mismo round y muestran el mismo resultado -- también si un admin lo cambió en Next
-// Results. Los números llegan recién cuando el sorteo se ejecutó (~2s antes de su hora).
+// lobby muestra a una hora de sorteo (la de su round, ver sync/quickMoneySchedule.ts), así que todas
+// las máquinas piden el mismo round y muestran el mismo resultado -- también si un admin lo cambió en
+// Next Results. Los números llegan recién cuando el sorteo se ejecutó (~2s antes de su hora).
 export interface QuickMoneyLobbyDrawResponse {
   id: number
   numeroEvento: string

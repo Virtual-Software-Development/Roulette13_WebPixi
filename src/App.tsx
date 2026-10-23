@@ -51,7 +51,7 @@ import { seedQuickMoneyDraws } from './sync/quickMoneyHistory'
 import { SyncOverlay } from './screens/SyncOverlay'
 import type { GameInfoResponse } from './types/gameInfo'
 import type { BetsSummaryResponse } from './types/betsSummary'
-import { ROULETTE_BETS_TOPIC, onMqttMessage } from './mqtt/topics'
+import { ROULETTE_BETS_TOPIC, ROULETTE_EVENT_TOPIC, onMqttMessage } from './mqtt/topics'
 import { IS_LAN_VIEWER } from './lanPreview'
 
 // Cuánto antes de la hora del sorteo se pide /drawResult y se precarga el clip. El backend ejecuta el
@@ -110,6 +110,9 @@ function App() {
   videoErrorRoundRef.current = videoErrorRound
   // drawStartMs de la última ronda que ya agendó el sorteo siguiente (handleRoundEnded).
   const roundEndedForRef = useRef<number | null>(null)
+  // Cada agenda nueva (reschedule) deja sin efecto los timers de la anterior: así reagendar con un
+  // sorteo todavía pendiente (otro horario, re-sync) no dispara un sorteo fantasma a la hora vieja.
+  const scheduleGenRef = useRef(0)
 
   // Agenda el próximo sorteo: pide /gameInfo, y programa dos timers según
   // nextDraw.startTime — uno para pedir /drawResult 500ms antes (y precargar
@@ -260,6 +263,12 @@ function App() {
     }
   }, [])
 
+  // Vuelve a agendar el próximo sorteo desde /gameInfo, cancelando la agenda anterior.
+  const reschedule = useCallback(() => {
+    const gen = ++scheduleGenRef.current
+    return scheduleDraw(() => gen !== scheduleGenRef.current, false)
+  }, [scheduleDraw])
+
   // Arranque: primero el reloj del servidor (todo lo que sigue se agenda contra él), después el
   // primer /gameInfo. Con él: si en las demás máquinas hay un sorteo en pantalla, esta se suma con
   // "Sincronizando…" (joinDrawInProgress), y se cargan las mismas apuestas que muestran las demás.
@@ -289,7 +298,8 @@ function App() {
       .then(() => {
         if (cancelled) return
         startServerClockResync()
-        cleanupDraw = scheduleDraw(() => cancelled, true, (data) => {
+        const gen = ++scheduleGenRef.current
+        cleanupDraw = scheduleDraw(() => cancelled || gen !== scheduleGenRef.current, true, (data) => {
           applyRoughServerTime(data.serverTimeMs)
 
           const lastDraw = data.lastDraw ?? (data.history[0] && { ...data.history[0], startTime: data.history[0].time })
@@ -448,11 +458,11 @@ function App() {
       const msPastStart = serverNow() - parseApiDateTime(nextDrawStartTime).getTime()
       if (msPastStart > STUCK_GRACE_MS) {
         console.warn('El sorteo no arrancó a tiempo, reagendando...', { nextDrawStartTime })
-        scheduleDraw(() => false, false)
+        reschedule()
       }
     }, CHECK_INTERVAL_MS)
     return () => clearInterval(interval)
-  }, [active, videoMounted, videoErrorRound, scheduleDraw])
+  }, [active, videoMounted, videoErrorRound, reschedule])
 
   // Se llama apenas el video termina de reproducirse (bien antes del
   // freeze-hold/slide-down) — agenda el próximo sorteo ahí, no cuando vuelve
@@ -461,8 +471,8 @@ function App() {
   // animación en vez de mostrar el dato viejo un instante y luego saltar.
   const handleRoundEnded = useCallback(() => {
     roundEndedForRef.current = useDrawCycleStore.getState().drawStartMs
-    scheduleDraw(() => false, false)
-  }, [scheduleDraw])
+    reschedule()
+  }, [reschedule])
 
   // Failsafe de ronda: la secuencia del lobby sigue la línea de tiempo del servidor, pase lo que pase
   // con el resultado o el video. El camino normal depende de eventos -- el 'ended' del video agenda
@@ -508,11 +518,43 @@ function App() {
       })
       if (roundEndedForRef.current !== roundDrawStartMs) {
         roundEndedForRef.current = roundDrawStartMs
-        scheduleDraw(() => false, false)
+        reschedule()
       }
     }, Math.max(0, failsafeAt - serverNow()))
     return () => clearTimeout(timer)
-  }, [roundDrawStartMs, scheduleDraw])
+  }, [roundDrawStartMs, reschedule])
+
+  // Los sorteos de Roulette están horas separados (página Programming del Admin): entre uno y otro el
+  // próximo sorteo puede cambiar (un admin cambió el horario) y los timers de varias horas pueden
+  // correrse (la PC suspendida). Se reagenda desde /gameInfo cuando el backend anuncia por MQTT una
+  // ronda de Roulette con otra hora que la agendada, y cada RESYNC_MS como red de seguridad -- nunca
+  // durante un sorteo ni justo antes de uno.
+  useEffect(() => {
+    const RESYNC_MS = 5 * 60_000
+    const IMMINENT_MS = 60_000
+    const idle = () => {
+      const cycle = useDrawCycleStore.getState()
+      if (cycle.active || !cycle.lobbyInfoVisible || videoMountedRef.current || videoErrorRoundRef.current !== null) return false
+      const next = useGameConfigStore.getState().nextDrawStartTime
+      return !next || parseApiDateTime(next).getTime() - serverNow() > IMMINENT_MS
+    }
+    const unsubscribe = onMqttMessage(ROULETTE_EVENT_TOPIC, (message) => {
+      const m = message as { estado?: string; horaProgramada?: string } | null
+      if (!m?.horaProgramada || (m.estado !== 'sugerido' && m.estado !== 'programado')) return
+      const next = useGameConfigStore.getState().nextDrawStartTime
+      if (next && parseApiDateTime(next).getTime() === new Date(m.horaProgramada).getTime()) return
+      if (!idle()) return
+      console.info('[round] the next roulette round changed -- rescheduling', { from: next, to: m.horaProgramada })
+      reschedule()
+    })
+    const interval = setInterval(() => {
+      if (idle()) reschedule()
+    }, RESYNC_MS)
+    return () => {
+      unsubscribe()
+      clearInterval(interval)
+    }
+  }, [reschedule])
 
   // Fin de una ronda mostrada con VideoErrorRound -- el panel ya salió y el lobby volvió.
   const handleVideoErrorRoundFinished = useCallback(() => {

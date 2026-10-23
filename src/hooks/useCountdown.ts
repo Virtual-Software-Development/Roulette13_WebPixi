@@ -14,7 +14,8 @@ function computeRemainingMs(targetIso: string, now: number): number {
   return Math.max(0, parseApiDateTime(targetIso).getTime() - now)
 }
 
-// MM:SS; desde una hora, H:MM:SS (con el horario nuevo hay horas entre sorteos).
+// MM:SS, or H:MM:SS from one hour on (rounds are scheduled hours apart: 2 hours reads 2:00:00,
+// not 120:00).
 export function formatCountdown(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)

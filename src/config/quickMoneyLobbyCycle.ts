@@ -1,33 +1,22 @@
-// Ciclo del lobby principal (App.tsx, http://localhost:5173/) -- un solo lobby para Roulette y Quick
-// Money, anclado al reloj de Roulette (useGameConfigStore.nextDrawStartTime, que viene del backend).
-// Con el round de Roulette en 5:00 (game_schedule_config.intervalo_segundos = 300) hay un sorteo de
-// Quick Money por round, también cada 5:00, en MEDIO del round -- separado de los dos sorteos de
-// Roulette para que cada juego tenga su momento (pedido explícito):
+// Ciclo del lobby principal (App.tsx) -- un solo lobby para Roulette y Quick Money. Cada juego se
+// sortea a sus propias horas del día (página Programming del Admin; el backend crea las rondas con
+// días de anticipación): la ruleta cada dos horas, Quick Money a las 12, 14, 18, 20 y 22. Nunca se
+// superponen -- el backend salta una hora de ruleta que tocaría un sorteo de Quick Money (desde su
+// cierre de apuestas hasta 3 minutos después del sorteo). El lobby muestra Roulette a pantalla
+// completa y, alrededor de cada sorteo REAL de Quick Money (su hora sale del backend, ver
+// sync/quickMoneySchedule.ts), el bloque de Quick Money:
 //
-//   0:00  sorteo de Roulette (video + hold + panel Winner)            ~25s
-//   0:25  Roulette a pantalla completa (resultados, hot/cold)         ~45s
-//   1:10  bloque de Quick Money: quickMoneySplit (countdown de 30s)
-//   1:40  sorteo de Quick Money -> quickMoneyVideo -> quickMoneyResult
-//   3:15  Roulette a pantalla completa (hot/cold, spin stats)          rouletteFocusMs
-//   5:00  sorteo de Roulette ...
+//   QD - 0:30  entra el bloque: quickMoneySplit (countdown de 30s)
+//   QD         sorteo de Quick Money -> quickMoneyVideo (72.7s) -> quickMoneyResult
+//   QD + 1:33.8  sale el bloque: Roulette a pantalla completa otra vez
 //
-// Todo se mide como "tiempo que falta para el sorteo de Roulette", así el sorteo de Quick Money
-// nunca puede coincidir con el de Roulette. Si el round es más corto que lo previsto el bloque se
-// achica: si no alcanza para el video se muestra el resultado directo, y si el sorteo de Quick Money
-// ya pasó (p. ej. al recargar la página a mitad del bloque) entra directo al resultado del último
+// Si el bloque arranca tarde (p. ej. al recargar la página a mitad de él) se acorta: si no alcanza
+// para el video se muestra el resultado directo, y si el sorteo ya pasó entra al resultado del último
 // sorteo, sin generar uno nuevo.
 
-// Sorteo de Quick Money cuando faltan esto para el sorteo de Roulette (3:20 -> 1:40 de un round de
-// 5:00).
-export const QUICK_MONEY_DRAW_AT_REMAINING_MS = 200_000
 // Countdown visible del sorteo de Quick Money desde que entra el split (pedido explícito: 30s, antes
-// 10s). Sumado a QUICK_MONEY_DRAW_AT_REMAINING_MS da cuándo entra el bloque: 3:50 antes del sorteo
-// de Roulette -- ~45s después de que termina su panel Winner, así nunca se pisan.
+// 10s): el bloque entra esto antes del sorteo.
 export const QUICK_MONEY_DRAW_LEAD_MS = 30_000
-// Roulette a pantalla completa al final de cada round. Con 105s los paneles propios de Roulette
-// salen completos (hot/cold mientras quedan >70s, spin stats de 70s al sorteo, ver
-// useHotColdWindow/useSpinStatsCycle).
-export const ROULETTE_FOCUS_MS = 105_000
 // Tiempo que debe quedar en el bloque para arrancar el video (fade + clip de ~72s + hold). Si queda
 // menos, se salta el video y se publica el resultado directo.
 export const QUICK_MONEY_VIDEO_BUDGET_MS = 80_000
@@ -51,21 +40,14 @@ export const QUICK_MONEY_NUMBERS_WAIT_MS = 8_000
 export const QUICK_MONEY_VIDEO_LATE_JOIN_MS = 3_000
 
 // Duración de la transición Roulette completo <-> split (rueda achicándose a la izquierda + paneles
-// de Quick Money entrando) -- compartida por el CSS (vía variable inline) y por el cálculo del final
-// del bloque: la salida arranca esto antes de ROULETTE_FOCUS_MS, así al llegar ahí ya se ve solo
-// Roulette.
+// de Quick Money entrando) -- compartida por el CSS (vía variable inline).
 export const QUICK_MONEY_SPLIT_TRANSITION_MS = 1200
-// El bloque de Quick Money entra cuando al round de Roulette le queda esto (countdown de
-// QUICK_MONEY_DRAW_LEAD_MS) y sale cuando le queda esto otro -- la transición de salida arranca ahí,
-// así a ROULETTE_FOCUS_MS la pantalla ya es 100% Roulette. Los usan useQuickMoneyLobbyCycle y las
+// El bloque sale (arranca la transición de salida) esto después del sorteo de Quick Money: el video
+// (72.7s), su fade y ~20s del resultado y el resumen del sorteo -- el mismo bloque que cuando Quick
+// Money se sorteaba a mitad de cada round de Roulette. Lo usan useQuickMoneyLobbyCycle y las
 // ventanas del resumen del sorteo (sync/lobbyTimeline.ts).
-export const QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS = QUICK_MONEY_DRAW_AT_REMAINING_MS + QUICK_MONEY_DRAW_LEAD_MS
-export const QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS = ROULETTE_FOCUS_MS + QUICK_MONEY_SPLIT_TRANSITION_MS
+export const QUICK_MONEY_BLOCK_EXIT_AFTER_DRAW_MS = 93_800
 export const QUICK_MONEY_VIDEO_FADE_MS = 400
-
-// Duración de un round de Roulette si todavía no llegó /gameInfo (roundInterval) -- solo para
-// estimar el sorteo de Quick Money del round SIGUIENTE (pedido del video y countdown "Next Draw").
-export const FALLBACK_ROULETTE_ROUND_MS = 300_000
 
 // Duración del video de Quick Money -- siempre la misma: las piezas de local-media/QuickMoney suman
 // 1743 frames a 24 fps = 72.62s (ver video/quickMoneyPieces/plan.ts). Toda la secuencia del video se agenda contra esto y

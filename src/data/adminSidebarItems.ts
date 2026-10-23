@@ -57,4 +57,10 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
     icon: buildMediaUrl('Website_svg_icons/17_gear_white.svg'),
     view: 'admin-settings',
   },
+  {
+    id: 'programming',
+    labelKey: 'admin.nav.programming',
+    icon: buildMediaUrl('Website_svg_icons/30_clock_white.svg'),
+    view: 'admin-programming',
+  },
 ]

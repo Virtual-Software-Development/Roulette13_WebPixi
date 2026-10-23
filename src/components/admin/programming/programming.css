@@ -1,0 +1,284 @@
+/* Programming page -- on top of adminSettings.css (cards, toggles, buttons, notices). Only what is
+   its own: the two game cards side by side, the time chips, the duration inputs and the rounds
+   table. */
+.admin-programming-games {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 20px;
+}
+
+.admin-programming-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-programming-label {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--admin-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.admin-programming-times {
+  margin-top: 18px;
+}
+
+.admin-programming-time-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-programming-time-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 6px 0 12px;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: rgba(9, 17, 26, 0.7);
+  color: var(--admin-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-programming-time-chip button {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-programming-time-chip button:hover,
+.admin-programming-time-chip button:focus-visible {
+  background: rgba(243, 38, 53, 0.18);
+  color: #fff;
+}
+
+.admin-programming-time-empty {
+  color: var(--admin-text-secondary);
+  font-size: 13px;
+}
+
+.admin-programming-time-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.admin-programming-time-add input[type='time'],
+.admin-programming-duration-inputs input {
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 1px solid var(--admin-border);
+  background: rgba(3, 10, 17, 0.9);
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color-scheme: dark;
+}
+
+.admin-programming-time-add input:focus-visible,
+.admin-programming-duration-inputs input:focus-visible {
+  outline: 2px solid rgba(243, 38, 53, 0.6);
+  outline-offset: 1px;
+}
+
+.admin-programming-quick-fill {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--admin-text-secondary);
+  font-size: 12px;
+}
+
+.admin-programming-quick-fill-btn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: transparent;
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-programming-quick-fill-btn:hover,
+.admin-programming-quick-fill-btn:focus-visible {
+  border-color: rgba(120, 155, 185, 0.5);
+}
+
+.admin-programming-cutoffs {
+  margin-top: 20px;
+}
+
+.admin-programming-duration-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  color: var(--admin-text-secondary);
+  font-size: 13px;
+}
+
+.admin-programming-duration-inputs input {
+  width: 64px;
+  box-sizing: border-box;
+}
+
+.admin-programming-duration-suffix {
+  white-space: nowrap;
+}
+
+.admin-programming-horizon {
+  margin-top: 14px;
+}
+
+/* --- Rounds ------------------------------------------------------------------------------- */
+.admin-programming-rounds .admin-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-programming-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-programming-summary li,
+.admin-programming-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+[data-action='create'].admin-programming-status,
+.admin-programming-summary [data-action='create'] {
+  border-color: color-mix(in srgb, var(--admin-green) 50%, transparent);
+  color: var(--admin-green);
+}
+
+[data-action='update'].admin-programming-status,
+.admin-programming-summary [data-action='update'] {
+  border-color: color-mix(in srgb, var(--admin-blue) 55%, transparent);
+  color: #6fb0ff;
+}
+
+[data-action='cancel'].admin-programming-status,
+.admin-programming-summary [data-action='cancel'] {
+  border-color: color-mix(in srgb, var(--admin-amber) 55%, transparent);
+  color: var(--admin-amber);
+}
+
+[data-action='blocked'].admin-programming-status,
+.admin-programming-summary [data-action='blocked'] {
+  border-color: color-mix(in srgb, var(--admin-red) 60%, transparent);
+  color: #ff6b75;
+}
+
+.admin-programming-day {
+  margin-top: 18px;
+}
+
+.admin-programming-day-title {
+  margin: 0 0 8px;
+  color: var(--admin-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.admin-programming-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-programming-table th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.admin-programming-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(100, 140, 170, 0.1);
+  color: var(--admin-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-programming-table tr[data-action='skip'] td,
+.admin-programming-table tr[data-action='cancel'] td {
+  color: var(--admin-text-secondary);
+}
+
+.admin-programming-table tr[data-action='cancel'] .admin-programming-time-cell {
+  text-decoration: line-through;
+}
+
+.admin-programming-time-cell {
+  font-weight: 700;
+}
+
+.admin-programming-game {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(243, 38, 53, 0.14);
+  color: #ff8a92;
+}
+
+.admin-programming-game[data-game='lottery'] {
+  background: rgba(37, 136, 255, 0.14);
+  color: #7cb7ff;
+}
+
+.admin-programming-show-all {
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .admin-programming-games {
+    grid-template-columns: 1fr;
+  }
+}

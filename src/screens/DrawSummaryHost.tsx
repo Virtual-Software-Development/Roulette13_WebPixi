@@ -12,22 +12,19 @@ import { parseApiDateTime } from '../utils/time'
 import { toWheelPocket } from '../utils/rouletteColors'
 import {
   DRAW_SUMMARY_PREFETCH_MS,
-  quickMoneyDrawAtMs,
+  quickMoneyBlockExitMs,
   quickMoneySummaryWindow,
   rouletteSummaryWindow,
   type DrawSummaryWindow,
 } from '../sync/lobbyTimeline'
+import { useQuickMoneyScheduleStore } from '../sync/quickMoneySchedule'
 import { rotationQuickMoneySummaryWindow, rotationRouletteSummaryWindow } from '../sync/lobbyRotation'
 import { LOBBY_MODE } from '../config/lobbyMode'
-import { FALLBACK_ROULETTE_ROUND_MS } from '../config/quickMoneyLobbyCycle'
 import type { WinningTicketsDraw } from '../types/winningTickets'
 
 const CHECK_INTERVAL_MS = 250
-// Un sorteo de Quick Money de la tabla se toma como el de este round solo si su hora cae cerca del
-// slot esperado (la tabla arranca con sorteos de relleno de otras horas, ver useQuickMoneyDrawsStore).
-const QUICK_MONEY_SLOT_TOLERANCE_MS = 60_000
-// Lo mismo para Roulette: el último ganador se resume solo si es el sorteo del round que termina con
-// nextDrawStartTime. Mientras corre el video del sorteo siguiente (/gameInfo ya anuncia el de
+// El último ganador de Roulette se resume solo si es el sorteo del round que termina con
+// nextDrawStartTime (roundInterval: el tiempo entre ese sorteo y el siguiente, ver /gameInfo). Mientras corre el video del sorteo siguiente (/gameInfo ya anuncia el de
 // después, y currentWinner sigue siendo el anterior hasta que termina el clip) quedan dos rounds de
 // distancia y no se toma.
 const ROULETTE_SLOT_TOLERANCE_MS = 60_000
@@ -47,22 +44,22 @@ function inPrefetchOrWindow(now: number, window: DrawSummaryWindow | null): wind
 // abrir), o null. Lee los stores con getState() (sin suscribirse) desde el polling, igual que
 // useQuickMoneyLobbyCycle, para no re-renderizar en cada cambio de estado.
 function currentCandidate(now: number): Candidate | null {
-  const { nextDrawStartTime, roundIntervalMs } = useGameConfigStore.getState()
-  if (!nextDrawStartTime) return null
-  const nextDrawMs = parseApiDateTime(nextDrawStartTime).getTime()
   const phase = useLobbyModeStore.getState().phase
 
   // Sin mirar `active`: la ventana arranca al terminar el hold del panel Winner y se precarga
   // durante el hold, con el sorteo todavía activo (ver rouletteSummaryWindow).
   if (phase === 'roulette') {
+    const { nextDrawStartTime, roundIntervalMs } = useGameConfigStore.getState()
     const winner = useResultsStore.getState().currentWinner
-    if (!winner) return null
-    const roundMs = roundIntervalMs > 0 ? roundIntervalMs : FALLBACK_ROULETTE_ROUND_MS
+    if (!nextDrawStartTime || !winner) return null
+    const nextDrawMs = parseApiDateTime(nextDrawStartTime).getTime()
     // En modo 'rotation' la ventana cuelga del propio sorteo (sync/lobbyRotation.ts), así que no
     // hace falta mirar si es el del round.
-    if (LOBBY_MODE === 'round' && nextDrawMs - winner.timestamp > roundMs + ROULETTE_SLOT_TOLERANCE_MS) return null
+    if (LOBBY_MODE === 'round' && roundIntervalMs > 0 && nextDrawMs - winner.timestamp > roundIntervalMs + ROULETTE_SLOT_TOLERANCE_MS) return null
     const window =
-      LOBBY_MODE === 'rotation' ? rotationRouletteSummaryWindow(winner.timestamp) : rouletteSummaryWindow(winner.timestamp, nextDrawMs)
+      LOBBY_MODE === 'rotation'
+        ? rotationRouletteSummaryWindow(winner.timestamp)
+        : rouletteSummaryWindow(winner.timestamp, nextDrawMs, useQuickMoneyScheduleStore.getState().nextDrawAtMs)
     if (!inPrefetchOrWindow(now, window)) return null
     const pocket = toWheelPocket(winner.winningNumber)
     return {
@@ -79,8 +76,10 @@ function currentCandidate(now: number): Candidate | null {
     const draw = phase === 'quickMoneyVideo' ? useLobbyModeStore.getState().pendingDraw : useQuickMoneyDrawsStore.getState().draws[0]
     if (!draw) return null
     const drawMs = new Date(draw.drawnAt).getTime()
-    if (LOBBY_MODE === 'round' && Math.abs(drawMs - quickMoneyDrawAtMs(nextDrawMs)) > QUICK_MONEY_SLOT_TOLERANCE_MS) return null
-    const window = LOBBY_MODE === 'rotation' ? rotationQuickMoneySummaryWindow(drawMs) : quickMoneySummaryWindow(drawMs, nextDrawMs)
+    // Solo el sorteo del bloque en curso (la tabla arranca con sorteos de otras horas, ver
+    // useQuickMoneyDrawsStore). En modo 'rotation' lo acota su propia ventana.
+    if (LOBBY_MODE === 'round' && (drawMs > now || quickMoneyBlockExitMs(drawMs) <= now)) return null
+    const window = LOBBY_MODE === 'rotation' ? rotationQuickMoneySummaryWindow(drawMs) : quickMoneySummaryWindow(drawMs)
     if (!inPrefetchOrWindow(now, window)) return null
     return {
       key: `quickMoney-${drawMs}-${draw.gameNumber}`,

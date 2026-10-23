@@ -2,11 +2,11 @@ import {
   RESULT_HOLD_MS,
   VIDEO_WHEEL_TRANSITION_DURATION_MS,
   WINNER_PANEL_EXIT_DURATION_MS,
+  WINNING_TICKETS_DURATION_MS,
 } from '../layout/layout.constants'
 import {
-  QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS,
-  QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS,
-  QUICK_MONEY_DRAW_AT_REMAINING_MS,
+  QUICK_MONEY_BLOCK_EXIT_AFTER_DRAW_MS,
+  QUICK_MONEY_DRAW_LEAD_MS,
   QUICK_MONEY_VIDEO_DURATION_MS,
   QUICK_MONEY_VIDEO_FADE_MS,
 } from '../config/quickMoneyLobbyCycle'
@@ -61,11 +61,15 @@ export function rotorPhaseMs(nowMs: number, lastDrawStartMs: number | null, peri
   return (((nowMs - anchor) % periodMs) + periodMs) % periodMs
 }
 
-// --- Quick Money (un sorteo por round de Roulette, ver config/quickMoneyLobbyCycle.ts) ---
+// --- Quick Money (a sus propias horas, ver config/quickMoneyLobbyCycle.ts) ---
 
-// Sorteo de Quick Money del round que termina con el sorteo de Roulette rouletteDrawAtMs.
-export function quickMoneyDrawAtMs(rouletteDrawAtMs: number): number {
-  return rouletteDrawAtMs - QUICK_MONEY_DRAW_AT_REMAINING_MS
+// El bloque de Quick Money de un sorteo a drawAtMs: entra QUICK_MONEY_DRAW_LEAD_MS antes y sale
+// QUICK_MONEY_BLOCK_EXIT_AFTER_DRAW_MS después.
+export function quickMoneyBlockEnterMs(drawAtMs: number): number {
+  return drawAtMs - QUICK_MONEY_DRAW_LEAD_MS
+}
+export function quickMoneyBlockExitMs(drawAtMs: number): number {
+  return drawAtMs + QUICK_MONEY_BLOCK_EXIT_AFTER_DRAW_MS
 }
 
 // Offsets desde el sorteo de Quick Money (QD): el clip arranca en QD (QuickMoneyPiecesView lo alinea)
@@ -76,18 +80,18 @@ export const QUICK_MONEY_VIDEO_END_OFFSET_MS = QUICK_MONEY_VIDEO_DURATION_MS
 export const QUICK_MONEY_RESULT_OFFSET_MS = QUICK_MONEY_VIDEO_END_OFFSET_MS + QUICK_MONEY_VIDEO_FADE_MS
 
 // --- Resumen del sorteo (WinningTicketsScreen, lo monta DrawSummaryHost) ---
-// Se muestra en los huecos del ciclo que ya existen, a la misma hora absoluta en todas las máquinas,
-// y arranca en el instante en que termina el sorteo -- tapa la vuelta al lobby, que queda armado
-// detrás y se ve recién al cerrarse (antes arrancaba con el lobby ya de vuelta, y se lo veía un
-// momento antes de los ganadores):
-// - Roulette: desde que termina el hold del panel Winner (la rueda empezaría a bajar) hasta justo
-//   antes de que entre el bloque de Quick Money (~47 s en un round de 5:00).
+// Se muestra a la misma hora absoluta en todas las máquinas, y arranca en el instante en que termina
+// el sorteo -- tapa la vuelta al lobby, que queda armado detrás y se ve recién al cerrarse (antes
+// arrancaba con el lobby ya de vuelta, y se lo veía un momento antes de los ganadores):
+// - Roulette: desde que termina el hold del panel Winner (la rueda empezaría a bajar), durante
+//   WINNING_TICKETS_DURATION_MS (los sorteos están horas separados: el resumen no se queda todo el
+//   round), cortado antes si antes entra el bloque de Quick Money o llega el sorteo siguiente.
 // - Quick Money: desde que termina su video (en vez del fade out al split) hasta justo antes de que
-//   salga el bloque (~20 s en un round de 5:00 -- para más, ver docs/backend/draw-summary.md).
+//   salga el bloque (~20 s -- para más, ver docs/backend/draw-summary.md).
 // Se cierra DRAW_SUMMARY_EXIT_MARGIN_MS antes de la fase siguiente para que su transición se vea, y si
-// el hueco queda por debajo de DRAW_SUMMARY_MIN_MS no se muestra (round más corto, o la máquina llegó
-// al final del hueco). El resumen se pide DRAW_SUMMARY_PREFETCH_MS antes de abrir, para que la
-// pantalla aparezca a su hora y no cuando responda el backend.
+// el hueco queda por debajo de DRAW_SUMMARY_MIN_MS no se muestra (la máquina llegó al final del
+// hueco, o la fase siguiente está demasiado cerca). El resumen se pide DRAW_SUMMARY_PREFETCH_MS antes
+// de abrir, para que la pantalla aparezca a su hora y no cuando responda el backend.
 export const DRAW_SUMMARY_EXIT_MARGIN_MS = 1_500
 export const DRAW_SUMMARY_MIN_MS = 8_000
 export const DRAW_SUMMARY_PREFETCH_MS = 5_000
@@ -101,19 +105,25 @@ function summaryWindow(startMs: number, endMs: number): DrawSummaryWindow | null
   return endMs - startMs >= DRAW_SUMMARY_MIN_MS ? { startMs, endMs } : null
 }
 
-// lastDrawStartMs: T0 del sorteo de Roulette que se resume; nextDrawStartMs: T0 del siguiente.
-export function rouletteSummaryWindow(lastDrawStartMs: number, nextDrawStartMs: number): DrawSummaryWindow | null {
-  return summaryWindow(
-    lastDrawStartMs + RESULT_HOLD_END_OFFSET_MS,
-    nextDrawStartMs - QUICK_MONEY_BLOCK_ENTER_AT_REMAINING_MS - DRAW_SUMMARY_EXIT_MARGIN_MS,
-  )
+// lastDrawStartMs: T0 del sorteo de Roulette que se resume; nextDrawStartMs: T0 del siguiente;
+// nextQuickMoneyDrawMs: el próximo sorteo de Quick Money, si se conoce.
+export function rouletteSummaryWindow(
+  lastDrawStartMs: number,
+  nextDrawStartMs: number,
+  nextQuickMoneyDrawMs: number | null = null,
+): DrawSummaryWindow | null {
+  const startMs = lastDrawStartMs + RESULT_HOLD_END_OFFSET_MS
+  let endMs = Math.min(startMs + WINNING_TICKETS_DURATION_MS, nextDrawStartMs - DRAW_EXECUTION_LEAD_MS - DRAW_SUMMARY_EXIT_MARGIN_MS)
+  if (nextQuickMoneyDrawMs !== null && nextQuickMoneyDrawMs > startMs) {
+    endMs = Math.min(endMs, quickMoneyBlockEnterMs(nextQuickMoneyDrawMs) - DRAW_SUMMARY_EXIT_MARGIN_MS)
+  }
+  return summaryWindow(startMs, endMs)
 }
 
-// quickMoneyDrawMs: hora del sorteo de Quick Money que se resume (el del round que termina con el
-// sorteo de Roulette nextDrawStartMs).
-export function quickMoneySummaryWindow(quickMoneyDrawMs: number, nextDrawStartMs: number): DrawSummaryWindow | null {
+// quickMoneyDrawMs: hora del sorteo de Quick Money que se resume.
+export function quickMoneySummaryWindow(quickMoneyDrawMs: number): DrawSummaryWindow | null {
   return summaryWindow(
     quickMoneyDrawMs + QUICK_MONEY_VIDEO_END_OFFSET_MS,
-    nextDrawStartMs - QUICK_MONEY_BLOCK_EXIT_AT_REMAINING_MS - DRAW_SUMMARY_EXIT_MARGIN_MS,
+    quickMoneyBlockExitMs(quickMoneyDrawMs) - DRAW_SUMMARY_EXIT_MARGIN_MS,
   )
 }
