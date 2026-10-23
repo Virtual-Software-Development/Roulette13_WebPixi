@@ -474,7 +474,8 @@
       "rtpManagement": "Administración",
       "systemLogs": "Registros del Sistema",
       "reports": "Reportes",
-      "settings": "Configuración"
+      "settings": "Configuración",
+      "programming": "Programación"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -1342,7 +1343,8 @@
       "bandWarningConfirm": "Este resultado deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}.",
       "bandStabilizing": "El RTP todavía se está estabilizando: {{rounds}} de {{size}} rondas medidas ({{percent}}%). Estar fuera de la banda {{band}} (ahora {{rtp}}) es esperable; los resultados no se bloquean.",
       "bandConfirmStabilizing": "Este resultado deja el RTP proyectado en {{rtp}}, fuera de la banda de RTP {{band}}. El RTP todavía se está estabilizando.",
-      "betsCloseAt": "(apuestas cierran {{close}})"
+      "betsCloseAt": "(apuestas cierran {{close}})",
+      "hours": "Horas"
     },
     "rtp": {
       "title": "RTP Dashboard",
@@ -1587,7 +1589,123 @@
         "load": "No se pudieron cargar los datos del backend."
       }
     }
-  }
+  },
+    "programming": {
+      "title": "Programación",
+      "subtitle": "Cuándo se sortean las rondas, cuándo cierran las apuestas y con cuánta anticipación existen. Todas las horas son de Santo Domingo (UTC-4).",
+      "loading": "Cargando la programación…",
+      "loadError": "No se pudo cargar la programación: {{error}}",
+      "retry": "Reintentar",
+      "saveChanges": "Guardar cambios",
+      "saving": "Guardando…",
+      "discard": "Descartar cambios",
+      "saveSuccess": "Programación guardada: {{created}} rondas creadas, {{updated}} actualizadas, {{cancelled}} quitadas.",
+      "saveError": "No se pudo guardar la programación: {{error}}",
+      "errors": {
+        "login": "Tu sesión venció. Volvé a iniciar sesión para continuar."
+      },
+      "invalid": "Estos valores no se pueden guardar",
+      "previewing": "Revisando el cambio…",
+      "active": "Activo",
+      "paused": "Pausado",
+      "minutes": "minutos",
+      "seconds": "segundos",
+      "minutesShort": "min",
+      "secondsShort": "s",
+      "rules": {
+        "title": "La ruleta y Quick Money nunca se superponen",
+        "description": "Cada sorteo ocupa su lugar desde que cierran las apuestas hasta {{runTime}} minutos después del sorteo. Una hora de ruleta que tocaría un sorteo de Quick Money se salta: Quick Money tiene prioridad. Los cambios se aplican a las rondas próximas; nunca se quitan rondas que ya vendieron tickets."
+      },
+      "roulette": {
+        "title": "Ruleta",
+        "subtitle": "Horas del día en que se sortea la ruleta."
+      },
+      "quickMoney": {
+        "title": "Quick Money",
+        "subtitle": "Horas del día en que se sortea Quick Money. Tiene prioridad sobre la ruleta."
+      },
+      "times": {
+        "label_one": "Hora de sorteo ({{count}})",
+        "label_other": "Horas de sorteo ({{count}})",
+        "none": "Sin horas: el juego no se va a sortear.",
+        "new": "Nueva hora de sorteo",
+        "add": "Agregar hora",
+        "remove": "Quitar {{time}}",
+        "quickFill": "Completar:",
+        "everyHours_one": "cada hora",
+        "everyHours_other": "cada {{count}} horas"
+      },
+      "bettingClose": {
+        "label": "Cierre de apuestas",
+        "hint": "En ese momento se decide el resultado."
+      },
+      "resultChange": {
+        "label": "Cambio de resultado hasta",
+        "hint": "Los administradores pueden cambiar el resultado en Next Results durante {{duration}} después del cierre de apuestas.",
+        "hintInvalid": "Tiene que ser menor que el cierre de apuestas, así queda tiempo para cambiar el resultado después del cierre."
+      },
+      "horizon": {
+        "title": "Rondas por adelantado",
+        "subtitle": "Las rondas se crean con anticipación para poder vender tickets por adelantado.",
+        "label": "Crear rondas con",
+        "days_one": "día de anticipación",
+        "days_other": "días de anticipación",
+        "hint": "Solo se puede vender un ticket para una ronda que ya existe."
+      },
+      "blocked": {
+        "title": "Hay rondas que no se pueden quitar",
+        "description_one": "{{count}} ronda que este cambio quitaría ya vendió tickets. Mantené su hora para guardar el cambio.",
+        "description_other": "{{count}} rondas que este cambio quitaría ya vendieron tickets. Mantené sus horas para guardar el cambio."
+      },
+      "removeConfirm": {
+        "title": "¿Quitar rondas?",
+        "description_one": "Este cambio quita {{count}} ronda próxima. No tiene tickets vendidos.",
+        "description_other": "Este cambio quita {{count}} rondas próximas. Ninguna tiene tickets vendidos.",
+        "confirm": "Guardar y quitar",
+        "cancel": "Cancelar"
+      },
+      "rounds": {
+        "title": "Próximas rondas",
+        "subtitle": "Todas las rondas de ambos juegos hasta el último día creado.",
+        "previewTitle": "Próximas rondas con tus cambios",
+        "previewSubtitle": "Nada cambia hasta que guardes.",
+        "none": "No hay rondas programadas.",
+        "showAll": "Ver los {{count}} días",
+        "showLess": "Ver menos",
+        "columns": {
+          "time": "Hora",
+          "game": "Juego",
+          "round": "Ronda",
+          "bettingCloses": "Cierre de apuestas",
+          "resultChangeUntil": "Cambio de resultado hasta",
+          "status": "Estado"
+        },
+        "status": {
+          "open": "Apuestas abiertas",
+          "scheduled": "Programada",
+          "closed": "Apuestas cerradas",
+          "create": "Nueva",
+          "update": "Nuevos horarios",
+          "cancel": "Se quita",
+          "blocked": "Tiene tickets: no se puede quitar",
+          "skip": "Salteada",
+          "skipFor": "Salteada: Quick Money a las {{time}}"
+        },
+        "summary": {
+          "create_one": "{{count}} nueva",
+          "create_other": "{{count}} nuevas",
+          "update_one": "{{count}} con nuevos horarios",
+          "update_other": "{{count}} con nuevos horarios",
+          "cancel_one": "{{count}} quitada",
+          "cancel_other": "{{count}} quitadas",
+          "blocked_one": "{{count}} bloqueada",
+          "blocked_other": "{{count}} bloqueadas",
+          "skip_one": "{{count}} hora de ruleta salteada",
+          "skip_other": "{{count}} horas de ruleta salteadas"
+        }
+      },
+      "beforeTheDraw": "antes del sorteo"
+    }
   },
   "errorView": {
     "goBackHome": "Volver al inicio",

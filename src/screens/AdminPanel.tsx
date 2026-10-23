@@ -6,6 +6,7 @@ import { RtpManagementPage } from './RtpManagementPage'
 import { NextResultsPage } from './NextResultsPage'
 import { GameEventsPage } from './GameEventsPage'
 import { AdminSettingsPage } from './AdminSettingsPage'
+import { AdminProgrammingPage } from './AdminProgrammingPage'
 import { AdminReportsPage } from './AdminReportsPage'
 import { UsersPage } from './UsersPage'
 import { SystemLogsPage } from './SystemLogsPage'
@@ -23,6 +24,7 @@ type AdminView =
   | 'admin-next-results'
   | 'admin-next-results-quick-money'
   | 'admin-settings'
+  | 'admin-programming'
   | 'admin-users'
   | 'admin-reports'
   | 'admin-system-logs'
@@ -41,6 +43,7 @@ const ACTIVE_SIDEBAR_ID_BY_VIEW: Record<AdminView, string> = {
   'admin-next-results': 'roulette',
   'admin-next-results-quick-money': 'lottery',
   'admin-settings': 'settings',
+  'admin-programming': 'programming',
   'admin-users': 'users',
   'admin-reports': 'reports',
   'admin-system-logs': 'systemLogs',
@@ -55,6 +58,7 @@ function isAdminView(value: string | null): value is AdminView {
     value === 'admin-next-results' ||
     value === 'admin-next-results-quick-money' ||
     value === 'admin-settings' ||
+    value === 'admin-programming' ||
     value === 'admin-users' ||
     value === 'admin-reports' ||
     value === 'admin-system-logs'
@@ -126,6 +130,7 @@ export function AdminPanel() {
       {view === 'admin-next-results' && <NextResultsPage section="roulette" />}
       {view === 'admin-next-results-quick-money' && <NextResultsPage section="quickMoney" />}
       {view === 'admin-settings' && <AdminSettingsPage />}
+      {view === 'admin-programming' && <AdminProgrammingPage />}
       {view === 'admin-users' && <UsersPage />}
       {view === 'admin-reports' && <AdminReportsPage />}
       {view === 'admin-system-logs' && <SystemLogsPage />}
