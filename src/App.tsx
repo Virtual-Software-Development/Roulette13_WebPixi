@@ -38,6 +38,9 @@ import { RoundHistoryModal } from './components/roundHistory/RoundHistoryModal'
 import { QuickMoneySplitOverlay } from './screens/QuickMoneySplitOverlay'
 import { QuickMoneyPiecesView } from './screens/QuickMoneyPiecesView'
 import { QuickMoneyLobbyCycle } from './hooks/useQuickMoneyLobbyCycle'
+import { LobbyRotationCycle } from './hooks/useLobbyRotationCycle'
+import { JackpotOverlay } from './screens/JackpotOverlay'
+import { LOBBY_MODE } from './config/lobbyMode'
 import { useLobbyModeStore } from './store/useLobbyModeStore'
 import { useLobbySyncStore } from './store/useLobbySyncStore'
 import { applyRoughServerTime, serverNow, startServerClockResync, syncServerClock } from './time/serverClock'
@@ -553,8 +556,10 @@ function App() {
           onFinished={handleVideoErrorRoundFinished}
         />
       )}
-      <QuickMoneyLobbyCycle />
+      {/* Modo del lobby (config/lobbyMode.ts): ciclo por ronda de Roulette o rotación de vistas. */}
+      {LOBBY_MODE === 'rotation' ? <LobbyRotationCycle /> : <QuickMoneyLobbyCycle />}
       <QuickMoneySplitOverlay />
+      {LOBBY_MODE === 'rotation' && <JackpotOverlay />}
       <DrawSummaryHost />
       {lobbyPhase === 'quickMoneyVideo' && <QuickMoneyPiecesView />}
       <Application

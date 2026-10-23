@@ -8,6 +8,7 @@ import { parseApiDateTime } from '../utils/time'
 import { serverNow } from '../time/serverClock'
 import { QUICK_MONEY_RESULT_OFFSET_MS, quickMoneyDrawAtMs } from '../sync/lobbyTimeline'
 import { onQuickMoneyDrawPublished } from '../sync/quickMoneyResultTables'
+import { LOBBY_MODE } from '../config/lobbyMode'
 import { prepareQuickMoneyDraw, takePreparedDraw } from '../video/quickMoneyDrawVideo'
 import { fetchQuickMoneyLobbyDraw } from '../api/quickMoneyLobbyDraw'
 import { fetchCurrentEvent } from '../api/terminalTicket'
@@ -54,13 +55,15 @@ async function syncDrawNumber(drawAtMs: number) {
 
 // Publica el sorteo pendiente en la tabla y deja el countdown apuntando al sorteo de Quick Money del
 // round siguiente (estimado con roundInterval; se corrige al entrar ese bloque). También lo usa
-// QuickMoneyPiecesView al terminar su video.
+// QuickMoneyPiecesView al terminar su video. En modo 'rotation' el próximo sorteo lo trae el backend
+// (useQuickMoneyEventSync), así que no se estima.
 export function publishPendingDraw(rouletteDrawAtMs: number = currentRouletteDrawAtMs()) {
   const { pendingDraw, setPendingDraw } = useLobbyModeStore.getState()
   if (!pendingDraw) return
   useQuickMoneyDrawsStore.getState().addDraw(pendingDraw)
   onQuickMoneyDrawPublished(pendingDraw)
   setPendingDraw(null)
+  if (LOBBY_MODE === 'rotation') return
   useQuickMoneyRoundStore.setState({
     nextDrawTime: toIso(quickMoneyDrawAtMs(rouletteDrawAtMs) + roundIntervalMs()),
   })

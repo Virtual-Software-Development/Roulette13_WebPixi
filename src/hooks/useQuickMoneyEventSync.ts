@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { fetchCurrentEvent } from '../api/terminalTicket'
+import { useEffect, useRef } from 'react'
+import { fetchCurrentEvent, type CurrentEvent } from '../api/terminalTicket'
 import { LOTTERY_EVENT_TOPIC, onMqttMessage } from '../mqtt/topics'
 import { useQuickMoneyRoundStore } from '../store/useQuickMoneyRoundStore'
 import { onConnectionRestored } from './useConnectionIssue'
@@ -23,8 +23,12 @@ export function shouldResync(message: unknown, shownEventId: number | null): boo
 }
 
 // Keeps useQuickMoneyRoundStore on the draw the backend has open for betting. Mounted by
-// QuickMoneyBettingView only: the lobby still runs the mock cycle.
-export function useQuickMoneyEventSync() {
+// QuickMoneyBettingView; the lobby in 'rotation' mode (useLobbyRotationCycle) passes its own apply,
+// since it keeps showing the draw it is about to play after the backend already opened the next one.
+export function useQuickMoneyEventSync(apply: (event: CurrentEvent | null) => void = (event) => useQuickMoneyRoundStore.getState().setLiveEvent(event)) {
+  const applyRef = useRef(apply)
+  applyRef.current = apply
+
   useEffect(() => {
     let cancelled = false
     let generation = 0
@@ -34,7 +38,7 @@ export function useQuickMoneyEventSync() {
       try {
         const event = await fetchCurrentEvent('lottery')
         // A slower, older response must not overwrite a newer one.
-        if (!cancelled && mine === generation) useQuickMoneyRoundStore.getState().setLiveEvent(event)
+        if (!cancelled && mine === generation) applyRef.current(event)
       } catch (err) {
         // Keep showing the last known draw; the next poll retries.
         console.error('[quickMoney] could not read the current draw:', err instanceof Error ? err.message : err)

@@ -149,7 +149,9 @@
   },
   "lastGame": {
     "currentGame": "JUEGO ACTUAL",
-    "nextRoundIn": "PRÓXIMA RONDA EN"
+    "nextRoundIn": "PRÓXIMA RONDA EN",
+    "betsCloseIn": "CIERRE DE APUESTAS EN",
+    "betsClosedSpinIn": "APUESTAS CERRADAS · GIRO EN"
   },
   "roundHistory": {
     "title": "Historial de Rondas",
@@ -433,7 +435,12 @@
     "yesterdayResults": "Resultados de ayer",
     "noDrawsToday": "Aún no hay sorteos hoy",
     "noDrawsYesterday": "No hubo sorteos ayer",
-    "fastPayments": "Pagos Rápidos"
+    "fastPayments": "Pagos Rápidos",
+    "betsCloseIn": "Quick Money · Cierre de apuestas en",
+    "betsClosedDrawIn": "Apuestas cerradas · Sorteo en"
+  },
+  "jackpotView": {
+    "title": "Jackpot"
   },
   "quickMoneyLobby": {
     "previousResult": "Resultado Anterior",

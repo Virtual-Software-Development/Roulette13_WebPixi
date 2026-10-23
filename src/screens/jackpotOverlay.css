@@ -1,0 +1,28 @@
+/* Vista Jackpot provisoria (JackpotOverlay.tsx): mismo fondo oscuro que los paneles del split de
+   Quick Money, por encima del <canvas> de Pixi (z-index:0) y por debajo de los <video> de sorteo
+   (z-index:5). Entrada/salida solo con opacity (compositor). */
+.jackpot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #0c1622 0%, #08101a 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1200ms ease;
+}
+.jackpot-overlay[data-visible='true'] {
+  opacity: 1;
+}
+
+.jackpot-overlay-title {
+  margin: 0;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 9vh;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f4f7fa;
+}

@@ -17,6 +17,8 @@ import {
   rouletteSummaryWindow,
   type DrawSummaryWindow,
 } from '../sync/lobbyTimeline'
+import { rotationQuickMoneySummaryWindow, rotationRouletteSummaryWindow } from '../sync/lobbyRotation'
+import { LOBBY_MODE } from '../config/lobbyMode'
 import { FALLBACK_ROULETTE_ROUND_MS } from '../config/quickMoneyLobbyCycle'
 import type { WinningTicketsDraw } from '../types/winningTickets'
 
@@ -56,8 +58,11 @@ function currentCandidate(now: number): Candidate | null {
     const winner = useResultsStore.getState().currentWinner
     if (!winner) return null
     const roundMs = roundIntervalMs > 0 ? roundIntervalMs : FALLBACK_ROULETTE_ROUND_MS
-    if (nextDrawMs - winner.timestamp > roundMs + ROULETTE_SLOT_TOLERANCE_MS) return null
-    const window = rouletteSummaryWindow(winner.timestamp, nextDrawMs)
+    // En modo 'rotation' la ventana cuelga del propio sorteo (sync/lobbyRotation.ts), así que no
+    // hace falta mirar si es el del round.
+    if (LOBBY_MODE === 'round' && nextDrawMs - winner.timestamp > roundMs + ROULETTE_SLOT_TOLERANCE_MS) return null
+    const window =
+      LOBBY_MODE === 'rotation' ? rotationRouletteSummaryWindow(winner.timestamp) : rouletteSummaryWindow(winner.timestamp, nextDrawMs)
     if (!inPrefetchOrWindow(now, window)) return null
     const pocket = toWheelPocket(winner.winningNumber)
     return {
@@ -74,8 +79,8 @@ function currentCandidate(now: number): Candidate | null {
     const draw = phase === 'quickMoneyVideo' ? useLobbyModeStore.getState().pendingDraw : useQuickMoneyDrawsStore.getState().draws[0]
     if (!draw) return null
     const drawMs = new Date(draw.drawnAt).getTime()
-    if (Math.abs(drawMs - quickMoneyDrawAtMs(nextDrawMs)) > QUICK_MONEY_SLOT_TOLERANCE_MS) return null
-    const window = quickMoneySummaryWindow(drawMs, nextDrawMs)
+    if (LOBBY_MODE === 'round' && Math.abs(drawMs - quickMoneyDrawAtMs(nextDrawMs)) > QUICK_MONEY_SLOT_TOLERANCE_MS) return null
+    const window = LOBBY_MODE === 'rotation' ? rotationQuickMoneySummaryWindow(drawMs) : quickMoneySummaryWindow(drawMs, nextDrawMs)
     if (!inPrefetchOrWindow(now, window)) return null
     return {
       key: `quickMoney-${drawMs}-${draw.gameNumber}`,

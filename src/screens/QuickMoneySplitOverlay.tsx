@@ -17,6 +17,7 @@ import {
   type ResultsPanelView,
 } from '../config/quickMoneyLobbyCycle'
 import { startQuickMoneyResultTables } from '../sync/quickMoneyResultTables'
+import { LOBBY_MODE, QUICK_MONEY_ANTEROOM_MS } from '../config/lobbyMode'
 import { serverNow } from '../time/serverClock'
 import { getRouletteColor, toWheelPocket } from '../utils/rouletteColors'
 import { buildMediaUrl } from '../utils/media'
@@ -146,25 +147,37 @@ function CenterPanel() {
   const drawNumber = useQuickMoneyRoundStore((state) => state.drawNumber)
   const pendingDraw = useLobbyModeStore((state) => state.pendingDraw)
   const latest = useQuickMoneyDrawsStore((state) => state.draws[0])
-  const countdown = useCountdown(nextDrawTime)
+  const drawCountdown = useCountdown(nextDrawTime)
+  // Antesala (lobby en modo 'rotation', vista fija por Quick Money antes del sorteo): cuenta hasta el
+  // cierre de apuestas; cerradas, hasta el sorteo. Sin ningún sorteo abierto en el backend, '--:--'.
+  const betsCloseTime = useQuickMoneyRoundStore((state) => state.betsCloseTime)
+  const noOpenDraw = useQuickMoneyRoundStore((state) => LOBBY_MODE === 'rotation' && state.live && state.eventId === null)
+  const closeCountdown = useCountdown(betsCloseTime)
+  const forced = useLobbyModeStore((state) => state.forced === 'quickMoney')
+  const anteroom = forced && !pendingDraw && betsCloseTime !== '' && drawCountdown.remainingSeconds * 1000 <= QUICK_MONEY_ANTEROOM_MS
+  const betsOpen = anteroom && closeCountdown.remainingSeconds > 0
+  const countdown = betsOpen ? closeCountdown : drawCountdown
+  const label = betsOpen ? t('quickMoneySplit.betsCloseIn') : anteroom ? t('quickMoneySplit.betsClosedDrawIn') : t('quickMoneySplit.nextDrawIn')
   // Mientras hay un sorteo pendiente (llegó la hora, esperando su video) el reloj ya avanzó al
   // próximo -- se congela en 00:00 con el número del sorteo en curso.
-  const display = pendingDraw ? '00:00' : countdown.display
+  const display = pendingDraw ? '00:00' : noOpenDraw ? '--:--' : countdown.display
   const gameNumber = pendingDraw ? pendingDraw.gameNumber : drawNumber
-  const urgent = pendingDraw ? true : countdown.urgent
-  const critical = !pendingDraw && countdown.remainingSeconds > 0 && countdown.remainingSeconds <= CRITICAL_SECONDS
+  const urgent = pendingDraw ? true : !noOpenDraw && countdown.urgent
+  const critical = !pendingDraw && !noOpenDraw && countdown.remainingSeconds > 0 && countdown.remainingSeconds <= CRITICAL_SECONDS
 
   return (
     <div className="qms-card qms-center-panel" data-critical={critical}>
       <div className="qms-next-draw">
         <img src={QUICK_MONEY_LOGO_URL} className="qms-logo" alt="" />
-        <span className="qms-label">{t('quickMoneySplit.nextDrawIn')}</span>
-        <span className="qms-next-draw-countdown" data-urgent={urgent}>
+        <span className="qms-label">{label}</span>
+        <span className="qms-next-draw-countdown" data-urgent={urgent} data-long={display.length > 5}>
           <CountdownDigits display={display} />
         </span>
-        <span className="qms-game-number">
-          {t('quickMoneyLobby.gameNumber')} #{gameNumber}
-        </span>
+        {!noOpenDraw && (
+          <span className="qms-game-number">
+            {t('quickMoneyLobby.gameNumber')} #{gameNumber}
+          </span>
+        )}
       </div>
 
       <span className="qms-center-divider" aria-hidden="true" />
