@@ -14,10 +14,14 @@ function computeRemainingMs(targetIso: string, now: number): number {
   return Math.max(0, parseApiDateTime(targetIso).getTime() - now)
 }
 
-function formatCountdown(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60)
+// MM:SS, or H:MM:SS from one hour on (rounds are scheduled hours apart: 2 hours reads 2:00:00,
+// not 120:00).
+export function formatCountdown(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  const mmss = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  return hours > 0 ? `${hours}:${mmss}` : mmss
 }
 
 // Fuente del tiempo: useClockStore (un solo timer compartido, ver su comentario) en vez de un

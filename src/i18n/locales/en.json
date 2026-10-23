@@ -480,7 +480,8 @@
       "rtpManagement": "Management",
       "systemLogs": "System Logs",
       "reports": "Reports",
-      "settings": "Settings"
+      "settings": "Settings",
+      "programming": "Programming"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -1348,7 +1349,8 @@
       "bandWarningConfirm": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}.",
       "bandStabilizing": "RTP still stabilizing: {{rounds}} of {{size}} rounds measured ({{percent}}%). Being outside the band {{band}} (now {{rtp}}) is expected; results are not blocked.",
       "bandConfirmStabilizing": "This result leaves the projected RTP at {{rtp}}, outside the RTP band {{band}}. The RTP is still stabilizing.",
-      "betsCloseAt": "(bets close {{close}})"
+      "betsCloseAt": "(bets close {{close}})",
+      "hours": "Hours"
     },
     "rtp": {
       "title": "RTP Dashboard",
@@ -1593,7 +1595,123 @@
         "load": "Could not load the data from the backend."
       }
     }
-  }
+  },
+    "programming": {
+      "title": "Programming",
+      "subtitle": "When the rounds are drawn, when betting closes and how far ahead rounds exist. All times are Santo Domingo time (UTC-4).",
+      "loading": "Loading programming…",
+      "loadError": "Could not load programming: {{error}}",
+      "retry": "Retry",
+      "saveChanges": "Save Changes",
+      "saving": "Saving…",
+      "discard": "Discard changes",
+      "saveSuccess": "Programming saved: {{created}} rounds created, {{updated}} updated, {{cancelled}} removed.",
+      "saveError": "Could not save programming: {{error}}",
+      "errors": {
+        "login": "Your session expired. Log in again to continue."
+      },
+      "invalid": "These values can't be saved",
+      "previewing": "Checking the change…",
+      "active": "Active",
+      "paused": "Paused",
+      "minutes": "minutes",
+      "seconds": "seconds",
+      "minutesShort": "min",
+      "secondsShort": "s",
+      "rules": {
+        "title": "Roulette and Quick Money never overlap",
+        "description": "Each draw takes its slot from the moment betting closes until {{runTime}} minutes after the draw. A roulette time whose slot would touch a Quick Money draw is skipped: Quick Money has priority. Changes apply to the upcoming rounds; rounds that already sold tickets are never removed."
+      },
+      "roulette": {
+        "title": "Roulette",
+        "subtitle": "Times of the day the roulette is drawn."
+      },
+      "quickMoney": {
+        "title": "Quick Money",
+        "subtitle": "Times of the day Quick Money is drawn. It has priority over the roulette."
+      },
+      "times": {
+        "label_one": "Draw time ({{count}})",
+        "label_other": "Draw times ({{count}})",
+        "none": "No times: the game won't be drawn.",
+        "new": "New draw time",
+        "add": "Add time",
+        "remove": "Remove {{time}}",
+        "quickFill": "Fill:",
+        "everyHours_one": "every hour",
+        "everyHours_other": "every {{count}} hours"
+      },
+      "bettingClose": {
+        "label": "Betting closes",
+        "hint": "The result is decided at this moment."
+      },
+      "resultChange": {
+        "label": "Result changes allowed until",
+        "hint": "Admins can change the result in Next Results for {{duration}} after betting closes.",
+        "hintInvalid": "It must be shorter than the betting close, so there is time to change the result after betting closes."
+      },
+      "horizon": {
+        "title": "Rounds ahead",
+        "subtitle": "Rounds are created ahead of time so tickets can be sold for them in advance.",
+        "label": "Create rounds",
+        "days_one": "day ahead",
+        "days_other": "days ahead",
+        "hint": "A ticket can only be sold for a round that already exists."
+      },
+      "blocked": {
+        "title": "Some rounds can't be removed",
+        "description_one": "{{count}} round this change would remove already sold tickets. Keep its time to save the change.",
+        "description_other": "{{count}} rounds this change would remove already sold tickets. Keep their times to save the change."
+      },
+      "removeConfirm": {
+        "title": "Remove rounds?",
+        "description_one": "This change removes {{count}} upcoming round. It has no tickets sold.",
+        "description_other": "This change removes {{count}} upcoming rounds. None of them has tickets sold.",
+        "confirm": "Save and remove",
+        "cancel": "Cancel"
+      },
+      "rounds": {
+        "title": "Upcoming rounds",
+        "subtitle": "Every round of both games until the last day created.",
+        "previewTitle": "Upcoming rounds with your changes",
+        "previewSubtitle": "Nothing changes until you save.",
+        "none": "No rounds scheduled.",
+        "showAll": "Show all {{count}} days",
+        "showLess": "Show less",
+        "columns": {
+          "time": "Time",
+          "game": "Game",
+          "round": "Round",
+          "bettingCloses": "Betting closes",
+          "resultChangeUntil": "Result changes until",
+          "status": "Status"
+        },
+        "status": {
+          "open": "Betting open",
+          "scheduled": "Scheduled",
+          "closed": "Betting closed",
+          "create": "New",
+          "update": "New times",
+          "cancel": "Will be removed",
+          "blocked": "Has tickets: can't be removed",
+          "skip": "Skipped",
+          "skipFor": "Skipped: Quick Money at {{time}}"
+        },
+        "summary": {
+          "create_one": "{{count}} new",
+          "create_other": "{{count}} new",
+          "update_one": "{{count}} with new times",
+          "update_other": "{{count}} with new times",
+          "cancel_one": "{{count}} removed",
+          "cancel_other": "{{count}} removed",
+          "blocked_one": "{{count}} blocked",
+          "blocked_other": "{{count}} blocked",
+          "skip_one": "{{count}} roulette time skipped",
+          "skip_other": "{{count}} roulette times skipped"
+        }
+      },
+      "beforeTheDraw": "before the draw"
+    }
   },
   "errorView": {
     "goBackHome": "Go Back Home",

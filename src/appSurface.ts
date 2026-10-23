@@ -25,6 +25,7 @@ export const ADMIN_PREVIEW_VALUES = [
   'admin-next-results',
   'admin-next-results-quick-money',
   'admin-settings',
+  'admin-programming',
   'admin-users',
   'admin-reports',
   'admin-system-logs',

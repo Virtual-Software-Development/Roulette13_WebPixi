@@ -11,6 +11,10 @@ export const ROULETTE_BETS_TOPIC = 'qm/v1/games/roulette/bets'
 // ready=false en su lugar (último deseo de su conexión). Ver network/backendMonitor.ts.
 export const BACKEND_STATUS_TOPIC = 'qm/v1/backend/status'
 
+// Estado de cada ronda de Roulette (event.state, retenido): el backend la anuncia cuando pasa a ser la
+// próxima en sortearse, y otra vez si cambia su horario.
+export const ROULETTE_EVENT_TOPIC = 'qm/v1/games/roulette/event'
+
 // Estado de cada sorteo de Quick Money (event.state, retenido): el backend lo publica en cada cambio
 // de estado (abierto, cerrado, en curso, liquidado).
 export const LOTTERY_EVENT_TOPIC = 'qm/v1/games/lottery/event'

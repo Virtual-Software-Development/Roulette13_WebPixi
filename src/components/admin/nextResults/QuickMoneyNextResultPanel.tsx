@@ -115,6 +115,7 @@ export function QuickMoneyNextResultPanel() {
             {isDue ? t('admin.nextResults.dueNow') : nextDrawTime ? countdown.display : '--:--'}
           </span>
           <div className="admin-next-results-timer-units">
+            {countdown.remainingSeconds >= 3600 && !isDue && <span>{t('admin.nextResults.hours')}</span>}
             <span>{t('admin.nextResults.minutes')}</span>
             <span>{t('admin.nextResults.seconds')}</span>
           </div>
